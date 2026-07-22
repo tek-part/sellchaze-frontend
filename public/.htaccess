@@ -6,6 +6,17 @@
     # Do not rewrite direct requests to index.html
     RewriteRule ^index\.html$ - [L]
 
+    # Theme preview: any request carrying ?preview=1 must load the storefront app
+    # (storefront.html), NOT the dashboard (index.html). This mirrors the dev-only
+    # middleware in vite.config.js so theme previews render identically in
+    # production. It is matched on the query string and placed before the
+    # real-file/-directory check below, because the root "/" resolves to a
+    # directory and would otherwise serve index.html first. The storefront's own
+    # asset requests carry no preview flag, so they still fall through to real
+    # files.
+    RewriteCond %{QUERY_STRING} (^|&)preview=1(&|$)
+    RewriteRule ^ storefront.html [L]
+
     # Existing files and directories (assets, favicon, etc.)
     RewriteCond %{REQUEST_FILENAME} -f [OR]
     RewriteCond %{REQUEST_FILENAME} -d
@@ -21,8 +32,10 @@
         Header set Cache-Control "public, max-age=31536000, immutable"
     </FilesMatch>
 
-    # Never cache index.html — it references hashed assets which change on each build.
-    <FilesMatch "^index\.html$">
+    # Never cache the HTML entry points — they reference hashed assets that
+    # change on each build. storefront.html and theme-studio.html are entries
+    # too, so they must not be cached either or a preview could load stale JS.
+    <FilesMatch "^(index|storefront|theme-studio)\.html$">
         Header set Cache-Control "no-store, no-cache, must-revalidate, max-age=0"
         Header set Pragma "no-cache"
         Header set Expires "0"
