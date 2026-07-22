@@ -7,6 +7,7 @@
  * brand name but the API exposes no brand index — so it derives the brand list from the products it
  * can see and says plainly where that list comes from. No endpoint is invented anywhere here.
  */
+import { previewOrDev } from '../preview';
 import { useMemo, type ReactElement } from 'react';
 import { Container, EmptyState, ErrorState, Section, Spinner } from '../themes/luxury-fashion/components';
 import { useLocale } from '../i18n/useLocale';
@@ -45,7 +46,7 @@ function useCategoryContext(title: string, description: string): {
   const manifest = useThemeManifest();
   const { locale } = useLocale();
   const categoriesQ = useAsync(() => getCategories(), []);
-  const dev = import.meta.env.DEV;
+  const dev = previewOrDev();
 
   const categories = useMemo(() => {
     if (categoriesQ.data) return categoriesQ.data.data.map(toCategoryCard);
@@ -175,7 +176,7 @@ export function BrandsPage(): ReactElement {
   const manifest = useThemeManifest();
   const { locale } = useLocale();
   const productsQ = useAsync(() => getProducts({ perPage: 60 }), []);
-  const dev = import.meta.env.DEV;
+  const dev = previewOrDev();
 
   const brands = useMemo<BrandEntry[]>(() => {
     const source = productsQ.data

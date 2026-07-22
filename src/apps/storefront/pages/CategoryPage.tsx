@@ -6,6 +6,7 @@
  * (see ./curated). Fetching a category for those would 404 and strand the primary nav, so they are
  * recognised here and served from the unfiltered products endpoint. No invented endpoint.
  */
+import { previewOrDev } from '../preview';
 import { useMemo, type ReactElement } from 'react';
 import { useParams } from 'react-router-dom';
 import { ThemeRenderer, useTemplate, type StorefrontContext, useThemeManifest } from '../theme-engine';
@@ -37,7 +38,7 @@ export function CategoryPage(): ReactElement | null {
     [slug],
   );
 
-  const dev = import.meta.env.DEV;
+  const dev = previewOrDev();
   let products: ProductCardModel[] = productsQ.data ? productsQ.data.data.map((p) => toProductCard(p, currency)) : [];
   if (dev && !productsQ.data) products = sampleNewest(manifest.id, locale);
   if (curated?.rank) products = [...curated.rank(products)];

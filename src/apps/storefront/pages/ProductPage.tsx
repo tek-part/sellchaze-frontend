@@ -2,6 +2,7 @@
  * ProductPage — /products/:slug. Fetches the product, its reviews and a related set, then renders the
  * `product` template (product-details + related-products). DEV falls back to a preview product.
  */
+import { previewOrDev } from '../preview';
 import { useEffect, useMemo, type ReactElement } from 'react';
 import { useParams } from 'react-router-dom';
 import { ThemeRenderer, useTemplate, type StorefrontContext, useThemeManifest } from '../theme-engine';
@@ -31,7 +32,7 @@ export function ProductPage(): ReactElement | null {
   const relatedQ = useAsync(() => getProducts({ perPage: 8 }), [slug]);
 
   const { record } = useRecentlyViewed();
-  const dev = import.meta.env.DEV;
+  const dev = previewOrDev();
   let detail: ProductDetailModel | null = productQ.data ? toProductDetail(productQ.data.data, currency) : null;
   if (dev && !detail) detail = sampleProductDetail(slug, manifest.id, locale);
 

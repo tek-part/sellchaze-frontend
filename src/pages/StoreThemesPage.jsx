@@ -41,19 +41,19 @@ function fmtDate(iso) {
 }
 
 /**
- * Real storefront preview — loads the storefront entry (`storefront.html`)
- * directly with `?theme=…&preview=1`.
+ * Real storefront preview — the storefront root with `?theme=…&preview=1`.
  *
- * This must target storefront.html explicitly, not the clean root `/`. On the
- * dashboard's own host the root serves the dashboard app; only a store's own
- * host serves the storefront at `/`. In dev a Vite middleware rewrote
- * `?preview=1` → storefront.html, but production Apache has no such rule, so a
- * clean-root preview URL loaded the dashboard instead of the theme. Pointing at
- * the real file (which exists in every build) makes the preview work in every
- * environment with no server rewrite — exactly like studioUrl below.
+ * The URL must stay a CLEAN path (`/`), not `/storefront.html`: the storefront
+ * uses BrowserRouter, which reads the literal path as the route, and
+ * `/storefront.html` matches nothing → its own 404. Instead, `?preview=1` is
+ * served as storefront.html by a rewrite (the Vite middleware in dev, the
+ * .htaccess rule in production) while the browser URL stays `/`, so the router
+ * resolves the home route. In preview mode the storefront renders from demo
+ * data (see ../apps/storefront/preview.ts), since there is no store to resolve
+ * on the dashboard host.
  */
 function previewUrl(id) {
-    return `/storefront.html?theme=${encodeURIComponent(id)}&preview=1`;
+    return `/?theme=${encodeURIComponent(id)}&preview=1`;
 }
 
 /** Real Theme Studio (live editor) entry for a theme — shares the same platform install state. */

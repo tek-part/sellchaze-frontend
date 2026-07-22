@@ -4,6 +4,7 @@
  * reachable/resolved, so pages can fall back to DEV preview data when developing without a seeded
  * backend. In production there is no fallback — an unresolved store surfaces normally.
  */
+import { previewOrDev } from '../preview';
 import { createContext, useContext, type ReactElement, type ReactNode } from 'react';
 import { getStore } from '../api/storefront';
 import { useAsync } from '../api/useAsync';
@@ -52,7 +53,7 @@ export function StoreProvider(props: { children: ReactNode }): ReactElement {
       ...(s.logo_url ? { logoUrl: s.logo_url } : {}),
       ...(s.description ? { description: s.description } : {}),
     };
-  } else if (import.meta.env.DEV) {
+  } else if (previewOrDev()) {
     store = DEV_STORE;
   } else {
     store = { id: '', name: 'Store', slug: '', currency: 'USD' };

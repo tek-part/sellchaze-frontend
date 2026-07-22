@@ -7,6 +7,7 @@
  * Navigation comes from the store's categories (with static shop links); in DEV it uses preview
  * nav/footer so the chrome is fully populated without a seeded backend.
  */
+import { previewOrDev } from './preview';
 import { useEffect, useMemo, type ReactElement } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useLocale } from './i18n/useLocale';
@@ -116,7 +117,7 @@ export function StorefrontApp(): ReactElement {
   }, [direction]);
 
   const context = useMemo<StorefrontContext>(() => {
-    const dev = import.meta.env.DEV;
+    const dev = previewOrDev();
     const categoryNav: NavItem[] = categoriesQ.data
       ? categoriesQ.data.data.map((c) => ({ label: c.name, url: `/collections/${c.slug}` }))
       : [];

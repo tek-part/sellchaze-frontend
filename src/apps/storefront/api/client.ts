@@ -39,7 +39,18 @@ export async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> 
   }
 
   if (response.status === 204) return undefined as T;
-  return (await response.json()) as T;
+
+  // Guard the success-path parse. A misrouted request can return HTTP 200 with
+  // an HTML body — e.g. an SPA host that serves index.html for an unknown /api
+  // path. Without this, response.json() throws a raw SyntaxError
+  // ("Unexpected token '<'") that escapes as an unhandled promise rejection.
+  // Converting it to an ApiError lets callers (useAsync) handle it and fall
+  // back — in a theme preview, to demo data.
+  try {
+    return (await response.json()) as T;
+  } catch {
+    throw new ApiError(response.status, 'The API returned an unexpected non-JSON response.');
+  }
 }
 
 export const apiGet = <T>(path: string): Promise<T> => apiFetch<T>(path);
@@ -70,5 +81,16 @@ export async function apiRootFetch<T>(path: string, init?: RequestInit): Promise
     throw new ApiError(response.status, message);
   }
   if (response.status === 204) return undefined as T;
-  return (await response.json()) as T;
+
+  // Guard the success-path parse. A misrouted request can return HTTP 200 with
+  // an HTML body — e.g. an SPA host that serves index.html for an unknown /api
+  // path. Without this, response.json() throws a raw SyntaxError
+  // ("Unexpected token '<'") that escapes as an unhandled promise rejection.
+  // Converting it to an ApiError lets callers (useAsync) handle it and fall
+  // back — in a theme preview, to demo data.
+  try {
+    return (await response.json()) as T;
+  } catch {
+    throw new ApiError(response.status, 'The API returned an unexpected non-JSON response.');
+  }
 }

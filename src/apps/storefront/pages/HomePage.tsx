@@ -3,6 +3,7 @@
  * the engine. In DEV it falls back to preview data if the API isn't reachable, so the store is always
  * demoable; production shows whatever the API returns (empty states if nothing).
  */
+import { previewOrDev } from '../preview';
 import { useMemo, type ReactElement } from 'react';
 import { ThemeRenderer, useTemplate, type StorefrontContext, useThemeManifest } from '../theme-engine';
 import { useStore } from '../state/store-context';
@@ -25,7 +26,7 @@ export function HomePage(): ReactElement | null {
   const currency = store.currency;
 
   const context = useMemo<StorefrontContext>(() => {
-    const dev = import.meta.env.DEV;
+    const dev = previewOrDev();
     let newest: ProductCardModel[] = products.data ? products.data.data.map((p) => toProductCard(p, currency)) : [];
     let categories: CategoryCardModel[] = cats.data ? cats.data.data.map(toCategoryCard) : [];
     if (dev && !products.data) newest = sampleNewest(manifest.id, locale);

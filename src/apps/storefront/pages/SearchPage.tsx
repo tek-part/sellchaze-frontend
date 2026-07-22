@@ -3,6 +3,7 @@
  * product set and filters client-side by title/vendor (no invented endpoint). Renders a product grid
  * or an empty state. DEV falls back to preview products.
  */
+import { previewOrDev } from '../preview';
 import { useMemo, type CSSProperties, type ReactElement } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Container, EmptyState, ProductCard, Section } from '../themes/luxury-fashion/components';
@@ -30,7 +31,7 @@ export function SearchPage(): ReactElement {
 
   const results = useMemo<ProductCardModel[]>(() => {
     let products: ProductCardModel[] = productsQ.data ? productsQ.data.data.map((p) => toProductCard(p, currency)) : [];
-    if (import.meta.env.DEV && !productsQ.data) products = sampleNewest(manifest.id, locale);
+    if (previewOrDev() && !productsQ.data) products = sampleNewest(manifest.id, locale);
     if (!query) return products;
     const q = query.toLowerCase();
     return products.filter((p) => p.title.toLowerCase().includes(q) || (p.vendor ?? '').toLowerCase().includes(q));
