@@ -1,0 +1,194 @@
+/*
+ * Theme 04 — Rouge · global chrome (announcement, header, nav, footer, mobile nav). Loaded by the
+ * theme package. Own `.rge-*` namespace, light-first porcelain, gilt + rouge accents. No other
+ * theme's chrome reused.
+ */
+
+/* ------------------------------------------------------------------ Announcement bar */
+.rge-announce {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 40px;
+  padding: var(--sp-2) var(--gutter);
+  background: var(--primary);
+  color: var(--on-primary);
+  text-align: center;
+}
+.rge-announce__msg {
+  margin: 0;
+  font-family: var(--font);
+  font-size: var(--fs-sm);
+  letter-spacing: var(--tracking-caps);
+  animation: rge-announce-in var(--transition-slow) var(--ease);
+}
+@keyframes rge-announce-in { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
+
+/* ------------------------------------------------------------------ Header */
+.rge-header {
+  position: sticky;
+  top: 0;
+  z-index: var(--z-header);
+  background: color-mix(in srgb, var(--bg) 78%, transparent);
+  -webkit-backdrop-filter: saturate(150%) blur(var(--blur-glass)); backdrop-filter: saturate(150%) blur(var(--blur-glass));
+  border-bottom: 1px solid transparent;
+  transition: border-color var(--transition) var(--ease), background-color var(--transition) var(--ease);
+}
+.rge-header--scrolled { border-bottom-color: var(--border); background: color-mix(in srgb, var(--bg) 92%, transparent); }
+.rge-header__bar { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-5); min-height: 72px; }
+.rge-header__brand {
+  font-family: var(--heading);
+  font-weight: 600;
+  font-size: var(--fs-xl);
+  letter-spacing: 0.01em;
+  color: var(--text);
+  text-decoration: none;
+}
+.rge-header__nav { display: flex; align-items: center; gap: var(--sp-7); }
+.rge-header__actions { display: flex; align-items: center; gap: var(--sp-1); }
+.rge-header__cart { position: relative; }
+.rge-header__cart-count {
+  position: absolute;
+  top: 6px;
+  inset-inline-end: 4px;
+  min-width: 17px;
+  height: 17px;
+  padding-inline: 4px;
+  border-radius: var(--radius-pill);
+  background: var(--primary);
+  color: var(--on-primary);
+  font-family: var(--font);
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 17px;
+  text-align: center;
+}
+.rge-header__menu-btn { display: none; }
+@media (max-width: 1024px) {
+  .rge-header__nav { display: none; }
+  .rge-header__menu-btn { display: inline-flex; }
+  .rge-header__hide-sm { display: none; }
+}
+
+.rge-nav-link {
+  position: relative;
+  padding-block: var(--sp-2);
+  color: var(--text);
+  font-family: var(--font);
+  font-size: var(--fs-sm);
+  font-weight: 500;
+  letter-spacing: var(--tracking-caps);
+  text-decoration: none;
+  transition: color var(--transition) var(--ease);
+}
+.rge-nav-link:hover, .rge-nav-link[aria-current='page'] { color: var(--primary); }
+.rge-nav-link::after {
+  content: '';
+  position: absolute;
+  inset-inline: 0;
+  bottom: -2px;
+  height: 1.5px;
+  border-radius: var(--radius-pill);
+  background: var(--gilt);
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform var(--transition) var(--ease);
+}
+.rge-nav-link:hover::after, .rge-nav-link[aria-current='page']::after { transform: scaleX(1); }
+[dir='rtl'] .rge-nav-link::after { transform-origin: right center; }
+
+/* ------------------------------------------------------------------ Footer */
+.rge-footer { margin-top: var(--section-y); padding-block: var(--sp-11) var(--sp-8); background: var(--bg-sunken); border-top: 1px solid var(--border); }
+.rge-footer__grid { display: grid; grid-template-columns: 1.6fr repeat(3, 1fr); gap: var(--sp-8); }
+.rge-footer__brand { font-family: var(--heading); font-weight: 600; font-size: var(--fs-2xl); color: var(--text); }
+.rge-footer__blurb { margin-top: var(--sp-3); color: var(--muted); font-family: var(--font); font-size: var(--fs-sm); max-width: 42ch; line-height: var(--lh); }
+.rge-footer__group-title { margin-bottom: var(--sp-4); font-family: var(--font); font-size: var(--fs-xs); font-weight: 600; letter-spacing: var(--tracking-eyebrow); text-transform: uppercase; color: var(--accent-strong); }
+.rge-footer__link { display: block; padding-block: var(--sp-2); color: var(--muted); font-family: var(--font); font-size: var(--fs-sm); text-decoration: none; transition: color var(--transition) var(--ease); }
+.rge-footer__link:hover { color: var(--primary); }
+.rge-footer__legal { display: flex; justify-content: space-between; flex-wrap: wrap; gap: var(--sp-4); margin-top: var(--sp-10); padding-top: var(--sp-6); border-top: 1px solid var(--border); color: var(--muted); font-family: var(--font); font-size: var(--fs-xs); }
+@media (max-width: 768px) { .rge-footer__grid { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 480px) { .rge-footer__grid { grid-template-columns: 1fr; } }
+
+/* ------------------------------------------------------------------ Mobile nav */
+.rge-mobilenav { position: fixed; inset: 0; z-index: var(--z-drawer); background: var(--bg); display: flex; flex-direction: column; padding: var(--sp-6) var(--gutter); animation: rge-mobilenav-in var(--transition) var(--ease); }
+@keyframes rge-mobilenav-in { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: none; } }
+.rge-mobilenav__head { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--sp-7); }
+.rge-mobilenav__link { display: block; padding-block: var(--sp-4); border-bottom: 1px solid var(--border); color: var(--text); font-family: var(--heading); font-size: var(--fs-2xl); text-decoration: none; }
+.rge-mobilenav__link:active { color: var(--primary); }
+
+/* ------------------------------------------------------------------ Overlay / Drawer */
+/* Portalled overlays (drawer, search, toast) render OUTSIDE `.sf-root`, so the theme's scoped
+   `:focus-visible` ring can't reach them. Restate a visible keyboard-focus ring here, reading the
+   engine-projected `--shadow-focus`/`--radius-sm` (inherited from <html>). WCAG 2.4.7. */
+[data-rge-portal] :focus-visible { outline: none; box-shadow: var(--shadow-focus); border-radius: var(--radius-sm); }
+.rge-overlay { position: fixed; inset: 0; z-index: var(--z-drawer); }
+.rge-overlay__scrim { position: absolute; inset: 0; background: var(--scrim); animation: rge-fade var(--transition) var(--ease); }
+@keyframes rge-fade { from { opacity: 0; } to { opacity: 1; } }
+.rge-drawer { position: absolute; inset-block: 0; width: min(440px, 92vw); display: flex; flex-direction: column; background: var(--bg); box-shadow: var(--shadow-lg); }
+.rge-drawer--end { inset-inline-end: 0; animation: rge-slide-end var(--transition) var(--ease-emphasis); }
+.rge-drawer--start { inset-inline-start: 0; animation: rge-slide-start var(--transition) var(--ease-emphasis); }
+@keyframes rge-slide-end { from { transform: translateX(100%); } to { transform: none; } }
+@keyframes rge-slide-start { from { transform: translateX(-100%); } to { transform: none; } }
+[dir='rtl'] .rge-drawer--end { animation-name: rge-slide-start; }
+[dir='rtl'] .rge-drawer--start { animation-name: rge-slide-end; }
+@media (prefers-reduced-motion: reduce) { .rge-drawer, .rge-overlay__scrim, .rge-searchoverlay__panel { animation: none; } }
+
+/* Cart drawer */
+.rge-cartdrawer__head { display: flex; align-items: center; justify-content: space-between; padding: var(--sp-5) var(--sp-6); border-bottom: 1px solid var(--border); }
+.rge-cartdrawer__empty { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: var(--sp-4); padding: var(--sp-8); }
+.rge-cartdrawer__empty-title { font-family: var(--heading); font-size: var(--fs-xl); color: var(--text); }
+.rge-cartdrawer__empty-text { color: var(--muted); font-family: var(--font); }
+.rge-cartdrawer__lines { flex: 1; overflow-y: auto; list-style: none; margin: 0; padding: var(--sp-4) var(--sp-6); display: flex; flex-direction: column; gap: var(--sp-5); }
+.rge-cartdrawer__line { display: grid; grid-template-columns: 72px 1fr auto; gap: var(--sp-4); align-items: start; }
+.rge-cartdrawer__media { aspect-ratio: 4/5; width: 72px; border-radius: var(--radius); overflow: hidden; background: var(--surface-2); }
+.rge-cartdrawer__media img { width: 100%; height: 100%; object-fit: cover; }
+.rge-cartdrawer__info { display: flex; flex-direction: column; gap: var(--sp-2); min-width: 0; }
+.rge-cartdrawer__name { font-family: var(--heading); font-size: var(--fs-md); color: var(--text); text-decoration: none; }
+.rge-cartdrawer__attrs { color: var(--muted); font-family: var(--font); font-size: var(--fs-sm); }
+.rge-cartdrawer__controls { display: flex; align-items: center; gap: var(--sp-4); flex-wrap: wrap; }
+.rge-cartdrawer__controls .rge-qty { height: 40px; }
+.rge-cartdrawer__remove { color: var(--muted); font-size: var(--fs-sm); }
+.rge-cartdrawer__price { align-self: center; }
+.rge-cartdrawer__foot { border-top: 1px solid var(--border); padding: var(--sp-6); display: flex; flex-direction: column; gap: var(--sp-3); background: var(--surface); }
+.rge-cartdrawer__subtotal { display: flex; align-items: baseline; justify-content: space-between; font-family: var(--font); }
+.rge-cartdrawer__subtotal .rge-price { font-size: var(--fs-lg); }
+.rge-cartdrawer__note { color: var(--muted); font-size: var(--fs-xs); }
+
+/* Search overlay */
+.rge-searchoverlay__panel { position: absolute; inset-inline: 0; inset-block-start: 0; background: color-mix(in srgb, var(--bg) 92%, transparent); -webkit-backdrop-filter: saturate(150%) blur(var(--blur-glass)); backdrop-filter: saturate(150%) blur(var(--blur-glass)); box-shadow: var(--shadow-lg); overflow: hidden; animation: rge-slide-down var(--transition) var(--ease-emphasis); }
+@keyframes rge-slide-down { from { transform: translateY(-100%); } to { transform: none; } }
+.rge-searchoverlay__aura { opacity: 0.35; }
+.rge-searchoverlay__inner { position: relative; z-index: 1; max-width: var(--container-narrow); margin-inline: auto; padding: clamp(24px, 6vw, 56px) var(--gutter); display: flex; flex-direction: column; gap: var(--sp-5); }
+.rge-searchoverlay__form { position: relative; display: flex; align-items: center; gap: var(--sp-3); border-bottom: 1.5px solid var(--border-strong); padding-bottom: var(--sp-3); }
+.rge-searchoverlay__icon { color: var(--accent-strong); display: inline-flex; }
+.rge-searchoverlay__input { flex: 1; border: 0; background: none; color: var(--text); font-family: var(--heading); font-size: var(--fs-2xl); }
+.rge-searchoverlay__input:focus { outline: none; }
+.rge-searchoverlay__input::placeholder { color: var(--muted); }
+.rge-searchoverlay__suggest { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-2); }
+.rge-searchoverlay__suggest-label { font-family: var(--font); font-size: var(--fs-xs); font-weight: 600; letter-spacing: var(--tracking-eyebrow); text-transform: uppercase; color: var(--muted); margin-inline-end: var(--sp-2); }
+
+/* Chip */
+.rge-chip { display: inline-flex; align-items: center; gap: var(--sp-2); padding: var(--sp-2) var(--sp-4); border-radius: var(--radius-pill); border: 1.5px solid var(--border-strong); background: var(--surface); color: var(--text); font-family: var(--font); font-size: var(--fs-sm); cursor: pointer; transition: border-color var(--transition) var(--ease), color var(--transition) var(--ease); }
+.rge-chip:hover { border-color: var(--primary); color: var(--primary); }
+
+/* ------------------------------------------------------------------ Language switcher */
+/* Rouge: pillowy pill on the porcelain surface, rouge fill when active, soft bloom on focus. */
+.rge-header__lang { margin-inline-end: var(--sp-3); }
+.rge-lang { display: inline-flex; gap: 2px; padding: 3px; border-radius: var(--radius-pill); background: var(--surface-2); }
+.rge-lang__btn {
+  padding: 4px 12px;
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--muted);
+  font-family: var(--font);
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color var(--transition) var(--ease), color var(--transition) var(--ease);
+}
+.rge-lang__btn:hover { color: var(--text); }
+.rge-lang__btn[aria-pressed='true'] { background: var(--primary); color: var(--on-primary); }
+.rge-lang__btn:focus-visible { box-shadow: var(--shadow-focus); outline: none; }
+.rge-lang__btn[lang='ar'] { font-family: var(--font-arabic); }
+@media (max-width: 900px) { .rge-header__lang { display: none; } }

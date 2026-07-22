@@ -1,0 +1,30 @@
+# Apache: Sellchase SPA (Vite build). Serves real files; all other routes → index.html for React Router.
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteBase /
+
+    # Do not rewrite direct requests to index.html
+    RewriteRule ^index\.html$ - [L]
+
+    # Existing files and directories (assets, favicon, etc.)
+    RewriteCond %{REQUEST_FILENAME} -f [OR]
+    RewriteCond %{REQUEST_FILENAME} -d
+    RewriteRule ^ - [L]
+
+    # Client-side routes
+    RewriteRule ^ index.html [L]
+</IfModule>
+
+# Long cache for hashed assets (Vite emits filenames with content hash)
+<IfModule mod_headers.c>
+    <FilesMatch "\.(js|css|woff2?|png|jpg|jpeg|gif|svg|ico|webp)$">
+        Header set Cache-Control "public, max-age=31536000, immutable"
+    </FilesMatch>
+
+    # Never cache index.html — it references hashed assets which change on each build.
+    <FilesMatch "^index\.html$">
+        Header set Cache-Control "no-store, no-cache, must-revalidate, max-age=0"
+        Header set Pragma "no-cache"
+        Header set Expires "0"
+    </FilesMatch>
+</IfModule>

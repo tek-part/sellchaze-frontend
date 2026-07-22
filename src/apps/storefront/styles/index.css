@@ -1,0 +1,129 @@
+/*
+ * Storefront design system (Theme 01 — Modern Luxury Fashion, but theme-agnostic bridge).
+ * Its OWN Tailwind v4 build + entry — fully isolated from the dashboard's `src/index.css`.
+ *
+ * The ThemeProvider writes the ACTIVE theme's tokens onto the root as `--token` custom
+ * properties at runtime. Here we bridge those into the Tailwind v4 `@theme` so storefront
+ * components use utilities (`bg-bg`, `text-ink`, `font-serif`, `shadow-e2`) that always
+ * resolve to the active theme — a theme/scheme swap is a single custom-property write.
+ * Docs source of truth: docs/themes/theme-01-modern-luxury-fashion/02-design-tokens.
+ */
+
+/*
+ * Fonts. The theme's stacks lead with licensed display faces (Söhne, Canela, Ogg) and fall
+ * back to open equivalents — we self-serve the OPEN fallbacks so the theme renders faithfully
+ * without shipping unlicensed fonts: Inter (sans), Cormorant Garamond (serif display),
+ * IBM Plex Mono (mono), Rubik (Arabic). `display=swap` avoids invisible text; Phase 9 may
+ * migrate these to self-hosted woff2 + preload for performance. Must precede all other rules.
+ */
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@400;500;600;700&family=Rubik:wght@400;500;600&display=swap');
+@import 'tailwindcss';
+
+@theme {
+  /* colour — bound to runtime engine tokens */
+  --color-ink: var(--primary);
+  --color-on-ink: var(--on-primary);
+  --color-accent: var(--accent);
+  --color-accent-ink: var(--accent-ink);
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-fg: var(--text);
+  --color-muted: var(--muted);
+  --color-hairline: var(--border);
+  --color-hairline-strong: var(--border-strong);
+  --color-sale: var(--sale);
+  --color-success: var(--success);
+  --color-danger: var(--danger);
+  --color-warning: var(--warning);
+
+  /* typography */
+  --font-serif: var(--heading);
+  --font-sans: var(--font);
+  --font-mono: var(--font-mono);
+
+  /* radius — 1:1 with the engine scale, mapped onto Tailwind's radius keys. Names that also
+   * exist as engine tokens (--radius-sm/-lg) still resolve correctly: the engine sets them
+   * inline on <html>, which shadows these :root aliases with the identical intended value. */
+  --radius-sm: var(--radius-sm); /* 0px */
+  --radius-md: var(--radius); /* 2px — the theme's base radius */
+  --radius-lg: var(--radius-lg); /* 6px */
+  --radius-full: var(--radius-pill); /* pill */
+
+  /* elevation */
+  --shadow-e1: var(--shadow-sm);
+  --shadow-e2: var(--shadow);
+  --shadow-e3: var(--shadow-lg);
+
+  /* motion */
+  --ease-silk: var(--ease);
+  --ease-in-out-silk: var(--ease-in-out);
+
+  /* breakpoints (design system: sm 480 overrides Tailwind's 640; rest match defaults) */
+  --breakpoint-sm: 30rem; /* 480px */
+}
+
+/*
+ * Base layer — theme-agnostic reset + the RTL/dark-mode/motion foundations the engine drives.
+ * The engine sets `dir` and `data-theme` on the root; these rules react to them.
+ */
+@layer base {
+  :root {
+    color-scheme: light dark;
+  }
+
+  .sf-root {
+    background-color: var(--color-bg);
+    color: var(--color-fg);
+    font-family: var(--font-sans);
+    font-size: 16px;
+    line-height: var(--lh, 1.6);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    min-height: 100dvh;
+  }
+
+  /* Arabic / RTL typography — larger line-height, no forced letter-spacing on Arabic. */
+  [dir='rtl'] .sf-root {
+    font-family: var(--font-ar, var(--font-sans));
+    line-height: 1.75;
+  }
+
+  /* Serif display for headings + prices (the theme's signature). */
+  .sf-root :is(h1, h2, h3, h4) {
+    font-family: var(--font-serif);
+    line-height: var(--lh-tight, 1.1);
+    font-weight: 500;
+  }
+
+  /* Visible focus ring — the champagne-gold signal, never removed. */
+  .sf-root :focus-visible {
+    outline: none;
+    box-shadow: var(--shadow-focus);
+  }
+
+  /* Reduced motion — the engine also exposes this; belt-and-braces at the CSS layer. */
+  @media (prefers-reduced-motion: reduce) {
+    .sf-root *,
+    .sf-root *::before,
+    .sf-root *::after {
+      animation-duration: 0.001ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.001ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+/* Uppercase tracked eyebrow — the recurring structural label (Latin only; RTL keeps natural). */
+@utility eyebrow {
+  font-family: var(--font-sans);
+  font-size: var(--fs-xs);
+  letter-spacing: var(--tracking-eyebrow);
+  text-transform: uppercase;
+  color: var(--color-muted);
+}
+[dir='rtl'] .eyebrow {
+  letter-spacing: normal;
+  text-transform: none;
+}

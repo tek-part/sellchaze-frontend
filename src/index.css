@@ -1,0 +1,271 @@
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap')
+layer(base);
+
+@import 'tailwindcss';
+
+@theme {
+  --font-sans: IBM Plex Sans, system-ui, sans-serif;
+  --font-arabic: IBM Plex Sans Arabic, IBM Plex Sans, system-ui, sans-serif;
+
+  --color-brand: #004bb4;
+  --color-brand-dark: #003a8f;
+  --color-brand-light: #e8eef9;
+
+  --color-accent: #00c0a9;
+  --color-accent-dark: #009e8c;
+  --color-accent-light: #e6faf7;
+
+  --color-surface: #f6f8fc;
+  --color-surface-card: #ffffff;
+  --color-surface-muted: #f0f4fa;
+
+  --shadow-soft:
+    0 4px 24px -4px rgba(0, 75, 180, 0.08),
+    0 2px 8px -2px rgba(15, 23, 42, 0.06);
+  --shadow-card:
+    0 1px 3px rgba(0, 75, 180, 0.06), 0 4px 16px -4px rgba(15, 23, 42, 0.05);
+}
+
+/*
+  The default border color has changed to `currentcolor` in Tailwind CSS v4,
+  so we've added these compatibility styles to make sure everything still
+  looks the same as it did with Tailwind CSS v3.
+
+  If we ever want to remove these styles, we need to add an explicit border
+  color utility to any element that depends on these defaults.
+*/
+@layer base {
+  *,
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: var(--color-gray-200, currentcolor);
+  }
+}
+
+@layer utilities {
+  /* كامل لوحة التحكم بالعربية: IBM Plex Sans Arabic (نفس ترتيب tailwind theme.extend.fontFamily.arabic) */
+  html[lang='ar'],
+  html[dir='rtl'] {
+    font-family: 'IBM Plex Sans Arabic', 'IBM Plex Sans', system-ui, sans-serif;
+  }
+
+  html[lang='ar'] body,
+  html[dir='rtl'] body,
+  html[lang='ar'] #root,
+  html[dir='rtl'] #root {
+    font-family: inherit;
+  }
+}
+
+@layer base {
+    html {
+        margin: 0;
+        min-height: 100dvh;
+    }
+
+    body {
+        margin: 0;
+        min-height: 100dvh;
+        @apply text-slate-800 antialiased;
+        /* Nested `surface.DEFAULT` does not always resolve via @apply bg-surface in PostCSS */
+        background-color: var(--color-surface);
+    }
+
+    #root {
+        min-height: 100dvh;
+    }
+
+    /* UA default for <th> is often centered; align headers to block start (LTR left / RTL right). */
+    table thead th {
+        text-align: start;
+    }
+}
+
+/* react-hot-toast: subtle brand border */
+div[data-sonner-toaster],
+div#_rht_toaster {
+    font-family: inherit;
+}
+
+/* ============================================================
+   Landing page entrance animations
+   ============================================================ */
+
+@keyframes sc-fade-up {
+    0% {
+        opacity: 0;
+        transform: translateY(18px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes sc-fade {
+    0% {
+        opacity: 0;
+    }
+    100% {
+        opacity: 1;
+    }
+}
+
+@keyframes sc-fade-left {
+    0% {
+        opacity: 0;
+        transform: translateX(-24px) scale(0.97);
+    }
+    100% {
+        opacity: 1;
+        transform: translateX(0) scale(1);
+    }
+}
+
+@keyframes sc-fade-right {
+    0% {
+        opacity: 0;
+        transform: translateX(24px) scale(0.97);
+    }
+    100% {
+        opacity: 1;
+        transform: translateX(0) scale(1);
+    }
+}
+
+@keyframes sc-fade-scale {
+    0% {
+        opacity: 0;
+        transform: scale(0.88);
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+@keyframes sc-draw {
+    to {
+        stroke-dashoffset: 0;
+    }
+}
+
+@keyframes sc-float {
+    0%, 100% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-6px);
+    }
+}
+
+@keyframes sc-caret-blink {
+    0%, 49% {
+        opacity: 1;
+    }
+    50%, 100% {
+        opacity: 0;
+    }
+}
+
+.sc-anim-fade-up {
+    opacity: 0;
+    animation: sc-fade-up 0.7s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.sc-anim-fade {
+    opacity: 0;
+    animation: sc-fade 0.8s ease-out forwards;
+}
+
+.sc-anim-fade-left {
+    opacity: 0;
+    animation: sc-fade-left 0.8s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.sc-anim-fade-right {
+    opacity: 0;
+    animation: sc-fade-right 0.8s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.sc-anim-pop {
+    opacity: 0;
+    animation: sc-fade-scale 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+.sc-anim-draw path {
+    stroke-dasharray: 800;
+    stroke-dashoffset: 800;
+    animation: sc-draw 1.6s ease-out forwards;
+}
+
+.sc-float {
+    animation: sc-float 5s ease-in-out infinite;
+}
+
+.sc-typing {
+    overflow: hidden;
+    white-space: nowrap;
+    display: inline-block;
+}
+
+.sc-caret::after {
+    content: '|';
+    margin-inline-start: 2px;
+    font-weight: 400;
+    color: var(--color-brand);
+    animation: sc-caret-blink 0.9s steps(1) infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .sc-anim-fade-up,
+    .sc-anim-fade,
+    .sc-anim-fade-left,
+    .sc-anim-fade-right,
+    .sc-anim-pop {
+        opacity: 1 !important;
+        animation: none !important;
+        transform: none !important;
+    }
+    .sc-anim-draw path {
+        stroke-dashoffset: 0 !important;
+        animation: none !important;
+    }
+    .sc-float {
+        animation: none !important;
+    }
+}
+
+/* ------------------------------------------------------------------ */
+/*  Dashboard page cascade                                             */
+/*  Every routed dashboard page reveals its top-level blocks one after */
+/*  another — the same system as the public landing page. Applied      */
+/*  globally via `.sc-page` in AppLayout (keyed per route, so it       */
+/*  replays on navigation). Targets the page root's direct children.   */
+/*  Elements already carrying an `.sc-anim-*` class (e.g. <Reveal>)    */
+/*  are skipped so they keep their own timing — no double animation.   */
+/* ------------------------------------------------------------------ */
+.sc-page > * > *:not([class*='sc-anim-']) {
+    opacity: 0;
+    animation: sc-fade-up 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.sc-page > * > *:nth-child(1):not([class*='sc-anim-']) { animation-delay: 40ms; }
+.sc-page > * > *:nth-child(2):not([class*='sc-anim-']) { animation-delay: 110ms; }
+.sc-page > * > *:nth-child(3):not([class*='sc-anim-']) { animation-delay: 180ms; }
+.sc-page > * > *:nth-child(4):not([class*='sc-anim-']) { animation-delay: 250ms; }
+.sc-page > * > *:nth-child(5):not([class*='sc-anim-']) { animation-delay: 320ms; }
+.sc-page > * > *:nth-child(6):not([class*='sc-anim-']) { animation-delay: 390ms; }
+.sc-page > * > *:nth-child(7):not([class*='sc-anim-']) { animation-delay: 460ms; }
+.sc-page > * > *:nth-child(8):not([class*='sc-anim-']) { animation-delay: 530ms; }
+.sc-page > * > *:nth-child(9):not([class*='sc-anim-']) { animation-delay: 600ms; }
+.sc-page > * > *:nth-child(n + 10):not([class*='sc-anim-']) { animation-delay: 660ms; }
+
+@media (prefers-reduced-motion: reduce) {
+    .sc-page > * > * {
+        opacity: 1 !important;
+        animation: none !important;
+        transform: none !important;
+    }
+}

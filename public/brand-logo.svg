@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 232 40" width="232" height="40" role="img" aria-label="Maison Selchase">
+  <title>Maison Selchase</title>
+
+  <!--
+    Demo storefront wordmark.
+
+    Rendered at 28px tall in the header, so the 232x40 viewBox gives a
+    comfortable horizontal lockup. Ink is the same near-black the luxury theme
+    uses for header text, so the mark sits with the nav rather than competing.
+
+    Note: XML comments cannot contain a double hyphen, so CSS custom property
+    names are written without their leading dashes here.
+  -->
+
+  <g fill="none" stroke="#14110F" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Monogram: diamond frame with an M and S -->
+    <path d="M20 3.5 L36.5 20 L20 36.5 L3.5 20 Z" stroke-width="1" opacity="0.45"/>
+    <path d="M12.6 25.6 V14.4 l3.8 5.9 3.8 -5.9 v11.2" stroke-width="1.5"/>
+    <path d="M28.2 16.2 a3.2 3.2 0 0 0 -4.9 0.7 c-0.9 1.7 0.5 3.1 2.2 3.7 c2 0.7 3.4 2 2.4 3.8 a3.2 3.2 0 0 1 -4.9 0.6" stroke-width="1.5"/>
+  </g>
+
+  <g fill="#14110F" font-family="Georgia, 'Times New Roman', serif">
+    <text x="50" y="18" font-size="15" letter-spacing="3.4">MAISON</text>
+    <text x="50" y="33" font-size="15" letter-spacing="1.9" opacity="0.6">SELCHASE</text>
+  </g>
+</svg>

@@ -1,0 +1,959 @@
+/*
+ * Theme 03 — Hearth · Home & Living · component skin (base design system).
+ *
+ * The theme package OWNS this stylesheet (imported from its index) — the engine and the app-level
+ * design system never reference it, so a different active theme brings its own skin. Every value
+ * reads a `var(--token)` projected by the engine, so a scheme/settings change restyles instantly and
+ * no literal hex/px/ms appears here. Signature: oat canvas · walnut ink · terracotta acts / sage
+ * natural · warm humanist serif + soft sans · large soft radii · warm diffuse shadow (no glow).
+ *
+ * Source of truth: docs/themes/theme-03 (04-theme-tokens, 05-component-specifications, 21-coding).
+ */
+
+/* --------------------------------------------------------------------------- Root canvas */
+.hh-root {
+  font-family: var(--font);
+  font-size: var(--fs-base);
+  line-height: var(--lh);
+  color: var(--text);
+  background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+.hh-root *,
+.hh-root *::before,
+.hh-root *::after {
+  box-sizing: border-box;
+}
+.hh-main {
+  display: block;
+  min-height: 40vh;
+}
+
+/* Focus — a single, consistent warm terracotta ring on keyboard focus. */
+.hh-root :focus-visible {
+  outline: none;
+  box-shadow: var(--shadow-focus);
+  border-radius: var(--radius-sm);
+}
+
+/* Skip link — visible on focus. */
+.hh-skip-link {
+  position: absolute;
+  inset-inline-start: var(--sp-4);
+  inset-block-start: calc(var(--sp-4) * -1);
+  z-index: var(--z-toast);
+  padding: var(--sp-2) var(--sp-4);
+  background: var(--primary);
+  color: var(--on-primary);
+  border-radius: var(--radius);
+  font-family: var(--font);
+  font-size: var(--fs-sm);
+  text-decoration: none;
+  transform: translateY(-200%);
+  transition: transform var(--transition-fast) var(--ease);
+}
+.hh-skip-link:focus {
+  transform: translateY(calc(var(--sp-4) + 100%));
+}
+
+/* --------------------------------------------------------------------------- Layout */
+.hh-container {
+  inline-size: 100%;
+  max-inline-size: var(--container);
+  margin-inline: auto;
+  padding-inline: var(--gutter);
+}
+.hh-container--narrow {
+  max-inline-size: var(--container-narrow);
+}
+.hh-container--wide {
+  max-inline-size: 1560px;
+}
+.hh-container--flush {
+  padding-inline: 0;
+}
+
+.hh-section {
+  padding-block: var(--section-y);
+}
+.hh-section--tight {
+  padding-block: clamp(40px, 5vw, 80px);
+}
+.hh-section--oat {
+  background: var(--bg);
+}
+.hh-section--sand {
+  background: var(--surface-2);
+}
+.hh-section--cream {
+  background: var(--surface);
+}
+
+/* --------------------------------------------------------------------------- Typography */
+.hh-label {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  font-family: var(--heading);
+  font-size: var(--fs-sm);
+  font-weight: 500;
+  font-style: italic;
+  letter-spacing: var(--tracking-caps);
+  color: var(--primary);
+}
+.hh-label::after {
+  content: '';
+  inline-size: var(--sp-7);
+  block-size: 1px;
+  background: var(--border-strong);
+}
+
+.hh-heading {
+  margin: 0;
+  font-family: var(--heading);
+  font-weight: 500;
+  line-height: var(--lh-tight);
+  letter-spacing: -0.01em;
+  color: var(--text);
+}
+.hh-text {
+  margin: 0;
+  font-family: var(--font);
+  line-height: var(--lh);
+  color: var(--text);
+}
+.hh-text--muted {
+  color: var(--muted);
+}
+
+/* --------------------------------------------------------------------------- Buttons */
+.hh-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-2);
+  min-block-size: var(--tap);
+  block-size: 48px;
+  padding-inline: var(--sp-7);
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+  font-family: var(--font);
+  font-size: var(--fs-sm);
+  font-weight: 500;
+  line-height: 1;
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    transform var(--transition-fast) var(--ease),
+    background-color var(--transition) var(--ease),
+    border-color var(--transition) var(--ease),
+    color var(--transition) var(--ease),
+    box-shadow var(--transition) var(--ease);
+}
+.hh-btn:active:not(:disabled) {
+  transform: scale(0.99);
+}
+.hh-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.hh-btn--sm {
+  block-size: 38px;
+  padding-inline: var(--sp-5);
+}
+.hh-btn--md {
+  block-size: 48px;
+}
+.hh-btn--lg {
+  block-size: 56px;
+  padding-inline: var(--sp-8);
+  font-size: var(--fs-base);
+}
+.hh-btn--block {
+  inline-size: 100%;
+}
+.hh-btn__label {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+}
+.hh-btn__icon {
+  display: inline-flex;
+  font-size: var(--icon-sm);
+}
+.hh-btn--loading .hh-btn__label {
+  opacity: 0.6;
+}
+
+/* Primary — terracotta fill, warm lift on hover. */
+.hh-btn--primary {
+  background: var(--primary);
+  color: var(--on-primary);
+}
+.hh-btn--primary:hover:not(:disabled) {
+  box-shadow: var(--shadow);
+  transform: translateY(-1px);
+}
+/* Accent — sage fill (natural / secondary CTAs). */
+.hh-btn--accent {
+  background: var(--accent);
+  color: var(--on-accent, var(--on-primary));
+}
+.hh-btn--accent:hover:not(:disabled) {
+  box-shadow: var(--shadow);
+  transform: translateY(-1px);
+}
+/* Secondary — warm surface + hairline. */
+.hh-btn--secondary {
+  background: var(--surface-2);
+  color: var(--text);
+  border-color: var(--border);
+}
+.hh-btn--secondary:hover:not(:disabled) {
+  border-color: var(--border-strong);
+}
+/* Outline — transparent, strong hairline, terracotta ink on hover. */
+.hh-btn--outline {
+  background: transparent;
+  color: var(--text);
+  border-color: var(--border-strong);
+}
+.hh-btn--outline:hover:not(:disabled) {
+  color: var(--primary);
+  border-color: var(--primary);
+}
+/* Ghost — text only. */
+.hh-btn--ghost {
+  background: transparent;
+  color: var(--primary);
+}
+.hh-btn--ghost:hover:not(:disabled) {
+  background: var(--surface-2);
+}
+/* Danger. */
+.hh-btn--danger {
+  background: var(--danger);
+  color: var(--on-primary);
+}
+
+/* --------------------------------------------------------------------------- Text link */
+.hh-link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  font-family: var(--font);
+  font-size: var(--fs-sm);
+  font-weight: 500;
+  color: var(--primary);
+  text-decoration: none;
+}
+.hh-link__label {
+  border-block-end: 1px solid transparent;
+  transition: border-color var(--transition) var(--ease);
+}
+.hh-link:hover .hh-link__label {
+  border-block-end-color: var(--primary);
+}
+.hh-link__arrow {
+  display: inline-flex;
+  transition: transform var(--transition) var(--ease);
+}
+.hh-link--arrow:hover .hh-link__arrow {
+  transform: translateX(3px);
+}
+
+/* --------------------------------------------------------------------------- Section head */
+.hh-section-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--sp-6);
+  margin-block-end: var(--sp-8);
+}
+.hh-section-head--centered {
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+.hh-section-head__group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+}
+.hh-section-head__title {
+  margin: 0;
+  font-family: var(--heading);
+  font-weight: 500;
+  font-size: var(--fs-2xl);
+  line-height: var(--lh-tight);
+  color: var(--text);
+}
+.hh-section-head__intro {
+  margin: 0;
+  max-inline-size: 60ch;
+  color: var(--muted);
+  font-size: var(--fs-md);
+}
+
+/* --------------------------------------------------------------------------- Image fallback */
+.hh-img-fallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: 100%;
+  block-size: 100%;
+  min-block-size: 120px;
+  background: var(--surface-2);
+  border-radius: var(--radius-lg);
+  color: var(--muted);
+  font-family: var(--heading);
+  font-size: var(--fs-2xl);
+}
+
+/* --------------------------------------------------------------------------- Spinner */
+.hh-spinner {
+  display: inline-block;
+  inline-size: 1em;
+  block-size: 1em;
+  border: 2px solid color-mix(in srgb, currentColor 30%, transparent);
+  border-block-start-color: currentColor;
+  border-radius: var(--radius-pill);
+  animation: hh-spin 0.7s linear infinite;
+}
+.hh-spinner--md {
+  font-size: var(--icon-md);
+}
+@keyframes hh-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* --------------------------------------------------------------------------- Visually hidden */
+.hh-visually-hidden {
+  position: absolute !important;
+  inline-size: 1px;
+  block-size: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* --------------------------------------------------------------------------- IconButton */
+.hh-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: var(--tap);
+  block-size: var(--tap);
+  border: 1px solid transparent;
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--text);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: background-color var(--transition) var(--ease), color var(--transition) var(--ease),
+    border-color var(--transition) var(--ease);
+}
+.hh-icon-btn--sm {
+  inline-size: 38px;
+  block-size: 38px;
+}
+.hh-icon-btn__glyph {
+  display: inline-flex;
+  font-size: var(--icon-md);
+}
+.hh-icon-btn--ghost:hover {
+  background: var(--surface-2);
+  color: var(--primary);
+}
+.hh-icon-btn--filled {
+  background: var(--surface-2);
+  border-color: var(--border);
+}
+.hh-icon-btn--filled:hover {
+  border-color: var(--border-strong);
+}
+.hh-icon-btn--accent {
+  background: color-mix(in srgb, var(--primary) 14%, transparent);
+  color: var(--primary);
+}
+
+/* --------------------------------------------------------------------------- Price */
+.hh-price {
+  display: inline-flex;
+  align-items: baseline;
+  gap: var(--sp-2);
+  font-family: var(--font);
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+}
+.hh-price--sm {
+  font-size: var(--fs-sm);
+}
+.hh-price--base {
+  font-size: var(--fs-base);
+}
+.hh-price--lg {
+  font-size: var(--fs-xl);
+  font-weight: 500;
+}
+.hh-price--sale .hh-price__current {
+  color: var(--sale);
+  font-weight: 600;
+}
+.hh-price__was {
+  color: var(--muted);
+  text-decoration: line-through;
+  font-size: 0.85em;
+}
+
+/* --------------------------------------------------------------------------- Tag */
+.hh-tag {
+  display: inline-flex;
+  align-items: center;
+  block-size: 22px;
+  padding-inline: var(--sp-3);
+  border-radius: var(--radius-pill);
+  font-family: var(--font);
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  letter-spacing: var(--tracking-caps);
+  white-space: nowrap;
+}
+.hh-tag--neutral {
+  background: var(--surface-3, var(--surface-2));
+  color: var(--muted);
+}
+.hh-tag--soft.hh-tag--sale {
+  background: color-mix(in srgb, var(--sale) 16%, transparent);
+  color: var(--sale);
+}
+.hh-tag--soft.hh-tag--sage {
+  background: color-mix(in srgb, var(--accent) 18%, transparent);
+  color: var(--accent-ink);
+}
+.hh-tag--soft.hh-tag--info {
+  background: color-mix(in srgb, var(--info) 16%, transparent);
+  color: var(--info);
+}
+.hh-tag--soft.hh-tag--warning {
+  background: color-mix(in srgb, var(--warning) 18%, transparent);
+  color: var(--warning);
+}
+.hh-tag--soft.hh-tag--success {
+  background: color-mix(in srgb, var(--success) 16%, transparent);
+  color: var(--success);
+}
+
+/* --------------------------------------------------------------------------- Rating */
+.hh-rating {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  font-size: var(--fs-sm);
+  color: var(--muted);
+}
+.hh-rating__stars {
+  display: inline-flex;
+  color: var(--border-strong);
+  letter-spacing: 1px;
+}
+.hh-rating__star--on {
+  color: var(--warning);
+}
+.hh-rating--compact .hh-rating__star--on {
+  color: var(--warning);
+}
+.hh-rating__value {
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+}
+.hh-rating__count {
+  font-variant-numeric: tabular-nums;
+}
+
+/* --------------------------------------------------------------------------- Skeleton */
+.hh-skeleton {
+  display: block;
+  background: linear-gradient(
+    100deg,
+    var(--surface-2) 30%,
+    color-mix(in srgb, var(--surface) 60%, var(--surface-2)) 50%,
+    var(--surface-2) 70%
+  );
+  background-size: 200% 100%;
+  border-radius: var(--radius-sm);
+  animation: hh-shimmer 1.4s var(--ease-linear, linear) infinite;
+}
+.hh-skeleton--media {
+  inline-size: 100%;
+  border-radius: var(--radius-lg);
+}
+.hh-skeleton--line {
+  block-size: 0.9em;
+  margin-block: 0.25em;
+}
+.hh-skeleton--price {
+  block-size: 1.1em;
+}
+@keyframes hh-shimmer {
+  to {
+    background-position: -200% 0;
+  }
+}
+
+/* --------------------------------------------------------------------------- ProductCard */
+.hh-product-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+}
+.hh-product-card__media {
+  position: relative;
+  display: block;
+  aspect-ratio: 4 / 5;
+  overflow: clip;
+  border-radius: var(--radius-lg);
+  background: var(--surface-2);
+}
+.hh-product-card__img {
+  inline-size: 100%;
+  block-size: 100%;
+  object-fit: cover;
+  transition: transform var(--transition-slow) var(--ease);
+}
+.hh-product-card:hover .hh-product-card__img {
+  transform: scale(1.03);
+}
+.hh-product-card__tags {
+  position: absolute;
+  inset-block-start: var(--sp-3);
+  inset-inline-start: var(--sp-3);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  align-items: flex-start;
+}
+.hh-product-card__save {
+  position: absolute;
+  inset-block-start: var(--sp-2);
+  inset-inline-end: var(--sp-2);
+  background: color-mix(in srgb, var(--surface) 80%, transparent);
+  backdrop-filter: blur(4px);
+}
+.hh-product-card__body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+}
+.hh-product-card__swatches {
+  display: flex;
+  gap: var(--sp-2);
+  margin: 0 0 var(--sp-1);
+  padding: 0;
+  list-style: none;
+  align-items: center;
+}
+.hh-product-card__swatch {
+  inline-size: 16px;
+  block-size: 16px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--border);
+}
+.hh-product-card__swatch-more {
+  font-size: var(--fs-xs);
+  color: var(--muted);
+}
+.hh-product-card__vendor {
+  margin: 0;
+  font-size: var(--fs-xs);
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-caps);
+}
+.hh-product-card__title {
+  margin: 0;
+  font-family: var(--font);
+  font-size: var(--fs-md);
+  font-weight: 500;
+  line-height: 1.35;
+}
+.hh-product-card__title a {
+  color: var(--text);
+  text-decoration: none;
+}
+.hh-product-card__title a::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+}
+.hh-product-card__meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-3);
+}
+.hh-product-card--compact .hh-product-card__title {
+  font-size: var(--fs-sm);
+}
+
+/* --------------------------------------------------------------------------- CategoryCard */
+.hh-category-card {
+  position: relative;
+  display: block;
+  border-radius: var(--radius-lg);
+  overflow: clip;
+  text-decoration: none;
+  aspect-ratio: 4 / 5;
+  background: var(--surface-2);
+}
+.hh-category-card__media,
+.hh-category-card__img {
+  position: absolute;
+  inset: 0;
+  inline-size: 100%;
+  block-size: 100%;
+}
+.hh-category-card__img {
+  object-fit: cover;
+  transition: transform var(--transition-slow) var(--ease);
+}
+.hh-category-card:hover .hh-category-card__img {
+  transform: scale(1.04);
+}
+.hh-category-card__overlay {
+  position: absolute;
+  inset-block-end: 0;
+  inset-inline: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--sp-5);
+  background: linear-gradient(to top, var(--scrim), transparent);
+}
+.hh-category-card__title {
+  font-family: var(--heading);
+  font-size: var(--fs-xl);
+  font-weight: 500;
+  color: var(--on-primary);
+}
+.hh-category-card__meta {
+  font-size: var(--fs-sm);
+  color: color-mix(in srgb, var(--on-primary) 82%, transparent);
+}
+
+/* --------------------------------------------------------------------------- Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .hh-root *,
+  .hh-root *::before,
+  .hh-root *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* --------------------------------------------------------------------------- EmptyState */
+.hh-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-3);
+  padding-block: var(--sp-11);
+  text-align: center;
+}
+.hh-state__art {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: 64px;
+  block-size: 64px;
+  border-radius: var(--radius-pill);
+  background: var(--surface-2);
+  color: var(--accent);
+  font-size: var(--fs-2xl);
+  margin-block-end: var(--sp-2);
+}
+.hh-state__title {
+  margin: 0;
+  font-family: var(--heading);
+  font-size: var(--fs-2xl);
+  color: var(--text);
+}
+.hh-state__text {
+  margin: 0;
+  max-inline-size: 44ch;
+  color: var(--muted);
+}
+.hh-state__actions {
+  margin-block-start: var(--sp-3);
+  display: flex;
+  gap: var(--sp-3);
+}
+
+/* --------------------------------------------------------------------------- WishlistButton */
+.hh-wishlist-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: var(--tap);
+  block-size: var(--tap);
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--text);
+  cursor: pointer;
+  transition: color var(--transition) var(--ease), background-color var(--transition) var(--ease);
+}
+.hh-wishlist-btn--sm {
+  inline-size: 38px;
+  block-size: 38px;
+}
+.hh-wishlist-btn__glyph {
+  display: inline-flex;
+  font-size: var(--icon-md);
+}
+.hh-wishlist-btn:hover {
+  background: var(--surface-2);
+  color: var(--primary);
+}
+.hh-wishlist-btn--saved {
+  color: var(--primary);
+}
+.hh-wishlist-btn--saved .hh-wishlist-btn__glyph svg {
+  fill: var(--primary);
+}
+
+/* --------------------------------------------------------------------------- HorizontalProductCard */
+.hh-hcard {
+  display: flex;
+  gap: var(--sp-4);
+}
+.hh-hcard__media {
+  flex: none;
+  inline-size: 110px;
+  aspect-ratio: 4 / 5;
+  border-radius: var(--radius);
+  overflow: clip;
+  background: var(--surface-2);
+}
+.hh-hcard__img {
+  inline-size: 100%;
+  block-size: 100%;
+  object-fit: cover;
+}
+.hh-hcard__body {
+  flex: 1;
+  display: flex;
+  justify-content: space-between;
+  gap: var(--sp-4);
+  min-inline-size: 0;
+}
+.hh-hcard__info {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  min-inline-size: 0;
+}
+.hh-hcard__title {
+  margin: 0;
+  font-family: var(--font);
+  font-size: var(--fs-md);
+  font-weight: 500;
+}
+.hh-hcard__title a {
+  color: var(--text);
+  text-decoration: none;
+}
+.hh-hcard__meta {
+  font-size: var(--fs-sm);
+  color: var(--muted);
+}
+.hh-hcard__actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: var(--sp-3);
+}
+
+/* --------------------------------------------------------------------------- Fields */
+.hh-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+}
+.hh-field__label {
+  font-family: var(--font);
+  font-size: var(--fs-sm);
+  font-weight: 500;
+  color: var(--text);
+}
+.hh-field__req {
+  color: var(--muted);
+  font-weight: 400;
+}
+.hh-field__help {
+  margin: 0;
+  font-size: var(--fs-xs);
+  color: var(--muted);
+}
+.hh-field__error {
+  margin: 0;
+  font-size: var(--fs-xs);
+  color: var(--danger);
+}
+.hh-field--error .hh-input {
+  border-color: var(--danger);
+}
+.hh-textarea {
+  min-block-size: 120px;
+  padding-block: var(--sp-3);
+  resize: vertical;
+  line-height: var(--lh);
+}
+.hh-select {
+  position: relative;
+  display: flex;
+}
+.hh-select__control {
+  inline-size: 100%;
+  min-block-size: 48px;
+  padding-inline: var(--sp-4) var(--sp-8);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--text);
+  font-family: var(--font);
+  font-size: var(--fs-base);
+  appearance: none;
+  cursor: pointer;
+}
+.hh-select__control:focus-visible {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: var(--shadow-focus);
+}
+.hh-select__chevron {
+  position: absolute;
+  inset-inline-end: var(--sp-4);
+  inset-block: 0;
+  display: flex;
+  align-items: center;
+  color: var(--muted);
+  pointer-events: none;
+}
+.hh-checkbox {
+  display: inline-flex;
+  align-items: flex-start;
+  gap: var(--sp-3);
+  cursor: pointer;
+  font-size: var(--fs-sm);
+  color: var(--text);
+}
+.hh-checkbox__input {
+  position: absolute;
+  opacity: 0;
+  inline-size: 1px;
+  block-size: 1px;
+}
+.hh-checkbox__box {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: 22px;
+  block-size: 22px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: transparent;
+  font-size: 13px;
+  transition: background-color var(--transition) var(--ease), border-color var(--transition) var(--ease);
+}
+.hh-checkbox__input:checked + .hh-checkbox__box {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: var(--on-primary);
+}
+.hh-checkbox__input:focus-visible + .hh-checkbox__box {
+  box-shadow: var(--shadow-focus);
+}
+
+/* --------------------------------------------------------------------------- Divider / Chip */
+.hh-divider {
+  border: 0;
+  block-size: 1px;
+  background: var(--border);
+  margin-block: var(--sp-7);
+}
+.hh-divider--tight {
+  margin-block: var(--sp-4);
+}
+.hh-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  min-block-size: 36px;
+  padding-inline: var(--sp-4);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pill);
+  background: var(--surface);
+  color: var(--text);
+  font-family: var(--font);
+  font-size: var(--fs-sm);
+  text-decoration: none;
+  cursor: pointer;
+  transition: border-color var(--transition) var(--ease), background-color var(--transition) var(--ease);
+}
+.hh-chip:hover {
+  border-color: var(--border-strong);
+}
+.hh-chip--selected {
+  border-color: var(--primary);
+  background: color-mix(in srgb, var(--primary) 10%, transparent);
+  color: var(--primary-ink, var(--primary));
+}
+.hh-chip__remove {
+  border: 0;
+  background: transparent;
+  color: currentColor;
+  cursor: pointer;
+  font-size: var(--fs-xs);
+  padding: 0;
+  line-height: 1;
+}
+
+/* --------------------------------------------------------------------------- Reveal (motion) */
+.hh-reveal {
+  opacity: 0;
+  transform: translateY(16px);
+  transition: opacity var(--transition-slow) var(--ease), transform var(--transition-slow) var(--ease);
+  will-change: opacity, transform;
+}
+.hh-reveal--in {
+  opacity: 1;
+  transform: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .hh-reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}
+
+/* Error variant — shares the empty-state block; only the message takes the danger colour, so a
+   failure reads as calm and recoverable rather than alarming. */
+.hh-state--error .hh-state__text { color: var(--danger); }
+.hh-state__code { font-family: var(--heading); font-size: clamp(56px, 12vw, 104px); line-height: 1; color: var(--primary); }

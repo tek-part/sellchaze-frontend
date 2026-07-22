@@ -1,0 +1,148 @@
+/*
+ * Arabic typography and RTL corrections.
+ *
+ * App-level, like editorial.css and company.css, because it applies to the shared `.sf-*` layer
+ * every theme falls back to. Each theme keeps its own Latin typeface; only the Arabic stack and the
+ * direction-dependent geometry live here.
+ *
+ * Most layout needs NO correction: the codebase already uses CSS logical properties
+ * (margin-inline, inset-inline, padding-block) throughout, which flip automatically with `dir`.
+ * What genuinely needs attention is the narrow set of things logical properties cannot fix —
+ * typography metrics, glyphs that encode a direction, and transforms.
+ */
+
+/* ------------------------------------------------------------------ Arabic type stack */
+:root {
+  /*
+   * IBM Plex Sans Arabic leads: it has true multi-weight support (300–700), was designed alongside
+   * a Latin companion so mixed runs stay visually consistent, and its counters hold up at the small
+   * sizes used for prices and metadata. Cairo and Tajawal follow as widely-installed fallbacks,
+   * then Noto Sans Arabic as the near-universal backstop.
+   */
+  --font-arabic: 'IBM Plex Sans Arabic', 'Cairo', 'Tajawal', 'Noto Sans Arabic', 'Segoe UI', system-ui, sans-serif;
+}
+
+/*
+ * Arabic script has no capitals and taller ascenders/descenders than Latin, so the Latin metrics
+ * every theme sets would render it cramped. These adjust the metrics without touching the themes'
+ * colour, spacing or scale — each theme keeps its own identity, in Arabic.
+ */
+/*
+ * Override the TOKENS, not the selectors.
+ *
+ * Every theme rule reads `var(--font)` / `var(--heading)`, and those rules are more specific than
+ * any blanket element selector could be — an earlier attempt to set font-family on descendants
+ * simply lost to `.hh-header__nav-link { font-family: var(--font) }`. Redefining the variables on
+ * the root means every existing rule picks up Arabic with no per-theme edits, and a new theme
+ * inherits it automatically.
+ *
+ * Each theme keeps its own Latin faces for English; only the Arabic view is remapped.
+ */
+[dir='rtl'] .sf-root {
+  --font: var(--font-arabic);
+  --heading: var(--font-arabic);
+  --font-mono: var(--font-arabic);
+}
+
+[dir='rtl'] .sf-root {
+  /* Arabic needs more leading than Latin at the same size to stay readable. */
+  line-height: 1.85;
+  /* letter-spacing breaks Arabic: it separates glyphs that must remain joined. */
+  letter-spacing: normal;
+}
+
+/*
+ * Headings in the themes use display serifs and tracking tuned for Latin. Arabic has no serif/sans
+ * distinction in that sense and no uppercase, so tracking and transforms are neutralised rather
+ * than mirrored.
+ */
+[dir='rtl'] .sf-root h1,
+[dir='rtl'] .sf-root h2,
+[dir='rtl'] .sf-root h3,
+[dir='rtl'] .sf-root h4,
+[dir='rtl'] .sf-root .sf-page-head__title,
+[dir='rtl'] .sf-root .sf-coheading,
+[dir='rtl'] .sf-root .sf-article__title,
+[dir='rtl'] .sf-root .sf-prose__h2 {
+  font-family: var(--font-arabic);
+  line-height: 1.5;
+  letter-spacing: normal;
+}
+
+/* Eyebrows and small caps: uppercase is meaningless in Arabic and tracking is harmful. */
+[dir='rtl'] .sf-root .sf-eyebrow,
+[dir='rtl'] .sf-root .sf-postcard__cat,
+[dir='rtl'] .sf-root .sf-article__cat,
+[dir='rtl'] .sf-root .sf-blogside__title,
+[dir='rtl'] .sf-root .sf-toc__title,
+[dir='rtl'] .sf-root .sf-share__title,
+[dir='rtl'] .sf-root .sf-coperson__role,
+[dir='rtl'] .sf-root .sf-prevnext__label,
+[dir='rtl'] .sf-root .sf-copanel__meta dt,
+[dir='rtl'] .sf-root .sf-codept__meta dt {
+  text-transform: none;
+  letter-spacing: normal;
+}
+
+/* Prose measure: Arabic sets denser per character, so a Latin 68ch column runs too long. */
+[dir='rtl'] .sf-root .sf-prose { max-inline-size: 60ch; }
+[dir='rtl'] .sf-root .sf-coprose { max-inline-size: 56ch; }
+[dir='rtl'] .sf-root .sf-prose__p { line-height: 1.95; }
+
+/* ------------------------------------------------------------------ direction-encoding glyphs */
+
+/*
+ * Characters that POINT. Logical properties move a chevron to the correct side but cannot turn it
+ * around, so it ends up pointing away from the thing it refers to. These are the elements whose
+ * content is a literal arrow or slash.
+ */
+[dir='rtl'] .sf-crumbs li + li::before { content: '\\\\'; }
+
+/* Pagination prev/next render text chevrons; mirror them so "previous" still points backwards. */
+[dir='rtl'] .sf-page > span[aria-hidden] { display: inline-block; transform: scaleX(-1); }
+
+/*
+ * Icon-only affordances that mean "onward" or "back". Mirrored as a group rather than per-theme, so
+ * a new theme inherits correct behaviour without repeating the rule.
+ */
+[dir='rtl'] .sf-root [data-direction-icon] { transform: scaleX(-1); }
+
+/* ------------------------------------------------------------------ numerals */
+
+/*
+ * Prices, counts and dates stay in Western Arabic numerals (1234), which is the norm across Gulf
+ * and Levantine ecommerce and what customers expect on an invoice. Tabular figures keep columns
+ * aligned; `direction: ltr` on the number itself stops a currency symbol jumping to the wrong end.
+ */
+[dir='rtl'] .sf-root .sf-price,
+[dir='rtl'] .sf-root .sf-num,
+[dir='rtl'] .sf-root .vlt-num,
+[dir='rtl'] .sf-root .sf-blogside__count,
+[dir='rtl'] .sf-root .sf-costat__value {
+  font-variant-numeric: tabular-nums;
+  direction: ltr;
+  unicode-bidi: isolate;
+}
+
+/* ------------------------------------------------------------------ language switcher */
+.sf-lang { display: inline-flex; gap: 2px; border: 1px solid var(--border); border-radius: var(--radius-pill, 999px); padding: 2px; }
+.sf-lang__btn {
+  padding: 4px 10px;
+  border: 0;
+  border-radius: var(--radius-pill, 999px);
+  background: transparent;
+  color: var(--muted);
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color var(--transition) var(--ease), color var(--transition) var(--ease);
+}
+.sf-lang__btn:hover { color: var(--text); }
+.sf-lang__btn[aria-pressed='true'] { background: var(--primary); color: var(--on-primary); }
+.sf-lang__btn:focus-visible { outline: 2px solid var(--accent, var(--primary)); outline-offset: 1px; }
+/* The Arabic option renders in the Arabic face even while the page is still English. */
+.sf-lang__btn[lang='ar'] { font-family: var(--font-arabic); }
+
+@media (prefers-reduced-motion: reduce) {
+  .sf-lang__btn { transition: none; }
+}

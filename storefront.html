@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/png" href="/icon.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="light dark" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <!--
+      Arabic face. display=swap so text is readable immediately in a fallback rather than invisible
+      while the webfont downloads — which matters more in Arabic, where the system fallback is often
+      a poor match and a blank paragraph is the worse trade.
+    -->
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&display=swap"
+    />
+    <title>Store — Modern Luxury Fashion</title>
+  </head>
+  <body>
+    <div id="storefront-root"></div>
+    <script type="module" src="/src/apps/storefront/main.tsx"></script>
+  </body>
+</html>

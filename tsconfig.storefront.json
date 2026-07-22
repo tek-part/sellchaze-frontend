@@ -1,0 +1,29 @@
+{
+  "//": "Strict TypeScript config SCOPED to the storefront app + shared layer only. The existing dashboard (JSX) is untouched — Vite/esbuild still transpiles it. Type-check with: npx tsc -p tsconfig.storefront.json --noEmit",
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "jsx": "react-jsx",
+    "useDefineForClassFields": true,
+
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "noImplicitOverride": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "forceConsistentCasingInFileNames": true,
+
+    "isolatedModules": true,
+    "esModuleInterop": true,
+    "resolveJsonModule": true,
+    "skipLibCheck": true,
+    "allowJs": false,
+    "noEmit": true,
+
+    "types": ["vite/client"]
+  },
+  "include": ["src/apps/storefront", "src/shared"]
+}
