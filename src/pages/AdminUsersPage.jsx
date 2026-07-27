@@ -12,7 +12,7 @@ import ConfirmDialog from '../components/ConfirmDialog';
 import { exportRowsToExcel } from '../utils/exportExcel';
 import { fetchAllPages } from '../utils/fetchAllPages';
 import { impersonateUserId } from '../utils/impersonationApi';
-import { HiOutlineClock, HiOutlineSignal } from 'react-icons/hi2';
+import { HiOutlineClock, HiOutlineSignal, HiOutlinePlus } from 'react-icons/hi2';
 
 function unwrapUser(payload) {
     if (!payload) {
@@ -271,24 +271,36 @@ export default function AdminUsersPage() {
                         </div>
                     ) : null}
                 </div>
-                {canViewMonitoring ? (
-                    <div className="flex items-center gap-2">
-                        <Link
-                            to="/admin/monitoring/live"
-                            className="inline-flex h-10 items-center gap-1 rounded-xl border border-slate-200 px-3 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+                <div className="flex flex-wrap items-center gap-2">
+                    {!pendingTab && canCreateUser ? (
+                        <button
+                            type="button"
+                            onClick={() => navigate('/admin/users/new')}
+                            className="inline-flex h-10 items-center gap-1.5 rounded-xl bg-brand px-4 text-sm font-semibold text-white shadow-xs transition hover:bg-brand-dark"
                         >
-                            <HiOutlineSignal className="h-4 w-4" />
-                            {t('nav_monitoring_live')}
-                        </Link>
-                        <Link
-                            to="/admin/monitoring/sessions"
-                            className="inline-flex h-10 items-center gap-1 rounded-xl border border-slate-200 px-3 text-xs font-semibold text-slate-700 hover:bg-slate-50"
-                        >
-                            <HiOutlineClock className="h-4 w-4" />
-                            {t('monitoring_view_all_sessions')}
-                        </Link>
-                    </div>
-                ) : null}
+                            <HiOutlinePlus className="h-4 w-4" aria-hidden />
+                            {t('staff_add_user')}
+                        </button>
+                    ) : null}
+                    {canViewMonitoring ? (
+                        <>
+                            <Link
+                                to="/admin/monitoring/live"
+                                className="inline-flex h-10 items-center gap-1 rounded-xl border border-slate-200 px-3 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+                            >
+                                <HiOutlineSignal className="h-4 w-4" />
+                                {t('nav_monitoring_live')}
+                            </Link>
+                            <Link
+                                to="/admin/monitoring/sessions"
+                                className="inline-flex h-10 items-center gap-1 rounded-xl border border-slate-200 px-3 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+                            >
+                                <HiOutlineClock className="h-4 w-4" />
+                                {t('monitoring_view_all_sessions')}
+                            </Link>
+                        </>
+                    ) : null}
+                </div>
             </div>
             {err && (
                 <p className="rounded-lg border border-red-100 bg-red-50 px-3 py-2 text-sm text-red-700">{err}</p>
@@ -305,8 +317,6 @@ export default function AdminUsersPage() {
                     onExportCurrent={handleExportCurrent}
                     onExportAll={handleExportAll}
                     exportDisabled={loading}
-                    onCreate={pendingTab || !canCreateUser ? undefined : () => navigate('/admin/users/new')}
-                    createLabel={t('staff_add_user')}
                     selectedCount={selected.size}
                     onBulkDelete={
                         canBulkDelete

@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import api from '../api/client';
 import PaginationBar from '../components/table/PaginationBar';
 import TableLoadingOverlay from '../components/table/TableLoadingOverlay';
+import SearchableSelect from '../components/ui/SearchableSelect';
 
 function warehouseLabel(w, lang) {
     if (!w) {
@@ -95,17 +96,17 @@ export default function StockTransfersPage() {
             <div className="flex justify-end">
                 <label className="flex items-center gap-2 text-sm text-slate-600">
                     {t('table_per_page')}
-                    <select
+                    <SearchableSelect
                         value={perPage}
                         onChange={(e) => setPerPage(Number(e.target.value))}
-                        className="rounded-lg border border-slate-200 px-2 py-1"
+                        className="w-24"
                     >
                         {[15, 30, 50, 100].map((n) => (
                             <option key={n} value={n}>
                                 {n}
                             </option>
                         ))}
-                    </select>
+                    </SearchableSelect>
                 </label>
             </div>
 

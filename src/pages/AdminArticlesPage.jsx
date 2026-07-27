@@ -10,6 +10,7 @@ import {
     HiOutlineEyeSlash,
 } from 'react-icons/hi2';
 import api from '../api/client';
+import SearchableSelect from '../components/ui/SearchableSelect';
 import { useDebounced } from '../hooks/useDebounced';
 import ConfirmDialog from '../components/ConfirmDialog';
 
@@ -96,18 +97,18 @@ export default function AdminArticlesPage() {
                     placeholder={t('search', 'Search')}
                     className="min-w-64 flex-1 rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-brand focus:outline-hidden"
                 />
-                <select
+                <SearchableSelect
                     value={status}
                     onChange={(e) => {
                         setStatus(e.target.value);
                         setPage(1);
                     }}
-                    className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                    className="w-full sm:w-56"
                 >
                     <option value="">{t('all', 'All')}</option>
                     <option value="published">{t('published', 'Published')}</option>
                     <option value="draft">{t('draft', 'Draft')}</option>
-                </select>
+                </SearchableSelect>
             </div>
 
             {err ? (

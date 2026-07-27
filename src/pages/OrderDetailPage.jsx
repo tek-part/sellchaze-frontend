@@ -28,6 +28,7 @@ import {
 } from 'react-icons/hi2';
 import api from '../api/client';
 import ConfirmDialog from '../components/ConfirmDialog';
+import SearchableSelect from '../components/ui/SearchableSelect';
 
 function unwrap(o) {
     return o?.data ?? o;
@@ -1148,17 +1149,17 @@ export default function OrderDetailPage() {
                                         <label className="block text-[11px] font-semibold uppercase tracking-wide text-slate-500">
                                             {t('col_wigpleasure_store_status')}
                                         </label>
-                                        <select
+                                        <SearchableSelect
                                             value={wigpleasureStoreDraft}
                                             onChange={(e) => setWigpleasureStoreDraft(e.target.value)}
-                                            className="w-full max-w-md rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-xs focus:border-brand focus:outline-hidden focus:ring-2 focus:ring-brand/20"
+                                            className="w-full max-w-md"
                                         >
                                             {WIGPLEASURE_STORE_STATUSES.map((s) => (
                                                 <option key={s} value={s}>
                                                     {t(`wigpleasure_store_status_${s}`)}
                                                 </option>
                                             ))}
-                                        </select>
+                                        </SearchableSelect>
                                         {wigpleasureStoreDraft === 'canceled' ||
                                         wigpleasureStoreDraft === 'refunded' ? (
                                             <div className="pt-1">
@@ -1580,10 +1581,10 @@ export default function OrderDetailPage() {
                                                 <label className="block text-xs font-semibold uppercase tracking-wide text-slate-500">
                                                     {t('order_delivery_company')}
                                                 </label>
-                                                <select
+                                                <SearchableSelect
                                                     value={deliveryCompanyId}
                                                     onChange={(e) => setDeliveryCompanyId(e.target.value)}
-                                                    className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-xs focus:border-brand focus:outline-hidden focus:ring-2 focus:ring-brand/20"
+                                                    className="mt-1.5 w-full"
                                                     required
                                                 >
                                                     <option value="">{t('order_delivery_select_placeholder')}</option>
@@ -1592,23 +1593,23 @@ export default function OrderDetailPage() {
                                                             {c.name || c.code || c.id}
                                                         </option>
                                                     ))}
-                                                </select>
+                                                </SearchableSelect>
                                             </div>
                                             {supplierTargetDelivery?.id != null ? (
                                                 <div className="sm:col-span-2">
                                                     <label className="block text-xs font-semibold uppercase tracking-wide text-slate-500">
                                                         {t('order_delivery_status_label')}
                                                     </label>
-                                                    <select
+                                                    <SearchableSelect
                                                         value={deliveryStatus}
                                                         onChange={(e) => setDeliveryStatus(e.target.value)}
-                                                        className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-xs focus:border-brand focus:outline-hidden focus:ring-2 focus:ring-brand/20"
+                                                        className="mt-1.5 w-full"
                                                     >
                                                         <option value="pending">{t('delivery_status_pending')}</option>
                                                         <option value="in_transit">{t('delivery_status_in_transit')}</option>
                                                         <option value="delivered">{t('delivery_status_delivered')}</option>
                                                         <option value="failed">{t('delivery_status_failed')}</option>
-                                                    </select>
+                                                    </SearchableSelect>
                                                 </div>
                                             ) : null}
                                             <div>
@@ -1677,10 +1678,10 @@ export default function OrderDetailPage() {
                                                 <label className="block text-xs font-semibold uppercase tracking-wide text-slate-500">
                                                     {t('order_delivery_company')}
                                                 </label>
-                                                <select
+                                                <SearchableSelect
                                                     value={adminDeliveryCompanyId}
                                                     onChange={(e) => setAdminDeliveryCompanyId(e.target.value)}
-                                                    className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-xs focus:border-brand focus:outline-hidden focus:ring-2 focus:ring-brand/20"
+                                                    className="mt-1.5 w-full"
                                                     required
                                                 >
                                                     <option value="">{t('order_delivery_select_placeholder')}</option>
@@ -1689,23 +1690,23 @@ export default function OrderDetailPage() {
                                                             {c.name || c.code || c.id}
                                                         </option>
                                                     ))}
-                                                </select>
+                                                </SearchableSelect>
                                             </div>
                                             {deliveryLegCustomer?.id != null ? (
                                                 <div className="sm:col-span-2">
                                                     <label className="block text-xs font-semibold uppercase tracking-wide text-slate-500">
                                                         {t('order_delivery_status_label')}
                                                     </label>
-                                                    <select
+                                                    <SearchableSelect
                                                         value={adminDeliveryStatus}
                                                         onChange={(e) => setAdminDeliveryStatus(e.target.value)}
-                                                        className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-xs focus:border-brand focus:outline-hidden focus:ring-2 focus:ring-brand/20"
+                                                        className="mt-1.5 w-full"
                                                     >
                                                         <option value="pending">{t('delivery_status_pending')}</option>
                                                         <option value="in_transit">{t('delivery_status_in_transit')}</option>
                                                         <option value="delivered">{t('delivery_status_delivered')}</option>
                                                         <option value="failed">{t('delivery_status_failed')}</option>
-                                                    </select>
+                                                    </SearchableSelect>
                                                 </div>
                                             ) : null}
                                             <div>
@@ -2025,17 +2026,17 @@ export default function OrderDetailPage() {
                                 <label className="block text-xs font-semibold uppercase tracking-wide text-slate-500">
                                     {t('order_ticket_type')}
                                 </label>
-                                <select
+                                <SearchableSelect
                                     value={ticketType}
                                     onChange={(e) => setTicketType(e.target.value)}
-                                    className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-xs focus:border-brand focus:outline-hidden focus:ring-2 focus:ring-brand/20"
+                                    className="mt-1.5 w-full"
                                 >
                                     {TICKET_TYPES.map((opt) => (
                                         <option key={opt.value} value={opt.value}>
                                             {t(opt.labelKey)}
                                         </option>
                                     ))}
-                                </select>
+                                </SearchableSelect>
                             </div>
                             <div>
                                 <label className="block text-xs font-semibold uppercase tracking-wide text-slate-500">
@@ -2081,17 +2082,17 @@ export default function OrderDetailPage() {
                                 <label className="block text-xs font-semibold uppercase tracking-wide text-slate-500">
                                     {t('col_status')}
                                 </label>
-                                <select
+                                <SearchableSelect
                                     value={editStatus}
                                     onChange={(e) => setEditStatus(e.target.value)}
-                                    className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-xs focus:border-brand focus:outline-hidden focus:ring-2 focus:ring-brand/20"
+                                    className="mt-1.5 w-full"
                                 >
                                     {statusSelectOptions.map((s) => (
                                         <option key={s} value={s}>
                                             {localizedStatusLabel(s, t)}
                                         </option>
                                     ))}
-                                </select>
+                                </SearchableSelect>
                             </div>
                             <div>
                                 <label className="block text-xs font-semibold uppercase tracking-wide text-slate-500">

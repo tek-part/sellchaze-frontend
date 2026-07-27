@@ -4,6 +4,7 @@ import useStoreScope from '../hooks/useStoreScope';
 import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
 import api from '../api/client';
+import SearchableSelect from '../components/ui/SearchableSelect';
 
 const EMPTY = {
     code: '', type: 'percentage', value: '', starts_at: '', expires_at: '',
@@ -88,10 +89,10 @@ export default function StoreCouponFormPage() {
                     </label>
                     <label className="block">
                         <span className={label}>{t('coupon_type', 'Type')}</span>
-                        <select value={form.type} onChange={(e) => set('type', e.target.value)} className={field}>
+                        <SearchableSelect value={form.type} onChange={(e) => set('type', e.target.value)} className="w-full">
                             <option value="percentage">{t('coupon_type_percentage', 'Percentage (%)')}</option>
                             <option value="fixed">{t('coupon_type_fixed', 'Fixed amount')}</option>
-                        </select>
+                        </SearchableSelect>
                     </label>
                     <label className="block">
                         <span className={label}>{t('coupon_value', 'Value')}</span>

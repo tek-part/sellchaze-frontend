@@ -9,6 +9,9 @@ import PaginationBar from '../components/table/PaginationBar';
 import TableLoadingOverlay from '../components/table/TableLoadingOverlay';
 import ConfirmDialog from '../components/ConfirmDialog';
 import TableIconActions from '../components/table/TableIconActions';
+import SearchableSelect from '../components/ui/SearchableSelect';
+import PageHeader from '../components/PageHeader';
+import { HiOutlinePlus } from 'react-icons/hi2';
 
 const STATUS_STYLES = {
     active: 'bg-emerald-50 text-emerald-700 border-emerald-100',
@@ -83,10 +86,20 @@ export default function StoresPage() {
 
     return (
         <div className="space-y-5">
-            <div className="border-s-4 border-brand ps-4">
-                <h1 className="text-2xl font-semibold tracking-tight text-slate-900">{t('stores_title')}</h1>
-                <p className="mt-1 text-sm text-slate-500">{t('stores_subtitle')}</p>
-            </div>
+            <PageHeader
+                title={t('stores_title')}
+                subtitle={t('stores_subtitle')}
+                action={can('stores-create') ? (
+                    <button
+                        type="button"
+                        onClick={() => navigate('/stores/new')}
+                        className="inline-flex items-center gap-1.5 rounded-xl bg-brand px-4 py-2 text-sm font-semibold text-white shadow-xs transition hover:bg-brand-dark"
+                    >
+                        <HiOutlinePlus className="h-4 w-4" aria-hidden />
+                        {t('table_create')}
+                    </button>
+                ) : null}
+            />
             {err && (
                 <p className="rounded-lg border border-red-100 bg-red-50 px-3 py-2 text-sm text-red-700">{err}</p>
             )}
@@ -99,24 +112,22 @@ export default function StoresPage() {
                         setPerPage(n);
                         setPage(1);
                     }}
-                    onCreate={can('stores-create') ? () => navigate('/stores/new') : undefined}
-                    createLabel={t('table_create')}
                     advanced={
                         <div className="grid gap-3 sm:grid-cols-2">
                             <div>
                                 <label className="mb-1 block text-[11px] font-semibold uppercase text-slate-500">
                                     {t('store_status')}
                                 </label>
-                                <select
+                                <SearchableSelect
                                     value={statusFilter}
                                     onChange={(e) => setStatusFilter(e.target.value)}
-                                    className="w-full rounded-lg border border-slate-200 px-2 py-1.5 text-sm"
+                                    className="w-full"
                                 >
                                     <option value="">—</option>
                                     <option value="draft">{t('store_status_draft')}</option>
                                     <option value="active">{t('store_status_active')}</option>
                                     <option value="suspended">{t('store_status_suspended')}</option>
-                                </select>
+                                </SearchableSelect>
                             </div>
                         </div>
                     }

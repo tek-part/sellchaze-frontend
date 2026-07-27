@@ -4,6 +4,7 @@ import { useOutletContext } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
 import api from '../api/client';
+import SearchableSelect from '../components/ui/SearchableSelect';
 
 /** @typedef {{ key: string, description: string, placeholders: string, subject: string | null, has_custom_body: boolean }} TemplateIndexRow */
 
@@ -253,16 +254,16 @@ export default function EmailSettingsPage() {
                                     <label htmlFor="mail-mailer" className="block text-sm font-medium text-slate-700">
                                         {t('settings_mail_mailer')}
                                     </label>
-                                    <select
+                                    <SearchableSelect
                                         id="mail-mailer"
                                         value={mailMailer}
                                         onChange={(e) => setMailMailer(e.target.value)}
-                                        className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm text-slate-900 shadow-xs focus:border-brand focus:outline-hidden focus:ring-2 focus:ring-brand/20"
+                                        className="mt-1 w-full"
                                     >
                                         <option value="smtp">smtp</option>
                                         <option value="log">log</option>
                                         <option value="array">array</option>
-                                    </select>
+                                    </SearchableSelect>
                                 </div>
                                 <div>
                                     <label htmlFor="mail-host" className="block text-sm font-medium text-slate-700">
@@ -294,17 +295,17 @@ export default function EmailSettingsPage() {
                                     <label htmlFor="mail-enc" className="block text-sm font-medium text-slate-700">
                                         {t('settings_mail_encryption')}
                                     </label>
-                                    <select
+                                    <SearchableSelect
                                         id="mail-enc"
                                         value={mailEncryption}
                                         onChange={(e) => setMailEncryption(e.target.value)}
-                                        className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm text-slate-900 shadow-xs focus:border-brand focus:outline-hidden focus:ring-2 focus:ring-brand/20"
+                                        className="mt-1 w-full"
                                     >
                                         <option value="">{t('settings_email_encryption_none')}</option>
                                         <option value="ssl">ssl</option>
                                         <option value="tls">tls</option>
                                         <option value="none">none</option>
-                                    </select>
+                                    </SearchableSelect>
                                 </div>
                                 <div>
                                     <label htmlFor="mail-user" className="block text-sm font-medium text-slate-700">
@@ -429,11 +430,11 @@ export default function EmailSettingsPage() {
                                 <label htmlFor="email-tpl-key" className="block text-sm font-medium text-slate-700">
                                     {t('settings_email_template_select')}
                                 </label>
-                                <select
+                                <SearchableSelect
                                     id="email-tpl-key"
                                     value={tplKey}
                                     onChange={(e) => setTplKey(e.target.value)}
-                                    className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm text-slate-900 shadow-xs focus:border-brand focus:outline-hidden focus:ring-2 focus:ring-brand/20"
+                                    className="mt-1 w-full"
                                 >
                                     {tplList.map((row) => (
                                         <option key={row.key} value={row.key}>
@@ -441,7 +442,7 @@ export default function EmailSettingsPage() {
                                             {row.description ? ` — ${row.description}` : ''}
                                         </option>
                                     ))}
-                                </select>
+                                </SearchableSelect>
                             </div>
                             {tplDetailLoading ? (
                                 <p className="py-4 text-center text-sm text-slate-500">{t('loading')}</p>

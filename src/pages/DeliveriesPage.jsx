@@ -8,6 +8,7 @@ import { useDebounced } from '../hooks/useDebounced';
 import ListToolbar from '../components/table/ListToolbar';
 import PaginationBar from '../components/table/PaginationBar';
 import TableLoadingOverlay from '../components/table/TableLoadingOverlay';
+import SearchableSelect from '../components/ui/SearchableSelect';
 
 function unwrapRow(o) {
     return o?.data ?? o;
@@ -222,28 +223,29 @@ export default function DeliveriesPage() {
                 <p className="rounded-lg border border-red-100 bg-red-50 px-3 py-2 text-sm text-red-700">{err}</p>
             )}
 
-            <div className="flex flex-wrap items-center gap-3 rounded-xl border border-slate-200/80 bg-white px-4 py-3">
-                <label className="flex items-center gap-2 text-sm text-slate-700">
-                    <span className="font-medium">{t('col_status')}</span>
-                    <select
-                        value={statusFilter}
-                        onChange={(e) => setStatusFilter(e.target.value)}
-                        className="rounded-lg border border-slate-200 px-2 py-1.5 text-sm"
-                    >
-                        <option value="">{t('filter_all_statuses')}</option>
-                        {DELIVERY_STATUSES.map((s) => (
-                            <option key={s} value={s}>
-                                {statusLabel(s)}
-                            </option>
-                        ))}
-                    </select>
-                </label>
-            </div>
-
             <div className="overflow-hidden rounded-2xl border border-slate-200/80 shadow-card">
                 <ListToolbar
                     searchValue={searchInput}
                     onSearchChange={setSearchInput}
+                    afterSearch={
+                        <div>
+                            <label className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+                                {t('col_status')}
+                            </label>
+                            <SearchableSelect
+                                value={statusFilter}
+                                onChange={(e) => setStatusFilter(e.target.value)}
+                                className="w-full sm:w-56"
+                            >
+                                <option value="">{t('filter_all_statuses')}</option>
+                                {DELIVERY_STATUSES.map((s) => (
+                                    <option key={s} value={s}>
+                                        {statusLabel(s)}
+                                    </option>
+                                ))}
+                            </SearchableSelect>
+                        </div>
+                    }
                     perPage={perPage}
                     onPerPageChange={(n) => {
                         setPerPage(n);
@@ -319,11 +321,11 @@ export default function DeliveriesPage() {
                                     </td>
                                     <td className="px-4 py-3 text-slate-700">
                                         {can('deliveries-update') ? (
-                                            <select
+                                            <SearchableSelect
                                                 value={String(row.status ?? 'pending')}
                                                 disabled={statusPatchingId === Number(row.id)}
                                                 onChange={(e) => void handleInlineStatusChange(row, e.target.value)}
-                                                className="max-w-44 rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-sm text-slate-900 disabled:opacity-60"
+                                                className="max-w-44"
                                                 aria-label={t('col_status')}
                                             >
                                                 {DELIVERY_STATUSES.map((s) => (
@@ -331,7 +333,7 @@ export default function DeliveriesPage() {
                                                         {statusLabel(s)}
                                                     </option>
                                                 ))}
-                                            </select>
+                                            </SearchableSelect>
                                         ) : (
                                             statusLabel(row.status)
                                         )}
@@ -384,11 +386,11 @@ export default function DeliveriesPage() {
                                 <label className="mb-1 block text-sm font-medium text-slate-700">
                                     {t('shipping_carrier')}
                                 </label>
-                                <select
+                                <SearchableSelect
                                     required
                                     value={addCompanyId}
                                     onChange={(e) => setAddCompanyId(e.target.value)}
-                                    className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm"
+                                    className="w-full"
                                 >
                                     <option value="">{t('shipping_select_carrier')}</option>
                                     {companies.map((c) => (
@@ -396,7 +398,7 @@ export default function DeliveriesPage() {
                                             {c.name}
                                         </option>
                                     ))}
-                                </select>
+                                </SearchableSelect>
                             </div>
                             <div>
                                 <label className="mb-1 block text-sm font-medium text-slate-700">
@@ -447,28 +449,28 @@ export default function DeliveriesPage() {
                         <form onSubmit={submitEdit} className="mt-4 space-y-3">
                             <div>
                                 <label className="mb-1 block text-sm font-medium text-slate-700">{t('col_status')}</label>
-                                <select
+                                <SearchableSelect
                                     value={editRow.status}
                                     onChange={(e) => setEditRow({ ...editRow, status: e.target.value })}
-                                    className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm"
+                                    className="w-full"
                                 >
                                     {DELIVERY_STATUSES.map((s) => (
                                         <option key={s} value={s}>
                                             {statusLabel(s)}
                                         </option>
                                     ))}
-                                </select>
+                                </SearchableSelect>
                             </div>
                             <div>
                                 <label className="mb-1 block text-sm font-medium text-slate-700">
                                     {t('shipping_carrier')}
                                 </label>
-                                <select
+                                <SearchableSelect
                                     value={editRow.shipping_company_id || ''}
                                     onChange={(e) =>
                                         setEditRow({ ...editRow, shipping_company_id: e.target.value || null })
                                     }
-                                    className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm"
+                                    className="w-full"
                                 >
                                     <option value="">{t('shipping_keep_carrier')}</option>
                                     {companies.map((c) => (
@@ -476,7 +478,7 @@ export default function DeliveriesPage() {
                                             {c.name}
                                         </option>
                                     ))}
-                                </select>
+                                </SearchableSelect>
                             </div>
                             <div>
                                 <label className="mb-1 block text-sm font-medium text-slate-700">

@@ -4,6 +4,7 @@ import useStoreScope from '../hooks/useStoreScope';
 import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
 import api from '../api/client';
+import SearchableSelect from '../components/ui/SearchableSelect';
 
 /** Flatten settings_schema groups -> field list. */
 function fieldsOf(schema) {
@@ -100,9 +101,9 @@ export default function StoreThemeSettingsPage() {
                 return <textarea rows={3} value={v ?? ''} onChange={(e) => setValue(f.id, e.target.value)} className={inputClass} />;
             case 'select':
                 return (
-                    <select value={v ?? ''} onChange={(e) => setValue(f.id, e.target.value)} className={inputClass}>
+                    <SearchableSelect value={v ?? ''} onChange={(e) => setValue(f.id, e.target.value)} className="w-full">
                         {(f.options || []).map((o) => <option key={o} value={o}>{o}</option>)}
-                    </select>
+                    </SearchableSelect>
                 );
             case 'color':
                 return <input type="color" value={v || '#000000'} onChange={(e) => setValue(f.id, e.target.value)} className="h-9 w-16 rounded-sm border border-slate-200" />;

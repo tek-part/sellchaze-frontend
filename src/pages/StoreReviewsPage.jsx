@@ -8,6 +8,7 @@ import ListToolbar from '../components/table/ListToolbar';
 import PaginationBar from '../components/table/PaginationBar';
 import TableLoadingOverlay from '../components/table/TableLoadingOverlay';
 import ConfirmDialog from '../components/ConfirmDialog';
+import SearchableSelect from '../components/ui/SearchableSelect';
 import StatusBadge from '../components/StatusBadge';
 
 const REVIEW_STATUS_STYLE = {
@@ -97,10 +98,10 @@ export default function StoreReviewsPage() {
                     advanced={
                         <div>
                             <label className="mb-1 block text-[11px] font-semibold uppercase text-slate-500">{t('col_status', 'Status')}</label>
-                            <select value={status} onChange={(e) => setStatus(e.target.value)} className="w-full rounded-lg border border-slate-200 px-2 py-1.5 text-sm sm:w-48">
+                            <SearchableSelect value={status} onChange={(e) => setStatus(e.target.value)} className="w-full sm:w-48">
                                 <option value="">—</option>
                                 {['approved', 'pending', 'rejected', 'hidden'].map((s) => <option key={s} value={s}>{t(`review_status_${s}`, s)}</option>)}
-                            </select>
+                            </SearchableSelect>
                         </div>
                     }
                 />

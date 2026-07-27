@@ -15,6 +15,7 @@ import {
     HiOutlineXMark,
 } from 'react-icons/hi2';
 import api from '../api/client';
+import SearchableSelect from '../components/ui/SearchableSelect';
 
 const TICKET_STATUSES = [
     'open',
@@ -528,17 +529,17 @@ export default function TicketDetailPage() {
                                     <label className="block text-xs font-semibold uppercase tracking-wide text-slate-500">
                                         {t('col_status')}
                                     </label>
-                                    <select
+                                    <SearchableSelect
                                         value={statusEdit}
                                         onChange={(e) => setStatusEdit(e.target.value)}
-                                        className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-xs focus:border-brand focus:outline-hidden focus:ring-2 focus:ring-brand/20 sm:max-w-md"
+                                        className="mt-1.5 w-full sm:max-w-md"
                                     >
                                         {TICKET_STATUSES.map((s) => (
                                             <option key={s} value={s}>
                                                 {statusLabel(s)}
                                             </option>
                                         ))}
-                                    </select>
+                                    </SearchableSelect>
                                 </div>
                                 <button
                                     type="button"
@@ -567,17 +568,17 @@ export default function TicketDetailPage() {
                                     <label className="block text-xs font-semibold uppercase tracking-wide text-slate-500">
                                         {t('ticket_action_label')}
                                     </label>
-                                    <select
+                                    <SearchableSelect
                                         value={actionType}
                                         onChange={(e) => setActionType(e.target.value)}
-                                        className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-xs focus:border-brand focus:outline-hidden focus:ring-2 focus:ring-brand/20 sm:max-w-md"
+                                        className="mt-1.5 w-full sm:max-w-md"
                                     >
                                         {ACTION_TYPES.map((a) => (
                                             <option key={a.value} value={a.value}>
                                                 {t(a.labelKey)}
                                             </option>
                                         ))}
-                                    </select>
+                                    </SearchableSelect>
                                 </div>
                                 <div>
                                     <label className="block text-xs font-semibold uppercase tracking-wide text-slate-500">

@@ -6,6 +6,7 @@ import api from '../api/client';
 import PaginationBar from '../components/table/PaginationBar';
 import TableLoadingOverlay from '../components/table/TableLoadingOverlay';
 import ConfirmDialog from '../components/ConfirmDialog';
+import SearchableSelect from '../components/ui/SearchableSelect';
 import { useDebounced } from '../hooks/useDebounced';
 
 function warehouseLabel(w, lang) {
@@ -281,10 +282,10 @@ export default function InventoryPage() {
                 <div className="flex flex-col gap-3 lg:flex-row lg:flex-wrap lg:items-end">
                     <label className="flex min-w-[160px] flex-col gap-1 text-sm">
                         <span className="font-medium text-slate-700">{t('inventory_filter_warehouse')}</span>
-                        <select
+                        <SearchableSelect
                             value={warehouseId}
                             onChange={(e) => setWarehouseId(e.target.value)}
-                            className="rounded-xl border border-slate-200 px-3 py-2 text-slate-900"
+                            className="w-full"
                         >
                             <option value="">{t('inventory_filter_all_warehouses')}</option>
                             {warehouses.map((w) => (
@@ -292,7 +293,7 @@ export default function InventoryPage() {
                                     {warehouseLabel(w, lang)}
                                 </option>
                             ))}
-                        </select>
+                        </SearchableSelect>
                     </label>
                     <label className="flex min-w-[140px] flex-col gap-1 text-sm">
                         <span className="font-medium text-slate-700">{t('inventory_filter_product_id')}</span>
@@ -346,17 +347,17 @@ export default function InventoryPage() {
             <div className="flex justify-end">
                 <label className="flex items-center gap-2 text-sm text-slate-600">
                     {t('table_per_page')}
-                    <select
+                    <SearchableSelect
                         value={perPage}
                         onChange={(e) => setPerPage(Number(e.target.value))}
-                        className="rounded-lg border border-slate-200 px-2 py-1"
+                        className="w-24"
                     >
                         {[15, 30, 50, 100].map((n) => (
                             <option key={n} value={n}>
                                 {n}
                             </option>
                         ))}
-                    </select>
+                    </SearchableSelect>
                 </label>
             </div>
 
@@ -484,17 +485,17 @@ export default function InventoryPage() {
                         <p className="mt-1 text-sm text-slate-600">{t('inventory_add_line_hint')}</p>
                         <label className="mt-4 flex flex-col gap-1 text-sm">
                             <span className="font-medium">{t('inventory_filter_warehouse')}</span>
-                            <select
+                            <SearchableSelect
                                 value={addWarehouseId}
                                 onChange={(e) => setAddWarehouseId(e.target.value)}
-                                className="rounded-xl border border-slate-200 px-3 py-2"
+                                className="w-full"
                             >
                                 {warehouses.map((w) => (
                                     <option key={w.id} value={w.id}>
                                         {warehouseLabel(w, lang)}
                                     </option>
                                 ))}
-                            </select>
+                            </SearchableSelect>
                         </label>
                         <div className="mt-4 space-y-2">
                             <div className="flex items-center justify-between gap-2 text-sm">

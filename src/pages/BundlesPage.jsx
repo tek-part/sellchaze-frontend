@@ -10,6 +10,8 @@ import PaginationBar from '../components/table/PaginationBar';
 import TableLoadingOverlay from '../components/table/TableLoadingOverlay';
 import ConfirmDialog from '../components/ConfirmDialog';
 import TableIconActions from '../components/table/TableIconActions';
+import PageHeader from '../components/PageHeader';
+import { HiOutlinePlus } from 'react-icons/hi2';
 import { exportRowsToExcel } from '../utils/exportExcel';
 import { fetchAllPages } from '../utils/fetchAllPages';
 
@@ -170,10 +172,20 @@ export default function BundlesPage() {
 
     return (
         <div className="space-y-5">
-            <div className="border-s-4 border-brand ps-4">
-                <h1 className="text-2xl font-semibold tracking-tight text-slate-900">{t('bundles')}</h1>
-                <p className="mt-1 text-sm text-slate-500">{t('bundles_subtitle')}</p>
-            </div>
+            <PageHeader
+                title={t('bundles')}
+                subtitle={t('bundles_subtitle')}
+                action={can('bundles-create') ? (
+                    <button
+                        type="button"
+                        onClick={() => navigate('/bundles/new')}
+                        className="inline-flex items-center gap-1.5 rounded-xl bg-brand px-4 py-2 text-sm font-semibold text-white shadow-xs transition hover:bg-brand-dark"
+                    >
+                        <HiOutlinePlus className="h-4 w-4" aria-hidden />
+                        {t('table_create')}
+                    </button>
+                ) : null}
+            />
             {err && (
                 <p className="rounded-lg border border-red-100 bg-red-50 px-3 py-2 text-sm text-red-700">{err}</p>
             )}
@@ -189,8 +201,6 @@ export default function BundlesPage() {
                     onExportCurrent={handleExportCurrent}
                     onExportAll={handleExportAll}
                     exportDisabled={loading}
-                    onCreate={can('bundles-create') ? () => navigate('/bundles/new') : undefined}
-                    createLabel={t('table_create')}
                     selectedCount={selected.size}
                     onBulkDelete={
                         canBulkDeleteByActivity && can('bundles-delete')

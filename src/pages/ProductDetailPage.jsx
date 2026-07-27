@@ -14,6 +14,7 @@ import {
 } from 'react-icons/hi2';
 import toast from 'react-hot-toast';
 import api from '../api/client';
+import { confirmDialog } from '../components/ui/confirmDialog';
 
 function unwrap(p) { return p?.data ?? p; }
 
@@ -43,7 +44,12 @@ export default function ProductDetailPage() {
     }
 
     const handleDelete = async () => {
-        if (!window.confirm(t('confirm_delete') || 'Delete this product?')) return;
+        const ok = await confirmDialog({
+            title: t('confirm_delete_title', 'Delete product?'),
+            text: t('confirm_delete', 'Delete this product?'),
+            confirmText: t('action_delete', 'Delete'),
+        });
+        if (!ok) return;
         try {
             await api.delete(`/products/${id}`);
             toast.success(t('deleted') || 'Deleted');

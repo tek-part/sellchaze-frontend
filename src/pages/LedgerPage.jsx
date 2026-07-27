@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
 import { HiOutlineBanknotes, HiOutlinePlusCircle, HiOutlineUsers } from 'react-icons/hi2';
 import api from '../api/client';
+import SearchableSelect from '../components/ui/SearchableSelect';
 
 export default function LedgerPage() {
     const { t } = useTranslation();
@@ -90,14 +91,14 @@ export default function LedgerPage() {
                     <h2 className="font-semibold text-slate-900">{t('ledger_pick_partner')}</h2>
                 </div>
                 <div className="p-4">
-                    <select value={partnerId} onChange={(e) => setPartnerId(e.target.value)} className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm">
+                    <SearchableSelect value={partnerId} onChange={(e) => setPartnerId(e.target.value)} className="w-full">
                         <option value="">{t('ledger_select_placeholder')}</option>
                         {partners.map((p) => (
                             <option key={`${p.kind}-${p.id}`} value={p.id}>
                                 {p.name} — {p.email} ({t('role_' + p.kind)})
                             </option>
                         ))}
-                    </select>
+                    </SearchableSelect>
                 </div>
             </section>
 

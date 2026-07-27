@@ -15,6 +15,7 @@ import {
     HiOutlineInformationCircle,
 } from 'react-icons/hi2';
 import api from '../api/client';
+import SearchableSelect from '../components/ui/SearchableSelect';
 
 function unwrap(p) { return p?.data ?? p; }
 
@@ -37,6 +38,12 @@ export default function ProductFormPage() {
     const [imagePreview, setImagePreview] = useState('');
     const [existingImageUrl, setExistingImageUrl] = useState('');
     const [removeImage, setRemoveImage] = useState(false);
+    // Additional gallery images (multi-image).
+    const galleryInputRef = useRef(null);
+    const [galleryFiles, setGalleryFiles] = useState([]); // newly-picked File[]
+    const [galleryPreviews, setGalleryPreviews] = useState([]); // data-URL previews, aligned with galleryFiles
+    const [existingMedia, setExistingMedia] = useState([]); // [{ id, url }] already saved
+    const [removedMediaIds, setRemovedMediaIds] = useState([]); // ids to delete on save
     const [loading, setLoading] = useState(false);
     const [initLoading, setInitLoading] = useState(!isNew);
     const [errors, setErrors] = useState({});
@@ -80,6 +87,7 @@ export default function ProductFormPage() {
                 setCategoryId(String(p.category_id ?? ''));
                 setAttributeIds((p.attribute_ids ?? (p.attributes ?? []).map((a) => a.id)).map(Number));
                 setExistingImageUrl(p.image_url || p.image_thumb_url || '');
+                setExistingMedia(Array.isArray(p.media) ? p.media : []);
             })
             .catch((e) => setTopErr(e.response?.data?.message || e.message))
             .finally(() => setInitLoading(false));
@@ -121,6 +129,32 @@ export default function ProductFormPage() {
         if (file) handleFile(file);
     };
 
+    const addGalleryFiles = (fileList) => {
+        const picked = Array.from(fileList || []);
+        const files = picked.filter((f) => f.type.startsWith('image/') && f.size <= 8 * 1024 * 1024);
+        if (files.length !== picked.length) {
+            toast.error(t('product_image_too_big') || 'Some files were skipped (must be images under 8 MB)');
+        }
+        if (!files.length) return;
+        files.forEach((file) => {
+            const reader = new FileReader();
+            reader.onload = () => setGalleryPreviews((prev) => [...prev, String(reader.result)]);
+            reader.readAsDataURL(file);
+        });
+        setGalleryFiles((prev) => [...prev, ...files]);
+        if (galleryInputRef.current) galleryInputRef.current.value = '';
+    };
+
+    const removeNewGalleryImage = (idx) => {
+        setGalleryFiles((prev) => prev.filter((_, i) => i !== idx));
+        setGalleryPreviews((prev) => prev.filter((_, i) => i !== idx));
+    };
+
+    const removeExistingMedia = (mediaId) => {
+        setExistingMedia((prev) => prev.filter((m) => m.id !== mediaId));
+        setRemovedMediaIds((prev) => (prev.includes(mediaId) ? prev : [...prev, mediaId]));
+    };
+
     const toggleAttribute = (aid) => {
         setAttributeIds((curr) => curr.includes(aid) ? curr.filter((x) => x !== aid) : [...curr, aid]);
     };
@@ -150,6 +184,8 @@ export default function ProductFormPage() {
             attributeIds.forEach((aid) => fd.append('attribute_ids[]', String(aid)));
             if (imageFile) fd.append('image', imageFile);
             if (!isNew && removeImage && !imageFile) fd.append('remove_image', '1');
+            galleryFiles.forEach((f) => fd.append('gallery[]', f));
+            if (!isNew) removedMediaIds.forEach((mid) => fd.append('remove_media_ids[]', String(mid)));
 
             let resp;
             if (isNew) {
@@ -159,6 +195,12 @@ export default function ProductFormPage() {
                 resp = await api.post(`/products/${id}`, fd, { headers: { 'Content-Type': 'multipart/form-data' } });
             }
             toast.success(isNew ? (t('product_created') || 'Product created') : (t('product_updated') || 'Product updated'));
+
+            // Clear the newly-picked gallery state so a re-save (Save & keep editing)
+            // doesn't re-upload them; existing media is re-fetched on reload.
+            setGalleryFiles([]);
+            setGalleryPreviews([]);
+            setRemovedMediaIds([]);
 
             if (stayOnPage && isNew) {
                 const created = unwrap(resp.data);
@@ -461,6 +503,67 @@ export default function ProductFormPage() {
                         {errors.image ? <p className="mt-2 text-xs text-red-600">{errors.image}</p> : null}
                     </div>
 
+                    {/* Gallery card — additional images */}
+                    <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-xs">
+                        <div className="mb-4 flex items-center gap-2 border-b border-slate-100 pb-3">
+                            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600">
+                                <HiOutlinePhoto className="h-5 w-5" aria-hidden />
+                            </div>
+                            <div>
+                                <h2 className="text-base font-semibold text-slate-900">{t('product_section_gallery') || 'More images'}</h2>
+                                <p className="text-xs text-slate-500">{t('product_gallery_hint') || 'Add several photos of the product'}</p>
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-3 gap-3 sm:grid-cols-4">
+                            {existingMedia.map((m) => (
+                                <div key={`m-${m.id}`} className="relative aspect-square overflow-hidden rounded-xl border border-slate-200 bg-slate-50">
+                                    <img src={m.url} alt="" className="h-full w-full object-cover" />
+                                    <button
+                                        type="button"
+                                        onClick={() => removeExistingMedia(m.id)}
+                                        className="absolute inset-e-1 top-1 inline-flex h-7 w-7 items-center justify-center rounded-full bg-white/95 text-slate-600 shadow-xs ring-1 ring-slate-200 transition hover:bg-red-50 hover:text-red-600"
+                                        title={t('remove') || 'Remove'}
+                                    >
+                                        <HiOutlineXMark className="h-4 w-4" aria-hidden />
+                                    </button>
+                                </div>
+                            ))}
+                            {galleryPreviews.map((src, idx) => (
+                                <div key={`n-${idx}`} className="relative aspect-square overflow-hidden rounded-xl border border-slate-200 bg-slate-50">
+                                    <img src={src} alt="" className="h-full w-full object-cover" />
+                                    <span className="absolute inset-s-1 top-1 rounded-md bg-brand px-1.5 py-0.5 text-[10px] font-semibold text-white">
+                                        {t('new_badge') || 'New'}
+                                    </span>
+                                    <button
+                                        type="button"
+                                        onClick={() => removeNewGalleryImage(idx)}
+                                        className="absolute inset-e-1 top-1 inline-flex h-7 w-7 items-center justify-center rounded-full bg-white/95 text-slate-600 shadow-xs ring-1 ring-slate-200 transition hover:bg-red-50 hover:text-red-600"
+                                        title={t('remove') || 'Remove'}
+                                    >
+                                        <HiOutlineXMark className="h-4 w-4" aria-hidden />
+                                    </button>
+                                </div>
+                            ))}
+                            <button
+                                type="button"
+                                onClick={() => galleryInputRef.current?.click()}
+                                className="flex aspect-square flex-col items-center justify-center gap-1 rounded-xl border-2 border-dashed border-slate-300 bg-slate-50 text-slate-400 transition hover:border-brand/60 hover:text-brand"
+                            >
+                                <HiOutlinePlus className="h-6 w-6" aria-hidden />
+                                <span className="px-2 text-center text-xs font-medium">{t('product_gallery_add') || 'Add images'}</span>
+                            </button>
+                        </div>
+                        <input
+                            ref={galleryInputRef}
+                            type="file"
+                            accept="image/*"
+                            multiple
+                            className="hidden"
+                            onChange={(e) => addGalleryFiles(e.target.files)}
+                        />
+                    </div>
+
                     {/* Category card */}
                     <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-xs">
                         <div className="mb-4 flex items-center justify-between gap-2 border-b border-slate-100 pb-3">
@@ -483,21 +586,21 @@ export default function ProductFormPage() {
                                 </button>
                             ) : null}
                         </div>
-                        <select
+                        <SearchableSelect
                             required
                             value={categoryId}
                             onChange={(e) => setCategoryId(e.target.value)}
-                            className={`w-full rounded-xl border bg-white px-3.5 py-2.5 text-sm outline-hidden transition focus:ring-2 ${
+                            placeholder={t('select_category') || '— Select category —'}
+                            buttonClassName={
                                 errors.category_id
                                     ? 'border-red-300 focus:border-red-400 focus:ring-red-100'
-                                    : 'border-slate-200 focus:border-brand focus:ring-brand/20'
-                            }`}
+                                    : ''
+                            }
                         >
-                            <option value="">{t('select_category') || '— Select category —'}</option>
                             {categories.map((c) => (
                                 <option key={c.id} value={c.id}>{c.name}</option>
                             ))}
-                        </select>
+                        </SearchableSelect>
                         {errors.category_id ? <p className="mt-1 text-xs text-red-600">{errors.category_id}</p> : null}
                     </div>
                 </div>
@@ -527,14 +630,14 @@ export default function ProductFormPage() {
                         <FieldInput label={t('col_name')} value={newAttrName} onChange={setNewAttrName} placeholder="Color" />
                         <div>
                             <label className="mb-1.5 block text-sm font-medium text-slate-700">{t('attribute_type') || 'Type'}</label>
-                            <select value={newAttrType} onChange={(e) => setNewAttrType(e.target.value)} className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm">
+                            <SearchableSelect value={newAttrType} onChange={(e) => setNewAttrType(e.target.value)} className="w-full">
                                 <option value="text">text</option>
                                 <option value="number">number</option>
                                 <option value="select">select</option>
                                 <option value="multiselect">multiselect</option>
                                 <option value="color">color</option>
                                 <option value="boolean">boolean</option>
-                            </select>
+                            </SearchableSelect>
                         </div>
                         {['select', 'multiselect', 'color'].includes(newAttrType) ? (
                             <FieldInput

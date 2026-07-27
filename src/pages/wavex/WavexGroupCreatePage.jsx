@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import { HiOutlineUserGroup, HiOutlineArrowLeft } from 'react-icons/hi2';
 import api from '../../api/client';
 import { extractApiList, groupIdFrom, groupLabel } from './wavexHelpers';
+import SearchableSelect from '../../components/ui/SearchableSelect';
 
 export default function WavexGroupCreatePage() {
     const { t, i18n } = useTranslation();
@@ -187,8 +188,8 @@ export default function WavexGroupCreatePage() {
                                         <label className="text-xs font-medium text-slate-600">
                                             {t('wavex_cg_import_wa_group_label')}
                                         </label>
-                                        <select
-                                            className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm focus:border-brand focus:ring-1 focus:ring-brand"
+                                        <SearchableSelect
+                                            className="mt-1 w-full"
                                             value={whatsappGroupId}
                                             onChange={(e) => setWhatsappGroupId(e.target.value)}
                                             disabled={waGroupsLoading}
@@ -203,7 +204,7 @@ export default function WavexGroupCreatePage() {
                                                     </option>
                                                 );
                                             })}
-                                        </select>
+                                        </SearchableSelect>
                                         {waGroupsLoading && (
                                             <p className="mt-1 text-xs text-slate-500">{t('wavex_cg_import_wa_loading')}</p>
                                         )}

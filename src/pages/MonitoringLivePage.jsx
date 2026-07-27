@@ -12,6 +12,7 @@ import {
     HiOutlineXCircle,
 } from 'react-icons/hi2';
 import api from '../api/client';
+import SearchableSelect from '../components/ui/SearchableSelect';
 
 const EMPTY_STATS = {
     active_total: 0,
@@ -129,17 +130,17 @@ export default function MonitoringLivePage() {
                         <HiOutlineArchiveBox className="h-4 w-4" />
                         {t('monitoring_view_all_sessions')}
                     </Link>
-                    <select
+                    <SearchableSelect
                         value={minutes}
                         onChange={(e) => setMinutes(Number(e.target.value) || 15)}
-                        className="rounded-xl border border-slate-200 px-3 py-2 text-sm"
+                        className="w-24"
                     >
                         <option value={5}>5m</option>
                         <option value={10}>10m</option>
                         <option value={15}>15m</option>
                         <option value={30}>30m</option>
                         <option value={60}>60m</option>
-                    </select>
+                    </SearchableSelect>
                     <button
                         type="button"
                         onClick={() => void load()}
@@ -168,10 +169,10 @@ export default function MonitoringLivePage() {
                     </div>
                     <div className="min-w-0">
                         <label className="mb-1 block text-[11px] font-semibold text-slate-500">{t('monitoring_filter_bucket')}</label>
-                        <select
+                        <SearchableSelect
                             value={bucket}
                             onChange={(e) => setBucket(e.target.value)}
-                            className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm"
+                            className="w-full"
                         >
                             <option value="">{t('monitoring_filter_bucket_all')}</option>
                             {(meta.available_buckets?.length ? meta.available_buckets : bucketOrder).map((b) => (
@@ -179,7 +180,7 @@ export default function MonitoringLivePage() {
                                     {t(`monitoring_bucket_${b}`)}
                                 </option>
                             ))}
-                        </select>
+                        </SearchableSelect>
                     </div>
                     <div className="min-w-0 md:col-span-2 lg:col-span-4">
                         <label className="mb-1 block text-[11px] font-semibold text-slate-500">{t('monitoring_filter_roles')}</label>

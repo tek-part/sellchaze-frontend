@@ -4,6 +4,7 @@ import { BrowserRouter } from 'react-router-dom';
 import { HelmetProvider } from 'react-helmet-async';
 import { Toaster } from 'react-hot-toast';
 import App from './App';
+import { ConfirmDialogHost } from './components/ui/confirmDialog';
 import './index.css';
 import './i18n';
 
@@ -23,6 +24,7 @@ if (el) {
             >
                 <HelmetProvider>
                 <App />
+                <ConfirmDialogHost />
                 <Toaster
                     position="top-center"
                     gutter={12}

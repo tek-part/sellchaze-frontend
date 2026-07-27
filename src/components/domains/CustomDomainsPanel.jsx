@@ -5,6 +5,7 @@ import DomainAuditHistory from './DomainAuditHistory';
 import { DnsBadge, HealthScore, PrimaryBadge, SslBadge, VerificationBadge } from './DomainBadges';
 import DomainHealthPanel from './DomainHealthPanel';
 import DomainSetupWizard from './DomainSetupWizard';
+import { confirmDialog } from '../ui/confirmDialog';
 
 /**
  * Custom Domains — the owner-facing management surface.
@@ -70,9 +71,15 @@ export default function CustomDomainsPanel() {
         }
     };
 
-    const remove = (domain) => {
+    const remove = async (domain) => {
         // Deleting a domain takes a live storefront host offline — confirm first.
-        if (!window.confirm(t('domain_confirm_remove', { host: domain.host }))) return;
+        const ok = await confirmDialog({
+            title: t('domain_confirm_remove_title', 'Remove domain?'),
+            text: t('domain_confirm_remove', { host: domain.host }),
+            confirmText: t('action_remove', 'Remove'),
+            icon: 'warning',
+        });
+        if (!ok) return;
         run(domain.id, () => domainsApi.remove(domain.id), 'domain_notice_removed');
     };
 

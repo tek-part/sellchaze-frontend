@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
 import { HiXMark } from 'react-icons/hi2';
 import api from '../../api/client';
+import SearchableSelect from '../ui/SearchableSelect';
 
 /**
  * Merchant-facing modal for creating a new order and fanning it out to one or
@@ -117,10 +118,10 @@ export default function CreateOrderDialog({ open, onClose, onCreated }) {
                             <span className="mb-1 block text-xs font-semibold uppercase text-slate-500">
                                 {t('create_order_product')}
                             </span>
-                            <select
+                            <SearchableSelect
                                 value={productId}
                                 onChange={(e) => setProductId(e.target.value)}
-                                className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm"
+                                className="w-full"
                                 required
                             >
                                 <option value="">—</option>
@@ -129,7 +130,7 @@ export default function CreateOrderDialog({ open, onClose, onCreated }) {
                                         {p.name || p.name_en || p.name_ar || `#${p.id}`}
                                     </option>
                                 ))}
-                            </select>
+                            </SearchableSelect>
                         </label>
                         <label className="block">
                             <span className="mb-1 block text-xs font-semibold uppercase text-slate-500">
@@ -190,14 +191,14 @@ export default function CreateOrderDialog({ open, onClose, onCreated }) {
                             <span className="mb-1 block text-xs font-semibold uppercase text-slate-500">
                                 {t('create_order_shipping_type')}
                             </span>
-                            <select
+                            <SearchableSelect
                                 value={shippingType}
                                 onChange={(e) => setShippingType(e.target.value)}
-                                className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm"
+                                className="w-full"
                             >
                                 <option value="customer_direct">{t('create_order_ship_direct')}</option>
                                 <option value="warehouse">{t('create_order_ship_warehouse')}</option>
-                            </select>
+                            </SearchableSelect>
                         </label>
                     </div>
 

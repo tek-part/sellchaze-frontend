@@ -3,6 +3,7 @@ import { Link, Navigate, useNavigate, useOutletContext } from 'react-router-dom'
 import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
 import api from '../api/client';
+import SearchableSelect from '../components/ui/SearchableSelect';
 
 function warehouseLabel(w, lang) {
     if (!w) {
@@ -140,10 +141,10 @@ export default function StockTransferFormPage() {
                 <div className="grid gap-4 sm:grid-cols-2">
                     <label className="flex flex-col gap-1 text-sm">
                         <span className="font-medium text-slate-700">{t('inventory_transfer_from')}</span>
-                        <select
+                        <SearchableSelect
                             value={fromId}
                             onChange={(e) => setFromId(e.target.value)}
-                            className="rounded-xl border border-slate-200 px-3 py-2"
+                            className="w-full"
                         >
                             <option value="">{t('inventory_select_warehouse')}</option>
                             {warehouses.map((w) => (
@@ -151,14 +152,14 @@ export default function StockTransferFormPage() {
                                     {warehouseLabel(w, lang)}
                                 </option>
                             ))}
-                        </select>
+                        </SearchableSelect>
                     </label>
                     <label className="flex flex-col gap-1 text-sm">
                         <span className="font-medium text-slate-700">{t('inventory_transfer_to')}</span>
-                        <select
+                        <SearchableSelect
                             value={toId}
                             onChange={(e) => setToId(e.target.value)}
-                            className="rounded-xl border border-slate-200 px-3 py-2"
+                            className="w-full"
                         >
                             <option value="">{t('inventory_select_warehouse')}</option>
                             {warehouses.map((w) => (
@@ -166,7 +167,7 @@ export default function StockTransferFormPage() {
                                     {warehouseLabel(w, lang)}
                                 </option>
                             ))}
-                        </select>
+                        </SearchableSelect>
                     </label>
                 </div>
 
@@ -205,10 +206,10 @@ export default function StockTransferFormPage() {
                             <div key={i} className="flex flex-wrap items-end gap-2 rounded-xl border border-slate-100 bg-slate-50/80 p-3">
                                 <label className="min-w-[200px] flex-1 flex flex-col gap-1 text-xs font-medium text-slate-600">
                                     {t('inventory_select_product')}
-                                    <select
+                                    <SearchableSelect
                                         value={line.product_id}
                                         onChange={(e) => updateLine(i, 'product_id', e.target.value)}
-                                        className="rounded-lg border border-slate-200 px-2 py-2 text-sm"
+                                        className="w-full"
                                     >
                                         <option value="">{t('inventory_pick_product')}</option>
                                         {productOptions.map((p) => (
@@ -216,7 +217,7 @@ export default function StockTransferFormPage() {
                                                 #{p.id} — {p.name}
                                             </option>
                                         ))}
-                                    </select>
+                                    </SearchableSelect>
                                 </label>
                                 <label className="w-28 flex flex-col gap-1 text-xs font-medium text-slate-600">
                                     {t('col_qty')}

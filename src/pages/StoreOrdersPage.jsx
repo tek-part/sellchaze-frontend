@@ -8,6 +8,7 @@ import ListToolbar from '../components/table/ListToolbar';
 import PaginationBar from '../components/table/PaginationBar';
 import TableLoadingOverlay from '../components/table/TableLoadingOverlay';
 import StatusBadge from '../components/StatusBadge';
+import SearchableSelect from '../components/ui/SearchableSelect';
 
 const STATUSES = ['pending', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled'];
 
@@ -69,10 +70,10 @@ export default function StoreOrdersPage() {
                         <div className="grid gap-3 sm:grid-cols-3">
                             <div>
                                 <label className="mb-1 block text-[11px] font-semibold uppercase text-slate-500">{t('col_status', 'Status')}</label>
-                                <select value={status} onChange={(e) => setStatus(e.target.value)} className="w-full rounded-lg border border-slate-200 px-2 py-1.5 text-sm">
+                                <SearchableSelect value={status} onChange={(e) => setStatus(e.target.value)} className="w-full">
                                     <option value="">—</option>
                                     {STATUSES.map((s) => <option key={s} value={s}>{t(`order_status_${s}`, s)}</option>)}
-                                </select>
+                                </SearchableSelect>
                             </div>
                             <div>
                                 <label className="mb-1 block text-[11px] font-semibold uppercase text-slate-500">{t('filter_date_from', 'From')}</label>

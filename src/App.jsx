@@ -94,11 +94,7 @@ const StoreOrdersPage = lazy(() => import('./pages/StoreOrdersPage'));
 const StoreOrderDetailPage = lazy(() => import('./pages/StoreOrderDetailPage'));
 const StoreAnalyticsPage = lazy(() => import('./pages/StoreAnalyticsPage'));
 const StoreReviewsPage = lazy(() => import('./pages/StoreReviewsPage'));
-const StoreProductsPage = lazy(() => import('./pages/StoreProductsPage'));
-const StoreProductFormPage = lazy(() => import('./pages/StoreProductFormPage'));
-const StoreProductDetailPage = lazy(() => import('./pages/StoreProductDetailPage'));
-const StoreCategoriesPage = lazy(() => import('./pages/StoreCategoriesPage'));
-const StoreCategoryFormPage = lazy(() => import('./pages/StoreCategoryFormPage'));
+// StoreProduct*/StoreCategory* pages removed: catalog is unified onto /products & /categories.
 import WavexSettingsPage from './pages/wavex/WavexSettingsPage';
 import WavexConnectPage from './pages/wavex/WavexConnectPage';
 import WavexChatsPage from './pages/wavex/WavexChatsPage';
@@ -239,7 +235,7 @@ export default function App() {
                 {/* Owner (Merchant/Supplier) single-store context — no store id in the URL.
                     Same components as the admin /stores/:id/* routes; useStoreScope resolves
                     the owner's store via /my-store. Admin multi-store console stays below. */}
-                <Route path="/store" element={<Navigate to="/store/products" replace />} />
+                <Route path="/store" element={<Navigate to="/store/orders" replace />} />
                 <Route path="/store/settings" element={<StoreSettingsPage />} />
                 <Route path="/store/themes/:themeId/settings" element={<StoreThemeSettingsPage />} />
                 <Route path="/store/themes" element={<StoreThemesPage />} />
@@ -253,13 +249,10 @@ export default function App() {
                 <Route path="/store/orders" element={<StoreOrdersPage />} />
                 <Route path="/store/analytics" element={<StoreAnalyticsPage />} />
                 <Route path="/store/reviews" element={<StoreReviewsPage />} />
-                <Route path="/store/products/new" element={<StoreProductFormPage />} />
-                <Route path="/store/products/:productId/edit" element={<StoreProductFormPage />} />
-                <Route path="/store/products/:productId" element={<StoreProductDetailPage />} />
-                <Route path="/store/products" element={<StoreProductsPage />} />
-                <Route path="/store/categories/new" element={<StoreCategoryFormPage />} />
-                <Route path="/store/categories/:categoryId/edit" element={<StoreCategoryFormPage />} />
-                <Route path="/store/categories" element={<StoreCategoriesPage />} />
+                {/* Catalog unified: the old per-store catalog pages now redirect to the
+                    single owner catalog (/products, /categories). See ProductScope. */}
+                <Route path="/store/products/*" element={<Navigate to="/products" replace />} />
+                <Route path="/store/categories/*" element={<Navigate to="/categories" replace />} />
                 <Route path="/stores/new" element={<StoreFormPage />} />
                 <Route path="/stores/:id/edit" element={<StoreFormPage />} />
                 <Route path="/stores/:id/settings" element={<StoreSettingsPage />} />
@@ -275,13 +268,9 @@ export default function App() {
                 <Route path="/stores/:id/orders" element={<StoreOrdersPage />} />
                 <Route path="/stores/:id/analytics" element={<StoreAnalyticsPage />} />
                 <Route path="/stores/:id/reviews" element={<StoreReviewsPage />} />
-                <Route path="/stores/:id/products/new" element={<StoreProductFormPage />} />
-                <Route path="/stores/:id/products/:productId/edit" element={<StoreProductFormPage />} />
-                <Route path="/stores/:id/products/:productId" element={<StoreProductDetailPage />} />
-                <Route path="/stores/:id/products" element={<StoreProductsPage />} />
-                <Route path="/stores/:id/categories/new" element={<StoreCategoryFormPage />} />
-                <Route path="/stores/:id/categories/:categoryId/edit" element={<StoreCategoryFormPage />} />
-                <Route path="/stores/:id/categories" element={<StoreCategoriesPage />} />
+                {/* Catalog unified — admin per-store catalog pages redirect to the shared catalog. */}
+                <Route path="/stores/:id/products/*" element={<Navigate to="/products" replace />} />
+                <Route path="/stores/:id/categories/*" element={<Navigate to="/categories" replace />} />
                 <Route path="/stores" element={<StoresPage />} />
                 <Route path="/attributes/groups" element={<AttributesPage />} />
                 <Route path="/attributes" element={<AttributesPage />} />

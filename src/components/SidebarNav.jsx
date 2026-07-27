@@ -379,9 +379,89 @@ export default function SidebarNav({ isAdmin = false, isSupplier = false, roles 
                 </NavLink>
             </div>
 
-            {hasStoreAccess ? (
+            {(hasStoreAccess || canViewCatalogSection) ? (
                 <div className="mt-5 flex flex-col gap-1.5 border-t border-slate-200/80 pt-5">
                     <SectionLabel>{t('nav_store_section')}</SectionLabel>
+
+                    {/* Catalog — the unified per-owner catalog that also powers the
+                        storefront, orders and inventory. Products & categories are the
+                        most-used items, so they sit at the top as direct links. */}
+                    {can('products-list') ? (
+                        <NavLink to="/products" className={navLinkClass}>
+                            <HiOutlineCube className="h-5 w-5 shrink-0 opacity-95" aria-hidden />
+                            {t('products')}
+                        </NavLink>
+                    ) : null}
+                    {can('categories-list') ? (
+                        <NavLink to="/categories" className={navLinkClass}>
+                            <HiOutlineRectangleStack className="h-5 w-5 shrink-0 opacity-95" aria-hidden />
+                            {t('categories')}
+                        </NavLink>
+                    ) : null}
+                    {can('bundles-list') ? (
+                        <NavLink to="/bundles" className={navLinkClass}>
+                            <HiOutlineRectangleGroup className="h-5 w-5 shrink-0 opacity-95" aria-hidden />
+                            {t('bundles')}
+                        </NavLink>
+                    ) : null}
+
+                    {can('products-list') ? (
+                        <NavGroup
+                            title={t('nav_group_inventory')}
+                            icon={HiOutlineBuildingOffice2}
+                            defaultOpen={openInventory}
+                            groupActive={openInventory}
+                        >
+                            <NavLink to="/inventory" end className={subNavLinkClass}>
+                                <HiOutlineCube className="h-4 w-4 shrink-0 opacity-90" aria-hidden />
+                                {t('inventory_title')}
+                            </NavLink>
+                            <NavLink to="/inventory/transfers" className={subNavLinkClass}>
+                                <HiOutlineArrowsRightLeft className="h-4 w-4 shrink-0 opacity-90" aria-hidden />
+                                {t('inventory_transfers')}
+                            </NavLink>
+                        </NavGroup>
+                    ) : null}
+
+                    {can('attributes-list') ? (
+                        <NavGroup
+                            title={t('perm_group_attributes')}
+                            icon={HiOutlineTag}
+                            defaultOpen={openAttributes}
+                            groupActive={openAttributes}
+                        >
+                            <NavLink to="/attributes" end className={subNavLinkClass}>
+                                <HiOutlineTag className="h-4 w-4 shrink-0 opacity-90" aria-hidden />
+                                {t('attributes_nav_definitions')}
+                            </NavLink>
+                            <NavLink to="/attributes/groups" className={subNavLinkClass}>
+                                <HiOutlineRectangleGroup className="h-4 w-4 shrink-0 opacity-90" aria-hidden />
+                                {t('attributes_nav_groups')}
+                            </NavLink>
+                        </NavGroup>
+                    ) : null}
+
+                    {storeSalesGroup ? (
+                        <NavGroup
+                            title={t('nav_store_group_sales')}
+                            icon={HiOutlineShoppingBag}
+                            defaultOpen={openStore}
+                            groupActive={openStore}
+                        >
+                            {canStoreOrders ? (
+                                <NavLink to="/store/orders" className={subNavLinkClass}>
+                                    <HiOutlineShoppingBag className="h-4 w-4 shrink-0 opacity-90" aria-hidden />
+                                    {t('nav_store_orders')}
+                                </NavLink>
+                            ) : null}
+                            {canStoreCoupons ? (
+                                <NavLink to="/store/coupons" className={subNavLinkClass}>
+                                    <HiOutlineTicket className="h-4 w-4 shrink-0 opacity-90" aria-hidden />
+                                    {t('nav_store_coupons')}
+                                </NavLink>
+                            ) : null}
+                        </NavGroup>
+                    ) : null}
 
                     {storeMyGroup ? (
                         <NavGroup
@@ -417,50 +497,6 @@ export default function SidebarNav({ isAdmin = false, isSupplier = false, roles 
                         </NavGroup>
                     ) : null}
 
-                    {storeCatalogGroup ? (
-                        <NavGroup
-                            title={t('nav_store_group_catalog')}
-                            icon={HiOutlineCube}
-                            defaultOpen={openStore}
-                            groupActive={openStore}
-                        >
-                            {canStoreProducts ? (
-                                <NavLink to="/store/products" className={subNavLinkClass}>
-                                    <HiOutlineCube className="h-4 w-4 shrink-0 opacity-90" aria-hidden />
-                                    {t('nav_store_products')}
-                                </NavLink>
-                            ) : null}
-                            {canStoreCategories ? (
-                                <NavLink to="/store/categories" className={subNavLinkClass}>
-                                    <HiOutlineRectangleStack className="h-4 w-4 shrink-0 opacity-90" aria-hidden />
-                                    {t('nav_store_categories')}
-                                </NavLink>
-                            ) : null}
-                        </NavGroup>
-                    ) : null}
-
-                    {storeSalesGroup ? (
-                        <NavGroup
-                            title={t('nav_store_group_sales')}
-                            icon={HiOutlineShoppingBag}
-                            defaultOpen={openStore}
-                            groupActive={openStore}
-                        >
-                            {canStoreOrders ? (
-                                <NavLink to="/store/orders" className={subNavLinkClass}>
-                                    <HiOutlineShoppingBag className="h-4 w-4 shrink-0 opacity-90" aria-hidden />
-                                    {t('nav_store_orders')}
-                                </NavLink>
-                            ) : null}
-                            {canStoreCoupons ? (
-                                <NavLink to="/store/coupons" className={subNavLinkClass}>
-                                    <HiOutlineTicket className="h-4 w-4 shrink-0 opacity-90" aria-hidden />
-                                    {t('nav_store_coupons')}
-                                </NavLink>
-                            ) : null}
-                        </NavGroup>
-                    ) : null}
-
                     {canStoreReviews ? (
                         <NavLink to="/store/reviews" className={navLinkClass}>
                             <HiOutlineChatBubbleLeftRight className="h-5 w-5 shrink-0 opacity-95" aria-hidden />
@@ -472,6 +508,13 @@ export default function SidebarNav({ isAdmin = false, isSupplier = false, roles 
                         <NavLink to="/store/analytics" className={navLinkClass}>
                             <HiOutlineChartBar className="h-5 w-5 shrink-0 opacity-95" aria-hidden />
                             {t('nav_store_analytics')}
+                        </NavLink>
+                    ) : null}
+
+                    {can('stores-list') ? (
+                        <NavLink to="/stores" className={navLinkClass}>
+                            <HiOutlineBuildingStorefront className="h-5 w-5 shrink-0 opacity-95" aria-hidden />
+                            {t('nav_stores')}
                         </NavLink>
                     ) : null}
                 </div>
@@ -595,70 +638,6 @@ export default function SidebarNav({ isAdmin = false, isSupplier = false, roles 
                         <HiOutlineTicket className="h-5 w-5 shrink-0 opacity-95" aria-hidden />
                         {t('tickets')}
                     </NavLink>
-                </div>
-            ) : null}
-
-            {canViewCatalogSection ? (
-                <div className="mt-5 flex flex-col gap-1.5 border-t border-slate-200/80 pt-5">
-                    <SectionLabel>{t('nav_sidebar_section_catalog')}</SectionLabel>
-                    {can('products-list') ? (
-                        <NavLink to="/products" className={navLinkClass}>
-                            <HiOutlineCube className="h-5 w-5 shrink-0 opacity-95" aria-hidden />
-                            {t('products')}
-                        </NavLink>
-                    ) : null}
-                    {can('products-list') ? (
-                        <NavGroup
-                            title={t('nav_group_inventory')}
-                            icon={HiOutlineBuildingOffice2}
-                            defaultOpen={openInventory}
-                            groupActive={openInventory}
-                        >
-                            <NavLink to="/inventory" end className={subNavLinkClass}>
-                                <HiOutlineCube className="h-4 w-4 shrink-0 opacity-90" aria-hidden />
-                                {t('inventory_title')}
-                            </NavLink>
-                            <NavLink to="/inventory/transfers" className={subNavLinkClass}>
-                                <HiOutlineArrowsRightLeft className="h-4 w-4 shrink-0 opacity-90" aria-hidden />
-                                {t('inventory_transfers')}
-                            </NavLink>
-                        </NavGroup>
-                    ) : null}
-                    {can('categories-list') ? (
-                        <NavLink to="/categories" className={navLinkClass}>
-                            <HiOutlineRectangleStack className="h-5 w-5 shrink-0 opacity-95" aria-hidden />
-                            {t('categories')}
-                        </NavLink>
-                    ) : null}
-                    {can('bundles-list') ? (
-                        <NavLink to="/bundles" className={navLinkClass}>
-                            <HiOutlineRectangleGroup className="h-5 w-5 shrink-0 opacity-95" aria-hidden />
-                            {t('bundles')}
-                        </NavLink>
-                    ) : null}
-                    {can('stores-list') ? (
-                        <NavLink to="/stores" className={navLinkClass}>
-                            <HiOutlineBuildingStorefront className="h-5 w-5 shrink-0 opacity-95" aria-hidden />
-                            {t('nav_stores')}
-                        </NavLink>
-                    ) : null}
-                    {can('attributes-list') ? (
-                        <NavGroup
-                            title={t('perm_group_attributes')}
-                            icon={HiOutlineTag}
-                            defaultOpen={openAttributes}
-                            groupActive={openAttributes}
-                        >
-                            <NavLink to="/attributes" end className={subNavLinkClass}>
-                                <HiOutlineTag className="h-4 w-4 shrink-0 opacity-90" aria-hidden />
-                                {t('attributes_nav_definitions')}
-                            </NavLink>
-                            <NavLink to="/attributes/groups" className={subNavLinkClass}>
-                                <HiOutlineRectangleGroup className="h-4 w-4 shrink-0 opacity-90" aria-hidden />
-                                {t('attributes_nav_groups')}
-                            </NavLink>
-                        </NavGroup>
-                    ) : null}
                 </div>
             ) : null}
 

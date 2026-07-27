@@ -11,6 +11,7 @@ import TableLoadingOverlay from '../components/table/TableLoadingOverlay';
 import TableIconActions from '../components/table/TableIconActions';
 import ConfirmDialog from '../components/ConfirmDialog';
 import StatusBadge from '../components/StatusBadge';
+import { HiOutlinePlus } from 'react-icons/hi2';
 
 export default function StoreCouponsPage() {
     const { id, apiBase, uiBase } = useStoreScope();
@@ -75,7 +76,17 @@ export default function StoreCouponsPage() {
                     <h1 className="text-2xl font-semibold tracking-tight text-slate-900">{t('coupons_title', 'Coupons')}</h1>
                     <p className="mt-1 text-sm text-slate-500">{t('coupons_subtitle', 'Create and manage discount codes for this store.')}</p>
                 </div>
-                {id ? <Link to="/stores" className="text-sm text-brand hover:underline">← {t('stores_title', 'Stores')}</Link> : null}
+                <div className="flex items-center gap-2">
+                    {id ? <Link to="/stores" className="text-sm text-brand hover:underline">← {t('stores_title', 'Stores')}</Link> : null}
+                    <button
+                        type="button"
+                        onClick={() => navigate(`${uiBase}/coupons/new`)}
+                        className="inline-flex items-center gap-1.5 rounded-xl bg-brand px-4 py-2 text-sm font-semibold text-white shadow-xs transition hover:bg-brand-dark"
+                    >
+                        <HiOutlinePlus className="h-4 w-4" aria-hidden />
+                        {t('coupon_create', 'New coupon')}
+                    </button>
+                </div>
             </div>
             {err && <p className="rounded-lg border border-red-100 bg-red-50 px-3 py-2 text-sm text-red-700">{err}</p>}
 
@@ -85,8 +96,6 @@ export default function StoreCouponsPage() {
                     onSearchChange={setSearchInput}
                     perPage={perPage}
                     onPerPageChange={(n) => { setPerPage(n); setPage(1); }}
-                    onCreate={() => navigate(`${uiBase}/coupons/new`)}
-                    createLabel={t('coupon_create', 'New coupon')}
                 />
                 <div className="relative min-h-48 overflow-auto bg-white">
                     <TableLoadingOverlay show={loading} />

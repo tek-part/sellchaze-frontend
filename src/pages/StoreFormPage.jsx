@@ -4,6 +4,7 @@ import { useOutletContext } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
 import api from '../api/client';
+import SearchableSelect from '../components/ui/SearchableSelect';
 
 const CURRENCIES = ['USD', 'SAR', 'AED', 'EGP', 'KWD', 'QAR', 'BHD', 'OMR', 'EUR'];
 
@@ -130,21 +131,21 @@ export default function StoreFormPage() {
                     </div>
                     <div>
                         <label className={label}>{t('store_currency')}</label>
-                        <select value={currency} onChange={(e) => setCurrency(e.target.value)} className={field}>
+                        <SearchableSelect value={currency} onChange={(e) => setCurrency(e.target.value)} className="w-full">
                             {CURRENCIES.map((c) => (
                                 <option key={c} value={c}>
                                     {c}
                                 </option>
                             ))}
-                        </select>
+                        </SearchableSelect>
                     </div>
                     <div>
                         <label className={label}>{t('store_status')}</label>
-                        <select value={status} onChange={(e) => setStatus(e.target.value)} className={field}>
+                        <SearchableSelect value={status} onChange={(e) => setStatus(e.target.value)} className="w-full">
                             <option value="draft">{t('store_status_draft')}</option>
                             <option value="active">{t('store_status_active')}</option>
                             <option value="suspended">{t('store_status_suspended')}</option>
-                        </select>
+                        </SearchableSelect>
                     </div>
                 </div>
                 <div className="flex gap-2 pt-2">

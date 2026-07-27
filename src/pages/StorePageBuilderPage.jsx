@@ -4,6 +4,7 @@ import useStoreScope from '../hooks/useStoreScope';
 import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
 import api from '../api/client';
+import SearchableSelect from '../components/ui/SearchableSelect';
 
 function SectionSettings({ schema, value, onChange }) {
     const fields = schema?.settings ?? [];
@@ -22,9 +23,9 @@ function SectionSettings({ schema, value, onChange }) {
                         ) : f.type === 'textarea' || f.type === 'richtext' ? (
                             <textarea rows={2} value={v ?? ''} onChange={(e) => set(f.id, e.target.value)} className={cls} />
                         ) : f.type === 'select' ? (
-                            <select value={v ?? ''} onChange={(e) => set(f.id, e.target.value)} className={cls}>
+                            <SearchableSelect value={v ?? ''} onChange={(e) => set(f.id, e.target.value)} className="w-full">
                                 {(f.options || []).map((o) => <option key={o} value={o}>{o}</option>)}
-                            </select>
+                            </SearchableSelect>
                         ) : f.type === 'number' || f.type === 'range' ? (
                             <input type="number" value={v ?? ''} onChange={(e) => set(f.id, e.target.value === '' ? '' : Number(e.target.value))} className={cls} />
                         ) : f.type === 'color' ? (
@@ -151,9 +152,9 @@ export default function StorePageBuilderPage() {
                         <h3 className="text-sm font-semibold">{t('page_settings', 'Page settings')}</h3>
                         <input value={page.title} onChange={(e) => setPage({ ...page, title: e.target.value })} placeholder="Title" className={field} />
                         <input value={page.slug} onChange={(e) => setPage({ ...page, slug: e.target.value })} placeholder="slug" className={field} />
-                        <select value={page.template} onChange={(e) => setPage({ ...page, template: e.target.value })} className={field}>
+                        <SearchableSelect value={page.template} onChange={(e) => setPage({ ...page, template: e.target.value })} className="w-full">
                             <option value="page">page</option><option value="landing">landing</option>
-                        </select>
+                        </SearchableSelect>
                         <input value={page.seo?.title ?? ''} onChange={(e) => setPage({ ...page, seo: { ...(page.seo || {}), title: e.target.value } })} placeholder="SEO title" className={field} />
                         <textarea rows={2} value={page.seo?.description ?? ''} onChange={(e) => setPage({ ...page, seo: { ...(page.seo || {}), description: e.target.value } })} placeholder="SEO description" className={field} />
                         <button type="button" disabled={saving} onClick={savePage} className="w-full rounded-lg bg-slate-800 px-3 py-2 text-sm font-semibold text-white disabled:opacity-50">

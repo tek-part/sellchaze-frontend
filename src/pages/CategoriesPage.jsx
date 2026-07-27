@@ -10,6 +10,8 @@ import PaginationBar from '../components/table/PaginationBar';
 import TableLoadingOverlay from '../components/table/TableLoadingOverlay';
 import ConfirmDialog from '../components/ConfirmDialog';
 import TableIconActions from '../components/table/TableIconActions';
+import PageHeader from '../components/PageHeader';
+import { HiOutlinePlus, HiOutlinePhoto } from 'react-icons/hi2';
 import { exportRowsToExcel } from '../utils/exportExcel';
 import { fetchAllPages } from '../utils/fetchAllPages';
 
@@ -169,10 +171,20 @@ export default function CategoriesPage() {
 
     return (
         <div className="space-y-5">
-            <div className="border-s-4 border-brand ps-4">
-                <h1 className="text-2xl font-semibold tracking-tight text-slate-900">{t('categories')}</h1>
-                <p className="mt-1 text-sm text-slate-500">{t('categories_subtitle')}</p>
-            </div>
+            <PageHeader
+                title={t('categories')}
+                subtitle={t('categories_subtitle')}
+                action={can('categories-create') ? (
+                    <button
+                        type="button"
+                        onClick={() => navigate('/categories/new')}
+                        className="inline-flex items-center gap-1.5 rounded-xl bg-brand px-4 py-2 text-sm font-semibold text-white shadow-xs transition hover:bg-brand-dark"
+                    >
+                        <HiOutlinePlus className="h-4 w-4" aria-hidden />
+                        {t('table_create')}
+                    </button>
+                ) : null}
+            />
             {err && (
                 <p className="rounded-lg border border-red-100 bg-red-50 px-3 py-2 text-sm text-red-700">{err}</p>
             )}
@@ -188,8 +200,6 @@ export default function CategoriesPage() {
                     onExportCurrent={handleExportCurrent}
                     onExportAll={handleExportAll}
                     exportDisabled={loading}
-                    onCreate={can('categories-create') ? () => navigate('/categories/new') : undefined}
-                    createLabel={t('table_create')}
                     selectedCount={selected.size}
                     onBulkDelete={
                         canBulkDeleteByActivity && can('categories-delete')
@@ -275,7 +285,22 @@ export default function CategoriesPage() {
                                             />
                                         </td>
                                     ) : null}
-                                    <td className="px-4 py-3 font-medium text-slate-900">{row.name}</td>
+                                    <td className="px-4 py-3 font-medium text-slate-900">
+                                        <div className="flex items-center gap-3">
+                                            {row.image_url ? (
+                                                <img
+                                                    src={row.image_url}
+                                                    alt=""
+                                                    className="h-10 w-10 shrink-0 rounded-lg object-cover ring-1 ring-slate-200"
+                                                />
+                                            ) : (
+                                                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-slate-400 ring-1 ring-slate-200">
+                                                    <HiOutlinePhoto className="h-5 w-5" aria-hidden />
+                                                </span>
+                                            )}
+                                            <span>{row.name}</span>
+                                        </div>
+                                    </td>
                                     <td className="px-4 py-3 text-slate-700">{row.products_count ?? 0}</td>
                                     <td className="px-4 py-3 text-slate-600">
                                         {row.created_at ? new Date(row.created_at).toLocaleString() : '—'}
@@ -293,7 +318,7 @@ export default function CategoriesPage() {
                                                     : undefined
                                             }
                                             onDelete={
-                                                canBulkDeleteByActivity && can('categories-delete')
+                                                can('categories-delete')
                                                     ? () => setConfirmOne(row.id)
                                                     : undefined
                                             }

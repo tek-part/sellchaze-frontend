@@ -11,6 +11,7 @@ import {
 import api from '../../api/client';
 import { getPaginatedRows } from '../../utils/apiPagination';
 import WavexTemplateBodyEditor from '../../components/wavex/WavexTemplateBodyEditor';
+import SearchableSelect from '../../components/ui/SearchableSelect';
 
 function plainToTipTapHtml(plain) {
     if (plain == null || String(plain).trim() === '') return '<p></p>';
@@ -154,8 +155,8 @@ export default function WavexCampaignNewPage() {
 
                     <div className="mb-4">
                         <label className="text-sm font-medium text-slate-600">{t('wavex_campaign_template')}</label>
-                        <select
-                            className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm focus:border-brand focus:ring-1 focus:ring-brand"
+                        <SearchableSelect
+                            className="mt-1 w-full"
                             value={templateId}
                             onChange={(e) => {
                                 const id = e.target.value;
@@ -175,7 +176,7 @@ export default function WavexCampaignNewPage() {
                             {templates.map((tpl) => (
                                 <option key={tpl.id} value={tpl.id}>{tpl.name}</option>
                             ))}
-                        </select>
+                        </SearchableSelect>
                         {selectedTemplate?.media_type && (
                             <p className="mt-1.5 flex items-center gap-1 text-xs text-brand">
                                 <HiOutlineDocumentDuplicate className="h-3.5 w-3.5" />
@@ -232,8 +233,8 @@ export default function WavexCampaignNewPage() {
 
                     {recipientSource === 'group' ? (
                         <div>
-                            <select
-                                className="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm focus:border-brand focus:ring-1 focus:ring-brand"
+                            <SearchableSelect
+                                className="w-full"
                                 value={contactGroupId}
                                 onChange={(e) => setContactGroupId(e.target.value)}
                                 required={recipientSource === 'group'}
@@ -244,7 +245,7 @@ export default function WavexCampaignNewPage() {
                                         {g.name} {typeof g.members_count === 'number' ? `(${g.members_count})` : ''}
                                     </option>
                                 ))}
-                            </select>
+                            </SearchableSelect>
                             {selectedGroup && (
                                 <p className="mt-2 text-sm text-emerald-700">
                                     {selectedGroup.members_count ?? 0} {t('wavex_cg_members_count')}

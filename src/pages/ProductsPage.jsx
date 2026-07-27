@@ -10,6 +10,9 @@ import PaginationBar from '../components/table/PaginationBar';
 import TableLoadingOverlay from '../components/table/TableLoadingOverlay';
 import ConfirmDialog from '../components/ConfirmDialog';
 import TableIconActions from '../components/table/TableIconActions';
+import PageHeader from '../components/PageHeader';
+import SearchableSelect from '../components/ui/SearchableSelect';
+import { HiOutlinePlus } from 'react-icons/hi2';
 import { exportRowsToExcel } from '../utils/exportExcel';
 import { fetchAllPages } from '../utils/fetchAllPages';
 
@@ -38,6 +41,7 @@ export default function ProductsPage() {
     const [searchInput, setSearchInput] = useState('');
     const debouncedSearch = useDebounced(searchInput, 400);
     const [categoryId, setCategoryId] = useState('');
+    const [categories, setCategories] = useState([]);
     const [dateFrom, setDateFrom] = useState('');
     const [dateTo, setDateTo] = useState('');
     const [selected, setSelected] = useState(() => new Set());
@@ -57,6 +61,12 @@ export default function ProductsPage() {
         };
         return params;
     }, [page, perPage, debouncedSearch, categoryId, dateFrom, dateTo]);
+
+    useEffect(() => {
+        api.get('/categories', { params: { per_page: 200 } })
+            .then(({ data }) => setCategories(data.data ?? []))
+            .catch(() => {});
+    }, []);
 
     useEffect(() => {
         setPage(1);
@@ -180,10 +190,20 @@ export default function ProductsPage() {
 
     return (
         <div className="space-y-5">
-            <div className="border-s-4 border-brand ps-4">
-                <h1 className="text-2xl font-semibold tracking-tight text-slate-900">{t('products')}</h1>
-                <p className="mt-1 text-sm text-slate-500">{t('products_subtitle')}</p>
-            </div>
+            <PageHeader
+                title={t('products')}
+                subtitle={t('products_subtitle')}
+                action={can('products-create') ? (
+                    <button
+                        type="button"
+                        onClick={() => navigate('/products/new')}
+                        className="inline-flex items-center gap-1.5 rounded-xl bg-brand px-4 py-2 text-sm font-semibold text-white shadow-xs transition hover:bg-brand-dark"
+                    >
+                        <HiOutlinePlus className="h-4 w-4" aria-hidden />
+                        {t('table_create')}
+                    </button>
+                ) : null}
+            />
             {err && (
                 <p className="rounded-lg border border-red-100 bg-red-50 px-3 py-2 text-sm text-red-700">{err}</p>
             )}
@@ -199,8 +219,6 @@ export default function ProductsPage() {
                     onExportCurrent={handleExportCurrent}
                     onExportAll={handleExportAll}
                     exportDisabled={loading}
-                    onCreate={can('products-create') ? () => navigate('/products/new') : undefined}
-                    createLabel={t('table_create')}
                     selectedCount={selected.size}
                     onBulkDelete={
                         canBulkDeleteByActivity && can('products-delete')
@@ -216,15 +234,19 @@ export default function ProductsPage() {
                         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
                             <div>
                                 <label className="mb-1 block text-[11px] font-semibold uppercase text-slate-500">
-                                    {t('col_category')} ID
+                                    {t('col_category')}
                                 </label>
-                                <input
-                                    type="number"
+                                <SearchableSelect
                                     value={categoryId}
                                     onChange={(e) => setCategoryId(e.target.value)}
                                     placeholder={t('filter_all')}
-                                    className="w-full rounded-lg border border-slate-200 px-2 py-1.5 text-sm"
-                                />
+                                    className="w-full"
+                                >
+                                    <option value="">{t('filter_all')}</option>
+                                    {categories.map((c) => (
+                                        <option key={c.id} value={c.id}>{c.name}</option>
+                                    ))}
+                                </SearchableSelect>
                             </div>
                             <div>
                                 <label className="mb-1 block text-[11px] font-semibold uppercase text-slate-500">
@@ -346,7 +368,7 @@ export default function ProductsPage() {
                                                     : undefined
                                             }
                                             onDelete={
-                                                canBulkDeleteByActivity && can('products-delete')
+                                                can('products-delete')
                                                     ? () => setConfirmOne(row.id)
                                                     : undefined
                                             }

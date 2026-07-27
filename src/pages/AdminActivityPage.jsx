@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { HiOutlineChevronDown } from 'react-icons/hi2';
 import toast from 'react-hot-toast';
 import api from '../api/client';
+import SearchableSelect from '../components/ui/SearchableSelect';
 import { useDebounced } from '../hooks/useDebounced';
 import ListToolbar from '../components/table/ListToolbar';
 import PaginationBar from '../components/table/PaginationBar';
@@ -166,10 +167,10 @@ export default function AdminActivityPage() {
                                 <label className="mb-1 block text-[11px] font-semibold uppercase text-slate-500">
                                     {t('activity_filter_event_type')}
                                 </label>
-                                <select
+                                <SearchableSelect
                                     value={eventType}
                                     onChange={(e) => setEventType(e.target.value)}
-                                    className="w-full rounded-lg border border-slate-200 px-2 py-1.5 text-sm"
+                                    className="w-full"
                                 >
                                     <option value="">{t('filter_all')}</option>
                                     <option value="user_action">user_action</option>
@@ -177,16 +178,16 @@ export default function AdminActivityPage() {
                                     <option value="background_job">background_job</option>
                                     <option value="integration">integration</option>
                                     <option value="error">error</option>
-                                </select>
+                                </SearchableSelect>
                             </div>
                             <div>
                                 <label className="mb-1 block text-[11px] font-semibold uppercase text-slate-500">
                                     {t('activity_filter_channel')}
                                 </label>
-                                <select
+                                <SearchableSelect
                                     value={channel}
                                     onChange={(e) => setChannel(e.target.value)}
-                                    className="w-full rounded-lg border border-slate-200 px-2 py-1.5 text-sm"
+                                    className="w-full"
                                 >
                                     <option value="">{t('filter_all')}</option>
                                     <option value="http">http</option>
@@ -194,22 +195,22 @@ export default function AdminActivityPage() {
                                     <option value="scheduler">scheduler</option>
                                     <option value="webhook">webhook</option>
                                     <option value="command">command</option>
-                                </select>
+                                </SearchableSelect>
                             </div>
                             <div>
                                 <label className="mb-1 block text-[11px] font-semibold uppercase text-slate-500">
                                     {t('activity_filter_level')}
                                 </label>
-                                <select
+                                <SearchableSelect
                                     value={level}
                                     onChange={(e) => setLevel(e.target.value)}
-                                    className="w-full rounded-lg border border-slate-200 px-2 py-1.5 text-sm"
+                                    className="w-full"
                                 >
                                     <option value="">{t('filter_all')}</option>
                                     <option value="info">info</option>
                                     <option value="warning">warning</option>
                                     <option value="error">error</option>
-                                </select>
+                                </SearchableSelect>
                             </div>
                             <div>
                                 <label className="mb-1 block text-[11px] font-semibold uppercase text-slate-500">

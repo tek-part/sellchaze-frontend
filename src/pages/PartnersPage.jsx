@@ -20,6 +20,7 @@ import {
     HiOutlineUsers,
 } from 'react-icons/hi2';
 import api from '../api/client';
+import SearchableSelect from '../components/ui/SearchableSelect';
 
 export default function PartnersPage() {
     const { t } = useTranslation();
@@ -193,10 +194,10 @@ export default function PartnersPage() {
                     {isAdmin ? (
                         <label>
                             <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-slate-500">{t('partners_invite_role')}</span>
-                            <select value={role} onChange={(e) => setRole(e.target.value)} className="rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm">
+                            <SearchableSelect value={role} onChange={(e) => setRole(e.target.value)} className="w-full sm:w-56">
                                 <option value="supplier">{t('role_supplier')}</option>
                                 <option value="merchant">{t('role_merchant')}</option>
-                            </select>
+                            </SearchableSelect>
                         </label>
                     ) : (
                         <p className="text-xs text-slate-500">{isSupplier ? t('partners_auto_role_supplier_hint') : t('partners_auto_role_merchant_hint')}</p>

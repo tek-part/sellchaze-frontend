@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
 import api from '../api/client';
 import useStoreScope from '../hooks/useStoreScope';
+import SearchableSelect from '../components/ui/SearchableSelect';
 
 const TYPES = ['url', 'internal', 'category', 'product'];
 
@@ -50,9 +51,9 @@ function MenuEditor({ apiBase, handle }) {
                 {items.map((it, i) => (
                     <div key={i} className="flex flex-wrap items-center gap-2">
                         <input value={it.label} onChange={(e) => setItem(i, 'label', e.target.value)} placeholder="Label" className={`${cls} flex-1 min-w-32`} />
-                        <select value={it.type} onChange={(e) => setItem(i, 'type', e.target.value)} className={cls}>
+                        <SearchableSelect value={it.type} onChange={(e) => setItem(i, 'type', e.target.value)} className="w-full sm:w-56">
                             {TYPES.map((tp) => <option key={tp} value={tp}>{tp}</option>)}
-                        </select>
+                        </SearchableSelect>
                         <input value={it.target} onChange={(e) => setItem(i, 'target', e.target.value)} placeholder="target (slug/url)" className={`${cls} flex-1 min-w-32`} />
                         <button type="button" onClick={() => removeItem(i)} className="rounded-sm border px-2 py-1 text-sm text-red-600">×</button>
                     </div>
