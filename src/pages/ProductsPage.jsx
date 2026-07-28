@@ -367,6 +367,11 @@ export default function ProductsPage() {
                                                     ? `/products/${row.id}/edit`
                                                     : undefined
                                             }
+                                            reviewsTo={
+                                                can('store.reviews.manage')
+                                                    ? `/store/reviews?product=${row.id}&product_name=${encodeURIComponent(row.name)}`
+                                                    : undefined
+                                            }
                                             onDelete={
                                                 can('products-delete')
                                                     ? () => setConfirmOne(row.id)
@@ -382,7 +387,6 @@ export default function ProductsPage() {
                 </div>
                 <PaginationBar meta={meta} loading={loading} onPageChange={setPage} />
             </div>
-            <p className="text-sm text-slate-600">{t('products_manage_hint')}</p>
 
             <ConfirmDialog
                 open={!!confirmOne}

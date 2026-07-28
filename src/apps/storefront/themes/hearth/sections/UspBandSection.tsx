@@ -7,15 +7,19 @@ import type { SectionRenderProps } from '../../../theme-engine/rendering';
 import { Container } from '../components/Container';
 import { Section } from '../components/Section';
 import { option, range, lines, text } from './section-settings';
+import { sectionTitlesFrom, whyChooseUsFrom } from '../../../content/home-data';
 
 export function UspBandSection(props: SectionRenderProps): ReactElement | null {
-  const { settings } = props;
-  const heading = text(settings, 'heading');
+  const { settings, context } = props;
+  const fromData = whyChooseUsFrom(context);
+  const heading = sectionTitlesFrom(context).why ?? text(settings, 'heading');
   const bg = option(settings, 'bg', ['oat', 'sand', 'cream'] as const, 'sand');
-  const items = lines(settings, 'items').map((line) => {
-    const [title, ...rest] = line.split('|');
-    return { title: (title ?? '').trim(), body: rest.join('|').trim() };
-  });
+  const items = fromData.length
+    ? fromData.map((w) => ({ title: w.title, body: w.text }))
+    : lines(settings, 'items').map((line) => {
+        const [title, ...rest] = line.split('|');
+        return { title: (title ?? '').trim(), body: rest.join('|').trim() };
+      });
   const columns = range(settings, 'columns', Math.min(items.length || 1, 4), 2, 5);
 
   if (items.length === 0) return null;

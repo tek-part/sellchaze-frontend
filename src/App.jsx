@@ -85,6 +85,7 @@ import StoreThemesPage from './pages/StoreThemesPage';
 import StoreThemeSettingsPage from './pages/StoreThemeSettingsPage';
 import StorePagesPage from './pages/StorePagesPage';
 const StorePageBuilderPage = lazy(() => import('./pages/StorePageBuilderPage'));
+const StoreContentPageEditor = lazy(() => import('./pages/StoreContentPageEditor'));
 import StoreMenusPage from './pages/StoreMenusPage';
 // Phase 6H: route-level lazy loading for the heavier commerce/analytics pages
 // (keeps chart.js and these screens out of the main bundle).
@@ -240,6 +241,7 @@ export default function App() {
                 <Route path="/store/themes/:themeId/settings" element={<StoreThemeSettingsPage />} />
                 <Route path="/store/themes" element={<StoreThemesPage />} />
                 <Route path="/store/pages/:pageId/builder" element={<StorePageBuilderPage />} />
+                <Route path="/store/content/:key" element={<StoreContentPageEditor />} />
                 <Route path="/store/pages" element={<StorePagesPage />} />
                 <Route path="/store/menus" element={<StoreMenusPage />} />
                 <Route path="/store/coupons/new" element={<StoreCouponFormPage />} />
@@ -259,6 +261,7 @@ export default function App() {
                 <Route path="/stores/:id/themes/:themeId/settings" element={<StoreThemeSettingsPage />} />
                 <Route path="/stores/:id/themes" element={<StoreThemesPage />} />
                 <Route path="/stores/:id/pages/:pageId/builder" element={<StorePageBuilderPage />} />
+                <Route path="/stores/:id/content/:key" element={<StoreContentPageEditor />} />
                 <Route path="/stores/:id/pages" element={<StorePagesPage />} />
                 <Route path="/stores/:id/menus" element={<StoreMenusPage />} />
                 <Route path="/stores/:id/coupons/new" element={<StoreCouponFormPage />} />

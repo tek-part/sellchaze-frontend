@@ -10,6 +10,7 @@ import { ButtonLink } from '../components/ButtonLink';
 import { IconButton } from '../components/IconButton';
 import { IconChevronLeft, IconChevronRight } from '../components/icons';
 import { lines } from './section-settings';
+import { slidesFrom } from '../../../content/home-data';
 
 interface Slide {
   eyebrow: string;
@@ -24,16 +25,25 @@ function prefersReducedMotion(): boolean {
 }
 
 export function HeroSliderSection(props: SectionRenderProps): ReactElement | null {
-  const slides: Slide[] = lines(props.settings, 'slides')
-    .map((raw) => raw.split('|').map((p) => p.trim()))
-    .filter((parts) => parts[0] || parts[1])
-    .map((parts) => ({
-      eyebrow: parts[0] ?? '',
-      heading: parts[1] ?? '',
-      subheading: parts[2] ?? '',
-      ctaLabel: parts[3] ?? '',
-      ctaUrl: parts[4] ?? '',
-    }));
+  const fromData = slidesFrom(props.context);
+  const slides: Slide[] = fromData.length
+    ? fromData.map((s) => ({
+        eyebrow: s.eyebrow ?? '',
+        heading: s.heading ?? '',
+        subheading: s.subheading ?? '',
+        ctaLabel: s.ctaLabel ?? '',
+        ctaUrl: s.ctaUrl ?? '',
+      }))
+    : lines(props.settings, 'slides')
+        .map((raw) => raw.split('|').map((p) => p.trim()))
+        .filter((parts) => parts[0] || parts[1])
+        .map((parts) => ({
+          eyebrow: parts[0] ?? '',
+          heading: parts[1] ?? '',
+          subheading: parts[2] ?? '',
+          ctaLabel: parts[3] ?? '',
+          ctaUrl: parts[4] ?? '',
+        }));
 
   const [active, setActive] = useState(0);
   const count = slides.length;

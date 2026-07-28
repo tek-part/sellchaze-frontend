@@ -6,14 +6,18 @@ import { Section } from '../components/Section';
 import { SectionHead } from '../components/SectionHead';
 import { Accordion, type AccordionItem } from '../components/Accordion';
 import { lines, text } from './section-settings';
+import { faqFrom, faqHeadingFrom } from '../../../content/home-data';
 
 export function FaqSection(props: SectionRenderProps): ReactElement | null {
-  const items: AccordionItem[] = lines(props.settings, 'items')
-    .map((raw) => raw.split('|').map((p) => p.trim()))
-    .filter((parts) => parts[0] && parts[1])
-    .map((parts) => ({ question: parts[0] ?? '', answer: parts[1] ?? '' }));
+  const fromData = faqFrom(props.context);
+  const items: AccordionItem[] = fromData.length
+    ? fromData.map((f) => ({ question: f.question, answer: f.answer }))
+    : lines(props.settings, 'items')
+        .map((raw) => raw.split('|').map((p) => p.trim()))
+        .filter((parts) => parts[0] && parts[1])
+        .map((parts) => ({ question: parts[0] ?? '', answer: parts[1] ?? '' }));
   if (items.length === 0) return null;
-  const title = text(props.settings, 'title') || 'FAQ';
+  const title = faqHeadingFrom(props.context) || text(props.settings, 'title') || 'FAQ';
 
   return (
     <Section reveal>

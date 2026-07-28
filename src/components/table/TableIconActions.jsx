@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { HiEye, HiPencilSquare, HiTrash, HiOutlineUserCircle } from 'react-icons/hi2';
+import { HiEye, HiPencilSquare, HiTrash, HiOutlineUserCircle, HiOutlineStar } from 'react-icons/hi2';
 
 const btn =
     'inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 shadow-xs outline-hidden transition hover:border-slate-300 hover:bg-slate-50 hover:text-brand focus-visible:ring-2 focus-visible:ring-brand/30';
@@ -12,6 +12,7 @@ const btnDanger =
  *   viewTo?: string;
  *   viewLinkState?: object;
  *   editTo?: string;
+ *   reviewsTo?: string;
  *   onDelete?: () => void;
  *   deleteDisabled?: boolean;
  *   onImpersonate?: () => void;
@@ -27,6 +28,7 @@ export default function TableIconActions({
     viewTo,
     viewLinkState,
     editTo,
+    reviewsTo,
     onDelete,
     deleteDisabled,
     onImpersonate,
@@ -60,6 +62,16 @@ export default function TableIconActions({
                     aria-label={t('aria_edit')}
                 >
                     <HiPencilSquare className="h-4 w-4 shrink-0" aria-hidden />
+                </Link>
+            ) : null}
+            {reviewsTo ? (
+                <Link
+                    to={reviewsTo}
+                    className={btn}
+                    title={t('aria_reviews', 'Reviews')}
+                    aria-label={t('aria_reviews', 'Reviews')}
+                >
+                    <HiOutlineStar className="h-4 w-4 shrink-0" aria-hidden />
                 </Link>
             ) : null}
 

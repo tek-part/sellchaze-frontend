@@ -10,6 +10,7 @@ import { Section } from '../components/Section';
 import { SectionHead } from '../components/SectionHead';
 import { Rating } from '../components/Rating';
 import { option, range, text } from './section-settings';
+import { testimonialsFrom } from '../../../content/home-data';
 
 interface Quote {
   text: string;
@@ -32,11 +33,14 @@ function readQuotes(settings: SectionRenderProps['settings'], max: number): Quot
 }
 
 export function TestimonialsSection(props: SectionRenderProps): ReactElement | null {
-  const { settings } = props;
+  const { settings, context } = props;
   const heading = text(settings, 'heading', 'Loved at home');
   const label = text(settings, 'label');
   const bg = option(settings, 'bg', ['oat', 'sand', 'cream'] as const, 'sand');
-  const quotes = readQuotes(settings, 6);
+  const fromData = testimonialsFrom(context);
+  const quotes = fromData.length
+    ? fromData.map((t) => ({ text: t.body, author: t.author, rating: t.rating }))
+    : readQuotes(settings, 6);
 
   if (quotes.length === 0) return null;
   const gridStyle = { '--hh-cols': String(Math.min(3, quotes.length)) } as CSSProperties;

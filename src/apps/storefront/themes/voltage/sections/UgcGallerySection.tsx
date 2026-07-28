@@ -6,11 +6,13 @@ import { Section } from '../components/Section';
 import { SectionHead } from '../components/SectionHead';
 import { StoreImage } from '../components/Image';
 import { lines, text } from './section-settings';
+import { sectionTitlesFrom, ugcFrom } from '../../../content/home-data';
 
 export function UgcGallerySection(props: SectionRenderProps): ReactElement | null {
-  const images = lines(props.settings, 'images').filter(Boolean);
+  const ugc = ugcFrom(props.context);
+  const images = ugc.images.length ? ugc.images.map((i) => i.image) : lines(props.settings, 'images').filter(Boolean);
   if (images.length === 0) return null;
-  const title = text(props.settings, 'title');
+  const title = sectionTitlesFrom(props.context).ugc ?? text(props.settings, 'title');
 
   return (
     <Section reveal>

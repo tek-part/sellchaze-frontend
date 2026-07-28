@@ -14,7 +14,7 @@ import {
   type ReactNode,
 } from 'react';
 import { getAccount, login as loginReq, logout as logoutReq, register as registerReq } from '../api/storefront';
-import { ApiError } from '../api/client';
+import { ApiError, setAuthToken } from '../api/client';
 
 export interface Customer {
   id: string;
@@ -63,7 +63,8 @@ export function AuthProvider(props: { children: ReactNode }): ReactElement {
 
   const login = useCallback(
     async (email: string, password: string) => {
-      await loginReq({ email, password });
+      const res = await loginReq({ email, password });
+      if (res.token) setAuthToken(res.token);
       await refresh();
     },
     [refresh],
@@ -71,7 +72,8 @@ export function AuthProvider(props: { children: ReactNode }): ReactElement {
 
   const register = useCallback(
     async (input: { name: string; email: string; password: string; password_confirmation: string }) => {
-      await registerReq(input);
+      const res = await registerReq(input);
+      if (res.token) setAuthToken(res.token);
       await refresh();
     },
     [refresh],
@@ -81,6 +83,7 @@ export function AuthProvider(props: { children: ReactNode }): ReactElement {
     try {
       await logoutReq();
     } finally {
+      setAuthToken(null);
       setCustomer(null);
     }
   }, []);

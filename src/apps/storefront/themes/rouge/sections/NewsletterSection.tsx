@@ -17,16 +17,19 @@ import { Eyebrow } from '../components/Typography';
 import { IconCheck } from '../components/icons';
 import { useNewsletter } from '../../../shared-ui';
 import { text } from './section-settings';
+import { newsletterFrom } from '../../../content/home-data';
+import { subscribeNewsletter } from '../../../api/storefront';
 
 export function NewsletterSection(props: SectionRenderProps): ReactElement | null {
-  const { settings } = props;
+  const { settings, context } = props;
+  const copy = newsletterFrom(context);
   const eyebrow = text(settings, 'eyebrow', 'The Rouge Édit');
-  const title = text(settings, 'title', 'Join the list, unlock 10% off');
-  const subtitle = text(settings, 'subtitle', 'Early access to launches, shade drops, and members-only rituals.');
-  const ctaLabel = text(settings, 'cta_label', 'Subscribe');
+  const title = copy.title ?? text(settings, 'title', 'Join the list, unlock 10% off');
+  const subtitle = copy.text ?? text(settings, 'subtitle', 'Early access to launches, shade drops, and members-only rituals.');
+  const ctaLabel = copy.cta ?? text(settings, 'cta_label', 'Subscribe');
   const incentive = text(settings, 'incentive', 'Plus a complimentary sample with your first order.');
   const [email, setEmail] = useState('');
-  const { status, message, submitting, subscribe } = useNewsletter();
+  const { status, message, submitting, subscribe } = useNewsletter({ submit: (e) => subscribeNewsletter(e).then(() => undefined) });
   const done = status === 'saved' || status === 'subscribed';
 
   const onSubmit = (e: FormEvent<HTMLFormElement>): void => {

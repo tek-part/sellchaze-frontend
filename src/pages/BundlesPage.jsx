@@ -327,7 +327,6 @@ export default function BundlesPage() {
                 </div>
                 <PaginationBar meta={meta} loading={loading} onPageChange={setPage} />
             </div>
-            <p className="text-sm text-slate-600">{t('bundles_manage_hint')}</p>
 
             <ConfirmDialog
                 open={!!confirmOne}

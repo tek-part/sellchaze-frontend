@@ -10,17 +10,21 @@ import { Container } from '../components/Container';
 import { ButtonLink } from '../components/ButtonLink';
 import { StoreImage } from '../components/Image';
 import { count, lines, range } from './section-settings';
+import { slidesFrom } from '../../../content/home-data';
 
 interface Slide { heading: string; subheading: string; ctaLabel: string; ctaUrl: string; image: string }
 
 export function HeroSliderSection(props: SectionRenderProps): ReactElement | null {
-  const { settings } = props;
-  const slides: Slide[] = lines(settings, 'slides')
-    .map((row) => {
-      const [heading, subheading, ctaLabel, ctaUrl, image] = row.split('|').map((s) => s.trim());
-      return heading || image ? { heading: heading ?? '', subheading: subheading ?? '', ctaLabel: ctaLabel ?? '', ctaUrl: ctaUrl || '#', image: image ?? '' } : null;
-    })
-    .filter((x): x is Slide => x !== null);
+  const { settings, context } = props;
+  const fromData = slidesFrom(context);
+  const slides: Slide[] = fromData.length
+    ? fromData.map((s) => ({ heading: s.heading ?? '', subheading: s.subheading ?? '', ctaLabel: s.ctaLabel ?? '', ctaUrl: s.ctaUrl || '#', image: s.image ?? '' }))
+    : lines(settings, 'slides')
+        .map((row) => {
+          const [heading, subheading, ctaLabel, ctaUrl, image] = row.split('|').map((s) => s.trim());
+          return heading || image ? { heading: heading ?? '', subheading: subheading ?? '', ctaLabel: ctaLabel ?? '', ctaUrl: ctaUrl || '#', image: image ?? '' } : null;
+        })
+        .filter((x): x is Slide => x !== null);
   const interval = count(settings, 'interval', 6000);
   const overlay = range(settings, 'overlay', 30, 0, 100) / 100;
   const [index, setIndex] = useState(0);

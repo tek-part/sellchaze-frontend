@@ -9,20 +9,24 @@ import { Section } from '../components/Section';
 import { SectionHead } from '../components/SectionHead';
 import { StoreImage } from '../components/Image';
 import { lines, range, text } from './section-settings';
+import { featuredCollectionsFrom, sectionTitlesFrom } from '../../../content/home-data';
 
 interface Tile { label: string; subtitle: string; image: string; url: string }
 
 export function CollectionSection(props: SectionRenderProps): ReactElement | null {
-  const { settings } = props;
+  const { settings, context } = props;
+  const fromData = featuredCollectionsFrom(context);
   const eyebrow = text(settings, 'eyebrow');
-  const title = text(settings, 'title');
+  const title = sectionTitlesFrom(context).collections ?? text(settings, 'title');
   const columns = range(settings, 'columns', 3, 2, 4);
-  const tiles: Tile[] = lines(settings, 'items')
-    .map((row) => {
-      const [label, subtitle, image, url] = row.split('|').map((s) => s.trim());
-      return label ? { label, subtitle: subtitle ?? '', image: image ?? '', url: url ?? '#' } : null;
-    })
-    .filter((x): x is Tile => x !== null);
+  const tiles: Tile[] = fromData.length
+    ? fromData.map((c) => ({ label: c.title, subtitle: c.subtitle ?? '', image: c.image?.src ?? '', url: c.url }))
+    : lines(settings, 'items')
+        .map((row) => {
+          const [label, subtitle, image, url] = row.split('|').map((s) => s.trim());
+          return label ? { label, subtitle: subtitle ?? '', image: image ?? '', url: url ?? '#' } : null;
+        })
+        .filter((x): x is Tile => x !== null);
 
   if (tiles.length === 0) return null;
   const style = { '--rge-cols': columns, '--rge-cols-lg': Math.min(columns, 3), '--rge-cols-md': 2, '--rge-cols-sm': 1 } as CSSProperties;

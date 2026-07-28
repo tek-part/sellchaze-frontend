@@ -9,16 +9,22 @@ import { Section } from '../components/Section';
 import { SectionHead } from '../components/SectionHead';
 import { Accordion, type AccordionItem } from '../components/Accordion';
 import { lines, text } from './section-settings';
+import { faqFrom, faqHeadingFrom } from '../../../content/home-data';
 
 export function FaqSection(props: SectionRenderProps): ReactElement | null {
-  const { settings } = props;
+  const { settings, context } = props;
   const eyebrow = text(settings, 'eyebrow', 'Good to know');
-  const title = text(settings, 'title', 'Frequently asked');
+  const title = faqHeadingFrom(context) || text(settings, 'title', 'Frequently asked');
+  const fromData = faqFrom(context);
   const items: AccordionItem[] = [];
-  lines(settings, 'items').forEach((row, i) => {
-    const [q, a] = row.split('|').map((s) => s.trim());
-    if (q) items.push({ id: `faq-${i}`, title: q, content: a ?? '' });
-  });
+  if (fromData.length) {
+    fromData.forEach((f, i) => items.push({ id: `faq-${i}`, title: f.question, content: f.answer }));
+  } else {
+    lines(settings, 'items').forEach((row, i) => {
+      const [q, a] = row.split('|').map((s) => s.trim());
+      if (q) items.push({ id: `faq-${i}`, title: q, content: a ?? '' });
+    });
+  }
 
   if (items.length === 0) return null;
 

@@ -9,15 +9,17 @@ import { Container } from '../components/Container';
 import { EditorialCard } from '../components/EditorialCard';
 import { Section } from '../components/Section';
 import { option, text } from './section-settings';
+import { editorialFrom } from '../../../content/home-data';
 
 export function EditorialBannerSection(props: SectionRenderProps): ReactElement | null {
-  const { settings } = props;
-  const image = text(settings, 'image');
-  const heading = text(settings, 'heading');
-  const body = text(settings, 'body');
-  const eyebrow = text(settings, 'eyebrow');
-  const ctaLabel = text(settings, 'cta_label');
-  const ctaUrl = text(settings, 'cta_url', '#');
+  const { settings, context } = props;
+  const ed = editorialFrom(context);
+  const image = ed.image ?? text(settings, 'image');
+  const heading = ed.heading ?? text(settings, 'heading');
+  const body = ed.body ?? text(settings, 'body');
+  const eyebrow = ed.eyebrow ?? text(settings, 'eyebrow');
+  const ctaLabel = ed.ctaLabel ?? text(settings, 'cta_label');
+  const ctaUrl = ed.ctaUrl ?? text(settings, 'cta_url', '#');
   const side = option(settings, 'media_side', ['left', 'right'] as const, 'left');
 
   if (!heading && !image) return null;

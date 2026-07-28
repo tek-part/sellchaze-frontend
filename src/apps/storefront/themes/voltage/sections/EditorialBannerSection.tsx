@@ -10,15 +10,17 @@ import { Section } from '../components/Section';
 import { ButtonLink } from '../components/ButtonLink';
 import { StoreImage } from '../components/Image';
 import { option, text } from './section-settings';
+import { editorialFrom } from '../../../content/home-data';
 
 export function EditorialBannerSection(props: SectionRenderProps): ReactElement | null {
-  const heading = text(props.settings, 'heading');
-  const image = text(props.settings, 'image_url');
+  const ed = editorialFrom(props.context);
+  const heading = ed.heading ?? text(props.settings, 'heading');
+  const image = ed.image ?? text(props.settings, 'image_url');
   if (!heading && !image) return null;
-  const eyebrow = text(props.settings, 'eyebrow');
-  const body = text(props.settings, 'text');
-  const ctaLabel = text(props.settings, 'cta_label');
-  const ctaUrl = text(props.settings, 'cta_url');
+  const eyebrow = ed.eyebrow ?? text(props.settings, 'eyebrow');
+  const body = ed.body ?? text(props.settings, 'text');
+  const ctaLabel = ed.ctaLabel ?? text(props.settings, 'cta_label');
+  const ctaUrl = ed.ctaUrl ?? text(props.settings, 'cta_url');
   const align = option(props.settings, 'align', ['start', 'end'] as const, 'start');
 
   return (

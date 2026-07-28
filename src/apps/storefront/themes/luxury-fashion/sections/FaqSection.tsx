@@ -8,13 +8,17 @@ import type { SectionRenderProps } from '../../../theme-engine/rendering';
 import { Accordion, type AccordionItemData } from '../components/Accordion';
 import { SectionShell } from './SectionShell';
 import { pairs, text } from './section-settings';
+import { faqFrom, faqHeadingFrom } from '../../../content/home-data';
 
 export function FaqSection(props: SectionRenderProps): ReactElement | null {
-  const { settings } = props;
-  const title = text(settings, 'title', 'Frequently asked');
-  const items: AccordionItemData[] = pairs(settings, 'items')
-    .filter((p) => p.term)
-    .map((p, i) => ({ id: `faq-${i}`, header: p.term, content: p.definition }));
+  const { settings, context } = props;
+  const fromData = faqFrom(context);
+  const title = faqHeadingFrom(context) || text(settings, 'title', 'Frequently asked');
+  const items: AccordionItemData[] = fromData.length
+    ? fromData.map((f, i) => ({ id: `faq-${i}`, header: f.question, content: f.answer }))
+    : pairs(settings, 'items')
+        .filter((p) => p.term)
+        .map((p, i) => ({ id: `faq-${i}`, header: p.term, content: p.definition }));
 
   if (items.length === 0) return null;
 

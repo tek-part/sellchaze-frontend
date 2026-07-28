@@ -49,7 +49,8 @@ export function CheckoutSection(_props: SectionRenderProps): ReactElement {
     setError(undefined);
     try {
       const res = (await submitCheckout({
-        email: form.email,
+        customer_name: form.name,
+        customer_email: form.email,
         shipping_address: { name: form.name, line1: form.line1, city: form.city, postal_code: form.postal_code, country: form.country },
         items: cart.lines.map((l) => ({ product_id: Number(l.productId), variant_id: l.variantId ? Number(l.variantId) : undefined, quantity: l.quantity })),
         ...(coupon ? { coupon_code: coupon } : {}),

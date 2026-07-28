@@ -18,6 +18,35 @@ import { useStore } from '../state/store-context';
 import { useThemeManifest } from '../theme-engine';
 import { catalogFor } from '../content/demo';
 import { COMPANY, mapEmbedUrl, mapLinkUrl, type StoreLocation } from '../content/company';
+import { useStoreContent } from '../content/useStoreContent';
+
+interface AboutContent {
+  heading?: string; subheading?: string; hero_image?: string; mission?: string; vision?: string;
+  story?: string[]; values?: Array<{ title?: string; body?: string }>; stats?: Array<{ value?: string; label?: string }>;
+  founded?: string; story_image?: string; craft_image?: string;
+  milestones?: Array<{ year?: string; title?: string; body?: string }>;
+  leadership?: Array<{ name?: string; role?: string; bio?: string; photo?: string }>;
+  awards?: Array<{ year?: string; title?: string; body?: string }>;
+  partners?: string[];
+  craft_title?: string; craft_body?: string[];
+  testimonials?: Array<{ quote?: string; author?: string; detail?: string }>;
+  story_eyebrow?: string; story_heading?: string; values_eyebrow?: string; values_heading?: string;
+  milestones_eyebrow?: string; milestones_heading?: string; leadership_eyebrow?: string; leadership_heading?: string;
+  craft_eyebrow?: string; awards_eyebrow?: string; awards_heading?: string;
+  testimonials_eyebrow?: string; testimonials_heading?: string; partners_eyebrow?: string; partners_heading?: string;
+  cta_title?: string; cta_text?: string;
+}
+interface ContactContent {
+  heading?: string; intro?: string; email?: string; phone?: string; address?: string; hours?: string;
+  map_embed?: string; show_form?: boolean; notice_title?: string; notice_body?: string;
+  departments?: Array<{ name?: string; description?: string; email?: string; phone?: string; hours?: string }>;
+  locations?: Array<{ name?: string; address?: string; city?: string; country?: string; phone?: string; hours?: string; lat?: string; lon?: string }>;
+  hero_eyebrow?: string; departments_eyebrow?: string; departments_heading?: string;
+  form_heading?: string; locations_heading?: string; faq_eyebrow?: string; faq_heading?: string;
+}
+
+/** Return a trimmed override or the shipped default. */
+const L = (v: string | undefined, d: string): string => (v && v.trim() ? v.trim() : d);
 
 function site(): string {
   return typeof window !== 'undefined' ? window.location.origin : '';
@@ -66,26 +95,51 @@ export function AboutPage(): ReactElement {
   const { store } = useStore();
   const manifest = useThemeManifest();
   const catalog = catalogFor(manifest.id);
-  const testimonials = catalog.testimonials.slice(0, 3);
+
+  // Merge the store's editable content over the shipped defaults (unset -> default).
+  const c = useStoreContent<AboutContent>('about') ?? {};
+  const mission = c.mission?.trim() || COMPANY.mission;
+  const vision = c.vision?.trim() || COMPANY.vision;
+  const heroImage = c.hero_image?.trim() || COMPANY.heroImage;
+  const heroTitle = c.heading?.trim() || 'Fewer, better things — and the truth about them';
+  const heroSub = c.subheading?.trim() || mission;
+  const story = (Array.isArray(c.story) && c.story.filter(Boolean).length ? c.story.filter(Boolean) : COMPANY.story) as ReadonlyArray<string>;
+  const stats = (Array.isArray(c.stats) && c.stats.length ? c.stats : COMPANY.stats) as ReadonlyArray<{ value: string; label: string }>;
+  const values = (Array.isArray(c.values) && c.values.length ? c.values : COMPANY.values) as ReadonlyArray<{ title: string; body: string }>;
+  const founded = c.founded?.trim() || COMPANY.founded;
+  const storyImage = c.story_image?.trim() || COMPANY.storyImage;
+  const craftImage = c.craft_image?.trim() || COMPANY.craftImage;
+  const milestones = (Array.isArray(c.milestones) && c.milestones.length ? c.milestones : COMPANY.milestones) as ReadonlyArray<{ year: string; title: string; body: string }>;
+  const leadership = (Array.isArray(c.leadership) && c.leadership.length ? c.leadership : COMPANY.leadership) as ReadonlyArray<{ name: string; role: string; bio: string; photo: string }>;
+  const awards = (Array.isArray(c.awards) && c.awards.length ? c.awards : COMPANY.awards) as ReadonlyArray<{ year: string; title: string; body: string }>;
+  const partners = (Array.isArray(c.partners) && c.partners.filter(Boolean).length ? c.partners.filter(Boolean) : COMPANY.partners) as ReadonlyArray<string>;
+  const testimonials = (Array.isArray(c.testimonials) && c.testimonials.length ? c.testimonials : catalog.testimonials.slice(0, 3)) as ReadonlyArray<{ quote: string; author: string; detail: string }>;
+  const craftTitle = c.craft_title?.trim() || 'What we will and will not claim';
+  const craftBody = (Array.isArray(c.craft_body) && c.craft_body.filter(Boolean).length
+    ? c.craft_body.filter(Boolean)
+    : [
+        'Every product page carries full composition, the country of manufacture and the care instructions.',
+        'Our repair service has handled more than 11,000 pieces, and we hold spare components for discontinued lines.',
+      ]) as ReadonlyArray<string>;
 
   return (
     <>
       <Seo
         title="About us"
         path="/about"
-        description={COMPANY.mission}
-        image={COMPANY.heroImage}
+        description={mission}
+        image={heroImage}
         jsonLd={[breadcrumbSchema([{ label: 'Home', url: '/' }, { label: 'About us', url: '/about' }], site())]}
       />
 
       {/* Hero */}
       <section className="sf-cohero">
-        <StoreImage className="sf-cohero__img" src={COMPANY.heroImage} alt="" eager />
+        <StoreImage className="sf-cohero__img" src={heroImage} alt="" eager />
         <div className="sf-cohero__scrim" aria-hidden />
         <Container className="sf-cohero__inner">
-          <span className="sf-cohero__eyebrow">Since {COMPANY.founded}</span>
-          <h1 className="sf-cohero__title">Fewer, better things — and the truth about them</h1>
-          <p className="sf-cohero__sub">{COMPANY.mission}</p>
+          <span className="sf-cohero__eyebrow">Since {founded}</span>
+          <h1 className="sf-cohero__title">{heroTitle}</h1>
+          <p className="sf-cohero__sub">{heroSub}</p>
         </Container>
       </section>
 
@@ -96,16 +150,16 @@ export function AboutPage(): ReactElement {
           {/* Story */}
           <div className="sf-costory">
             <div className="sf-costory__copy">
-              <span className="sf-eyebrow">Our story</span>
-              <h2 className="sf-coheading">How we got here</h2>
-              {COMPANY.story.map((para) => (
+              <span className="sf-eyebrow">{L(c.story_eyebrow, 'Our story')}</span>
+              <h2 className="sf-coheading">{L(c.story_heading, 'How we got here')}</h2>
+              {story.map((para) => (
                 <p key={para.slice(0, 28)} className="sf-coprose">
                   {para}
                 </p>
               ))}
             </div>
             <figure className="sf-costory__media">
-              <StoreImage src={COMPANY.storyImage} alt="Rolls of material stacked in a workshop" />
+              <StoreImage src={storyImage} alt="Rolls of material stacked in a workshop" />
             </figure>
           </div>
         </Container>
@@ -115,7 +169,7 @@ export function AboutPage(): ReactElement {
       <Section className="sf-coband">
         <Container>
           <ul className="sf-costats">
-            {COMPANY.stats.map((s) => (
+            {stats.map((s) => (
               <li key={s.label} className="sf-costat">
                 <span className="sf-costat__value">{s.value}</span>
                 <span className="sf-costat__label">{s.label}</span>
@@ -131,11 +185,11 @@ export function AboutPage(): ReactElement {
           <div className="sf-comv">
             <article className="sf-comv__card">
               <span className="sf-eyebrow">Mission</span>
-              <p className="sf-comv__text">{COMPANY.mission}</p>
+              <p className="sf-comv__text">{mission}</p>
             </article>
             <article className="sf-comv__card">
               <span className="sf-eyebrow">Vision</span>
-              <p className="sf-comv__text">{COMPANY.vision}</p>
+              <p className="sf-comv__text">{vision}</p>
             </article>
           </div>
         </Container>
@@ -145,11 +199,11 @@ export function AboutPage(): ReactElement {
       <Section className="sf-coband">
         <Container>
           <header className="sf-cosection-head">
-            <span className="sf-eyebrow">What we hold to</span>
-            <h2 className="sf-coheading">Our values</h2>
+            <span className="sf-eyebrow">{L(c.values_eyebrow, 'What we hold to')}</span>
+            <h2 className="sf-coheading">{L(c.values_heading, 'Our values')}</h2>
           </header>
           <ul className="sf-covalues">
-            {COMPANY.values.map((v, i) => (
+            {values.map((v, i) => (
               <li key={v.title} className="sf-covalue">
                 <span className="sf-covalue__num" aria-hidden>
                   {String(i + 1).padStart(2, '0')}
@@ -166,11 +220,11 @@ export function AboutPage(): ReactElement {
       <Section>
         <Container>
           <header className="sf-cosection-head">
-            <span className="sf-eyebrow">Milestones</span>
-            <h2 className="sf-coheading">Ten years, in order</h2>
+            <span className="sf-eyebrow">{L(c.milestones_eyebrow, 'Milestones')}</span>
+            <h2 className="sf-coheading">{L(c.milestones_heading, 'Ten years, in order')}</h2>
           </header>
           <ol className="sf-cotimeline">
-            {COMPANY.milestones.map((m) => (
+            {milestones.map((m) => (
               <li key={m.year} className="sf-comilestone">
                 <span className="sf-comilestone__year">{m.year}</span>
                 <div className="sf-comilestone__body">
@@ -187,11 +241,11 @@ export function AboutPage(): ReactElement {
       <Section className="sf-coband">
         <Container>
           <header className="sf-cosection-head">
-            <span className="sf-eyebrow">The team</span>
-            <h2 className="sf-coheading">Who runs the place</h2>
+            <span className="sf-eyebrow">{L(c.leadership_eyebrow, 'The team')}</span>
+            <h2 className="sf-coheading">{L(c.leadership_heading, 'Who runs the place')}</h2>
           </header>
           <ul className="sf-coteam">
-            {COMPANY.leadership.map((p) => (
+            {leadership.map((p) => (
               <li key={p.name} className="sf-coperson">
                 <div className="sf-coperson__media">
                   <StoreImage src={p.photo} alt={`${p.name}, ${p.role}`} />
@@ -210,20 +264,14 @@ export function AboutPage(): ReactElement {
         <Container>
           <div className="sf-costory sf-costory--reverse">
             <figure className="sf-costory__media">
-              <StoreImage src={COMPANY.craftImage} alt="Close detail of finished material" />
+              <StoreImage src={craftImage} alt="Close detail of finished material" />
             </figure>
             <div className="sf-costory__copy">
-              <span className="sf-eyebrow">Quality &amp; sustainability</span>
-              <h2 className="sf-coheading">What we will and will not claim</h2>
-              <p className="sf-coprose">
-                Every product page carries full composition, the country of manufacture and the care
-                instructions. Where we can trace a material to the mill, we name it. Where we cannot,
-                we say nothing rather than implying more than we know.
-              </p>
-              <p className="sf-coprose">
-                Our repair service has handled more than 11,000 pieces, and we hold spare components
-                for discontinued lines so a single failed part does not end a product’s life.
-              </p>
+              <span className="sf-eyebrow">{L(c.craft_eyebrow, 'Quality & sustainability')}</span>
+              <h2 className="sf-coheading">{craftTitle}</h2>
+              {craftBody.map((para) => (
+                <p key={para.slice(0, 28)} className="sf-coprose">{para}</p>
+              ))}
               <ButtonLink href="/pages/sustainability">Read our approach</ButtonLink>
             </div>
           </div>
@@ -234,11 +282,11 @@ export function AboutPage(): ReactElement {
       <Section className="sf-coband">
         <Container>
           <header className="sf-cosection-head">
-            <span className="sf-eyebrow">Recognition</span>
-            <h2 className="sf-coheading">Awards &amp; accreditation</h2>
+            <span className="sf-eyebrow">{L(c.awards_eyebrow, 'Recognition')}</span>
+            <h2 className="sf-coheading">{L(c.awards_heading, 'Awards & accreditation')}</h2>
           </header>
           <ul className="sf-coawards">
-            {COMPANY.awards.map((a) => (
+            {awards.map((a) => (
               <li key={a.title} className="sf-coaward">
                 <span className="sf-coaward__year">{a.year}</span>
                 <h3 className="sf-coaward__title">{a.title}</h3>
@@ -254,8 +302,8 @@ export function AboutPage(): ReactElement {
         <Section>
           <Container>
             <header className="sf-cosection-head">
-              <span className="sf-eyebrow">In their words</span>
-              <h2 className="sf-coheading">What customers say</h2>
+              <span className="sf-eyebrow">{L(c.testimonials_eyebrow, 'In their words')}</span>
+              <h2 className="sf-coheading">{L(c.testimonials_heading, 'What customers say')}</h2>
             </header>
             <ul className="sf-coquotes">
               {testimonials.map((t) => (
@@ -276,11 +324,11 @@ export function AboutPage(): ReactElement {
       <Section className="sf-coband">
         <Container>
           <header className="sf-cosection-head">
-            <span className="sf-eyebrow">Standards we work to</span>
-            <h2 className="sf-coheading">Partners &amp; certification</h2>
+            <span className="sf-eyebrow">{L(c.partners_eyebrow, 'Standards we work to')}</span>
+            <h2 className="sf-coheading">{L(c.partners_heading, 'Partners & certification')}</h2>
           </header>
           <ul className="sf-copartners">
-            {COMPANY.partners.map((p) => (
+            {partners.map((p) => (
               <li key={p} className="sf-copartner">
                 {p}
               </li>
@@ -289,24 +337,13 @@ export function AboutPage(): ReactElement {
         </Container>
       </Section>
 
-      {/* Locations preview + map */}
-      <Section>
-        <Container>
-          <header className="sf-cosection-head">
-            <span className="sf-eyebrow">Find us</span>
-            <h2 className="sf-coheading">Where we are</h2>
-          </header>
-          <StoreMap location={COMPANY.locations[0]!} />
-        </Container>
-      </Section>
-
       {/* CTA */}
       <Section className="sf-coband">
         <Container>
           <div className="sf-cocta">
-            <h2 className="sf-cocta__title">Questions about anything here?</h2>
+            <h2 className="sf-cocta__title">{L(c.cta_title, 'Questions about anything here?')}</h2>
             <p className="sf-cocta__text">
-              Customer care is the largest team at {store.name} and reachable by phone, not just a form.
+              {L(c.cta_text, `Customer care is the largest team at ${store.name} and reachable by phone, not just a form.`)}
             </p>
             <div className="sf-cocta__actions">
               <ButtonLink href="/contact">Contact us</ButtonLink>
@@ -327,10 +364,29 @@ export function ContactPage(): ReactElement {
   const { store } = useStore();
   const manifest = useThemeManifest();
   const catalog = catalogFor(manifest.id);
-  const faqs = useMemo(() => catalog.faqs.slice(0, 6), [catalog]);
+  const cc = useStoreContent<ContactContent>('contact') ?? {};
+  const faqSource = useStoreContent<{ items?: Array<{ question?: string; answer?: string }> }>('faq');
+  const faqs = useMemo(() => {
+    const items = (faqSource?.items ?? []).filter((x) => (x.question || '').trim());
+    return items.length ? items.map((x) => ({ question: x.question || '', answer: x.answer || '' })) : catalog.faqs.slice(0, 6);
+  }, [faqSource, catalog]);
+  const heroTitle = cc.heading?.trim() || 'Talk to a person';
+  const heroSub = cc.intro?.trim() || 'Six teams, four studios and a real phone number. Pick whoever fits your question.';
+  const showForm = cc.show_form !== false;
+  const hasContactInfo = !!(cc.email?.trim() || cc.phone?.trim() || cc.address?.trim() || cc.hours?.trim());
+  const notice = { title: cc.notice_title?.trim() || COMPANY.notice.title, body: cc.notice_body?.trim() || COMPANY.notice.body };
+  const departments = (Array.isArray(cc.departments) && cc.departments.length ? cc.departments : COMPANY.departments) as ReadonlyArray<{ name: string; description: string; email: string; phone: string; hours: string }>;
+  const locations = ((Array.isArray(cc.locations) && cc.locations.length ? cc.locations : COMPANY.locations).map((l) => ({
+    name: (l as { name?: string }).name || '', address: (l as { address?: string }).address || '',
+    city: (l as { city?: string }).city || '', country: (l as { country?: string }).country || '',
+    phone: (l as { phone?: string }).phone || '', hours: (l as { hours?: string }).hours || '',
+    lat: Number((l as { lat?: string | number }).lat) || 0, lon: Number((l as { lon?: string | number }).lon) || 0,
+  }))) as StoreLocation[];
 
   const [active, setActive] = useState(0);
-  const location = COMPANY.locations[active] ?? COMPANY.locations[0]!;
+  const location: StoreLocation = locations[active] ?? locations[0] ?? {
+    name: '', address: '', city: '', country: '', phone: '', hours: '', lat: 0, lon: 0,
+  };
 
   const [form, setForm] = useState({ name: '', email: '', subject: '', message: '' });
   const [error, setError] = useState<string>();
@@ -366,11 +422,9 @@ export function ContactPage(): ReactElement {
         <StoreImage className="sf-cohero__img" src={COMPANY.storyImage} alt="" eager />
         <div className="sf-cohero__scrim" aria-hidden />
         <Container className="sf-cohero__inner">
-          <span className="sf-cohero__eyebrow">We reply within one business day</span>
-          <h1 className="sf-cohero__title">Talk to a person</h1>
-          <p className="sf-cohero__sub">
-            Six teams, four studios and a real phone number. Pick whoever fits your question.
-          </p>
+          <span className="sf-cohero__eyebrow">{L(cc.hero_eyebrow, 'We reply within one business day')}</span>
+          <h1 className="sf-cohero__title">{heroTitle}</h1>
+          <p className="sf-cohero__sub">{heroSub}</p>
         </Container>
       </section>
 
@@ -378,19 +432,29 @@ export function ContactPage(): ReactElement {
         <Container>
           <Crumbs label="Contact" />
 
+          {/* Store's own contact details (editable from the dashboard). */}
+          {hasContactInfo ? (
+            <dl className="sf-codept__meta" style={{ marginBottom: '1.5rem' }}>
+              {cc.email?.trim() ? (<><dt>Email</dt><dd><a href={`mailto:${cc.email.trim()}`}>{cc.email.trim()}</a></dd></>) : null}
+              {cc.phone?.trim() ? (<><dt>Phone</dt><dd><a href={`tel:${cc.phone.replace(/\s/g, '')}`}>{cc.phone.trim()}</a></dd></>) : null}
+              {cc.address?.trim() ? (<><dt>Address</dt><dd>{cc.address.trim()}</dd></>) : null}
+              {cc.hours?.trim() ? (<><dt>Hours</dt><dd>{cc.hours.trim()}</dd></>) : null}
+            </dl>
+          ) : null}
+
           {/* Service notice */}
           <aside className="sf-conotice" role="note">
-            <strong>{COMPANY.notice.title}</strong>
-            <p>{COMPANY.notice.body}</p>
+            <strong>{notice.title}</strong>
+            <p>{notice.body}</p>
           </aside>
 
           {/* Departments */}
           <header className="sf-cosection-head">
-            <span className="sf-eyebrow">Departments</span>
-            <h2 className="sf-coheading">Who to contact</h2>
+            <span className="sf-eyebrow">{L(cc.departments_eyebrow, 'Departments')}</span>
+            <h2 className="sf-coheading">{L(cc.departments_heading, 'Who to contact')}</h2>
           </header>
           <ul className="sf-codepts">
-            {COMPANY.departments.map((d) => (
+            {departments.map((d) => (
               <li key={d.name} className="sf-codept">
                 <h3 className="sf-codept__name">{d.name}</h3>
                 <p className="sf-codept__desc">{d.description}</p>
@@ -416,8 +480,9 @@ export function ContactPage(): ReactElement {
       <Section className="sf-coband">
         <Container>
           <div className="sf-cocontact">
+            {showForm ? (
             <div className="sf-cocontact__form">
-              <h2 className="sf-coheading">Send a message</h2>
+              <h2 className="sf-coheading">{L(cc.form_heading, 'Send a message')}</h2>
               {sent ? (
                 <div className="sf-conote" role="status">
                   <p>
@@ -434,7 +499,7 @@ export function ContactPage(): ReactElement {
                     inbox.
                   </p>
                   <ButtonLink
-                    href={`mailto:${COMPANY.departments[0]!.email}?subject=${encodeURIComponent(
+                    href={`mailto:${departments[0]?.email ?? COMPANY.departments[0]!.email}?subject=${encodeURIComponent(
                       form.subject || 'Website enquiry',
                     )}&body=${encodeURIComponent(`${form.message}\n\n— ${form.name} (${form.email})`)}`}
                   >
@@ -479,13 +544,14 @@ export function ContactPage(): ReactElement {
                 </form>
               )}
             </div>
+            ) : null}
 
             <div className="sf-cocontact__locations">
-              <h2 className="sf-coheading">Our studios</h2>
+              <h2 className="sf-coheading">{L(cc.locations_heading, 'Our studios')}</h2>
               <div className="sf-cotabs" role="tablist" aria-label="Store locations">
-                {COMPANY.locations.map((loc, i) => (
+                {locations.map((loc, i) => (
                   <button
-                    key={loc.name}
+                    key={`${loc.name}-${i}`}
                     type="button"
                     role="tab"
                     id={`loc-tab-${i}`}
@@ -495,9 +561,9 @@ export function ContactPage(): ReactElement {
                     className="sf-cotab"
                     onClick={() => setActive(i)}
                     onKeyDown={(e) => {
-                      if (e.key === 'ArrowRight') setActive((active + 1) % COMPANY.locations.length);
+                      if (e.key === 'ArrowRight') setActive((active + 1) % locations.length);
                       if (e.key === 'ArrowLeft')
-                        setActive((active - 1 + COMPANY.locations.length) % COMPANY.locations.length);
+                        setActive((active - 1 + locations.length) % locations.length);
                     }}
                   >
                     {loc.city}
@@ -525,7 +591,7 @@ export function ContactPage(): ReactElement {
                   <dt>Opening hours</dt>
                   <dd>{location.hours}</dd>
                 </dl>
-                <StoreMap location={location} />
+                {location.lat || location.lon ? <StoreMap location={location} /> : null}
               </div>
             </div>
           </div>
@@ -536,8 +602,8 @@ export function ContactPage(): ReactElement {
       <Section>
         <Container>
           <header className="sf-cosection-head">
-            <span className="sf-eyebrow">Before you write</span>
-            <h2 className="sf-coheading">Frequently asked</h2>
+            <span className="sf-eyebrow">{L(cc.faq_eyebrow, 'Before you write')}</span>
+            <h2 className="sf-coheading">{L(cc.faq_heading, 'Frequently asked')}</h2>
           </header>
           <ul className="sf-cofaqs">
             {faqs.map((f) => (

@@ -11,15 +11,17 @@ import { ButtonLink } from '../components/ButtonLink';
 import { Eyebrow } from '../components/Typography';
 import { StoreImage } from '../components/Image';
 import { option, text } from './section-settings';
+import { editorialFrom } from '../../../content/home-data';
 
 export function EditorialBannerSection(props: SectionRenderProps): ReactElement | null {
-  const { settings } = props;
-  const eyebrow = text(settings, 'eyebrow');
-  const heading = text(settings, 'heading');
-  const body = text(settings, 'body');
-  const ctaLabel = text(settings, 'cta_label');
-  const ctaUrl = text(settings, 'cta_url', '#');
-  const image = text(settings, 'image');
+  const { settings, context } = props;
+  const ed = editorialFrom(context);
+  const eyebrow = ed.eyebrow ?? text(settings, 'eyebrow');
+  const heading = ed.heading ?? text(settings, 'heading');
+  const body = ed.body ?? text(settings, 'body');
+  const ctaLabel = ed.ctaLabel ?? text(settings, 'cta_label');
+  const ctaUrl = ed.ctaUrl ?? text(settings, 'cta_url', '#');
+  const image = ed.image ?? text(settings, 'image');
   const side = option(settings, 'media_side', ['left', 'right', 'stacked'] as const, 'left');
   if (!heading && !image) return null;
 

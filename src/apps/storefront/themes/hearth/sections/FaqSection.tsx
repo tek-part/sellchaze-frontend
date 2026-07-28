@@ -9,13 +9,17 @@ import { Section } from '../components/Section';
 import { SectionHead } from '../components/SectionHead';
 import { ChevronRightIcon } from '../components/icons';
 import { option, pairs, text } from './section-settings';
+import { faqFrom, faqHeadingFrom } from '../../../content/home-data';
 
 export function FaqSection(props: SectionRenderProps): ReactElement | null {
-  const { settings } = props;
-  const heading = text(settings, 'heading', 'Frequently asked');
+  const { settings, context } = props;
+  const fromData = faqFrom(context);
+  const heading = faqHeadingFrom(context) || text(settings, 'heading', 'Frequently asked');
   const label = text(settings, 'label');
   const layout = option(settings, 'layout', ['single', 'two-col'] as const, 'single');
-  const items = pairs(settings, 'items').filter((p) => p.term);
+  const items = fromData.length
+    ? fromData.map((f) => ({ term: f.question, definition: f.answer }))
+    : pairs(settings, 'items').filter((p) => p.term);
 
   if (items.length === 0) return null;
 

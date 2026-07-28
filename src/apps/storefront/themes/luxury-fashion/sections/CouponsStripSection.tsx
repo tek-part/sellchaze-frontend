@@ -9,11 +9,15 @@ import { PromoCard } from '../components/PromoCard';
 import { useToast } from '../components/toast/useToast';
 import { SectionShell } from './SectionShell';
 import { pairs, text } from './section-settings';
+import { couponsFrom } from '../../../content/home-data';
 
 export function CouponsStripSection(props: SectionRenderProps): ReactElement | null {
-  const { settings } = props;
+  const { settings, context } = props;
   const title = text(settings, 'title');
-  const codes = pairs(settings, 'codes').filter((c) => c.term);
+  const fromData = couponsFrom(context);
+  const codes = fromData.length
+    ? fromData.map((c) => ({ term: c.code, definition: c.type === 'percentage' ? `${c.value}% off your order` : `${c.value} off your order` }))
+    : pairs(settings, 'codes').filter((c) => c.term);
   const toast = useToast();
 
   if (codes.length === 0) return null;

@@ -57,9 +57,11 @@ export function ProductDetailsSection(props: SectionRenderProps): ReactElement |
     });
   };
 
+  const hasShipping = Boolean(product.shippingReturns || product.careInstructions);
   const tabs = [
     { id: 'overview', label: 'Overview' },
     { id: 'specs', label: 'Specs' },
+    ...(hasShipping ? [{ id: 'shipping', label: 'Shipping & returns' }] : []),
     ...(reviews.length > 0 ? [{ id: 'reviews', label: `Reviews (${reviews.length})` }] : []),
   ];
 
@@ -104,12 +106,35 @@ export function ProductDetailsSection(props: SectionRenderProps): ReactElement |
 
             <Tabs tabs={tabs} value={tab} onChange={setTab} renderPanel={(id) =>
               id === 'overview' ? (
-                <div className="vlt-pdp__desc" dangerouslySetInnerHTML={{ __html: product.descriptionHtml ?? '<p>No description available.</p>' }} />
+                <div>
+                  <div className="vlt-pdp__desc" dangerouslySetInnerHTML={{ __html: product.descriptionHtml ?? '<p>No description available.</p>' }} />
+                  {product.highlights && product.highlights.length > 0 ? (
+                    <ul className="vlt-pdp__highlights">
+                      {product.highlights.map((h, i) => (<li key={i}>{h}</li>))}
+                    </ul>
+                  ) : null}
+                </div>
               ) : id === 'reviews' ? (
                 <Reviews reviews={reviews} />
+              ) : id === 'shipping' ? (
+                <div className="vlt-pdp__desc">
+                  {product.shippingReturns ? <p style={{ whiteSpace: 'pre-line' }}>{product.shippingReturns}</p> : null}
+                  {product.careInstructions ? (
+                    <>
+                      <h4 className="vlt-pdp__spec-k" style={{ marginTop: '1rem' }}>Care</h4>
+                      <p style={{ whiteSpace: 'pre-line' }}>{product.careInstructions}</p>
+                    </>
+                  ) : null}
+                </div>
               ) : (
                 <dl className="vlt-pdp__specs">
                   {product.sku ? (<><dt className="vlt-pdp__spec-k">SKU</dt><dd className="vlt-pdp__spec-v">{product.sku}</dd></>) : null}
+                  {product.vendor ? (<><dt className="vlt-pdp__spec-k">Brand</dt><dd className="vlt-pdp__spec-v">{product.vendor}</dd></>) : null}
+                  {(product.specs ?? []).map((s, i) => (
+                    <div key={i} style={{ display: 'contents' }}>
+                      <dt className="vlt-pdp__spec-k">{s.label}</dt><dd className="vlt-pdp__spec-v">{s.value}</dd>
+                    </div>
+                  ))}
                   <dt className="vlt-pdp__spec-k">Price</dt><dd className="vlt-pdp__spec-v">{unitPrice.toFixed(2)} {product.currency}</dd>
                   <dt className="vlt-pdp__spec-k">Availability</dt><dd className="vlt-pdp__spec-v">{outOfStock ? 'Out of stock' : 'In stock'}</dd>
                   {activeVariant ? (<><dt className="vlt-pdp__spec-k">Config</dt><dd className="vlt-pdp__spec-v">{activeVariant.label}</dd></>) : null}

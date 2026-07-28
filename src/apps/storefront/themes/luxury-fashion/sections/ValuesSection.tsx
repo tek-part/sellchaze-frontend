@@ -7,13 +7,17 @@ import type { SectionRenderProps } from '../../../theme-engine/rendering';
 import { FeatureCard } from '../components/FeatureCard';
 import { SectionShell } from './SectionShell';
 import { option, pairs, range, text } from './section-settings';
+import { sectionTitlesFrom, whyChooseUsFrom } from '../../../content/home-data';
 
 export function ValuesSection(props: SectionRenderProps): ReactElement | null {
-  const { settings } = props;
-  const title = text(settings, 'title');
+  const { settings, context } = props;
+  const fromData = whyChooseUsFrom(context);
+  const title = sectionTitlesFrom(context).why ?? text(settings, 'title');
   const columns = range(settings, 'columns', 3, 2, 4);
   const layout = option(settings, 'icon_style', ['icon-top', 'icon-inline', 'numbered'] as const, 'icon-top');
-  const items = pairs(settings, 'items').filter((p) => p.term);
+  const items = fromData.length
+    ? fromData.map((w) => ({ term: w.title, definition: w.text }))
+    : pairs(settings, 'items').filter((p) => p.term);
 
   if (items.length === 0) return null;
 

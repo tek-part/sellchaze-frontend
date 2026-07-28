@@ -22,6 +22,13 @@ import { Seo } from '../seo/Seo';
 import { articleSchema, breadcrumbSchema } from '../seo/schema';
 import { useStore } from '../state/store-context';
 import { useNewsletter } from '../shared-ui';
+import { useStoreContent } from '../content/useStoreContent';
+
+interface BlogContent {
+  heading?: string;
+  intro?: string;
+  posts?: Array<{ title?: string; slug?: string; excerpt?: string; image?: string; date?: string; body?: string }>;
+}
 import {
   ARTICLES_BY_DATE,
   articleCategories,
@@ -117,7 +124,6 @@ function NewsletterCta(): ReactElement {
 /* --------------------------------------------------------------------- index */
 
 export function BlogPage(): ReactElement {
-  const { store } = useStore();
   const [params, setParams] = useSearchParams();
   const query = (params.get('q') ?? '').trim();
   const activeCategory = params.get('category') ?? '';
@@ -157,22 +163,42 @@ export function BlogPage(): ReactElement {
 
   const trending = ARTICLES_BY_DATE.slice(0, 3);
 
+  // Store's own blog content (editable). When custom posts exist they replace the demo grid.
+  const bc = useStoreContent<BlogContent>('blog') ?? {};
+  const blogHeading = bc.heading?.trim() || 'The journal';
+  const blogIntro = bc.intro?.trim() || 'Essays, guides and notes on materials, care and the long life of well-made things.';
+  const customPosts = (Array.isArray(bc.posts) ? bc.posts : []).filter((p) => (p.title || '').trim());
+
   return (
     <Section>
       <Seo
         title="Journal"
         path="/blog"
-        description={`Essays, guides and notes from ${store.name}.`}
+        description={blogIntro}
         jsonLd={[breadcrumbSchema([{ label: 'Home', url: '/' }, { label: 'Journal', url: '/blog' }], site())]}
       />
       <Container>
         <header className="sf-page-head">
-          <h1 className="sf-page-head__title">The journal</h1>
-          <p className="sf-page-head__sub">
-            Essays, guides and notes on materials, care and the long life of well-made things.
-          </p>
+          <h1 className="sf-page-head__title">{blogHeading}</h1>
+          <p className="sf-page-head__sub">{blogIntro}</p>
         </header>
 
+        {customPosts.length ? (
+          <div className="sf-blog__grid">
+            {customPosts.map((p, i) => (
+              <article key={p.slug || i} className="sf-postcard">
+                {p.image?.trim() ? (
+                  <span className="sf-postcard__media"><StoreImage src={p.image} alt="" /></span>
+                ) : null}
+                <div className="sf-postcard__body">
+                  <h3 className="sf-postcard__title">{p.title}</h3>
+                  {p.excerpt?.trim() ? <p className="sf-postcard__excerpt">{p.excerpt}</p> : null}
+                  {p.date?.trim() ? <p className="sf-postcard__meta"><time>{p.date}</time></p> : null}
+                </div>
+              </article>
+            ))}
+          </div>
+        ) : (<>
         {featured ? (
           <div className="sf-blog__featured">
             <ArticleCard article={featured} featured />
@@ -284,6 +310,7 @@ export function BlogPage(): ReactElement {
             <NewsletterCta />
           </aside>
         </div>
+        </>)}
       </Container>
     </Section>
   );

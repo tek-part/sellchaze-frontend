@@ -8,6 +8,7 @@ import { Container } from '../components/Container';
 import { Section } from '../components/Section';
 import { IconCheck } from '../components/icons';
 import { lines, text } from './section-settings';
+import { couponsFrom } from '../../../content/home-data';
 
 function CouponCard(props: { code: string; description: string }): ReactElement {
   const { code, description } = props;
@@ -31,14 +32,17 @@ function CouponCard(props: { code: string; description: string }): ReactElement 
 }
 
 export function CouponsStripSection(props: SectionRenderProps): ReactElement | null {
-  const { settings } = props;
+  const { settings, context } = props;
   const title = text(settings, 'title');
-  const coupons = lines(settings, 'coupons')
-    .map((row) => {
-      const [code, description] = row.split('|').map((s) => s.trim());
-      return code ? { code, description: description ?? '' } : null;
-    })
-    .filter((x): x is { code: string; description: string } => x !== null);
+  const fromData = couponsFrom(context);
+  const coupons = fromData.length
+    ? fromData.map((c) => ({ code: c.code, description: c.type === 'percentage' ? `${c.value}% off your order` : `${c.value} off your order` }))
+    : lines(settings, 'coupons')
+        .map((row) => {
+          const [code, description] = row.split('|').map((s) => s.trim());
+          return code ? { code, description: description ?? '' } : null;
+        })
+        .filter((x): x is { code: string; description: string } => x !== null);
 
   if (coupons.length === 0) return null;
 

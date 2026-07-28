@@ -14,6 +14,7 @@ import { Section } from '../components/Section';
 import { SectionHead } from '../components/SectionHead';
 import { Rating } from '../components/Rating';
 import { lines, text } from './section-settings';
+import { testimonialsFrom } from '../../../content/home-data';
 
 interface Quote { body: string; author: string; rating: number }
 
@@ -29,10 +30,13 @@ function parse(rows: string[]): Quote[] {
 }
 
 export function TestimonialsSection(props: SectionRenderProps): ReactElement | null {
-  const { settings } = props;
+  const { settings, context } = props;
   const eyebrow = text(settings, 'eyebrow', 'Loved by many');
   const title = text(settings, 'title', 'The verdict');
-  const quotes = parse(lines(settings, 'quotes'));
+  const fromData = testimonialsFrom(context);
+  const quotes = fromData.length
+    ? fromData.map((t) => ({ body: t.body, author: t.author, rating: t.rating }))
+    : parse(lines(settings, 'quotes'));
   if (quotes.length === 0) return null;
 
   return (

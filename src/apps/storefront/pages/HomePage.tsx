@@ -1,15 +1,20 @@
 /**
- * HomePage — fetches the store's products + categories and renders the theme's `home` template via
- * the engine. In DEV it falls back to preview data if the API isn't reachable, so the store is always
- * demoable; production shows whatever the API returns (empty states if nothing).
+ * HomePage — fetches the store's catalogue AND all the merchant-editable content the theme's home
+ * sections render (hero, why-choose-us, testimonials, brands, coupons, collections, editorial, UGC,
+ * newsletter copy) in ONE consolidated request (GET /storefront/home) and packs it into
+ * `context.data` for the active theme's `home` template. Every content section reads this real data
+ * (see content/home-data.ts) instead of hardcoded settings. In DEV it falls back to preview data if
+ * the API isn't reachable, so the store is always demoable.
  */
 import { previewOrDev } from '../preview';
 import { useMemo, type ReactElement } from 'react';
 import { ThemeRenderer, useTemplate, type StorefrontContext, useThemeManifest } from '../theme-engine';
 import { useStore } from '../state/store-context';
 import { useAsync } from '../api/useAsync';
-import { getCategories, getProducts } from '../api/storefront';
+import { getHome, type ApiLocaleContent } from '../api/storefront';
 import { toCategoryCard, toProductCard } from '../api/mappers';
+import { buildHomeExtras } from '../content/home-data';
+import type { ApiProduct } from '../api/types';
 import type { CategoryCardModel, ProductCardModel } from '../types/catalog';
 import { useLocale } from '../i18n/useLocale';
 import { Seo } from '../seo/Seo';
@@ -21,41 +26,67 @@ export function HomePage(): ReactElement | null {
   const { locale } = useLocale();
   const { store } = useStore();
   const home = useTemplate('home');
-  const products = useAsync(() => getProducts({ perPage: 12 }), []);
-  const cats = useAsync(() => getCategories(), []);
   const currency = store.currency;
+
+  // One request for the entire home page (catalogue rows + merchandising + editable content).
+  const bundle = useAsync(() => getHome(), []);
 
   const context = useMemo<StorefrontContext>(() => {
     const dev = previewOrDev();
-    let newest: ProductCardModel[] = products.data ? products.data.data.map((p) => toProductCard(p, currency)) : [];
-    let categories: CategoryCardModel[] = cats.data ? cats.data.data.map(toCategoryCard) : [];
-    if (dev && !products.data) newest = sampleNewest(manifest.id, locale);
-    if (dev && !cats.data) categories = sampleCategories(manifest.id, locale);
+    const b = bundle.data?.data;
+    const cards = (arr: ReadonlyArray<ApiProduct> | undefined): ProductCardModel[] =>
+      arr ? arr.map((p) => toProductCard(p, currency)) : [];
+    // Pick the active-locale slice of a { en, ar } content payload, falling back to the other locale.
+    const pick = (c: ApiLocaleContent): Record<string, unknown> | null =>
+      c ? (c[locale] ?? c[locale === 'ar' ? 'en' : 'ar'] ?? null) : null;
+
+    let newest = cards(b?.products);
+    let categories: CategoryCardModel[] = b?.categories ? b.categories.map(toCategoryCard) : [];
+    if (dev && !b) newest = sampleNewest(manifest.id, locale);
+    if (dev && !b) categories = sampleCategories(manifest.id, locale);
     const featured = newest.length > 0 ? newest.slice(0, 4) : dev ? sampleFeatured(manifest.id, locale) : [];
 
-    // Themes merchandise by named collection ('bestsellers', 'sale', …). Previously only `newest`
-    // and `featured` were supplied, so every other named rail resolved to nothing and rendered
-    // empty on every theme. These are derived from the products we already hold — no extra request,
-    // and each is described by what it actually ranks on rather than implying sales data the API
-    // does not expose.
-    const bestsellers = [...newest]
-      .sort((a, b) => (b.reviewCount ?? 0) - (a.reviewCount ?? 0) || (b.rating ?? 0) - (a.rating ?? 0))
-      .slice(0, 8);
-    const sale = newest.filter((p) => p.compareAtPrice && p.compareAtPrice > p.price).slice(0, 8);
-    const topRated = [...newest].sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0)).slice(0, 8);
+    // Real merchandising rows from product flags; fall back to the base set so no rail is empty.
+    const best = cards(b?.best_sellers);
+    const fresh = cards(b?.new_arrivals);
+    const sale = cards(b?.on_sale);
+    const trend = cards(b?.trending);
+    const topRated = [...newest].sort((a, b2) => (b2.rating ?? 0) - (a.rating ?? 0)).slice(0, 8);
+    const orEmpty = (a: ProductCardModel[], fb: ProductCardModel[]): ProductCardModel[] => (a.length ? a : fb);
+
+    const extras = buildHomeExtras(
+      pick(b?.content?.home ?? null),
+      pick(b?.content?.about ?? null),
+      b?.brands ?? [],
+      b?.coupons ?? [],
+      b?.collections ?? [],
+      pick(b?.content?.faq ?? null),
+    );
+
     return {
       store: { name: store.name, currency },
       seo: {},
       navigation: { header: [], footer: [] },
       data: {
-        loading: dev ? false : products.loading || cats.loading,
-        // Let sections distinguish a failed fetch from an empty catalogue.
-        ...(products.error ? { error: products.error } : {}),
+        loading: dev ? false : bundle.loading,
+        ...(bundle.error ? { error: bundle.error } : {}),
         categories,
-        collections: { newest, featured, bestsellers, sale, 'top-rated': topRated, all: newest },
+        collections: {
+          newest,
+          featured,
+          all: newest,
+          bestsellers: orEmpty(best, newest.slice(0, 8)),
+          'best-sellers': orEmpty(best, newest.slice(0, 8)),
+          'new-arrivals': orEmpty(fresh, newest.slice(0, 8)),
+          sale: orEmpty(sale, newest.filter((p) => p.compareAtPrice && p.compareAtPrice > p.price).slice(0, 8)),
+          'flash-deals': orEmpty(sale, newest.slice(0, 8)),
+          trending: orEmpty(trend, newest.slice(0, 8)),
+          'top-rated': topRated,
+        },
+        ...extras,
       },
     };
-  }, [products.data, products.loading, products.error, cats.data, cats.loading, currency, store.name, manifest.id, locale]);
+  }, [bundle.data, bundle.loading, bundle.error, currency, store.name, manifest.id, locale]);
 
   const site = typeof window !== 'undefined' ? window.location.origin : '';
 

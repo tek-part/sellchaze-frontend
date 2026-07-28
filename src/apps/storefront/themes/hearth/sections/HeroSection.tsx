@@ -11,17 +11,19 @@ import { Container } from '../components/Container';
 import { SectionLabel } from '../components/Typography';
 import { StoreImage } from '../components/Image';
 import { option, range, text } from './section-settings';
+import { heroFrom } from '../../../content/home-data';
 
 export function HeroSection(props: SectionRenderProps): ReactElement | null {
-  const { settings } = props;
-  const heading = text(settings, 'heading');
-  const subheading = text(settings, 'subheading');
-  const label = text(settings, 'label');
-  const ctaLabel = text(settings, 'cta_label');
-  const ctaUrl = text(settings, 'cta_url', '#');
-  const cta2Label = text(settings, 'cta2_label');
-  const cta2Url = text(settings, 'cta2_url', '#');
-  const image = text(settings, 'image');
+  const { settings, context } = props;
+  const hero = heroFrom(context);
+  const heading = hero.heading ?? text(settings, 'heading');
+  const subheading = hero.subheading ?? text(settings, 'subheading');
+  const label = hero.eyebrow ?? text(settings, 'label');
+  const ctaLabel = hero.ctaLabel ?? text(settings, 'cta_label');
+  const ctaUrl = hero.ctaUrl ?? text(settings, 'cta_url', '#');
+  const cta2Label = hero.cta2Label ?? text(settings, 'cta2_label');
+  const cta2Url = hero.cta2Url ?? text(settings, 'cta2_url', '#');
+  const image = hero.image ?? text(settings, 'image');
   const align = option(settings, 'align', ['start', 'center'] as const, 'start');
   const overlay = range(settings, 'overlay_opacity', 30, 0, 60) / 100;
   const hasMedia = Boolean(image);

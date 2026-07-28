@@ -35,6 +35,21 @@ export interface ApiProduct {
   variants?: ReadonlyArray<ApiVariant> | null;
   rating?: number | null;
   reviews_count?: number | null;
+  brand?: string | null;
+  // Rich PDP surface (StorefrontProductResource)
+  long_description?: string | null;
+  specifications?: Record<string, unknown> | ReadonlyArray<unknown> | null;
+  dimensions?: Record<string, unknown> | null;
+  highlights?: ReadonlyArray<string> | null;
+  weight?: string | number | null;
+  material?: string | null;
+  warranty?: string | null;
+  shipping_returns?: string | null;
+  care_instructions?: string | null;
+  origin_country?: string | null;
+  manufacturer?: string | null;
+  unit?: string | null;
+  tags?: ReadonlyArray<string> | null;
 }
 
 export interface ApiCategory {
@@ -45,6 +60,37 @@ export interface ApiCategory {
   image?: string | null;
   image_url?: string | null;
   products_count?: number | null;
+}
+
+export interface ApiCollection {
+  id: number;
+  name: string;
+  slug: string;
+  type?: string | null;
+  description?: string | null;
+  image_url?: string | null;
+  products_count?: number | null;
+  products?: ReadonlyArray<ApiProduct> | null;
+}
+
+export interface ApiBrand {
+  id: number;
+  name: string;
+  slug: string;
+  description?: string | null;
+  logo_url?: string | null;
+  website?: string | null;
+  origin_country?: string | null;
+  is_featured?: boolean;
+  products_count?: number | null;
+}
+
+export interface ApiCoupon {
+  code: string;
+  type: 'fixed' | 'percentage';
+  value: string | number;
+  minimum_order_amount?: string | number | null;
+  expires_at?: string | null;
 }
 
 export interface ApiStoreSummary {

@@ -7,13 +7,15 @@ import type { SectionRenderProps } from '../../../theme-engine/rendering';
 import { StoreImage } from '../components/Image';
 import { SectionShell } from './SectionShell';
 import { lines, range, text } from './section-settings';
+import { ugcFrom } from '../../../content/home-data';
 
 export function InstagramSection(props: SectionRenderProps): ReactElement | null {
-  const { settings } = props;
-  const handle = text(settings, 'handle');
+  const { settings, context } = props;
+  const ugc = ugcFrom(context);
+  const handle = ugc.handle ?? text(settings, 'handle');
   const title = text(settings, 'title', handle ? `@${handle.replace(/^@/, '')}` : 'Follow us');
   const columns = range(settings, 'columns', 4, 2, 6);
-  const images = lines(settings, 'images');
+  const images = ugc.images.length ? ugc.images.map((u) => u.image) : lines(settings, 'images');
   if (images.length === 0) return null;
 
   const href = handle ? `https://instagram.com/${handle.replace(/^@/, '')}` : undefined;

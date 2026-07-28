@@ -63,6 +63,12 @@ export interface ProductVariantModel {
   available: boolean;
 }
 
+/** A key/value spec row rendered in the PDP "Specs" tab. */
+export interface ProductSpec {
+  label: string;
+  value: string;
+}
+
 /** The full product for a PDP — a superset of the card model. */
 export interface ProductDetailModel extends ProductCardModel {
   sku?: string;
@@ -71,6 +77,15 @@ export interface ProductDetailModel extends ProductCardModel {
   variants?: ReadonlyArray<ProductVariantModel>;
   inStock?: boolean;
   lowStock?: boolean;
+  /** Key selling points shown as a bullet list in the overview. */
+  highlights?: ReadonlyArray<string>;
+  /** Normalised spec rows (from specifications/dimensions/material/weight/warranty…). */
+  specs?: ReadonlyArray<ProductSpec>;
+  /** Per-product "Shipping & returns" copy (falls back to store policy when absent). */
+  shippingReturns?: string;
+  /** Per-product care instructions. */
+  careInstructions?: string;
+  warranty?: string;
 }
 
 export interface CategoryCardModel {
@@ -88,6 +103,25 @@ export interface CollectionCardModel {
   url: string;
   image?: ProductImage;
   subtitle?: string;
+}
+
+export interface BrandModel {
+  id: string;
+  name: string;
+  slug: string;
+  url: string;
+  logo?: string;
+  website?: string;
+  productCount?: number;
+}
+
+export interface CouponModel {
+  code: string;
+  /** 'fixed' | 'percentage' */
+  type: string;
+  value: number;
+  minimumOrder?: number;
+  expiresAt?: string;
 }
 
 export interface ArticleCardModel {

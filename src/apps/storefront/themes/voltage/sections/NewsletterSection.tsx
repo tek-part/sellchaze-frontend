@@ -14,13 +14,16 @@ import { Button } from '../components/Button';
 import { ButtonLink } from '../components/ButtonLink';
 import { useNewsletter } from '../../../shared-ui';
 import { text } from './section-settings';
+import { newsletterFrom } from '../../../content/home-data';
+import { subscribeNewsletter } from '../../../api/storefront';
 
 export function NewsletterSection(props: SectionRenderProps): ReactElement {
-  const title = text(props.settings, 'title') || 'Get the drop first';
-  const blurb = text(props.settings, 'text') || 'New builds, restocks and field notes — no noise.';
-  const ctaLabel = text(props.settings, 'cta_label') || 'Subscribe';
+  const copy = newsletterFrom(props.context);
+  const title = copy.title ?? (text(props.settings, 'title') || 'Get the drop first');
+  const blurb = copy.text ?? (text(props.settings, 'text') || 'New builds, restocks and field notes — no noise.');
+  const ctaLabel = copy.cta ?? (text(props.settings, 'cta_label') || 'Subscribe');
   const [email, setEmail] = useState('');
-  const { status, message, submitting, subscribe } = useNewsletter();
+  const { status, message, submitting, subscribe } = useNewsletter({ submit: (e) => subscribeNewsletter(e).then(() => undefined) });
   const done = status === 'saved' || status === 'subscribed';
   const error = status === 'invalid' || status === 'error' ? message : undefined;
 

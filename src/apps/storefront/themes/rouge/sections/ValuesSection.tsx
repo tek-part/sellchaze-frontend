@@ -9,20 +9,24 @@ import { Section } from '../components/Section';
 import { SectionHead } from '../components/SectionHead';
 import { IconLeaf, IconHeart, IconDroplet, IconSparkle, IconTruck, IconReturn, type IconProps } from '../components/icons';
 import { lines, range, text } from './section-settings';
+import { sectionTitlesFrom, whyChooseUsFrom } from '../../../content/home-data';
 
 const GLYPHS: ReadonlyArray<(p: IconProps) => ReactElement> = [IconTruck, IconReturn, IconLeaf, IconHeart, IconDroplet, IconSparkle];
 
 export function ValuesSection(props: SectionRenderProps): ReactElement | null {
-  const { settings } = props;
+  const { settings, context } = props;
   const eyebrow = text(settings, 'eyebrow');
-  const title = text(settings, 'title', 'The Rouge promise');
+  const title = sectionTitlesFrom(context).why ?? text(settings, 'title', 'The Rouge promise');
   const columns = range(settings, 'columns', 3, 2, 4);
-  const items = lines(settings, 'items')
-    .map((row) => {
-      const [t, body] = row.split('|').map((s) => s.trim());
-      return t ? { title: t, body: body ?? '' } : null;
-    })
-    .filter((x): x is { title: string; body: string } => x !== null);
+  const fromData = whyChooseUsFrom(context);
+  const items = fromData.length
+    ? fromData.map((w) => ({ title: w.title, body: w.text }))
+    : lines(settings, 'items')
+        .map((row) => {
+          const [t, body] = row.split('|').map((s) => s.trim());
+          return t ? { title: t, body: body ?? '' } : null;
+        })
+        .filter((x): x is { title: string; body: string } => x !== null);
 
   if (items.length === 0) return null;
   const style = { '--rge-cols': columns, '--rge-cols-lg': Math.min(columns, 3), '--rge-cols-md': 2, '--rge-cols-sm': 1 } as CSSProperties;

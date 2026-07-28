@@ -4,11 +4,13 @@ import type { SectionRenderProps } from '../../../theme-engine/rendering';
 import { Container } from '../components/Container';
 import { Section } from '../components/Section';
 import { lines, text } from './section-settings';
+import { brandsFrom, sectionTitlesFrom } from '../../../content/home-data';
 
 export function BrandLogosSection(props: SectionRenderProps): ReactElement | null {
-  const brands = lines(props.settings, 'brands').filter(Boolean);
+  const fromData = brandsFrom(props.context);
+  const brands = fromData.length ? fromData.map((b) => b.name) : lines(props.settings, 'brands').filter(Boolean);
   if (brands.length === 0) return null;
-  const title = text(props.settings, 'title');
+  const title = sectionTitlesFrom(props.context).brands ?? text(props.settings, 'title');
 
   return (
     <Section reveal className="vlt-section--tight">

@@ -12,20 +12,23 @@ import { Section } from '../components/Section';
 import { Heading, SectionLabel, Text } from '../components/Typography';
 import { useNewsletter } from '../../../shared-ui';
 import { option, text } from './section-settings';
+import { newsletterFrom } from '../../../content/home-data';
+import { subscribeNewsletter } from '../../../api/storefront';
 
 export function NewsletterSection(props: SectionRenderProps): ReactElement {
-  const { settings } = props;
+  const { settings, context } = props;
+  const copy = newsletterFrom(context);
   const label = text(settings, 'label');
-  const title = text(settings, 'title', 'Design notes & early access');
-  const body = text(settings, 'body', 'Room inspiration, new arrivals and the occasional offer. No noise.');
+  const title = copy.title ?? text(settings, 'title', 'Design notes & early access');
+  const body = copy.text ?? text(settings, 'body', 'Room inspiration, new arrivals and the occasional offer. No noise.');
   const placeholder = text(settings, 'placeholder', 'you@example.com');
-  const ctaLabel = text(settings, 'cta_label', 'Subscribe');
+  const ctaLabel = copy.cta ?? text(settings, 'cta_label', 'Subscribe');
   // No success_message setting: the outcome is decided by whether the address could actually be
   // recorded, not by copy. Claiming "check your inbox" when no email will ever be sent is a lie.
   const bg = option(settings, 'bg', ['oat', 'sand', 'cream'] as const, 'sand');
 
   const [email, setEmail] = useState('');
-  const { status, message, submitting, subscribe } = useNewsletter();
+  const { status, message, submitting, subscribe } = useNewsletter({ submit: (e) => subscribeNewsletter(e).then(() => undefined) });
   const done = status === 'saved' || status === 'subscribed';
   const failed = status === 'invalid' || status === 'error';
 

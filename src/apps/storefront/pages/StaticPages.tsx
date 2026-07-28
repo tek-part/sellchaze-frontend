@@ -15,12 +15,49 @@ import {
   Textarea,
 } from '../themes/luxury-fashion/components';
 import { Seo } from '../seo/Seo';
+import { useStoreContent } from '../content/useStoreContent';
 import { fillTokens, getPolicy } from '../content/policies';
 import { useLocale } from '../i18n/useLocale';
 import { useTranslation } from 'react-i18next';
 import { useStore } from '../state/store-context';
 import { ThemeRenderer, useTemplate } from '../theme-engine';
+import type { PageDefinition } from '../theme-engine';
 import { flowContext } from './flow-context';
+
+interface FaqOverride {
+  heading?: string;
+  items?: Array<{ question?: string; answer?: string }>;
+}
+
+/**
+ * Fold a store's saved FAQ content into a theme's `faq` template so the themed page (voltage et al.)
+ * renders the merchant's own questions instead of the template's placeholders. Theme-agnostic: it
+ * only rewrites the `faq`-type section's `title`/`items`, leaving every theme's FaqSection untouched.
+ */
+function withFaqOverride(page: PageDefinition, override: FaqOverride | null): PageDefinition {
+  if (!override) return page;
+  const items = (override.items ?? [])
+    .map((x) => ({ q: (x.question || '').trim(), a: (x.answer || '').trim() }))
+    .filter((x) => x.q && x.a);
+  const heading = (override.heading || '').trim();
+  if (items.length === 0 && !heading) return page;
+  const itemsStr = items.map((x) => `${x.q} | ${x.a}`).join('\n');
+  return {
+    ...page,
+    sections: page.sections.map((s) =>
+      s.type === 'faq'
+        ? {
+            ...s,
+            settings: {
+              ...s.settings,
+              ...(heading ? { title: heading } : {}),
+              ...(itemsStr ? { items: itemsStr } : {}),
+            },
+          }
+        : s,
+    ),
+  };
+}
 
 /** Render the active theme's static template when it provides one; otherwise null (luxury fallback). */
 function useStaticTemplate(name: 'blog' | 'about' | 'contact' | 'faq'): ReactElement | null {
@@ -60,12 +97,44 @@ function formatUpdated(iso: string, locale: string): string {
   }
 }
 
+/** Slugs whose content is editable per-store from the dashboard (Standard pages). */
+const EDITABLE_POLICIES = new Set(['shipping', 'returns']);
+
+interface PolicyOverride {
+  title?: string;
+  summary?: string;
+  sections?: Array<{ heading?: string; body?: string[] | string; list?: string[] | string }>;
+}
+
+/** Merge a store's saved payload over the shipped policy doc; unset fields keep the default. */
+function mergePolicy(
+  staticDoc: ReturnType<typeof getPolicy>,
+  override: PolicyOverride | null,
+  slug: string,
+): ReturnType<typeof getPolicy> {
+  if (!override) return staticDoc;
+  const asLines = (v: string[] | string | undefined): string[] =>
+    (Array.isArray(v) ? v : typeof v === 'string' ? v.split('\n') : []).map((s) => s.trim()).filter(Boolean);
+  const sections = (Array.isArray(override.sections) ? override.sections : [])
+    .map((s) => ({ heading: (s.heading || '').trim(), body: asLines(s.body), list: asLines(s.list) }))
+    .filter((s) => s.heading || s.body.length || s.list.length)
+    .map((s) => ({ heading: s.heading, body: s.body, ...(s.list.length ? { list: s.list } : {}) }));
+  return {
+    title: (override.title || '').trim() || staticDoc?.title || slug,
+    slug,
+    summary: (override.summary || '').trim() || staticDoc?.summary || '',
+    updated: staticDoc?.updated || new Date().toISOString().slice(0, 10),
+    sections: sections.length ? sections : (staticDoc?.sections ?? []),
+  } as ReturnType<typeof getPolicy>;
+}
+
 export function PolicyPage(): ReactElement {
   const { slug = '' } = useParams();
   const { store } = useStore();
   const { locale } = useLocale();
   const { t } = useTranslation();
-  const doc = getPolicy(slug, locale);
+  const override = useStoreContent<PolicyOverride>(slug, EDITABLE_POLICIES.has(slug));
+  const doc = mergePolicy(getPolicy(slug, locale), override, slug);
   const contactEmail = `hello@${store.slug || 'example'}.com`;
 
   if (!doc) {
@@ -230,15 +299,27 @@ const FAQ_ITEMS = [
 ];
 
 export function FaqPage(): ReactElement {
-  const themed = useStaticTemplate('faq');
-  if (themed) return themed;
+  const tpl = useTemplate('faq');
+  const { store } = useStore();
+  const override = useStoreContent<FaqOverride>('faq');
+  if (tpl) {
+    return <ThemeRenderer page={withFaqOverride(tpl, override)} context={flowContext(store)} />;
+  }
+
+  const items = override?.items?.length
+    ? override.items
+        .filter((x) => (x.question || '').trim())
+        .map((x, i) => ({ id: `q${i}`, header: (x.question || '').trim(), content: (x.answer || '').trim() }))
+    : FAQ_ITEMS;
+  const heading = (override?.heading || '').trim() || 'Frequently asked';
+
   return (
     <Section>
       <Container narrow>
         <div className="sf-page-head">
-          <h1 className="sf-page-head__title">Frequently asked</h1>
+          <h1 className="sf-page-head__title">{heading}</h1>
         </div>
-        <Accordion items={FAQ_ITEMS} type="single" defaultOpen={['ship']} />
+        <Accordion items={items} type="single" defaultOpen={items[0] ? [items[0].id] : []} />
       </Container>
     </Section>
   );

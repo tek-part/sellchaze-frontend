@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useParams, useSearchParams } from 'react-router-dom';
 import useStoreScope from '../hooks/useStoreScope';
 import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
@@ -21,6 +21,9 @@ const REVIEW_STATUS_STYLE = {
 export default function StoreReviewsPage() {
     const { id, apiBase, uiBase } = useStoreScope();
     const { t } = useTranslation();
+    const [searchParams, setSearchParams] = useSearchParams();
+    const productId = searchParams.get('product') || '';
+    const productName = searchParams.get('product_name') || '';
 
     const [rows, setRows] = useState([]);
     const [meta, setMeta] = useState(null);
@@ -34,10 +37,10 @@ export default function StoreReviewsPage() {
     const [deleting, setDeleting] = useState(false);
 
     const loadParams = useCallback(() => ({
-        page, per_page: perPage, ...(status ? { status } : {}),
-    }), [page, perPage, status]);
+        page, per_page: perPage, ...(status ? { status } : {}), ...(productId ? { product_id: productId } : {}),
+    }), [page, perPage, status, productId]);
 
-    useEffect(() => setPage(1), [status, perPage]);
+    useEffect(() => setPage(1), [status, perPage, productId]);
 
     const reload = useCallback(() => {
         setLoading(true);
@@ -89,6 +92,23 @@ export default function StoreReviewsPage() {
                 </div>
                 {id ? <Link to="/stores" className="text-sm text-brand hover:underline">← {t('stores_title', 'Stores')}</Link> : null}
             </div>
+
+            {productId ? (
+                <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-brand/20 bg-brand/5 px-4 py-2.5">
+                    <p className="text-sm text-slate-700">
+                        {t('reviews_filtered_by_product', 'Showing reviews for:')}{' '}
+                        <span className="font-semibold text-slate-900">{productName || `#${productId}`}</span>
+                    </p>
+                    <button
+                        type="button"
+                        onClick={() => setSearchParams({})}
+                        className="text-sm font-medium text-brand hover:underline"
+                    >
+                        {t('reviews_show_all', 'Show all reviews')}
+                    </button>
+                </div>
+            ) : null}
+
             {err && <p className="rounded-lg border border-red-100 bg-red-50 px-3 py-2 text-sm text-red-700">{err}</p>}
 
             <div className="overflow-hidden rounded-2xl border border-slate-200/80 shadow-card">

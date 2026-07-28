@@ -8,13 +8,17 @@ import { Container } from '../components/Container';
 import { Section } from '../components/Section';
 import { SectionHead } from '../components/SectionHead';
 import { lines, text } from './section-settings';
+import { sectionTitlesFrom, whyChooseUsFrom } from '../../../content/home-data';
 
 export function WhyChooseUsSection(props: SectionRenderProps): ReactElement | null {
-  const items = lines(props.settings, 'items')
-    .map((raw) => raw.split('|').map((p) => p.trim()))
-    .filter((parts) => parts[0]);
+  const fromData = whyChooseUsFrom(props.context);
+  const items: string[][] = fromData.length
+    ? fromData.map((w) => [w.title, w.text])
+    : lines(props.settings, 'items')
+        .map((raw) => raw.split('|').map((p) => p.trim()))
+        .filter((parts) => parts[0]);
   if (items.length === 0) return null;
-  const title = text(props.settings, 'title');
+  const title = sectionTitlesFrom(props.context).why ?? text(props.settings, 'title');
 
   return (
     <Section reveal>

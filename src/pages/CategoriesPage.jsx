@@ -332,7 +332,6 @@ export default function CategoriesPage() {
                 </div>
                 <PaginationBar meta={meta} loading={loading} onPageChange={setPage} />
             </div>
-            <p className="text-sm text-slate-600">{t('categories_manage_hint')}</p>
 
             <ConfirmDialog
                 open={!!confirmOne}
