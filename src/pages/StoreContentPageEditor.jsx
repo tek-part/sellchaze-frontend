@@ -13,18 +13,101 @@ import {
     HiOutlineCheck,
     HiOutlineXMark,
 } from 'react-icons/hi2';
+import ReactQuill from 'react-quill-new';
+import 'react-quill-new/dist/quill.snow.css';
 import api from '../api/client';
 import useStoreScope from '../hooks/useStoreScope';
+
+// Rich-text toolbar for `richtext` fields (e.g. a blog post's body). No inline image upload — posts
+// carry a separate featured-image field, and base64 images would bloat the stored content.
+const QUILL_MODULES = {
+    toolbar: [
+        [{ header: [2, 3, false] }],
+        ['bold', 'italic', 'underline', 'strike'],
+        [{ list: 'ordered' }, { list: 'bullet' }],
+        ['blockquote', 'link'],
+        ['clean'],
+    ],
+};
+
+function RichTextEditor({ value, onChange, placeholder }) {
+    return (
+        <div className="sc-quill">
+            <ReactQuill theme="snow" value={value ?? ''} onChange={onChange} modules={QUILL_MODULES} placeholder={placeholder} />
+        </div>
+    );
+}
+
+/** An image field with a real file upload (stores the returned URL) + preview. */
+function ImageField({ label, value, onChange, onUpload, t }) {
+    const [busy, setBusy] = useState(false);
+    const [err, setErr] = useState('');
+    const pick = async (e) => {
+        const file = e.target.files?.[0];
+        e.target.value = '';
+        if (!file) return;
+        setBusy(true);
+        setErr('');
+        try {
+            const url = await onUpload(file);
+            onChange(url);
+        } catch (ex) {
+            setErr(ex?.response?.data?.message || ex.message);
+        } finally {
+            setBusy(false);
+        }
+    };
+    return (
+        <div>
+            <label className={labelClass}>{label}</label>
+            {value ? <img src={value} alt="" className="mb-2 h-28 w-auto rounded-lg object-cover ring-1 ring-slate-200" /> : null}
+            <div className="flex flex-wrap items-center gap-2">
+                <label className="inline-flex cursor-pointer items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50">
+                    <input type="file" accept="image/*" className="hidden" onChange={pick} disabled={busy} />
+                    {busy ? t('loading', 'Uploading…') : value ? t('change_image', 'Change image') : t('upload_image', 'Upload image')}
+                </label>
+                {value ? (
+                    <button type="button" onClick={() => onChange('')} className="rounded-xl border border-slate-200 px-3 py-2 text-sm font-medium text-red-600 transition hover:bg-red-50">
+                        {t('remove', 'Remove')}
+                    </button>
+                ) : null}
+            </div>
+            {err ? <p className="mt-1 text-xs text-red-600">{err}</p> : null}
+        </div>
+    );
+}
 
 const labelClass = 'mb-1.5 block text-sm font-medium text-slate-700';
 const inputClass =
     'w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-hidden transition focus:border-brand focus:ring-2 focus:ring-brand/20';
 
-/** One scalar field (text/url/image/textarea/richtext/lines/toggle). */
-function Field({ field, value, onChange, t }) {
+// Grid placement inside a 12-column row. Short fields take half a row (two per row);
+// long/multiline fields take the full width. A field may override with `col` (1–12) in the schema.
+const COL_SPAN = {
+    2: 'md:col-span-2', 3: 'md:col-span-3', 4: 'md:col-span-4', 5: 'md:col-span-5', 6: 'md:col-span-6',
+    7: 'md:col-span-7', 8: 'md:col-span-8', 9: 'md:col-span-9', 10: 'md:col-span-10', 12: 'md:col-span-12',
+};
+const colClass = (field) =>
+    COL_SPAN[field.col] ?? (['textarea', 'richtext', 'lines'].includes(field.type) ? 'md:col-span-12' : 'md:col-span-6');
+
+/** One scalar field (text/url/image/date/textarea/richtext/lines/toggle). */
+function Field({ field, value, onChange, t, onUpload }) {
     const { type } = field;
     const label = t(field.label, field.label);
     const placeholder = field.placeholder ? t(field.placeholder, '') : undefined;
+
+    if (type === 'image') {
+        return <ImageField label={label} value={value} onChange={onChange} onUpload={onUpload} t={t} />;
+    }
+
+    if (type === 'date') {
+        return (
+            <div>
+                <label className={labelClass}>{label}</label>
+                <input type="date" value={value ?? ''} onChange={(e) => onChange(e.target.value)} className={inputClass} />
+            </div>
+        );
+    }
 
     if (type === 'toggle') {
         return (
@@ -40,11 +123,20 @@ function Field({ field, value, onChange, t }) {
         );
     }
 
-    if (type === 'textarea' || type === 'richtext') {
+    if (type === 'richtext') {
         return (
             <div>
                 <label className={labelClass}>{label}</label>
-                <textarea rows={type === 'richtext' ? 6 : 3} value={value ?? ''} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} className={inputClass} />
+                <RichTextEditor value={value} onChange={onChange} placeholder={placeholder} />
+            </div>
+        );
+    }
+
+    if (type === 'textarea') {
+        return (
+            <div>
+                <label className={labelClass}>{label}</label>
+                <textarea rows={3} value={value ?? ''} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} className={inputClass} />
             </div>
         );
     }
@@ -68,14 +160,13 @@ function Field({ field, value, onChange, t }) {
     return (
         <div>
             <label className={labelClass}>{label}</label>
-            <input type="text" value={value ?? ''} onChange={(e) => onChange(e.target.value)} placeholder={placeholder ?? (type === 'image' ? 'https://…' : undefined)} className={inputClass} />
-            {type === 'image' && value ? <img src={value} alt="" className="mt-2 h-24 w-auto rounded-lg object-cover ring-1 ring-slate-200" /> : null}
+            <input type={type === 'url' ? 'url' : 'text'} value={value ?? ''} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} className={inputClass} />
         </div>
     );
 }
 
 /** A repeater: an ordered list of objects edited with the item's sub-fields. */
-function Repeater({ field, value, onChange, t }) {
+function Repeater({ field, value, onChange, t, onUpload }) {
     const items = Array.isArray(value) ? value : [];
     const blank = () => Object.fromEntries((field.item ?? []).map((f) => [f.key, f.type === 'toggle' ? false : f.type === 'lines' ? [] : '']));
     const update = (idx, key, v) => onChange(items.map((it, i) => (i === idx ? { ...it, [key]: v } : it)));
@@ -104,9 +195,11 @@ function Repeater({ field, value, onChange, t }) {
                             <button type="button" onClick={() => remove(idx)} className="rounded-md p-1 text-red-400 hover:bg-red-50 hover:text-red-600"><HiOutlineTrash className="h-4 w-4" /></button>
                         </div>
                     </div>
-                    <div className="space-y-3">
+                    <div className="grid grid-cols-1 gap-3 md:grid-cols-12">
                         {(field.item ?? []).map((sub) => (
-                            <Field key={sub.key} field={sub} value={it[sub.key]} onChange={(v) => update(idx, sub.key, v)} t={t} />
+                            <div key={sub.key} className={colClass(sub)}>
+                                <Field field={sub} value={it[sub.key]} onChange={(v) => update(idx, sub.key, v)} t={t} onUpload={onUpload} />
+                            </div>
                         ))}
                     </div>
                 </div>
@@ -169,6 +262,14 @@ export default function StoreContentPageEditor() {
     const locData = data[locale] ?? {};
     const setField = (fk, v) => setData((d) => ({ ...d, [locale]: { ...(d[locale] ?? {}), [fk]: v } }));
 
+    // Upload an image file for any `image` field → returns the stored URL the field saves.
+    const uploadImage = async (file) => {
+        const fd = new FormData();
+        fd.append('image', file);
+        const { data: res } = await api.post(`${apiBase}/content/upload-image`, fd, { headers: { 'Content-Type': 'multipart/form-data' } });
+        return res.url;
+    };
+
     const save = async () => {
         setSaving(true);
         try {
@@ -190,7 +291,8 @@ export default function StoreContentPageEditor() {
     if (err) return <p className="rounded-lg border border-red-100 bg-red-50 px-3 py-2 text-sm text-red-700">{err}</p>;
 
     return (
-        <div className="mx-auto max-w-3xl space-y-6">
+        <div className="w-full space-y-6">
+            <style>{`.sc-quill .ql-toolbar{border-top-left-radius:.75rem;border-top-right-radius:.75rem;border-color:rgb(226 232 240);background:rgb(248 250 252)}.sc-quill .ql-container{border-bottom-left-radius:.75rem;border-bottom-right-radius:.75rem;border-color:rgb(226 232 240);font-family:inherit}.sc-quill .ql-editor{min-height:180px;font-size:.9rem}`}</style>
             {/* Header action bar (mirrors the product form). */}
             <div className="flex flex-wrap items-center justify-between gap-3">
                 <div className="flex items-center gap-3">
@@ -237,9 +339,11 @@ export default function StoreContentPageEditor() {
                 });
                 return order.map((g) => (
                     <Card key={g} icon={g === 'main' ? HiOutlineDocumentText : HiOutlineRectangleStack} title={g === 'main' ? t(page.label, page.label) : t(`cpg_${g}`, g)}>
-                        <div className="space-y-4" dir={locale === 'ar' ? 'rtl' : 'ltr'}>
+                        <div className="grid grid-cols-1 gap-4 md:grid-cols-12" dir={locale === 'ar' ? 'rtl' : 'ltr'}>
                             {byGroup[g].map((f) => (
-                                <Field key={f.key} field={f} value={locData[f.key]} onChange={(v) => setField(f.key, v)} t={t} />
+                                <div key={f.key} className={colClass(f)}>
+                                    <Field field={f} value={locData[f.key]} onChange={(v) => setField(f.key, v)} t={t} onUpload={uploadImage} />
+                                </div>
                             ))}
                         </div>
                         {g === 'main' ? (
@@ -256,7 +360,7 @@ export default function StoreContentPageEditor() {
             {repeaterFields.map((f) => (
                 <Card key={f.key} icon={HiOutlineRectangleStack} title={t(f.label, f.label)}>
                     <div dir={locale === 'ar' ? 'rtl' : 'ltr'}>
-                        <Repeater field={f} value={locData[f.key]} onChange={(v) => setField(f.key, v)} t={t} />
+                        <Repeater field={f} value={locData[f.key]} onChange={(v) => setField(f.key, v)} t={t} onUpload={uploadImage} />
                     </div>
                 </Card>
             ))}

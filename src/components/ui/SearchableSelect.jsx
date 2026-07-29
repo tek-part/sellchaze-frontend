@@ -2,7 +2,6 @@ import { useMemo, useState, useRef, useLayoutEffect, Children, isValidElement } 
 import {
     Combobox,
     ComboboxButton,
-    ComboboxInput,
     ComboboxOption,
     ComboboxOptions,
 } from '@headlessui/react';
@@ -127,7 +126,6 @@ export default function SearchableSelect({
                 emit(next);
             }}
             disabled={disabled}
-            immediate
             as="div"
             className={`relative ${className || 'w-full'}`}
         >
@@ -151,8 +149,7 @@ export default function SearchableSelect({
                 </ComboboxButton>
 
                 <ComboboxOptions
-                    transition
-                    className={`absolute start-0 z-50 max-h-72 w-full min-w-full overflow-auto rounded-xl border border-slate-200 bg-white p-1 shadow-lg ring-1 ring-black/5 outline-hidden empty:invisible data-[closed]:opacity-0 transition duration-100 ease-out ${
+                    className={`absolute start-0 z-50 max-h-72 w-full min-w-full overflow-auto rounded-xl border border-slate-200 bg-white p-1 shadow-lg ring-1 ring-black/5 outline-hidden empty:invisible ${
                         dropUp ? 'bottom-full mb-1' : 'top-full mt-1'
                     }`}
                 >
@@ -160,12 +157,19 @@ export default function SearchableSelect({
                     <div className="sticky top-0 z-10 -mx-1 -mt-1 mb-1 border-b border-slate-100 bg-white px-2 py-2">
                         <div className="relative">
                             <HiOutlineMagnifyingGlass className="pointer-events-none absolute inset-y-0 start-2 my-auto h-4 w-4 text-slate-400" aria-hidden />
-                            <ComboboxInput
+                            {/* Plain input (NOT a Headless ComboboxInput): a nested ComboboxInput
+                                hijacks focus and breaks option clicks. This only filters the list. */}
+                            <input
+                                type="text"
                                 autoFocus
+                                value={query}
+                                onChange={(e) => setQuery(e.target.value)}
+                                onKeyDown={(e) => {
+                                    if (e.key === 'Enter') e.preventDefault(); // never submit the surrounding form
+                                    if (!['Escape', 'Tab'].includes(e.key)) e.stopPropagation();
+                                }}
                                 className="w-full rounded-lg border border-slate-200 bg-slate-50 ps-8 pe-3 py-1.5 text-sm text-slate-900 outline-hidden focus:border-brand focus:bg-white focus:ring-2 focus:ring-brand/20"
                                 placeholder={t('search', 'Search…')}
-                                displayValue={() => query}
-                                onChange={(e) => setQuery(e.target.value)}
                             />
                         </div>
                     </div>

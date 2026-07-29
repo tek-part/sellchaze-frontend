@@ -4,6 +4,7 @@ import { useOutletContext } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
 import api from '../api/client';
+import SearchableSelect from '../components/ui/SearchableSelect';
 
 export default function BundleFormPage() {
     const { id } = useParams();
@@ -16,8 +17,17 @@ export default function BundleFormPage() {
     const [name, setName] = useState('');
     const [description, setDescription] = useState('');
     const [items, setItems] = useState([{ product_id: '', quantity: 1 }]);
+    const [products, setProducts] = useState([]);
     const [loading, setLoading] = useState(false);
     const [err, setErr] = useState('');
+
+    // Products for the picker (searchable dropdown shows names, not ids).
+    useEffect(() => {
+        if (!permissions.includes('products-list')) return;
+        api.get('/products', { params: { per_page: 200 } })
+            .then(({ data }) => setProducts(data.data ?? []))
+            .catch(() => {});
+    }, [permissions]);
 
     useEffect(() => {
         if (isNew || !permissions.includes('bundles-list')) {
@@ -131,17 +141,20 @@ export default function BundleFormPage() {
                     <div className="space-y-2">
                         {items.map((row, i) => (
                             <div key={i} className="flex flex-wrap items-end gap-2">
-                                <div className="min-w-32 flex-1">
+                                <div className="min-w-48 flex-1">
                                     <span className="mb-1 block text-[11px] uppercase text-slate-500">
-                                        {t('col_product_id')}
+                                        {t('col_product', 'Product')}
                                     </span>
-                                    <input
-                                        type="number"
-                                        min={1}
-                                        value={row.product_id}
+                                    <SearchableSelect
+                                        value={String(row.product_id ?? '')}
                                         onChange={(e) => updateLine(i, 'product_id', e.target.value)}
-                                        className="w-full rounded-lg border border-slate-200 px-2 py-1.5 text-sm"
-                                    />
+                                        className="w-full"
+                                    >
+                                        <option value="">{t('bundle_form_choose_product', '— choose a product —')}</option>
+                                        {products.map((p) => (
+                                            <option key={p.id} value={String(p.id)}>{p.name}</option>
+                                        ))}
+                                    </SearchableSelect>
                                 </div>
                                 <div className="w-24">
                                     <span className="mb-1 block text-[11px] uppercase text-slate-500">{t('col_qty')}</span>
