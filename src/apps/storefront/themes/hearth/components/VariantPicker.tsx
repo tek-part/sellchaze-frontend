@@ -5,6 +5,7 @@
  * nothing when a product has no finishes (data-gap safe).
  */
 import type { ReactElement } from 'react';
+import { useTranslation } from 'react-i18next';
 import { cn } from '../../../../../shared/utils/cn';
 import type { ProductSwatch } from '../../../types/catalog';
 
@@ -18,6 +19,7 @@ export interface VariantPickerProps {
 
 export function VariantPicker(props: VariantPickerProps): ReactElement | null {
   const { label, options, value, onChange, className } = props;
+  const { t } = useTranslation();
   if (options.length === 0) return null;
   const selected = options.find((o) => o.value === value);
 
@@ -37,7 +39,7 @@ export function VariantPicker(props: VariantPickerProps): ReactElement | null {
               type="button"
               role="radio"
               aria-checked={isSelected}
-              aria-label={`${o.label}${available ? '' : ' (unavailable)'}`}
+              aria-label={`${o.label}${available ? '' : ` (${t('product.unavailable')})`}`}
               disabled={!available}
               className={cn(
                 'hh-variant__swatch',

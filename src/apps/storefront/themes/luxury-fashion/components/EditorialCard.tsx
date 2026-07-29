@@ -4,6 +4,7 @@
  * See §32.4.
  */
 import type { ReactElement, ReactNode } from 'react';
+import { useTranslation } from 'react-i18next';
 import { cn } from '../../../../../shared/utils/cn';
 import { Eyebrow } from './Typography';
 import { LinkButton } from './LinkButton';
@@ -22,13 +23,14 @@ export interface EditorialCardProps {
 }
 
 export function EditorialCard(props: EditorialCardProps): ReactElement {
+  const { t } = useTranslation();
   const {
     title,
     eyebrow,
     text,
     image,
     href,
-    cta = 'Discover',
+    cta = t('misc.discover'),
     variant = 'media-left',
     headingLevel: Heading = 'h3',
     className,

@@ -5,6 +5,7 @@
  */
 import { useState, type FormEvent, type ReactElement } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import type { SectionRenderProps } from '../../../theme-engine/rendering';
 import { Container } from '../components/Container';
 import { Section } from '../components/Section';
@@ -16,6 +17,7 @@ import { applyCoupon, submitCheckout } from '../../../api/storefront';
 import { formatMoney } from '../../../utils/format';
 
 export function CheckoutSection(_props: SectionRenderProps): ReactElement {
+  const { t } = useTranslation();
   const cart = useCart();
   const { store } = useStore();
   const navigate = useNavigate();
@@ -36,10 +38,10 @@ export function CheckoutSection(_props: SectionRenderProps): ReactElement {
       const res = (await applyCoupon(coupon)) as { data?: { discount?: number; message?: string } };
       const value = Number(res?.data?.discount ?? 0);
       setDiscount(Number.isFinite(value) ? value : 0);
-      setCouponMsg(value > 0 ? 'Coupon applied.' : (res?.data?.message ?? 'Coupon applied.'));
+      setCouponMsg(value > 0 ? t('checkout.couponApplied') : (res?.data?.message ?? t('checkout.couponApplied')));
     } catch (err) {
       setDiscount(0);
-      setCouponMsg(err instanceof Error ? err.message : 'That code could not be applied.');
+      setCouponMsg(err instanceof Error ? err.message : t('checkout.couponFailed'));
     }
   };
 
@@ -59,7 +61,7 @@ export function CheckoutSection(_props: SectionRenderProps): ReactElement {
       const number = res?.data?.number;
       navigate(number ? `/order/success?number=${encodeURIComponent(number)}` : '/order/success');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'We could not place your order. Please try again.');
+      setError(err instanceof Error ? err.message : t('checkout.orderFailed'));
     } finally {
       setBusy(false);
     }
@@ -69,27 +71,27 @@ export function CheckoutSection(_props: SectionRenderProps): ReactElement {
     <Section>
       <Container>
         <div className="vlt-flow-head">
-          <span className="vlt-eyebrow">// Checkout</span>
-          <h1 className="vlt-flow-head__title">Checkout</h1>
+          <span className="vlt-eyebrow">{t('checkout.eyebrow')}</span>
+          <h1 className="vlt-flow-head__title">{t('checkout.title')}</h1>
         </div>
         <div className="vlt-checkout">
           <form className="vlt-checkout__form" onSubmit={(e) => void placeOrder(e)} noValidate>
-            <span className="vlt-eyebrow">// Contact</span>
-            <Input label="Email" type="email" value={form.email} onChange={set('email')} required autoComplete="email" />
-            <span className="vlt-eyebrow">// Shipping</span>
-            <Input label="Full name" value={form.name} onChange={set('name')} required autoComplete="name" />
-            <Input label="Address" value={form.line1} onChange={set('line1')} required autoComplete="address-line1" />
+            <span className="vlt-eyebrow">{t('contact.eyebrow')}</span>
+            <Input label={t('auth.email')} type="email" value={form.email} onChange={set('email')} required autoComplete="email" />
+            <span className="vlt-eyebrow">{t('checkout.eyebrowShipping')}</span>
+            <Input label={t('auth.fullName')} value={form.name} onChange={set('name')} required autoComplete="name" />
+            <Input label={t('checkout.address')} value={form.line1} onChange={set('line1')} required autoComplete="address-line1" />
             <div className="vlt-checkout__row">
-              <Input label="City" value={form.city} onChange={set('city')} required autoComplete="address-level2" />
-              <Input label="Postal code" value={form.postal_code} onChange={set('postal_code')} required autoComplete="postal-code" />
+              <Input label={t('account.city')} value={form.city} onChange={set('city')} required autoComplete="address-level2" />
+              <Input label={t('account.postalCode')} value={form.postal_code} onChange={set('postal_code')} required autoComplete="postal-code" />
             </div>
-            <Input label="Country" value={form.country} onChange={set('country')} required autoComplete="country-name" />
+            <Input label={t('account.country')} value={form.country} onChange={set('country')} required autoComplete="country-name" />
             {error ? <p className="vlt-field__error" role="alert">{error}</p> : null}
-            <Button type="submit" block loading={busy}>Place order · {formatMoney(total, currency)}</Button>
+            <Button type="submit" block loading={busy}>{t('checkout.placeOrder')} · {formatMoney(total, currency)}</Button>
           </form>
 
-          <aside className="vlt-summary" aria-label="Order summary">
-            <span className="vlt-eyebrow">// Summary</span>
+          <aside className="vlt-summary" aria-label={t('checkout.orderSummary')}>
+            <span className="vlt-eyebrow">{t('checkout.eyebrowSummary')}</span>
             {cart.lines.map((line) => (
               <div key={line.id} className="vlt-summary__row">
                 <span>{line.title} × {line.quantity}</span>
@@ -97,15 +99,15 @@ export function CheckoutSection(_props: SectionRenderProps): ReactElement {
               </div>
             ))}
             <div className="vlt-checkout__coupon">
-              <Input label="Coupon code" value={coupon} onChange={(e) => setCoupon(e.target.value)} />
-              <Button type="button" variant="secondary" onClick={() => void applyCode()} disabled={!coupon}>Apply</Button>
+              <Input label={t('checkout.couponCode')} value={coupon} onChange={(e) => setCoupon(e.target.value)} />
+              <Button type="button" variant="secondary" onClick={() => void applyCode()} disabled={!coupon}>{t('checkout.apply')}</Button>
             </div>
             {couponMsg ? <p className="vlt-checkout__coupon-msg" role="status">{couponMsg}</p> : null}
             {discount > 0 ? (
-              <div className="vlt-summary__row"><span>Discount</span><span className="vlt-num">−{formatMoney(discount, currency)}</span></div>
+              <div className="vlt-summary__row"><span>{t('checkout.discount')}</span><span className="vlt-num">−{formatMoney(discount, currency)}</span></div>
             ) : null}
-            <div className="vlt-summary__row vlt-summary__row--muted"><span>Shipping</span><span>Calculated after address</span></div>
-            <div className="vlt-summary__total"><span>Total</span><span className="vlt-num">{formatMoney(total, currency)}</span></div>
+            <div className="vlt-summary__row vlt-summary__row--muted"><span>{t('checkout.shipping')}</span><span>{t('checkout.calculatedAfterAddress')}</span></div>
+            <div className="vlt-summary__total"><span>{t('checkout.total')}</span><span className="vlt-num">{formatMoney(total, currency)}</span></div>
           </aside>
         </div>
       </Container>

@@ -12,6 +12,7 @@ import {
   type ReactElement,
   type ReactNode,
 } from 'react';
+import { useTranslation } from 'react-i18next';
 import { cn } from '../../../../../shared/utils/cn';
 import { prefersReducedMotion } from '../../../../../shared/env/media';
 import { IconButton } from './IconButton';
@@ -40,6 +41,7 @@ export function Carousel(props: CarouselProps): ReactElement {
     itemClassName,
     className,
   } = props;
+  const { t } = useTranslation();
 
   const items = Children.toArray(children);
   const trackRef = useRef<HTMLDivElement>(null);
@@ -109,7 +111,7 @@ export function Carousel(props: CarouselProps): ReactElement {
     >
       {showArrows && items.length > 1 ? (
         <IconButton
-          label="Previous"
+          label={t('common.previous')}
           className="sf-carousel__arrow sf-carousel__arrow--prev"
           disabled={atStart}
           onClick={() => scrollToIndex(Math.max(0, active - 1))}
@@ -128,7 +130,7 @@ export function Carousel(props: CarouselProps): ReactElement {
 
       {showArrows && items.length > 1 ? (
         <IconButton
-          label="Next"
+          label={t('common.next')}
           className="sf-carousel__arrow sf-carousel__arrow--next"
           disabled={atEnd}
           onClick={() => scrollToIndex(Math.min(items.length - 1, active + 1))}
@@ -138,14 +140,14 @@ export function Carousel(props: CarouselProps): ReactElement {
       ) : null}
 
       {showDots && items.length > 1 ? (
-        <div className="sf-carousel__dots" role="tablist" aria-label="Slides">
+        <div className="sf-carousel__dots" role="tablist" aria-label={t('misc.slides')}>
           {items.map((_, i) => (
             <button
               key={i}
               type="button"
               role="tab"
               aria-selected={i === active}
-              aria-label={`Go to item ${i + 1}`}
+              aria-label={t('misc.goToSlide', { n: i + 1 })}
               className={cn('sf-carousel__dot', i === active && 'sf-carousel__dot--active')}
               onClick={() => scrollToIndex(i)}
             />

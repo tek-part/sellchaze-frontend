@@ -3,6 +3,7 @@
  * auth context + account API. Rendered inside the Voltage account shell. Voltage's own .vlt-* markup.
  */
 import { useState, type FormEvent, type ReactElement } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { SectionRenderProps } from '../../../theme-engine/rendering';
 import { Input } from '../components/Input';
 import { Button } from '../components/Button';
@@ -13,6 +14,7 @@ import { changePassword, updateAccount } from '../../../api/storefront';
 type Status = 'idle' | 'saving' | 'saved' | 'error';
 
 function DetailsForm(): ReactElement {
+  const { t } = useTranslation();
   const { customer, refresh } = useAuth();
   const [name, setName] = useState(customer?.name ?? '');
   const [email, setEmail] = useState(customer?.email ?? '');
@@ -32,17 +34,18 @@ function DetailsForm(): ReactElement {
 
   return (
     <form className="vlt-account-form" onSubmit={(e) => void submit(e)} noValidate>
-      <span className="vlt-eyebrow">// Details</span>
-      <Input label="Full name" value={name} onChange={(e) => setName(e.target.value)} autoComplete="name" />
-      <Input label="Email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="email" />
-      {status === 'saved' ? <p className="vlt-account-form__ok" role="status">Your details have been saved.</p> : null}
-      {status === 'error' ? <p className="vlt-field__error" role="alert">Could not save — please try again.</p> : null}
-      <div><Button type="submit" loading={status === 'saving'}>Save changes</Button></div>
+      <span className="vlt-eyebrow">{t('account.eyebrowDetails')}</span>
+      <Input label={t('account.fullName')} value={name} onChange={(e) => setName(e.target.value)} autoComplete="name" />
+      <Input label={t('account.email')} type="email" value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="email" />
+      {status === 'saved' ? <p className="vlt-account-form__ok" role="status">{t('account.profileSaved')}</p> : null}
+      {status === 'error' ? <p className="vlt-field__error" role="alert">{t('account.profileError')}</p> : null}
+      <div><Button type="submit" loading={status === 'saving'}>{t('account.saveChanges')}</Button></div>
     </form>
   );
 }
 
 function PasswordForm(): ReactElement {
+  const { t } = useTranslation();
   const [form, setForm] = useState({ current_password: '', password: '', password_confirmation: '' });
   const [status, setStatus] = useState<Status>('idle');
   const [error, setError] = useState<string>();
@@ -64,13 +67,13 @@ function PasswordForm(): ReactElement {
 
   return (
     <form className="vlt-account-form" onSubmit={(e) => void submit(e)} noValidate>
-      <span className="vlt-eyebrow">// Password</span>
-      <Input label="Current password" type="password" autoComplete="current-password" value={form.current_password} onChange={set('current_password')} required />
-      <Input label="New password" type="password" autoComplete="new-password" value={form.password} onChange={set('password')} required />
-      <Input label="Confirm new password" type="password" autoComplete="new-password" value={form.password_confirmation} onChange={set('password_confirmation')} required />
-      {status === 'saved' ? <p className="vlt-account-form__ok" role="status">Your password has been updated.</p> : null}
+      <span className="vlt-eyebrow">{t('account.eyebrowPassword')}</span>
+      <Input label={t('account.currentPassword')} type="password" autoComplete="current-password" value={form.current_password} onChange={set('current_password')} required />
+      <Input label={t('account.newPassword')} type="password" autoComplete="new-password" value={form.password} onChange={set('password')} required />
+      <Input label={t('account.confirmNewPassword')} type="password" autoComplete="new-password" value={form.password_confirmation} onChange={set('password_confirmation')} required />
+      {status === 'saved' ? <p className="vlt-account-form__ok" role="status">{t('account.passwordUpdated')}</p> : null}
       {error ? <p className="vlt-field__error" role="alert">{error}</p> : null}
-      <div><Button type="submit" variant="secondary" loading={status === 'saving'}>Update password</Button></div>
+      <div><Button type="submit" variant="secondary" loading={status === 'saving'}>{t('account.updatePassword')}</Button></div>
     </form>
   );
 }

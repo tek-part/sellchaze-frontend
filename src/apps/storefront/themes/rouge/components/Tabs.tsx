@@ -3,6 +3,7 @@
  * active panel via `renderPanel`. Arrow-key roving per WAI-ARIA.
  */
 import { useId, useRef, type KeyboardEvent, type ReactElement, type ReactNode } from 'react';
+import { useTranslation } from 'react-i18next';
 import { cn } from '../../../../../shared/utils/cn';
 
 export interface TabItem {
@@ -19,6 +20,7 @@ export interface TabsProps {
 
 export function Tabs(props: TabsProps): ReactElement {
   const { tabs, value, onChange, renderPanel, className } = props;
+  const { t } = useTranslation();
   const baseId = useId();
   const refs = useRef<Array<HTMLButtonElement | null>>([]);
 
@@ -36,7 +38,7 @@ export function Tabs(props: TabsProps): ReactElement {
 
   return (
     <div className={cn('rge-tabs', className)}>
-      <div className="rge-tabs__list" role="tablist" aria-label="Product information">
+      <div className="rge-tabs__list" role="tablist" aria-label={t('pdp.productInformation')}>
         {tabs.map((tab, i) => {
           const selected = tab.id === value;
           return (

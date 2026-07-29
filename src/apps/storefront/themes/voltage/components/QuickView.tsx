@@ -3,6 +3,7 @@
  * (shared cart) and a link to the full PDP. Fed a ProductCardModel (list-level data). Voltage's own.
  */
 import type { ReactElement } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { ProductCardModel } from '../../../types/catalog';
 import { useCart } from '../../../state/cart';
 import { useToast } from './toast/toast-context';
@@ -20,6 +21,7 @@ export interface QuickViewProps {
 
 export function QuickView(props: QuickViewProps): ReactElement | null {
   const { product, open, onClose } = props;
+  const { t } = useTranslation();
   const cart = useCart();
   const toast = useToast();
   if (!product) return null;
@@ -35,7 +37,7 @@ export function QuickView(props: QuickViewProps): ReactElement | null {
       currency: product.currency,
       quantity: 1,
     });
-    toast.notify(`${product.title} added to cart`, 'success');
+    toast.notify(t('product.addedToCartNamed', { title: product.title }), 'success');
     onClose();
   };
 
@@ -52,8 +54,8 @@ export function QuickView(props: QuickViewProps): ReactElement | null {
             <Price amount={product.price} {...(product.compareAtPrice ? { compareAt: product.compareAtPrice } : {})} currency={product.currency} />
           </div>
           <div className="vlt-quickview__actions">
-            <Button onClick={addToCart} className="vlt-quickview__add">Add to cart</Button>
-            <ButtonLink href={product.url} variant="ghost" onClick={onClose}>View full details</ButtonLink>
+            <Button onClick={addToCart} className="vlt-quickview__add">{t('product.addToCart')}</Button>
+            <ButtonLink href={product.url} variant="ghost" onClick={onClose}>{t('product.viewFullDetails')}</ButtonLink>
           </div>
         </div>
       </div>

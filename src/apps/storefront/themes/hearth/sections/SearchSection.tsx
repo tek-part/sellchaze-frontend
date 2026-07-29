@@ -4,6 +4,7 @@
  * empty state that routes back to browsing when there are no matches. Never fabricates results.
  */
 import type { CSSProperties, ReactElement } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { SectionRenderProps } from '../../../theme-engine/rendering';
 import type { ProductCardModel } from '../../../types/catalog';
 import { ButtonLink } from '../components/ButtonLink';
@@ -27,6 +28,7 @@ function readData(context: SectionRenderProps['context']): {
 }
 
 export function SearchSection(props: SectionRenderProps): ReactElement {
+  const { t } = useTranslation();
   const { context } = props;
   const { query, products, loading } = readData(context);
   const gridStyle = { '--hh-cols': '4' } as CSSProperties;
@@ -35,10 +37,10 @@ export function SearchSection(props: SectionRenderProps): ReactElement {
     <Section>
       <Container>
         <header className="hh-search-head">
-          <h1 className="hh-page-title">{query ? `Results for “${query}”` : 'Search'}</h1>
+          <h1 className="hh-page-title">{query ? t('search.resultsFor', { query }) : t('search.title')}</h1>
           {!loading ? (
             <p className="hh-search-head__count">
-              {products.length} {products.length === 1 ? 'result' : 'results'}
+              {t('search.resultsCount', { count: products.length })}
             </p>
           ) : null}
         </header>
@@ -60,9 +62,9 @@ export function SearchSection(props: SectionRenderProps): ReactElement {
         ) : (
           <EmptyState
             variant="search"
-            title={query ? `No matches for “${query}”` : 'Search our rooms'}
-            description="Try a different term, or browse by room to find your piece."
-            actions={<ButtonLink href="/rooms">Browse rooms</ButtonLink>}
+            title={query ? t('search.noMatchesFor', { query }) : t('search.searchRooms')}
+            description={t('search.hearthHint')}
+            actions={<ButtonLink href="/rooms">{t('hearth.browseRooms')}</ButtonLink>}
           />
         )}
       </Container>

@@ -25,6 +25,16 @@ import './styles/index.css';
 // reads a token, so each theme's own tokens do the visual differentiation.
 import './styles/editorial.css';
 import './styles/company.css';
+// Shared component skin (buttons, form fields incl. the floating-label mechanics, cards, layout
+// helpers). The shared route pages (Auth / Account / Static / NotFound / errors) render luxury's
+// `.sf-*` components regardless of the active theme — they hard-import them in JS — but that skin
+// used to load ONLY when luxury was the active theme, leaving those pages unstyled under
+// hearth/voltage and half-styled under rouge (no floating-label rules). Loading it app-level makes
+// the CSS match that JS reality: every value reads a `var(--token)` on <html>, so each theme's own
+// tokens still do the visual differentiation, and a theme that wants a different look (rouge) simply
+// overrides in its own `shared.css`, which loads afterwards and wins on source order.
+import './themes/luxury-fashion/theme.css';
+import './themes/luxury-fashion/pages.css';
 // Arabic typography + the direction-dependent corrections logical properties cannot make.
 import './styles/rtl.css';
 

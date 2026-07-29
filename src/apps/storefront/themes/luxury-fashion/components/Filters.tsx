@@ -4,6 +4,7 @@
  * swatches, a RangeSlider). Height eases via the grid-rows trick; RTL-safe chevron. See §32.6.
  */
 import { useId, useState, type ReactElement, type ReactNode } from 'react';
+import { useTranslation } from 'react-i18next';
 import { cn } from '../../../../../shared/utils/cn';
 import { IconChevronDown } from './icons';
 import { LinkButton } from './LinkButton';
@@ -51,12 +52,13 @@ export interface FilterPanelProps {
 }
 
 export function FilterPanel(props: FilterPanelProps): ReactElement {
-  const { title = 'Filters', onClearAll, applied, children, className } = props;
+  const { t } = useTranslation();
+  const { title = t('shop.filters'), onClearAll, applied, children, className } = props;
   return (
     <div className={cn('sf-filter-panel', className)}>
       <div className="sf-filter-panel__head">
         <span className="sf-filter-panel__title">{title}</span>
-        {onClearAll ? <LinkButton onClick={onClearAll}>Clear all</LinkButton> : null}
+        {onClearAll ? <LinkButton onClick={onClearAll}>{t('shop.clearAll')}</LinkButton> : null}
       </div>
       {applied ? <div className="sf-filter-panel__applied">{applied}</div> : null}
       <div className="sf-filter-panel__groups">{children}</div>

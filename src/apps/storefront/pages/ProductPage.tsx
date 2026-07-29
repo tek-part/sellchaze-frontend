@@ -74,9 +74,9 @@ export function ProductPage(): ReactElement | null {
       <Section>
         <Container>
           <ErrorState
-            title="This product is unavailable"
-            description="We couldn't load this piece just now. Please try again."
-            actions={<Button onClick={productQ.reload}>Try again</Button>}
+            title={t('pdp.unavailableTitle')}
+            description={t('pdp.unavailableBody')}
+            actions={<Button onClick={productQ.reload}>{t('pdp.tryAgain')}</Button>}
           />
         </Container>
       </Section>
@@ -87,7 +87,7 @@ export function ProductPage(): ReactElement | null {
       <Section>
         <Container>
           <div style={{ display: 'grid', placeItems: 'center', minHeight: '40vh' }}>
-            <Spinner label="Loading product" />
+            <Spinner label={t('pdp.loadingProduct')} />
           </div>
         </Container>
       </Section>

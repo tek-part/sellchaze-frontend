@@ -10,6 +10,7 @@ import {
   type ReactElement,
   type ReactNode,
 } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Container } from './Container';
 import { Portal } from './overlay/Portal';
 import { useFocusTrap } from './overlay/useFocusTrap';
@@ -31,6 +32,7 @@ export interface SearchOverlayProps {
 
 export function SearchOverlay(props: SearchOverlayProps): ReactElement | null {
   const { open, onClose, query, onQueryChange, onSubmit, placeholder, children } = props;
+  const { t } = useTranslation();
   const panelRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const [present, setPresent] = useState(open);
@@ -71,7 +73,7 @@ export function SearchOverlay(props: SearchOverlayProps): ReactElement | null {
     <Portal>
       <div className="sf-search-overlay" data-state={state}>
         <div className="sf-search-overlay__scrim" aria-hidden onClick={onClose} />
-        <div ref={panelRef} className="sf-search-overlay__panel" role="dialog" aria-modal="true" aria-label="Search" tabIndex={-1}>
+        <div ref={panelRef} className="sf-search-overlay__panel" role="dialog" aria-modal="true" aria-label={t('search.title')} tabIndex={-1}>
           <Container>
             <div className="sf-search-overlay__head">
               <SearchBar

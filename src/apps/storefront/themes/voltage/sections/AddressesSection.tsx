@@ -3,6 +3,7 @@
  * shared addresses API. Spinner + empty state + inline form. Voltage's own .vlt-* markup.
  */
 import { useState, type FormEvent, type ReactElement } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { SectionRenderProps } from '../../../theme-engine/rendering';
 import { Input } from '../components/Input';
 import { Button } from '../components/Button';
@@ -13,6 +14,7 @@ import { createAddress, deleteAddress, getAddresses, updateAddress, type ApiAddr
 const EMPTY = { name: '', line1: '', city: '', postal_code: '', country: '' };
 
 export function AddressesSection(_props: SectionRenderProps): ReactElement {
+  const { t } = useTranslation();
   const addressesQ = useAsync(() => getAddresses(), []);
   const [adding, setAdding] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
@@ -51,14 +53,14 @@ export function AddressesSection(_props: SectionRenderProps): ReactElement {
     addressesQ.reload();
   };
 
-  if (addressesQ.loading) return <div className="vlt-account-loading"><Spinner label="Loading addresses" /></div>;
+  if (addressesQ.loading) return <div className="vlt-account-loading"><Spinner label={t('account.loadingAddresses')} /></div>;
 
   if (addresses.length === 0 && !adding) {
     return (
       <div className="vlt-empty vlt-empty--pad">
-        <span className="vlt-empty__title">No saved addresses</span>
-        <span className="vlt-empty__text">Add an address for faster checkout.</span>
-        <Button className="vlt-empty__cta" onClick={() => setAdding(true)}>Add address</Button>
+        <span className="vlt-empty__title">{t('account.addressesEmpty')}</span>
+        <span className="vlt-empty__text">{t('account.addressesEmptyHint')}</span>
+        <Button className="vlt-empty__cta" onClick={() => setAdding(true)}>{t('account.addAddress')}</Button>
       </div>
     );
   }
@@ -73,8 +75,8 @@ export function AddressesSection(_props: SectionRenderProps): ReactElement {
               <span className="vlt-log__meta">{[address.line1, address.city, address.postal_code, address.country].filter(Boolean).join(', ')}</span>
             </span>
             <span className="vlt-addr__actions">
-              <Button variant="ghost" size="sm" onClick={() => startEdit(address)}>Edit</Button>
-              <Button variant="ghost" size="sm" onClick={() => void remove(address.id)}>Remove</Button>
+              <Button variant="ghost" size="sm" onClick={() => startEdit(address)}>{t('account.edit')}</Button>
+              <Button variant="ghost" size="sm" onClick={() => void remove(address.id)}>{t('account.remove')}</Button>
             </span>
           </li>
         ))}
@@ -82,19 +84,19 @@ export function AddressesSection(_props: SectionRenderProps): ReactElement {
 
       {adding ? (
         <form className="vlt-account-form" onSubmit={(e) => void submit(e)} noValidate>
-          <span className="vlt-eyebrow">{editingId !== null ? '// Edit address' : '// New address'}</span>
-          <Input label="Full name" value={form.name} onChange={set('name')} required autoComplete="name" />
-          <Input label="Address line" value={form.line1} onChange={set('line1')} required autoComplete="address-line1" />
-          <Input label="City" value={form.city} onChange={set('city')} required autoComplete="address-level2" />
-          <Input label="Postal code" value={form.postal_code} onChange={set('postal_code')} required autoComplete="postal-code" />
-          <Input label="Country" value={form.country} onChange={set('country')} required autoComplete="country-name" />
+          <span className="vlt-eyebrow">{editingId !== null ? t('account.eyebrowEditAddress') : t('account.eyebrowNewAddress')}</span>
+          <Input label={t('account.fullName')} value={form.name} onChange={set('name')} required autoComplete="name" />
+          <Input label={t('account.addressLine')} value={form.line1} onChange={set('line1')} required autoComplete="address-line1" />
+          <Input label={t('account.city')} value={form.city} onChange={set('city')} required autoComplete="address-level2" />
+          <Input label={t('account.postalCode')} value={form.postal_code} onChange={set('postal_code')} required autoComplete="postal-code" />
+          <Input label={t('account.country')} value={form.country} onChange={set('country')} required autoComplete="country-name" />
           <div className="vlt-addr__form-actions">
-            <Button type="submit">{editingId !== null ? 'Update address' : 'Save address'}</Button>
-            <Button type="button" variant="ghost" onClick={closeForm}>Cancel</Button>
+            <Button type="submit">{editingId !== null ? t('account.updateAddress') : t('account.saveAddress')}</Button>
+            <Button type="button" variant="ghost" onClick={closeForm}>{t('account.cancel')}</Button>
           </div>
         </form>
       ) : (
-        <div><Button variant="secondary" onClick={() => setAdding(true)}>Add address</Button></div>
+        <div><Button variant="secondary" onClick={() => setAdding(true)}>{t('account.addAddress')}</Button></div>
       )}
     </div>
   );

@@ -3,6 +3,7 @@
  * the PLP and (large) inside the SearchOverlay. Submits on Enter. See §32.6.
  */
 import type { FormEvent, ReactElement, Ref } from 'react';
+import { useTranslation } from 'react-i18next';
 import { cn } from '../../../../../shared/utils/cn';
 import { IconButton } from './IconButton';
 import { IconClose, IconSearch } from './icons';
@@ -20,14 +21,15 @@ export interface SearchBarProps {
 }
 
 export function SearchBar(props: SearchBarProps): ReactElement {
+  const { t } = useTranslation();
   const {
     value,
     onChange,
     onSubmit,
     onClear,
-    placeholder = 'Search',
+    placeholder = t('header.search'),
     size = 'md',
-    ariaLabel = 'Search',
+    ariaLabel = t('header.search'),
     inputRef,
     className,
   } = props;
@@ -58,7 +60,7 @@ export function SearchBar(props: SearchBarProps): ReactElement {
       />
       {value ? (
         <IconButton
-          label="Clear search"
+          label={t('product.clearSearch')}
           className="sf-searchbar__clear"
           onClick={() => {
             onChange('');

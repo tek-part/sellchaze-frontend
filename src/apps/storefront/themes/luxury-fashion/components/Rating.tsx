@@ -4,6 +4,7 @@
  * reviews — never "0 stars". See §32.3.
  */
 import type { ReactElement } from 'react';
+import { useTranslation } from 'react-i18next';
 import { cn } from '../../../../../shared/utils/cn';
 import { IconStar } from './icons';
 
@@ -23,6 +24,7 @@ function stars(max: number): ReactElement[] {
 
 export function Rating(props: RatingProps): ReactElement | null {
   const { value, count, max = 5, showCount = true, className } = props;
+  const { t } = useTranslation();
 
   // Self-hide when there is genuinely nothing to show.
   if (!(value > 0) && !(typeof count === 'number' && count > 0)) return null;
@@ -34,7 +36,9 @@ export function Rating(props: RatingProps): ReactElement | null {
     <span
       className={cn('sf-rating', className)}
       role="img"
-      aria-label={`Rated ${rounded} out of ${max}${typeof count === 'number' ? `, ${count} reviews` : ''}`}
+      aria-label={typeof count === 'number'
+        ? t('product.ratedOutOfMaxCount', { rating: rounded, max, count })
+        : t('product.ratedOutOfMax', { rating: rounded, max })}
     >
       <span className="sf-rating__stars" aria-hidden>
         {stars(max)}

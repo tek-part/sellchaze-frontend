@@ -4,6 +4,7 @@
  * for manual control. Falls back to nothing when no slides are configured.
  */
 import { useEffect, useState, type ReactElement } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { SectionRenderProps } from '../../../theme-engine/rendering';
 import { Container } from '../components/Container';
 import { ButtonLink } from '../components/ButtonLink';
@@ -25,6 +26,7 @@ function prefersReducedMotion(): boolean {
 }
 
 export function HeroSliderSection(props: SectionRenderProps): ReactElement | null {
+  const { t } = useTranslation();
   const fromData = slidesFrom(props.context);
   const slides: Slide[] = fromData.length
     ? fromData.map((s) => ({
@@ -60,7 +62,7 @@ export function HeroSliderSection(props: SectionRenderProps): ReactElement | nul
   const go = (dir: number): void => setActive((i) => (i + dir + count) % count);
 
   return (
-    <section className="vlt-heroslider" aria-roledescription="carousel" aria-label="Highlights">
+    <section className="vlt-heroslider" aria-roledescription="carousel" aria-label={t('misc.highlights')}>
       <div className="vlt-heroslider__field" aria-hidden="true" />
       <Container>
         <div className="vlt-heroslider__inner">
@@ -74,21 +76,21 @@ export function HeroSliderSection(props: SectionRenderProps): ReactElement | nul
 
         {count > 1 ? (
           <div className="vlt-heroslider__controls">
-            <IconButton label="Previous slide" onClick={() => go(-1)}><IconChevronLeft /></IconButton>
-            <div className="vlt-heroslider__dots" role="tablist" aria-label="Slides">
+            <IconButton label={t('misc.previousSlide')} onClick={() => go(-1)}><IconChevronLeft /></IconButton>
+            <div className="vlt-heroslider__dots" role="tablist" aria-label={t('misc.slides')}>
               {slides.map((_, i) => (
                 <button
                   key={i}
                   type="button"
                   role="tab"
                   aria-selected={i === active}
-                  aria-label={`Slide ${i + 1}`}
+                  aria-label={t('misc.slideN', { n: i + 1 })}
                   className={i === active ? 'vlt-heroslider__dot vlt-heroslider__dot--on' : 'vlt-heroslider__dot'}
                   onClick={() => setActive(i)}
                 />
               ))}
             </div>
-            <IconButton label="Next slide" onClick={() => go(1)}><IconChevronRight /></IconButton>
+            <IconButton label={t('misc.nextSlide')} onClick={() => go(1)}><IconChevronRight /></IconButton>
           </div>
         ) : null}
       </Container>

@@ -4,6 +4,7 @@
  */
 import { useState, type FormEvent, type ReactElement } from 'react';
 import { Navigate, Outlet, useNavigate, useParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import {
   Button,
   Container,
@@ -40,6 +41,7 @@ import {
 import { formatDate, formatMoney } from '../utils/format';
 
 export function AccountLayout(): ReactElement {
+  const { t } = useTranslation();
   const { customer, loading, logout } = useAuth();
   const navigate = useNavigate();
   const { store } = useStore();
@@ -50,7 +52,7 @@ export function AccountLayout(): ReactElement {
       <Section>
         <Container>
           <div style={{ display: 'grid', placeItems: 'center', minHeight: '30vh' }}>
-            <Spinner label="Loading your account" />
+            <Spinner label={t('account.loadingAccount')} />
           </div>
         </Container>
       </Section>
@@ -70,16 +72,16 @@ export function AccountLayout(): ReactElement {
     <Section>
       <Container>
         <div className="sf-page-head" style={{ textAlign: 'start' }}>
-          <h1 className="sf-page-head__title">My account</h1>
+          <h1 className="sf-page-head__title">{t('account.title')}</h1>
         </div>
         <div className="sf-account">
-          <nav className="sf-account__nav" aria-label="Account">
-            <a href="/account">Profile</a>
-            <a href="/account/orders">Orders</a>
-            <a href="/account/addresses">Addresses</a>
-            <a href="/wishlist">Wishlist</a>
+          <nav className="sf-account__nav" aria-label={t('account.title')}>
+            <a href="/account">{t('account.profile')}</a>
+            <a href="/account/orders">{t('account.orders')}</a>
+            <a href="/account/addresses">{t('account.addresses')}</a>
+            <a href="/wishlist">{t('account.wishlist')}</a>
             <button type="button" onClick={() => void logout().then(() => navigate('/'))}>
-              Sign out
+              {t('account.signOut')}
             </button>
           </nav>
           <div className="sf-account__panel">
@@ -92,6 +94,7 @@ export function AccountLayout(): ReactElement {
 }
 
 export function AccountPage(): ReactElement {
+  const { t } = useTranslation();
   const { customer, refresh } = useAuth();
   const themed = useAccountTemplate('account-profile');
   const [name, setName] = useState(customer?.name ?? '');
@@ -115,12 +118,12 @@ export function AccountPage(): ReactElement {
   return (
     <div className="sf-account__panel">
       <form className="sf-account__panel" onSubmit={(e) => void submit(e)} noValidate>
-        <Input label="Full name" value={name} onChange={(e) => setName(e.target.value)} />
-        <Input label="Email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
-        {status === 'saved' ? <p className="sf-newsletter__success">Your details have been saved.</p> : null}
-        {status === 'error' ? <p className="sf-field__error">Could not save — please try again.</p> : null}
+        <Input label={t('account.fullName')} value={name} onChange={(e) => setName(e.target.value)} />
+        <Input label={t('account.email')} type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
+        {status === 'saved' ? <p className="sf-newsletter__success">{t('account.profileSaved')}</p> : null}
+        {status === 'error' ? <p className="sf-field__error">{t('account.profileError')}</p> : null}
         <Button type="submit" loading={status === 'saving'}>
-          Save changes
+          {t('account.saveChanges')}
         </Button>
       </form>
       <hr className="sf-divider" />
@@ -130,6 +133,7 @@ export function AccountPage(): ReactElement {
 }
 
 function ChangePasswordForm(): ReactElement {
+  const { t } = useTranslation();
   const [form, setForm] = useState({ current_password: '', password: '', password_confirmation: '' });
   const [status, setStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
   const [error, setError] = useState<string>();
@@ -144,27 +148,28 @@ function ChangePasswordForm(): ReactElement {
       setForm({ current_password: '', password: '', password_confirmation: '' });
       setStatus('saved');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Could not change your password.');
+      setError(err instanceof Error ? err.message : t('account.passwordError'));
       setStatus('error');
     }
   };
 
   return (
     <form className="sf-account__panel" onSubmit={(e) => void submit(e)} noValidate>
-      <h2 className="sf-footer__group-title">Change password</h2>
-      <Input label="Current password" type="password" autoComplete="current-password" value={form.current_password} onChange={set('current_password')} required />
-      <Input label="New password" type="password" autoComplete="new-password" value={form.password} onChange={set('password')} required />
-      <Input label="Confirm new password" type="password" autoComplete="new-password" value={form.password_confirmation} onChange={set('password_confirmation')} required />
-      {status === 'saved' ? <p className="sf-newsletter__success">Your password has been updated.</p> : null}
+      <h2 className="sf-footer__group-title">{t('account.changePassword')}</h2>
+      <Input label={t('account.currentPassword')} type="password" autoComplete="current-password" value={form.current_password} onChange={set('current_password')} required />
+      <Input label={t('account.newPassword')} type="password" autoComplete="new-password" value={form.password} onChange={set('password')} required />
+      <Input label={t('account.confirmNewPassword')} type="password" autoComplete="new-password" value={form.password_confirmation} onChange={set('password_confirmation')} required />
+      {status === 'saved' ? <p className="sf-newsletter__success">{t('account.passwordUpdated')}</p> : null}
       {error ? <p className="sf-field__error">{error}</p> : null}
       <Button type="submit" variant="secondary" loading={status === 'saving'}>
-        Update password
+        {t('account.updatePassword')}
       </Button>
     </form>
   );
 }
 
 export function OrderDetailPage(): ReactElement {
+  const { t } = useTranslation();
   const { number = '' } = useParams();
   const { store } = useStore();
   const themed = useAccountTemplate('account-order');
@@ -172,14 +177,14 @@ export function OrderDetailPage(): ReactElement {
   const order = orderQ.data?.data;
 
   if (themed) return themed;
-  if (orderQ.loading) return <Spinner label="Loading order" />;
-  if (!order) return <EmptyState variant="orders" title="Order not found" description="We couldn't find that order." />;
+  if (orderQ.loading) return <Spinner label={t('account.loadingOrder')} />;
+  if (!order) return <EmptyState variant="orders" title={t('account.orderNotFound')} description={t('account.orderNotFoundHint')} />;
 
   const currency = order.currency || store.currency;
   return (
     <div className="sf-account__panel">
       <div>
-        <div style={{ fontFamily: 'var(--heading)', fontSize: 'var(--fs-xl)', color: 'var(--text)' }}>Order {order.number}</div>
+        <div style={{ fontFamily: 'var(--heading)', fontSize: 'var(--fs-xl)', color: 'var(--text)' }}>{t('account.orderNumber', { number: order.number })}</div>
         <div className="sf-card-row__meta">
           {formatDate(order.created_at) ?? ''} · {order.status}
         </div>
@@ -190,7 +195,7 @@ export function OrderDetailPage(): ReactElement {
             <div key={item.id ?? i} className="sf-card-row">
               <div>
                 <div style={{ fontFamily: 'var(--heading)', color: 'var(--text)' }}>{item.name}</div>
-                <div className="sf-card-row__meta">Qty {item.quantity}</div>
+                <div className="sf-card-row__meta">{t('account.qty', { count: item.quantity })}</div>
               </div>
               <div>{formatMoney(Number(item.price) * item.quantity, currency)}</div>
             </div>
@@ -198,26 +203,27 @@ export function OrderDetailPage(): ReactElement {
         </div>
       ) : null}
       <div className="sf-cart-summary__total">
-        <span>Total</span>
+        <span>{t('account.orderTotal')}</span>
         <span className="sf-cart-summary__total-value">{formatMoney(Number(order.total), currency)}</span>
       </div>
       <a href="/account/orders" className="sf-link">
-        <span className="sf-link__label">Back to orders</span>
+        <span className="sf-link__label">{t('account.backToOrders')}</span>
       </a>
     </div>
   );
 }
 
 export function OrdersPage(): ReactElement {
+  const { t } = useTranslation();
   const { store } = useStore();
   const themed = useAccountTemplate('account-orders');
   const ordersQ = useAsync(() => getOrders(), []);
   const orders: ReadonlyArray<ApiOrder> = ordersQ.data?.data ?? [];
 
   if (themed) return themed;
-  if (ordersQ.loading) return <Spinner label="Loading orders" />;
+  if (ordersQ.loading) return <Spinner label={t('account.loadingOrders')} />;
   if (orders.length === 0) {
-    return <EmptyState variant="orders" title="No orders yet" description="When you place an order, it will appear here." />;
+    return <EmptyState variant="orders" title={t('account.ordersEmpty')} description={t('account.ordersEmptyHint')} />;
   }
 
   return (
@@ -225,7 +231,7 @@ export function OrdersPage(): ReactElement {
       {orders.map((order) => (
         <a key={order.id} href={`/account/orders/${order.number}`} className="sf-card-row" style={{ textDecoration: 'none' }}>
           <div>
-            <div style={{ fontFamily: 'var(--heading)', color: 'var(--text)' }}>Order {order.number}</div>
+            <div style={{ fontFamily: 'var(--heading)', color: 'var(--text)' }}>{t('account.orderNumber', { number: order.number })}</div>
             <div className="sf-card-row__meta">
               {formatDate(order.created_at) ?? ''} · {order.status}
             </div>
@@ -242,6 +248,7 @@ export function OrdersPage(): ReactElement {
 const EMPTY_ADDRESS = { name: '', line1: '', city: '', postal_code: '', country: '' };
 
 export function AddressesPage(): ReactElement {
+  const { t } = useTranslation();
   const themed = useAccountTemplate('account-addresses');
   const addressesQ = useAsync(() => getAddresses(), []);
   const [adding, setAdding] = useState(false);
@@ -286,9 +293,9 @@ export function AddressesPage(): ReactElement {
   return (
     <div className="sf-account__panel">
       {addressesQ.loading ? (
-        <Spinner label="Loading addresses" />
+        <Spinner label={t('account.loadingAddresses')} />
       ) : addresses.length === 0 && !adding ? (
-        <EmptyState variant="generic" title="No saved addresses" description="Add an address for faster checkout." actions={<Button onClick={() => setAdding(true)}>Add address</Button>} />
+        <EmptyState variant="generic" title={t('account.addressesEmpty')} description={t('account.addressesEmptyHint')} actions={<Button onClick={() => setAdding(true)}>{t('account.addAddress')}</Button>} />
       ) : (
         <>
           <div className="sf-card-list">
@@ -302,10 +309,10 @@ export function AddressesPage(): ReactElement {
                 </div>
                 <div className="sf-pdp__actions">
                   <Button variant="ghost" size="sm" onClick={() => startEdit(address)}>
-                    Edit
+                    {t('account.editAddress')}
                   </Button>
                   <Button variant="ghost" size="sm" onClick={() => void remove(address.id)}>
-                    Remove
+                    {t('account.removeAddress')}
                   </Button>
                 </div>
               </div>
@@ -313,21 +320,21 @@ export function AddressesPage(): ReactElement {
           </div>
           {adding ? (
             <form className="sf-account__panel" onSubmit={(e) => void submit(e)} noValidate>
-              <Input label="Full name" value={form.name} onChange={set('name')} required />
-              <Input label="Address line" value={form.line1} onChange={set('line1')} required />
-              <Input label="City" value={form.city} onChange={set('city')} required />
-              <Input label="Postal code" value={form.postal_code} onChange={set('postal_code')} required />
-              <Input label="Country" value={form.country} onChange={set('country')} required />
+              <Input label={t('account.fullName')} value={form.name} onChange={set('name')} required />
+              <Input label={t('account.addressLine')} value={form.line1} onChange={set('line1')} required />
+              <Input label={t('account.city')} value={form.city} onChange={set('city')} required />
+              <Input label={t('account.postalCode')} value={form.postal_code} onChange={set('postal_code')} required />
+              <Input label={t('account.country')} value={form.country} onChange={set('country')} required />
               <div className="sf-pdp__row">
-                <Button type="submit">{editingId !== null ? 'Update address' : 'Save address'}</Button>
+                <Button type="submit">{editingId !== null ? t('account.updateAddress') : t('account.saveAddress')}</Button>
                 <Button type="button" variant="ghost" onClick={closeForm}>
-                  Cancel
+                  {t('common.cancel')}
                 </Button>
               </div>
             </form>
           ) : (
             <Button variant="secondary" onClick={() => setAdding(true)}>
-              Add address
+              {t('account.addAddress')}
             </Button>
           )}
         </>

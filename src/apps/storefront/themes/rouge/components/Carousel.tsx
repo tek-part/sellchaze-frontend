@@ -4,6 +4,7 @@
  * hide when there's nothing to scroll. Children are the items.
  */
 import { useCallback, useEffect, useRef, useState, type ReactElement, type ReactNode } from 'react';
+import { useTranslation } from 'react-i18next';
 import { cn } from '../../../../../shared/utils/cn';
 import { IconChevronLeft, IconChevronRight } from './icons';
 
@@ -16,6 +17,7 @@ export interface CarouselProps {
 
 export function Carousel(props: CarouselProps): ReactElement {
   const { children, ariaLabel, itemClassName, className } = props;
+  const { t } = useTranslation();
   const trackRef = useRef<HTMLDivElement>(null);
   const [atStart, setAtStart] = useState(true);
   const [atEnd, setAtEnd] = useState(false);
@@ -51,7 +53,7 @@ export function Carousel(props: CarouselProps): ReactElement {
   return (
     <div className={cn('rge-carousel', className)}>
       {scrollable ? (
-        <button type="button" className="rge-carousel__arrow rge-carousel__arrow--prev" aria-label="Previous" disabled={atStart} onClick={() => scrollBy(-1)}>
+        <button type="button" className="rge-carousel__arrow rge-carousel__arrow--prev" aria-label={t('common.previous')} disabled={atStart} onClick={() => scrollBy(-1)}>
           <IconChevronLeft width={20} height={20} />
         </button>
       ) : null}
@@ -61,7 +63,7 @@ export function Carousel(props: CarouselProps): ReactElement {
         ))}
       </div>
       {scrollable ? (
-        <button type="button" className="rge-carousel__arrow rge-carousel__arrow--next" aria-label="Next" disabled={atEnd} onClick={() => scrollBy(1)}>
+        <button type="button" className="rge-carousel__arrow rge-carousel__arrow--next" aria-label={t('common.next')} disabled={atEnd} onClick={() => scrollBy(1)}>
           <IconChevronRight width={20} height={20} />
         </button>
       ) : null}

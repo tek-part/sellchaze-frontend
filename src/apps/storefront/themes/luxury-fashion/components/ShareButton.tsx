@@ -4,6 +4,7 @@
  * single calm confirmation (toast). Never fabricates success.
  */
 import { useState, type ReactElement } from 'react';
+import { useTranslation } from 'react-i18next';
 import { cn } from '../../../../../shared/utils/cn';
 import { IconShare } from './icons';
 
@@ -20,6 +21,7 @@ export interface ShareButtonProps {
 
 export function ShareButton(props: ShareButtonProps): ReactElement {
   const { url, title, text, onResult, labelledText, className } = props;
+  const { t } = useTranslation();
   const [busy, setBusy] = useState(false);
 
   const handleShare = async (): Promise<void> => {
@@ -50,8 +52,8 @@ export function ShareButton(props: ShareButtonProps): ReactElement {
   return (
     <button
       type="button"
-      aria-label={labelledText ? undefined : 'Share'}
-      title="Share"
+      aria-label={labelledText ? undefined : t('product.share')}
+      title={t('product.share')}
       disabled={busy}
       className={cn('sf-icon-btn', className)}
       onClick={() => void handleShare()}

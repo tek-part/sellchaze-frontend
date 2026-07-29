@@ -4,6 +4,7 @@
  * action node (wishlist "move to cart"). See §32.4.
  */
 import type { ReactElement, ReactNode } from 'react';
+import { useTranslation } from 'react-i18next';
 import { cn } from '../../../../../shared/utils/cn';
 import type { ProductCardModel } from '../../../types/catalog';
 import { IconButton } from './IconButton';
@@ -28,6 +29,7 @@ export interface HorizontalProductCardProps {
 }
 
 export function HorizontalProductCard(props: HorizontalProductCardProps): ReactElement {
+  const { t } = useTranslation();
   const {
     product,
     locale,
@@ -36,7 +38,7 @@ export function HorizontalProductCard(props: HorizontalProductCardProps): ReactE
     onQuantityChange,
     maxQuantity,
     onRemove,
-    removeLabel = 'Remove',
+    removeLabel = t('common.remove'),
     action,
     className,
   } = props;
@@ -67,7 +69,7 @@ export function HorizontalProductCard(props: HorizontalProductCardProps): ReactE
               onChange={onQuantityChange}
               max={maxQuantity}
               compact
-              label={`Quantity for ${product.title}`}
+              label={t('pdp.quantityFor', { title: product.title })}
             />
           ) : (
             <span />

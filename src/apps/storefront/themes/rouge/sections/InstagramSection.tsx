@@ -3,6 +3,7 @@
  * handle, columns, images (newline "image | url"). Self-hides with no images.
  */
 import type { CSSProperties, ReactElement } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { SectionRenderProps } from '../../../theme-engine/rendering';
 import { Container } from '../components/Container';
 import { Section } from '../components/Section';
@@ -12,11 +13,12 @@ import { lines, range, text } from './section-settings';
 import { sectionTitlesFrom, ugcFrom } from '../../../content/home-data';
 
 export function InstagramSection(props: SectionRenderProps): ReactElement | null {
+  const { t } = useTranslation();
   const { settings, context } = props;
   const ugc = ugcFrom(context);
-  const eyebrow = text(settings, 'eyebrow', 'Community');
+  const eyebrow = text(settings, 'eyebrow', t('social.community'));
   const handle = ugc.handle ?? text(settings, 'handle', '@rouge');
-  const title = sectionTitlesFrom(context).ugc ?? text(settings, 'title', `Share your ritual — ${handle}`);
+  const title = sectionTitlesFrom(context).ugc ?? text(settings, 'title', t('social.shareRitual', { handle }));
   const columns = range(settings, 'columns', 5, 3, 6);
   const shots = ugc.images.length
     ? ugc.images.map((u) => ({ image: u.image, url: u.url || handle }))
@@ -36,7 +38,7 @@ export function InstagramSection(props: SectionRenderProps): ReactElement | null
         <SectionHead align="center" eyebrow={eyebrow} title={title} className="rge-section__head-wrap" />
         <div className="rge-grid rge-ugc" style={style}>
           {shots.map((shot, i) => (
-            <a key={shot.image + i} href={shot.url} className="rge-ugc__item" aria-label="View post" target="_blank" rel="noreferrer">
+            <a key={shot.image + i} href={shot.url} className="rge-ugc__item" aria-label={t('social.viewPost')} target="_blank" rel="noreferrer">
               <StoreImage className="rge-ugc__img" src={shot.image} alt="" aria-hidden />
             </a>
           ))}

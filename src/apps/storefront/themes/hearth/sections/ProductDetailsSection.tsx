@@ -6,6 +6,7 @@
  * dimensions/AR (data gaps) are simply omitted rather than fabricated.
  */
 import { useMemo, useState, type ReactElement } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { SectionRenderProps } from '../../../theme-engine/rendering';
 import { useCart } from '../../../state/cart';
 import { Button } from '../components/Button';
@@ -30,6 +31,7 @@ function stripHtml(html: string): string[] {
 type TabKey = 'details' | 'materials' | 'delivery';
 
 export function ProductDetailsSection(props: SectionRenderProps): ReactElement | null {
+  const { t } = useTranslation();
   const { context } = props;
   const product = productDetailOf(context);
   const cart = useCart();
@@ -90,33 +92,33 @@ export function ProductDetailsSection(props: SectionRenderProps): ReactElement |
               />
             </div>
 
-            {product.lowStock ? <Tag tone="warning">Low stock</Tag> : null}
-            {soldOut ? <Tag tone="neutral">Sold out</Tag> : null}
+            {product.lowStock ? <Tag tone="warning">{t('pdp.lowStock')}</Tag> : null}
+            {soldOut ? <Tag tone="neutral">{t('product.soldOut')}</Tag> : null}
 
             {colors.length > 0 ? (
-              <VariantPicker label="Finish" options={colors} value={finish} onChange={setFinish} className="hh-pdp__variant" />
+              <VariantPicker label={t('pdp.finish')} options={colors} value={finish} onChange={setFinish} className="hh-pdp__variant" />
             ) : null}
 
             <div className="hh-pdp__actions">
               <QuantityStepper value={qty} onChange={setQty} />
               <Button block onClick={onAdd} disabled={soldOut}>
-                {soldOut ? 'Sold out' : 'Add to cart'}
+                {soldOut ? t('product.soldOut') : t('product.addToCart')}
               </Button>
             </div>
             {added ? (
               <p className="hh-pdp__added" role="status">
-                Added to your cart.
+                {t('pdp.addedToCart')}
               </p>
             ) : null}
 
             <ul className="hh-pdp__reassure">
-              <li>Free delivery over $150 · two-person delivery on large items</li>
-              <li>30-day returns · 5-year frame warranty</li>
-              <li>Order a swatch to feel the material first</li>
+              <li>{t('pdp.hearthReassure1')}</li>
+              <li>{t('pdp.hearthReassure2')}</li>
+              <li>{t('pdp.hearthReassure3')}</li>
             </ul>
 
             <div className="hh-pdp__tabs">
-              <div className="hh-pdp__tablist" role="tablist" aria-label="Product information">
+              <div className="hh-pdp__tablist" role="tablist" aria-label={t('pdp.productInformation')}>
                 {(['details', 'materials', 'delivery'] as const).map((key) => (
                   <button
                     key={key}
@@ -126,7 +128,7 @@ export function ProductDetailsSection(props: SectionRenderProps): ReactElement |
                     className={tab === key ? 'hh-pdp__tab hh-pdp__tab--active' : 'hh-pdp__tab'}
                     onClick={() => setTab(key)}
                   >
-                    {key === 'details' ? 'Details' : key === 'materials' ? 'Materials & care' : 'Delivery'}
+                    {key === 'details' ? t('pdp.tabDetails') : key === 'materials' ? t('pdp.tabMaterialsCare') : t('pdp.tabDelivery')}
                   </button>
                 ))}
               </div>
@@ -135,20 +137,14 @@ export function ProductDetailsSection(props: SectionRenderProps): ReactElement |
                   description.length > 0 ? (
                     description.map((p, i) => <p key={i}>{p}</p>)
                   ) : (
-                    <p>Considered materials and honest construction, made to live with for years.</p>
+                    <p>{t('pdp.hearthDetailsFallback')}</p>
                   )
                 ) : null}
                 {tab === 'materials' ? (
-                  <p>
-                    Made from solid, responsibly sourced timber and natural textiles. Wipe with a soft, dry cloth;
-                    keep out of direct heat and sunlight to let the finish age gracefully.
-                  </p>
+                  <p>{t('pdp.hearthMaterials')}</p>
                 ) : null}
                 {tab === 'delivery' ? (
-                  <p>
-                    Small items ship by courier within a few days. Larger furniture is delivered by our two-person
-                    team to your room of choice — you’ll pick a date at checkout.
-                  </p>
+                  <p>{t('pdp.hearthDelivery')}</p>
                 ) : null}
               </div>
             </div>

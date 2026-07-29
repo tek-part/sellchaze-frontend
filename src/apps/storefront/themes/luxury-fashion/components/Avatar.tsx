@@ -3,6 +3,7 @@
  * --surface-2 when there's no image. Sizes 24 / 32 / 48. AvatarStack overlaps a group. See §32.6.
  */
 import { useState, type ReactElement, type ReactNode } from 'react';
+import { useTranslation } from 'react-i18next';
 import { cn } from '../../../../../shared/utils/cn';
 
 export type AvatarSize = 'sm' | 'md' | 'lg';
@@ -25,6 +26,7 @@ function initials(name: string): string {
 
 export function Avatar(props: AvatarProps): ReactElement {
   const { src, name, size = 'md', className } = props;
+  const { t } = useTranslation();
   const [failed, setFailed] = useState(false);
   const showImage = src && !failed;
 
@@ -32,7 +34,7 @@ export function Avatar(props: AvatarProps): ReactElement {
     <span
       className={cn('sf-avatar', `sf-avatar--${size}`, className)}
       role="img"
-      aria-label={name || 'Avatar'}
+      aria-label={name || t('misc.avatar')}
     >
       {showImage ? (
         <img className="sf-avatar__img" src={src} alt="" onError={() => setFailed(true)} />

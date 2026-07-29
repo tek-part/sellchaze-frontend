@@ -4,6 +4,7 @@
  * when there is nothing to show (no fabricated ratings). Composes Rating + ReviewCard. See §32.4.
  */
 import type { ReactElement } from 'react';
+import { useTranslation } from 'react-i18next';
 import { cn } from '../../../../../shared/utils/cn';
 import type { ReviewModel } from '../../../types/catalog';
 import { Button } from './Button';
@@ -21,6 +22,7 @@ export interface ReviewSummaryProps {
 
 export function ReviewSummary(props: ReviewSummaryProps): ReactElement | null {
   const { average, total, distribution, className } = props;
+  const { t } = useTranslation();
   if (total <= 0) return null;
 
   return (
@@ -28,7 +30,7 @@ export function ReviewSummary(props: ReviewSummaryProps): ReactElement | null {
       <div className="sf-review-summary__aside">
         <span className="sf-review-summary__score">{(Math.round(average * 10) / 10).toFixed(1)}</span>
         <Rating value={average} showCount={false} />
-        <span className="sf-review-summary__count">{total} reviews</span>
+        <span className="sf-review-summary__count">{t('product.reviews', { count: total })}</span>
       </div>
       {distribution ? (
         <div className="sf-review-summary__bars">
@@ -62,6 +64,7 @@ export interface ReviewListProps {
 
 export function ReviewList(props: ReviewListProps): ReactElement | null {
   const { reviews, locale, onLoadMore, hasMore = false, loadingMore = false, className } = props;
+  const { t } = useTranslation();
   if (reviews.length === 0) return null;
 
   return (
@@ -71,7 +74,7 @@ export function ReviewList(props: ReviewListProps): ReactElement | null {
       ))}
       {hasMore && onLoadMore ? (
         <Button variant="secondary" className="sf-review-list__more" loading={loadingMore} onClick={onLoadMore}>
-          Load more reviews
+          {t('product.loadMoreReviews')}
         </Button>
       ) : null}
     </div>

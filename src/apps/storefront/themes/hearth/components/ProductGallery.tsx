@@ -5,6 +5,7 @@
  * one is `aria-current`.
  */
 import { useState, type ReactElement } from 'react';
+import { useTranslation } from 'react-i18next';
 import { cn } from '../../../../../shared/utils/cn';
 import type { ProductImage } from '../../../types/catalog';
 import { StoreImage } from './Image';
@@ -17,6 +18,7 @@ export interface ProductGalleryProps {
 
 export function ProductGallery(props: ProductGalleryProps): ReactElement {
   const { images, title, className } = props;
+  const { t } = useTranslation();
   const [active, setActive] = useState(0);
   const list = images.length > 0 ? images : [{ src: '', alt: title }];
   const current = list[Math.min(active, list.length - 1)] ?? list[0];
@@ -27,14 +29,14 @@ export function ProductGallery(props: ProductGalleryProps): ReactElement {
         <StoreImage className="hh-gallery__img" src={current?.src} alt={current?.alt ?? title} eager />
       </div>
       {list.length > 1 ? (
-        <ul className="hh-gallery__thumbs" aria-label="Product images">
+        <ul className="hh-gallery__thumbs" aria-label={t('product.productImages')}>
           {list.map((img, i) => (
             <li key={i}>
               <button
                 type="button"
                 className={cn('hh-gallery__thumb', i === active && 'hh-gallery__thumb--active')}
                 onClick={() => setActive(i)}
-                aria-label={`View image ${i + 1}`}
+                aria-label={t('product.viewImage', { n: i + 1 })}
                 aria-current={i === active}
               >
                 <StoreImage className="hh-gallery__thumb-img" src={img.src} alt={img.alt ?? `${title} ${i + 1}`} />

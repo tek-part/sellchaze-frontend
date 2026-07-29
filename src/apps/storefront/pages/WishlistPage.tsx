@@ -3,6 +3,7 @@
  * products from the storefront wishlist endpoint.
  */
 import { useMemo, type CSSProperties, type ReactElement } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   ButtonLink,
   Container,
@@ -22,6 +23,7 @@ import { flowContext } from './flow-context';
 const GRID: CSSProperties = { '--sf-cols': 4, '--sf-cols-lg': 3, '--sf-cols-md': 2, '--sf-cols-sm': 2 } as CSSProperties;
 
 export function WishlistPage(): ReactElement {
+  const { t } = useTranslation();
   const { customer, loading: authLoading } = useAuth();
   const { store } = useStore();
   const tpl = useTemplate('wishlist');
@@ -46,7 +48,7 @@ export function WishlistPage(): ReactElement {
       <Section>
         <Container>
           <div style={{ display: 'grid', placeItems: 'center', minHeight: '30vh' }}>
-            <Spinner label="Loading" />
+            <Spinner label={t('common.loading')} />
           </div>
         </Container>
       </Section>
@@ -57,21 +59,21 @@ export function WishlistPage(): ReactElement {
     <Section>
       <Container>
         <div className="sf-page-head">
-          <h1 className="sf-page-head__title">Wishlist</h1>
+          <h1 className="sf-page-head__title">{t('wishlist.title')}</h1>
         </div>
         {!customer ? (
           <EmptyState
             variant="wishlist"
-            title="Sign in to view your wishlist"
-            description="Save the pieces you love and find them here."
-            actions={<ButtonLink href="/login">Sign in</ButtonLink>}
+            title={t('wishlist.signInTitle')}
+            description={t('wishlist.signInHint')}
+            actions={<ButtonLink href="/login">{t('auth.signIn')}</ButtonLink>}
           />
         ) : products.length === 0 ? (
           <EmptyState
             variant="wishlist"
-            title="Your wishlist is empty"
-            description="Tap the heart on any piece to save it."
-            actions={<ButtonLink href="/collections/new-in">Explore new in</ButtonLink>}
+            title={t('wishlist.emptyTitle')}
+            description={t('wishlist.emptyHint')}
+            actions={<ButtonLink href="/collections/new-in">{t('wishlist.exploreNewIn')}</ButtonLink>}
           />
         ) : (
           <div className="sf-grid" style={GRID}>

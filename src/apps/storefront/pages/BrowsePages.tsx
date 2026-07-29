@@ -9,6 +9,7 @@
  */
 import { previewOrDev } from '../preview';
 import { useMemo, type ReactElement } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Container, EmptyState, ErrorState, Section, Spinner } from '../themes/luxury-fashion/components';
 import { useLocale } from '../i18n/useLocale';
 import { Seo } from '../seo/Seo';
@@ -42,6 +43,7 @@ function useCategoryContext(title: string, description: string): {
   error: Error | null;
   count: number;
 } {
+  const { t } = useTranslation();
   const { store } = useStore();
   const manifest = useThemeManifest();
   const { locale } = useLocale();
@@ -66,7 +68,7 @@ function useCategoryContext(title: string, description: string): {
           title,
           description,
           breadcrumbs: [
-            { label: 'Home', url: '/' },
+            { label: t('nav.home'), url: '/' },
             { label: title, url: '#' },
           ],
         },
@@ -79,10 +81,11 @@ function useCategoryContext(title: string, description: string): {
 }
 
 export function CategoriesPage(): ReactElement {
+  const { t } = useTranslation();
   const site = useSite();
   const { context, loading, error, count } = useCategoryContext(
-    'Categories',
-    'Browse the full range by category.',
+    t('nav.categories'),
+    t('browse.categoriesDesc'),
   );
   const template = useTemplate('category');
 
@@ -94,16 +97,17 @@ export function CategoriesPage(): ReactElement {
         description="Browse the full range by category."
         jsonLd={[crumbs('Categories', '/categories', site)]}
       />
-      <BrowseBody template={template} context={context} loading={loading} error={error} count={count} empty="No categories yet" emptyText="Categories will appear here once the catalogue is set up." />
+      <BrowseBody template={template} context={context} loading={loading} error={error} count={count} empty={t('browse.noCategories')} emptyText={t('browse.noCategoriesHint')} />
     </>
   );
 }
 
 export function CollectionsPage(): ReactElement {
+  const { t } = useTranslation();
   const site = useSite();
   const { context, loading, error, count } = useCategoryContext(
-    'Collections',
-    'Curated groupings from across the catalogue.',
+    t('nav.collections'),
+    t('browse.collectionsDesc'),
   );
   const template = useTemplate('category');
 
@@ -115,7 +119,7 @@ export function CollectionsPage(): ReactElement {
         description="Curated groupings from across the catalogue."
         jsonLd={[crumbs('Collections', '/collections', site)]}
       />
-      <BrowseBody template={template} context={context} loading={loading} error={error} count={count} empty="No collections yet" emptyText="Collections will appear here once the catalogue is set up." />
+      <BrowseBody template={template} context={context} loading={loading} error={error} count={count} empty={t('browse.noCollections')} emptyText={t('browse.noCollectionsHint')} />
     </>
   );
 }
@@ -129,13 +133,14 @@ function BrowseBody(props: {
   empty: string;
   emptyText: string;
 }): ReactElement {
+  const { t } = useTranslation();
   const { template, context, loading, error, count, empty, emptyText } = props;
 
   if (error && count === 0) {
     return (
       <Section>
         <Container>
-          <ErrorState title="Couldn’t load this page" description={error.message || 'Please try again shortly.'} />
+          <ErrorState title={t('browse.loadFailed')} description={error.message || t('browse.tryAgainShortly')} />
         </Container>
       </Section>
     );
@@ -145,7 +150,7 @@ function BrowseBody(props: {
       <Section>
         <Container>
           <div style={{ display: 'grid', placeItems: 'center', minHeight: '30vh' }}>
-            <Spinner label="Loading" />
+            <Spinner label={t('common.loading')} />
           </div>
         </Container>
       </Section>
@@ -171,6 +176,7 @@ interface BrandEntry {
 }
 
 export function BrandsPage(): ReactElement {
+  const { t } = useTranslation();
   const site = useSite();
   const { store } = useStore();
   const manifest = useThemeManifest();
@@ -204,24 +210,24 @@ export function BrandsPage(): ReactElement {
       />
       <Container>
         <div className="sf-page-head">
-          <h1 className="sf-page-head__title">Brands</h1>
-          <p className="sf-page-head__sub">The labels stocked at {store.name}.</p>
+          <h1 className="sf-page-head__title">{t('nav.brands')}</h1>
+          <p className="sf-page-head__sub">{t('browse.brandsSub', { store: store.name })}</p>
         </div>
 
         {productsQ.error && brands.length === 0 ? (
           <ErrorState
-            title="Couldn’t load brands"
-            description={productsQ.error.message || 'Please try again shortly.'}
+            title={t('browse.loadBrandsFailed')}
+            description={productsQ.error.message || t('browse.tryAgainShortly')}
           />
         ) : productsQ.loading && brands.length === 0 ? (
           <div style={{ display: 'grid', placeItems: 'center', minHeight: '30vh' }}>
-            <Spinner label="Loading" />
+            <Spinner label={t('common.loading')} />
           </div>
         ) : brands.length === 0 ? (
           <EmptyState
             variant="generic"
-            title="No brands listed yet"
-            description="Brands appear here once products are attributed to them."
+            title={t('browse.noBrands')}
+            description={t('browse.noBrandsHint')}
           />
         ) : (
           <>
@@ -232,7 +238,7 @@ export function BrandsPage(): ReactElement {
                   <a className="sf-brandgrid__link" href={`/search?q=${encodeURIComponent(brand.name)}`}>
                     <span className="sf-brandgrid__name">{brand.name}</span>
                     <span className="sf-brandgrid__count">
-                      {brand.count} {brand.count === 1 ? 'product' : 'products'}
+                      {t('browse.productCount', { count: brand.count })}
                     </span>
                   </a>
                 </li>
@@ -243,8 +249,7 @@ export function BrandsPage(): ReactElement {
               storefront can currently see, not from a brand directory, because the API has none.
             */}
             <p className="sf-brandgrid__note">
-              Compiled from the products currently listed. A brand may not appear until one of its
-              products is published.
+              {t('browse.brandsNote')}
             </p>
           </>
         )}

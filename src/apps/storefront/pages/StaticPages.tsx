@@ -144,9 +144,9 @@ export function PolicyPage(): ReactElement {
         <Container narrow>
           <EmptyState
             variant="generic"
-            title="Page not found"
-            description="We couldn’t find that page. It may have moved, or the link may be out of date."
-            actions={<ButtonLink href="/">Back to shop</ButtonLink>}
+            title={t('states.notFoundTitle')}
+            description={t('states.notFoundHint')}
+            actions={<ButtonLink href="/">{t('states.backToShop')}</ButtonLink>}
           />
         </Container>
       </Section>
@@ -175,7 +175,7 @@ export function PolicyPage(): ReactElement {
             <strong>{t('policy.noticeTitle')}</strong> {t('policy.noticeBody')}
           </aside>
 
-          <nav className="sf-policy__toc" aria-label="On this page">
+          <nav className="sf-policy__toc" aria-label={t('blog.onThisPage')}>
             <h2 className="sf-policy__toc-title">{t('blog.onThisPage')}</h2>
             <ol>
               {doc.sections.map((s, i) => (
@@ -299,6 +299,7 @@ const FAQ_ITEMS = [
 ];
 
 export function FaqPage(): ReactElement {
+  const { t } = useTranslation();
   const tpl = useTemplate('faq');
   const { store } = useStore();
   const override = useStoreContent<FaqOverride>('faq');
@@ -311,7 +312,7 @@ export function FaqPage(): ReactElement {
         .filter((x) => (x.question || '').trim())
         .map((x, i) => ({ id: `q${i}`, header: (x.question || '').trim(), content: (x.answer || '').trim() }))
     : FAQ_ITEMS;
-  const heading = (override?.heading || '').trim() || 'Frequently asked';
+  const heading = (override?.heading || '').trim() || t('contact.faqHeading');
 
   return (
     <Section>

@@ -1,5 +1,6 @@
 /** Voltage Spinner — neon ring; sized in em. Reduced-motion handled globally. */
 import type { HTMLAttributes, ReactElement } from 'react';
+import { useTranslation } from 'react-i18next';
 import { cn } from '../../../../../shared/utils/cn';
 
 export interface SpinnerProps extends HTMLAttributes<HTMLSpanElement> {
@@ -8,12 +9,13 @@ export interface SpinnerProps extends HTMLAttributes<HTMLSpanElement> {
 
 export function Spinner(props: SpinnerProps): ReactElement {
   const { label, className, ...rest } = props;
+  const { t } = useTranslation();
   const decorative = rest['aria-hidden'] === true || rest['aria-hidden'] === 'true';
   return (
     <span
       className={cn('vlt-spinner', className)}
       role={decorative ? undefined : 'status'}
-      aria-label={decorative ? undefined : (label ?? 'Loading')}
+      aria-label={decorative ? undefined : (label ?? t('common.loading'))}
       {...rest}
     />
   );

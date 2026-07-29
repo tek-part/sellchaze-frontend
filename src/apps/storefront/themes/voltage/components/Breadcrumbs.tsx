@@ -1,5 +1,6 @@
 /** Voltage Breadcrumbs — mono trail with chevron separators. Self-hides when there's nothing to show. */
 import type { ReactElement } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { Breadcrumb } from '../sections/section-data';
 import { IconChevronRight } from './icons';
 
@@ -10,9 +11,10 @@ export interface BreadcrumbsProps {
 
 export function Breadcrumbs(props: BreadcrumbsProps): ReactElement | null {
   const { items, className } = props;
+  const { t } = useTranslation();
   if (items.length === 0) return null;
   return (
-    <nav className={className} aria-label="Breadcrumb">
+    <nav className={className} aria-label={t('misc.breadcrumb')}>
       <ol className="vlt-crumbs">
         {items.map((item, i) => {
           const last = i === items.length - 1;

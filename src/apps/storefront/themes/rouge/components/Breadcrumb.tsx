@@ -1,5 +1,6 @@
 /** Rouge Breadcrumb — a quiet trail with gilt separators; last item is the current page. */
 import type { ReactElement } from 'react';
+import { useTranslation } from 'react-i18next';
 import { cn } from '../../../../../shared/utils/cn';
 
 export interface Crumb {
@@ -13,8 +14,9 @@ export interface BreadcrumbProps {
 
 export function Breadcrumb(props: BreadcrumbProps): ReactElement {
   const { items, className } = props;
+  const { t } = useTranslation();
   return (
-    <nav className={cn('rge-breadcrumb', className)} aria-label="Breadcrumb">
+    <nav className={cn('rge-breadcrumb', className)} aria-label={t('misc.breadcrumb')}>
       <ol className="rge-breadcrumb__list">
         {items.map((item, i) => {
           const last = i === items.length - 1;

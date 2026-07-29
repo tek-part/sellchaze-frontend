@@ -7,6 +7,7 @@
  * shared one rather than a second copy.
  */
 import { useId, type ReactElement } from 'react';
+import { useTranslation } from 'react-i18next';
 import { SortSelect as SharedSortSelect, type SortKey } from '../../../shared-ui';
 
 export type { SortKey };
@@ -20,7 +21,8 @@ export interface SortSelectProps {
 }
 
 export function SortSelect(props: SortSelectProps): ReactElement {
-  const { value, onChange, label = 'Sort', className, options } = props;
+  const { t } = useTranslation();
+  const { value, onChange, label = t('shop.sortBy'), className, options } = props;
   const id = useId();
 
   return (

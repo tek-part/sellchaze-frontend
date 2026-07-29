@@ -4,6 +4,7 @@
  * interval, overlay. Falls back to a single slide; self-hides with none.
  */
 import { useEffect, useState, type CSSProperties, type ReactElement } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { SectionRenderProps } from '../../../theme-engine/rendering';
 import { cn } from '../../../../../shared/utils/cn';
 import { Container } from '../components/Container';
@@ -15,6 +16,7 @@ import { slidesFrom } from '../../../content/home-data';
 interface Slide { heading: string; subheading: string; ctaLabel: string; ctaUrl: string; image: string }
 
 export function HeroSliderSection(props: SectionRenderProps): ReactElement | null {
+  const { t } = useTranslation();
   const { settings, context } = props;
   const fromData = slidesFrom(context);
   const slides: Slide[] = fromData.length
@@ -58,13 +60,13 @@ export function HeroSliderSection(props: SectionRenderProps): ReactElement | nul
         </Container>
       </div>
       {slides.length > 1 ? (
-        <div className="rge-heroslider__dots" role="tablist" aria-label="Slides">
+        <div className="rge-heroslider__dots" role="tablist" aria-label={t('misc.slides')}>
           {slides.map((_, i) => (
             <button
               key={i}
               type="button"
               className={cn('rge-heroslider__dot', i === index && 'rge-heroslider__dot--active')}
-              aria-label={`Go to slide ${i + 1}`}
+              aria-label={t('misc.goToSlide', { n: i + 1 })}
               aria-selected={i === index}
               role="tab"
               onClick={() => setIndex(i)}

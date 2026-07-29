@@ -6,6 +6,7 @@
 import { previewOrDev } from '../preview';
 import { useMemo, type CSSProperties, type ReactElement } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Container, EmptyState, ProductCard, Section } from '../themes/luxury-fashion/components';
 import { useLocale } from '../i18n/useLocale';
 import { Seo } from '../seo/Seo';
@@ -21,6 +22,7 @@ import { flowContext } from './flow-context';
 const GRID: CSSProperties = { '--sf-cols': 4, '--sf-cols-lg': 3, '--sf-cols-md': 2, '--sf-cols-sm': 2 } as CSSProperties;
 
 export function SearchPage(): ReactElement {
+  const { t } = useTranslation();
   const manifest = useThemeManifest();
   const { locale } = useLocale();
   const [params] = useSearchParams();
@@ -52,14 +54,14 @@ export function SearchPage(): ReactElement {
       <Seo title={query ? `Search: ${query}` : 'Search'} path="/search" noindex />
       <Container>
         <div className="sf-page-head">
-          <h1 className="sf-page-head__title">{query ? `Results for “${query}”` : 'Search'}</h1>
-          <p className="sf-page-head__sub">{results.length} pieces</p>
+          <h1 className="sf-page-head__title">{query ? t('search.resultsFor', { query }) : t('search.title')}</h1>
+          <p className="sf-page-head__sub">{t('search.piecesCount', { count: results.length })}</p>
         </div>
         {results.length === 0 ? (
           <EmptyState
             variant="search"
-            title="No results"
-            description={query ? `We couldn't find anything for “${query}”.` : 'Try a different search.'}
+            title={t('search.noResults')}
+            description={query ? t('search.noResultsHint', { query }) : t('search.tryDifferent')}
           />
         ) : (
           <div className="sf-grid" style={GRID}>

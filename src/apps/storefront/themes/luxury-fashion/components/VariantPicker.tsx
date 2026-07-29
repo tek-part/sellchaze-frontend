@@ -4,6 +4,7 @@
  * Unavailable options stay visible (struck), never hidden. See §32.2.
  */
 import type { CSSProperties, ReactElement, ReactNode } from 'react';
+import { useTranslation } from 'react-i18next';
 import { cn } from '../../../../../shared/utils/cn';
 
 export interface VariantGroupProps {
@@ -47,6 +48,7 @@ export interface ColorSwatchesProps {
 
 export function ColorSwatches(props: ColorSwatchesProps): ReactElement {
   const { options, value, onChange, label, className } = props;
+  const { t } = useTranslation();
   return (
     <div className={cn('sf-swatches', className)} role="radiogroup" aria-label={label}>
       {options.map((opt) => {
@@ -58,7 +60,7 @@ export function ColorSwatches(props: ColorSwatchesProps): ReactElement {
             type="button"
             role="radio"
             aria-checked={selected}
-            aria-label={unavailable ? `${opt.label} (unavailable)` : opt.label}
+            aria-label={unavailable ? `${opt.label} (${t('product.unavailable')})` : opt.label}
             title={opt.label}
             disabled={unavailable}
             className={cn('sf-swatch', selected && 'sf-swatch--selected', unavailable && 'sf-swatch--unavailable')}
@@ -89,6 +91,7 @@ export interface SizeSelectorProps {
 
 export function SizeSelector(props: SizeSelectorProps): ReactElement {
   const { options, value, onChange, label, className } = props;
+  const { t } = useTranslation();
   return (
     <div className={cn('sf-sizes', className)} role="radiogroup" aria-label={label}>
       {options.map((opt) => {
@@ -100,7 +103,7 @@ export function SizeSelector(props: SizeSelectorProps): ReactElement {
             type="button"
             role="radio"
             aria-checked={selected}
-            aria-label={unavailable ? `${opt.label} (unavailable)` : opt.label}
+            aria-label={unavailable ? `${opt.label} (${t('product.unavailable')})` : opt.label}
             disabled={unavailable}
             className={cn('sf-size', selected && 'sf-size--selected', unavailable && 'sf-size--unavailable')}
             onClick={() => onChange(opt.value)}

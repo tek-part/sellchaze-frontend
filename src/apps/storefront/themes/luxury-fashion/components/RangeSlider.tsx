@@ -4,6 +4,7 @@
  * min never crosses max. `formatValue` renders the readout (e.g. currency).
  */
 import { useId, type CSSProperties, type ReactElement } from 'react';
+import { useTranslation } from 'react-i18next';
 import { cn } from '../../../../../shared/utils/cn';
 
 export interface RangeSliderProps {
@@ -18,7 +19,8 @@ export interface RangeSliderProps {
 }
 
 export function RangeSlider(props: RangeSliderProps): ReactElement {
-  const { min, max, step = 1, value, onChange, formatValue, label = 'Price', className } = props;
+  const { t } = useTranslation();
+  const { min, max, step = 1, value, onChange, formatValue, label = t('shop.price'), className } = props;
   const [lo, hi] = value;
   const id = useId();
   const span = max - min || 1;
@@ -40,7 +42,7 @@ export function RangeSlider(props: RangeSliderProps): ReactElement {
           max={max}
           step={step}
           value={lo}
-          aria-label={`${label} minimum`}
+          aria-label={t('shop.priceMin', { label })}
           aria-describedby={`${id}-lo`}
           onChange={(e) => onChange([Math.min(Number(e.target.value), hi), hi])}
         />
@@ -51,7 +53,7 @@ export function RangeSlider(props: RangeSliderProps): ReactElement {
           max={max}
           step={step}
           value={hi}
-          aria-label={`${label} maximum`}
+          aria-label={t('shop.priceMax', { label })}
           aria-describedby={`${id}-hi`}
           onChange={(e) => onChange([lo, Math.max(Number(e.target.value), lo)])}
         />

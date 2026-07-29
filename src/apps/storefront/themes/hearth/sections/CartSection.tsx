@@ -4,6 +4,7 @@
  * progress; empty state that routes back to browsing. Reads/writes the shared cart state.
  */
 import type { ReactElement } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { SectionRenderProps } from '../../../theme-engine/rendering';
 import { useCart } from '../../../state/cart';
 import { ButtonLink } from '../components/ButtonLink';
@@ -16,6 +17,7 @@ import { Section } from '../components/Section';
 import { range } from './section-settings';
 
 export function CartSection(props: SectionRenderProps): ReactElement {
+  const { t } = useTranslation();
   const { settings, context } = props;
   const cart = useCart();
   const currency = cart.totals.currency || context.store.currency || 'USD';
@@ -28,9 +30,9 @@ export function CartSection(props: SectionRenderProps): ReactElement {
         <Container>
           <EmptyState
             variant="cart"
-            title="Your bag is empty"
-            description="Beautiful rooms start with one good piece."
-            actions={<ButtonLink href="/rooms">Browse rooms</ButtonLink>}
+            title={t('cart.empty')}
+            description={t('cart.emptyHearth')}
+            actions={<ButtonLink href="/rooms">{t('hearth.browseRooms')}</ButtonLink>}
           />
         </Container>
       </Section>
@@ -40,7 +42,7 @@ export function CartSection(props: SectionRenderProps): ReactElement {
   return (
     <Section>
       <Container>
-        <h1 className="hh-page-title">Your bag</h1>
+        <h1 className="hh-page-title">{t('cart.title')}</h1>
         <div className="hh-cart">
           <ul className="hh-cart__lines">
             {cart.lines.map((line) => (
@@ -56,7 +58,7 @@ export function CartSection(props: SectionRenderProps): ReactElement {
                         {...(line.maxQuantity ? { max: line.maxQuantity } : {})}
                       />
                       <button type="button" className="hh-cart__remove" onClick={() => cart.remove(line.id)}>
-                        Remove
+                        {t('common.remove')}
                       </button>
                     </>
                   }
@@ -65,29 +67,29 @@ export function CartSection(props: SectionRenderProps): ReactElement {
             ))}
           </ul>
 
-          <aside className="hh-cart__summary" aria-label="Order summary">
-            <h2 className="hh-cart__summary-title">Summary</h2>
+          <aside className="hh-cart__summary" aria-label={t('checkout.orderSummary')}>
+            <h2 className="hh-cart__summary-title">{t('checkout.summary')}</h2>
             {threshold > 0 ? (
               <p className="hh-cart__ship">
                 {remaining > 0 ? (
                   <>
-                    You’re <Price value={remaining} currency={currency} size="sm" /> from free delivery
+                    {t('cart.freeDeliveryPrefix')} <Price value={remaining} currency={currency} size="sm" /> {t('cart.freeDeliverySuffix')}
                   </>
                 ) : (
-                  'You’ve unlocked free delivery.'
+                  t('cart.freeDeliveryUnlocked')
                 )}
               </p>
             ) : null}
             <div className="hh-cart__row">
-              <span>Subtotal</span>
+              <span>{t('cart.subtotal')}</span>
               <Price value={cart.totals.subtotal} currency={currency} />
             </div>
-            <p className="hh-cart__note">Delivery &amp; taxes calculated at checkout.</p>
+            <p className="hh-cart__note">{t('checkout.deliveryTaxNote')}</p>
             <ButtonLink href="/checkout" block>
-              Checkout
+              {t('cart.checkout')}
             </ButtonLink>
             <ButtonLink href="/rooms" variant="ghost" block>
-              Continue shopping
+              {t('cart.continueShopping')}
             </ButtonLink>
           </aside>
         </div>

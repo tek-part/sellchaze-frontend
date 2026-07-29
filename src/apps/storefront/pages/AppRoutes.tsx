@@ -5,6 +5,7 @@
  */
 import { lazy, Suspense, type ReactElement } from 'react';
 import { Route, Routes } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Container, Section, Spinner } from '../themes/luxury-fashion/components';
 
 const HomePage = lazy(() => import('./HomePage').then((m) => ({ default: m.HomePage })));
@@ -36,11 +37,12 @@ const CollectionsPage = lazy(() => import('./BrowsePages').then((m) => ({ defaul
 const BrandsPage = lazy(() => import('./BrowsePages').then((m) => ({ default: m.BrandsPage })));
 
 function PageFallback(): ReactElement {
+  const { t } = useTranslation();
   return (
     <Section>
       <Container>
         <div style={{ display: 'grid', placeItems: 'center', minHeight: '40vh' }}>
-          <Spinner label="Loading" />
+          <Spinner label={t('common.loading')} />
         </div>
       </Container>
     </Section>

@@ -3,6 +3,7 @@
  * shows a spec grid from the chosen source. Self-hides / empty-states when there are no products.
  */
 import { useEffect, useState, type CSSProperties, type ReactElement } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { SectionRenderProps } from '../../../theme-engine/rendering';
 import { Container } from '../components/Container';
 import { Section } from '../components/Section';
@@ -22,8 +23,9 @@ function gridStyle(columns: number): CSSProperties {
 }
 
 export function FlashDealsSection(props: SectionRenderProps): ReactElement | null {
+  const { t } = useTranslation();
   const { settings, context } = props;
-  const title = text(settings, 'title') || 'Flash deals';
+  const title = text(settings, 'title') || t('flash.title');
   const source = option(settings, 'source', SOURCES, 'newest');
   const hours = range(settings, 'ends_in_hours', 24, 1, 240);
   const limit = range(settings, 'limit', 4, 1, 12);
@@ -51,10 +53,10 @@ export function FlashDealsSection(props: SectionRenderProps): ReactElement | nul
       <Container>
         <div className="vlt-flash__head">
           <div>
-            <span className="vlt-eyebrow">// Limited time</span>
+            <span className="vlt-eyebrow">{t('flash.eyebrow')}</span>
             <h2 className="vlt-flash__title">{title}</h2>
           </div>
-          <div className="vlt-flash__timer vlt-num" role="timer" aria-label="Time remaining">
+          <div className="vlt-flash__timer vlt-num" role="timer" aria-label={t('flash.timeRemaining')}>
             {dd > 0 ? <span className="vlt-flash__unit"><b>{pad(dd)}</b>d</span> : null}
             <span className="vlt-flash__unit"><b>{pad(hh)}</b>h</span>
             <span className="vlt-flash__unit"><b>{pad(mm)}</b>m</span>

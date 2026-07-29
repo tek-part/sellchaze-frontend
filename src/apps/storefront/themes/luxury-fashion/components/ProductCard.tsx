@@ -4,6 +4,7 @@
  * QuickAdd bar and wishlist toggle sit above the full-card link. One badge max. See §32.4.
  */
 import type { ReactElement } from 'react';
+import { useTranslation } from 'react-i18next';
 import { cn } from '../../../../../shared/utils/cn';
 import type { ProductCardModel } from '../../../types/catalog';
 import { Badge } from './Badge';
@@ -37,6 +38,7 @@ export function ProductCard(props: ProductCardProps): ReactElement {
     quickAddLoading = false,
     className,
   } = props;
+  const { t } = useTranslation();
 
   return (
     <article className={cn('sf-product-card', className)}>
@@ -64,12 +66,12 @@ export function ProductCard(props: ProductCardProps): ReactElement {
 
         {product.soldOut ? (
           <div className="sf-product-card__soldout">
-            <Badge variant="solid">Sold out</Badge>
+            <Badge variant="solid">{t('product.soldOut')}</Badge>
           </div>
         ) : showQuickAdd && onQuickAdd ? (
           <div className="sf-product-card__quickadd">
             <Button size="sm" block loading={quickAddLoading} onClick={() => onQuickAdd(product.id)}>
-              Add to cart
+              {t('product.addToCart')}
             </Button>
           </div>
         ) : null}

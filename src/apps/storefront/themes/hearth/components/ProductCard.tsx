@@ -6,6 +6,7 @@
  * separate buttons (no nested anchors).
  */
 import type { ReactElement } from 'react';
+import { useTranslation } from 'react-i18next';
 import { cn } from '../../../../../shared/utils/cn';
 import type { ProductCardModel } from '../../../types/catalog';
 import { StoreImage } from './Image';
@@ -27,6 +28,7 @@ const MAX_SWATCHES = 4;
 
 export function ProductCard(props: ProductCardProps): ReactElement {
   const { product, hideSave = false, compact = false, className } = props;
+  const { t } = useTranslation();
   const swatches = product.colors ?? [];
   const shown = swatches.slice(0, MAX_SWATCHES);
   const extra = swatches.length - shown.length;
@@ -42,7 +44,7 @@ export function ProductCard(props: ProductCardProps): ReactElement {
         <div className="hh-product-card__tags">
           {product.badge ? <Tag tone="sage">{product.badge}</Tag> : null}
           <DiscountBadge price={product.price} {...(product.compareAtPrice !== undefined ? { compareAt: product.compareAtPrice } : {})} />
-          {product.soldOut ? <Tag tone="neutral">Sold out</Tag> : null}
+          {product.soldOut ? <Tag tone="neutral">{t('product.soldOut')}</Tag> : null}
         </div>
       </a>
 
@@ -52,7 +54,7 @@ export function ProductCard(props: ProductCardProps): ReactElement {
 
       <div className="hh-product-card__body">
         {shown.length > 0 ? (
-          <ul className="hh-product-card__swatches" aria-label="Available finishes">
+          <ul className="hh-product-card__swatches" aria-label={t('product.availableFinishes')}>
             {shown.map((s) => (
               <li
                 key={s.value}

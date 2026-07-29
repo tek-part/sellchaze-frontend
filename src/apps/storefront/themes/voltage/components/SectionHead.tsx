@@ -1,5 +1,6 @@
 /** Voltage SectionHead — mono eyebrow + grotesque headline (+ optional intro / "View all"). */
 import type { ReactElement, ReactNode } from 'react';
+import { useTranslation } from 'react-i18next';
 import { cn } from '../../../../../shared/utils/cn';
 import { Eyebrow } from './Typography';
 import { LinkButton } from './LinkButton';
@@ -15,7 +16,8 @@ export interface SectionHeadProps {
 }
 
 export function SectionHead(props: SectionHeadProps): ReactElement {
-  const { eyebrow, title, intro, headingLevel: Tag = 'h2', viewAllHref, viewAllLabel = 'View all', className } = props;
+  const { t } = useTranslation();
+  const { eyebrow, title, intro, headingLevel: Tag = 'h2', viewAllHref, viewAllLabel = t('common.viewAll'), className } = props;
   const row = Boolean(viewAllHref);
   return (
     <header className={cn('vlt-section-head', row && 'vlt-section-head--row', className)}>

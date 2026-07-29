@@ -5,6 +5,7 @@
  */
 import { useState, type FormEvent, type ReactElement } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Button, Container, Section } from '../themes/luxury-fashion/components';
 import { Input } from '../themes/luxury-fashion/components';
 import { useAuth } from '../state/auth-context';
@@ -35,11 +36,12 @@ function AuthShell(props: { title: string; children: ReactElement; alt?: ReactEl
   );
 }
 
-function messageOf(error: unknown): string {
-  return error instanceof Error ? error.message : 'Something went wrong. Please try again.';
+function messageOf(error: unknown, fallback: string): string {
+  return error instanceof Error ? error.message : fallback;
 }
 
 export function LoginPage(): ReactElement {
+  const { t } = useTranslation();
   const { login } = useAuth();
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
@@ -57,7 +59,7 @@ export function LoginPage(): ReactElement {
       await login(email, password);
       navigate('/account');
     } catch (err) {
-      setError(messageOf(err));
+      setError(messageOf(err, t('auth.genericError')));
     } finally {
       setBusy(false);
     }
@@ -67,23 +69,23 @@ export function LoginPage(): ReactElement {
 
   return (
     <AuthShell
-      title="Sign in"
+      title={t('auth.signIn')}
       alt={
         <>
           <p className="sf-auth__alt">
-            <a href="/forgot-password">Forgot your password?</a>
+            <a href="/forgot-password">{t('auth.forgotLink')}</a>
           </p>
           <p className="sf-auth__alt">
-            New here? <a href="/register">Create an account</a>
+            {t('auth.newHere')} <a href="/register">{t('auth.createOne')}</a>
           </p>
         </>
       }
     >
       <form className="sf-auth" onSubmit={(e) => void submit(e)} noValidate>
-        <Input label="Email" type="email" name="email" autoComplete="email" required value={email} onChange={(e) => setEmail(e.target.value)} {...(error ? { error } : {})} />
-        <Input label="Password" type="password" name="password" autoComplete="current-password" required value={password} onChange={(e) => setPassword(e.target.value)} />
+        <Input label={t('auth.email')} type="email" name="email" autoComplete="email" required value={email} onChange={(e) => setEmail(e.target.value)} {...(error ? { error } : {})} />
+        <Input label={t('auth.password')} type="password" name="password" autoComplete="current-password" required value={password} onChange={(e) => setPassword(e.target.value)} />
         <Button type="submit" block loading={busy}>
-          Sign in
+          {t('auth.signIn')}
         </Button>
       </form>
     </AuthShell>
@@ -91,6 +93,7 @@ export function LoginPage(): ReactElement {
 }
 
 export function RegisterPage(): ReactElement {
+  const { t } = useTranslation();
   const { register } = useAuth();
   const navigate = useNavigate();
   const [form, setForm] = useState({ name: '', email: '', password: '', password_confirmation: '' });
@@ -107,7 +110,7 @@ export function RegisterPage(): ReactElement {
       await register(form);
       navigate('/account');
     } catch (err) {
-      setError(messageOf(err));
+      setError(messageOf(err, t('auth.genericError')));
     } finally {
       setBusy(false);
     }
@@ -117,20 +120,20 @@ export function RegisterPage(): ReactElement {
 
   return (
     <AuthShell
-      title="Create an account"
+      title={t('auth.registerTitle')}
       alt={
         <p className="sf-auth__alt">
-          Already have an account? <a href="/login">Sign in</a>
+          {t('auth.alreadyHaveAccount')} <a href="/login">{t('auth.signIn')}</a>
         </p>
       }
     >
       <form className="sf-auth" onSubmit={(e) => void submit(e)} noValidate>
-        <Input label="Full name" name="name" autoComplete="name" required value={form.name} onChange={set('name')} />
-        <Input label="Email" type="email" name="email" autoComplete="email" required value={form.email} onChange={set('email')} {...(error ? { error } : {})} />
-        <Input label="Password" type="password" name="password" autoComplete="new-password" required value={form.password} onChange={set('password')} />
-        <Input label="Confirm password" type="password" name="password_confirmation" autoComplete="new-password" required value={form.password_confirmation} onChange={set('password_confirmation')} />
+        <Input label={t('auth.fullName')} name="name" autoComplete="name" required value={form.name} onChange={set('name')} />
+        <Input label={t('auth.email')} type="email" name="email" autoComplete="email" required value={form.email} onChange={set('email')} {...(error ? { error } : {})} />
+        <Input label={t('auth.password')} type="password" name="password" autoComplete="new-password" required value={form.password} onChange={set('password')} />
+        <Input label={t('auth.confirmPassword')} type="password" name="password_confirmation" autoComplete="new-password" required value={form.password_confirmation} onChange={set('password_confirmation')} />
         <Button type="submit" block loading={busy}>
-          Create account
+          {t('auth.createAccount')}
         </Button>
       </form>
     </AuthShell>
@@ -138,6 +141,7 @@ export function RegisterPage(): ReactElement {
 }
 
 export function ForgotPasswordPage(): ReactElement {
+  const { t } = useTranslation();
   const [email, setEmail] = useState('');
   const [done, setDone] = useState(false);
   const [error, setError] = useState<string>();
@@ -152,7 +156,7 @@ export function ForgotPasswordPage(): ReactElement {
       await forgotPassword(email);
       setDone(true);
     } catch (err) {
-      setError(messageOf(err));
+      setError(messageOf(err, t('auth.genericError')));
     } finally {
       setBusy(false);
     }
@@ -161,16 +165,16 @@ export function ForgotPasswordPage(): ReactElement {
   if (themed) return themed;
 
   return (
-    <AuthShell title="Reset your password" alt={<p className="sf-auth__alt"><a href="/login">Back to sign in</a></p>}>
+    <AuthShell title={t('auth.forgotTitle')} alt={<p className="sf-auth__alt"><a href="/login">{t('auth.backToSignIn')}</a></p>}>
       {done ? (
         <p className="sf-newsletter__success" role="status">
-          If an account exists for {email}, a reset link is on its way.
+          {t('auth.resetLinkSent', { email })}
         </p>
       ) : (
         <form className="sf-auth" onSubmit={(e) => void submit(e)} noValidate>
-          <Input label="Email" type="email" name="email" autoComplete="email" required value={email} onChange={(e) => setEmail(e.target.value)} {...(error ? { error } : {})} />
+          <Input label={t('auth.email')} type="email" name="email" autoComplete="email" required value={email} onChange={(e) => setEmail(e.target.value)} {...(error ? { error } : {})} />
           <Button type="submit" block loading={busy}>
-            Send reset link
+            {t('auth.sendResetLink')}
           </Button>
         </form>
       )}
@@ -179,6 +183,7 @@ export function ForgotPasswordPage(): ReactElement {
 }
 
 export function ResetPasswordPage(): ReactElement {
+  const { t } = useTranslation();
   const [params] = useSearchParams();
   const navigate = useNavigate();
   const token = params.get('token') ?? '';
@@ -197,7 +202,7 @@ export function ResetPasswordPage(): ReactElement {
       await resetPassword({ token, ...form });
       navigate('/login');
     } catch (err) {
-      setError(messageOf(err));
+      setError(messageOf(err, t('auth.genericError')));
     } finally {
       setBusy(false);
     }
@@ -206,13 +211,13 @@ export function ResetPasswordPage(): ReactElement {
   if (themed) return themed;
 
   return (
-    <AuthShell title="Choose a new password" alt={<p className="sf-auth__alt"><a href="/login">Back to sign in</a></p>}>
+    <AuthShell title={t('auth.resetTitle')} alt={<p className="sf-auth__alt"><a href="/login">{t('auth.backToSignIn')}</a></p>}>
       <form className="sf-auth" onSubmit={(e) => void submit(e)} noValidate>
-        <Input label="Email" type="email" name="email" autoComplete="email" required value={form.email} onChange={set('email')} {...(error ? { error } : {})} />
-        <Input label="New password" type="password" name="password" autoComplete="new-password" required value={form.password} onChange={set('password')} />
-        <Input label="Confirm password" type="password" name="password_confirmation" autoComplete="new-password" required value={form.password_confirmation} onChange={set('password_confirmation')} />
+        <Input label={t('auth.email')} type="email" name="email" autoComplete="email" required value={form.email} onChange={set('email')} {...(error ? { error } : {})} />
+        <Input label={t('auth.newPassword')} type="password" name="password" autoComplete="new-password" required value={form.password} onChange={set('password')} />
+        <Input label={t('auth.confirmPassword')} type="password" name="password_confirmation" autoComplete="new-password" required value={form.password_confirmation} onChange={set('password_confirmation')} />
         <Button type="submit" block loading={busy}>
-          Reset password
+          {t('auth.resetPassword')}
         </Button>
       </form>
     </AuthShell>

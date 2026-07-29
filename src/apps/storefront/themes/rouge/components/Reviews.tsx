@@ -3,6 +3,7 @@
  * rating, verified badge, author, body, and optional photos. Reads the shared ReviewModel.
  */
 import { useMemo, useState, type ReactElement } from 'react';
+import { useTranslation } from 'react-i18next';
 import { cn } from '../../../../../shared/utils/cn';
 import type { ReviewModel } from '../../../types/catalog';
 import { Rating } from './Rating';
@@ -19,13 +20,14 @@ export interface ReviewSummaryProps {
 
 export function ReviewSummary(props: ReviewSummaryProps): ReactElement {
   const { average, total, distribution, className } = props;
+  const { t } = useTranslation();
   const bars = distribution ?? [];
   return (
     <div className={cn('rge-review-summary', className)}>
       <div className="rge-review-summary__aside">
         <div className="rge-review-summary__score rge-num">{average.toFixed(1)}</div>
         <Rating value={average} showCount={false} />
-        <div className="rge-review-summary__count">{total} review{total === 1 ? '' : 's'}</div>
+        <div className="rge-review-summary__count">{t('product.reviews', { count: total })}</div>
       </div>
       {bars.length === 5 ? (
         <div className="rge-review-summary__bars">
@@ -48,6 +50,7 @@ export function ReviewSummary(props: ReviewSummaryProps): ReactElement {
 
 export function ReviewCard(props: { review: ReviewModel }): ReactElement {
   const { review } = props;
+  const { t } = useTranslation();
   return (
     <article className="rge-review-card">
       <header className="rge-review-card__head">
@@ -55,7 +58,7 @@ export function ReviewCard(props: { review: ReviewModel }): ReactElement {
         <div>
           <div className="rge-review-card__name">
             {review.author}
-            {review.verified ? <Badge variant="stock">Verified</Badge> : null}
+            {review.verified ? <Badge variant="stock">{t('product.verified')}</Badge> : null}
           </div>
           <Rating value={review.rating} showCount={false} />
         </div>
@@ -82,6 +85,7 @@ export interface ReviewListProps {
 
 export function ReviewList(props: ReviewListProps): ReactElement {
   const { reviews, initial = 4, className } = props;
+  const { t } = useTranslation();
   const [shown, setShown] = useState(initial);
   const visible = useMemo(() => reviews.slice(0, shown), [reviews, shown]);
   return (
@@ -91,7 +95,7 @@ export function ReviewList(props: ReviewListProps): ReactElement {
       ))}
       {shown < reviews.length ? (
         <button type="button" className="rge-linkbtn rge-review-list__more" onClick={() => setShown((n) => n + initial)}>
-          Show more reviews
+          {t('product.showMoreReviews')}
         </button>
       ) : null}
     </div>

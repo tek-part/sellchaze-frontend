@@ -4,6 +4,7 @@
  * fallback under reduced motion), and can be dismissed. Calm + singular. Rouge's own skin (`.rge-*`).
  */
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactElement, type ReactNode } from 'react';
+import { useTranslation } from 'react-i18next';
 import { prefersReducedMotion } from '../../../../../../shared/env/media';
 import { cn } from '../../../../../../shared/utils/cn';
 import { IconButton } from '../IconButton';
@@ -19,6 +20,7 @@ const EXIT_MS = 360;
 
 function ToastItem(props: { record: ToastRecord; closing: boolean; onDismiss: (id: string) => void }): ReactElement {
   const { record, closing, onDismiss } = props;
+  const { t } = useTranslation();
   const [entered, setEntered] = useState(false);
   const duration = record.duration ?? 4000;
   const isError = record.variant === 'error';
@@ -48,7 +50,7 @@ function ToastItem(props: { record: ToastRecord; closing: boolean; onDismiss: (i
         {record.title ? <span className="rge-toast__title">{record.title}</span> : null}
         <span className="rge-toast__msg">{record.message}</span>
       </div>
-      <IconButton label="Dismiss" onClick={() => onDismiss(record.id)}>
+      <IconButton label={t('misc.dismiss')} onClick={() => onDismiss(record.id)}>
         <IconClose width={18} height={18} />
       </IconButton>
       <span className="rge-toast__progress" style={{ animationDuration: `${duration}ms` }} onAnimationEnd={() => onDismiss(record.id)} />
@@ -57,6 +59,7 @@ function ToastItem(props: { record: ToastRecord; closing: boolean; onDismiss: (i
 }
 
 export function ToastProvider(props: { children: ReactNode }): ReactElement {
+  const { t } = useTranslation();
   const [toasts, setToasts] = useState<ReadonlyArray<ToastRecord>>([]);
   const [closing, setClosing] = useState<ReadonlySet<string>>(() => new Set());
   const counter = useRef(0);
@@ -98,7 +101,7 @@ export function ToastProvider(props: { children: ReactNode }): ReactElement {
       {props.children}
       {toasts.length > 0 ? (
         <Portal>
-          <div className="rge-toast-viewport" role="region" aria-label="Notifications">
+          <div className="rge-toast-viewport" role="region" aria-label={t('misc.notifications')}>
             {toasts.map((record) => (
               <ToastItem key={record.id} record={record} closing={closing.has(record.id)} onDismiss={dismiss} />
             ))}

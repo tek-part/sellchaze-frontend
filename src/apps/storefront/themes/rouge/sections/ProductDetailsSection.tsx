@@ -5,6 +5,7 @@
  * review summary/list. Reads the product from context.data.product. Settings: show_sku, show_share.
  */
 import { useMemo, useState, type ReactElement } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { SectionRenderProps } from '../../../theme-engine/rendering';
 import { Container } from '../components/Container';
 import { Breadcrumb } from '../components/Breadcrumb';
@@ -27,6 +28,7 @@ import { productDetailOf, reviewsFor } from './section-data';
 import { flag } from './section-settings';
 
 export function ProductDetailsSection(props: SectionRenderProps): ReactElement | null {
+  const { t } = useTranslation();
   const { settings, context } = props;
   const product = productDetailOf(context);
   const cart = useCart();
@@ -68,14 +70,14 @@ export function ProductDetailsSection(props: SectionRenderProps): ReactElement |
       quantity: qty,
       ...(attributes ? { attributes } : {}),
     });
-    toast.toast({ message: `${product.title} added to your bag`, variant: 'success' });
+    toast.toast({ message: t('pdp.addedToBag', { title: product.title }), variant: 'success' });
   };
 
   const tabs = [
-    { id: 'description', label: 'Description' },
-    { id: 'how-to', label: 'How to use' },
-    { id: 'ingredients', label: 'Ingredients' },
-    { id: 'shipping', label: 'Shipping & returns' },
+    { id: 'description', label: t('pdp.tabDescription') },
+    { id: 'how-to', label: t('pdp.tabHowToUse') },
+    { id: 'ingredients', label: t('pdp.tabIngredients') },
+    { id: 'shipping', label: t('pdp.tabShipping') },
   ];
 
   return (
@@ -84,8 +86,8 @@ export function ProductDetailsSection(props: SectionRenderProps): ReactElement |
         <Breadcrumb
           className="rge-pdp__crumb"
           items={[
-            { label: 'Home', href: '/' },
-            { label: 'Shop', href: '/collections/all' },
+            { label: t('nav.home'), href: '/' },
+            { label: t('nav.shop'), href: '/collections/all' },
             { label: product.title },
           ]}
         />
@@ -104,29 +106,29 @@ export function ProductDetailsSection(props: SectionRenderProps): ReactElement |
               ) : null}
             </div>
 
-            {showSku && product.sku ? <span className="rge-pdp__sku">SKU {product.sku}</span> : null}
+            {showSku && product.sku ? <span className="rge-pdp__sku">{t('pdp.skuLabel', { sku: product.sku })}</span> : null}
 
             {shades.length > 0 ? (
               <div className="rge-pdp__shades">
                 <span className="rge-pdp__shade-label">
-                  Shade{activeShade ? <span className="rge-pdp__shade-name"> — {activeShade.label}</span> : null}
+                  {t('pdp.shade')}{activeShade ? <span className="rge-pdp__shade-name"> — {activeShade.label}</span> : null}
                 </span>
                 <ShadeDots shades={shades} selected={shade} onSelect={setShade} large />
               </div>
             ) : null}
 
             {product.variants && product.variants.length > 0 ? (
-              <VariantPicker label="Size" variants={product.variants} {...(variantId ? { value: variantId } : {})} onChange={setVariantId} />
+              <VariantPicker label={t('shop.size')} variants={product.variants} {...(variantId ? { value: variantId } : {})} onChange={setVariantId} />
             ) : null}
 
             <div className="rge-pdp__row">
-              <QuantityStepper value={qty} onChange={setQty} label={`Quantity for ${product.title}`} />
+              <QuantityStepper value={qty} onChange={setQty} label={t('pdp.quantityFor', { title: product.title })} />
               <Button className="rge-pdp__add" size="lg" onClick={addToCart} disabled={outOfStock}>
-                {outOfStock ? 'Sold out' : 'Add to bag'}
+                {outOfStock ? t('product.soldOut') : t('product.addToCart')}
               </Button>
             </div>
 
-            {product.lowStock && !outOfStock ? <span className="rge-pdp__stock rge-pdp__stock--low">Low stock — order soon</span> : null}
+            {product.lowStock && !outOfStock ? <span className="rge-pdp__stock rge-pdp__stock--low">{t('pdp.lowStockSoon')}</span> : null}
 
             <div className="rge-pdp__actions">
               <WishlistButton active={wishlist.has(product.id)} onToggle={() => wishlist.toggle(product.id)} />
@@ -134,7 +136,7 @@ export function ProductDetailsSection(props: SectionRenderProps): ReactElement |
                 <ShareButton
                   url={typeof window !== 'undefined' ? window.location.href : product.url}
                   title={product.title}
-                  onResult={(r) => { if (r === 'copied') toast.toast({ message: 'Link copied to clipboard' }); }}
+                  onResult={(r) => { if (r === 'copied') toast.toast({ message: t('pdp.linkCopiedClipboard') }); }}
                 />
               ) : null}
             </div>
@@ -146,13 +148,13 @@ export function ProductDetailsSection(props: SectionRenderProps): ReactElement |
               onChange={setActiveTab}
               renderPanel={(id) =>
                 id === 'description' ? (
-                  <div className="rge-prose" dangerouslySetInnerHTML={{ __html: product.descriptionHtml ?? '<p>A weightless, skin-loving formula in a spectrum of wearable shades.</p>' }} />
+                  <div className="rge-prose" dangerouslySetInnerHTML={{ __html: product.descriptionHtml ?? `<p>${t('pdp.rougeDescriptionFallback')}</p>` }} />
                 ) : id === 'how-to' ? (
-                  <p className="rge-pdp__desc">Sweep across bare or primed skin and build to your desired finish. Layer for depth; blend with a brush or fingertips for a second-skin veil.</p>
+                  <p className="rge-pdp__desc">{t('pdp.rougeHowTo')}</p>
                 ) : id === 'ingredients' ? (
-                  <p className="rge-pdp__desc">Clean, vegan, and dermatologist-tested — formulated without 1,800+ questionable ingredients. Full INCI list on pack.</p>
+                  <p className="rge-pdp__desc">{t('pdp.rougeIngredients')}</p>
                 ) : (
-                  <p className="rge-pdp__desc">Complimentary shipping on orders over $50. Returns accepted within 30 days on gently used products.</p>
+                  <p className="rge-pdp__desc">{t('pdp.rougeShipping')}</p>
                 )
               }
             />

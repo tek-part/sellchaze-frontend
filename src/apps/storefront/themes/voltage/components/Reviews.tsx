@@ -4,6 +4,7 @@
  * there's nothing to show (never fabricates ratings). Voltage's own .vlt-* markup.
  */
 import { useState, type ReactElement } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { ReviewModel } from '../../../types/catalog';
 import { Rating } from './Rating';
 import { ReviewCard } from './ReviewCard';
@@ -28,6 +29,7 @@ export interface ReviewsProps {
 
 export function Reviews(props: ReviewsProps): ReactElement | null {
   const { reviews, pageSize = 4 } = props;
+  const { t } = useTranslation();
   const [shown, setShown] = useState(pageSize);
   if (reviews.length === 0) return null;
 
@@ -37,12 +39,12 @@ export function Reviews(props: ReviewsProps): ReactElement | null {
   const visible = reviews.slice(0, shown);
 
   return (
-    <section className="vlt-reviews" aria-label="Customer reviews">
+    <section className="vlt-reviews" aria-label={t('product.customerReviews')}>
       <div className="vlt-review-summary">
         <div className="vlt-review-summary__aside">
           <span className="vlt-review-summary__score vlt-num">{(Math.round(average * 10) / 10).toFixed(1)}</span>
           <Rating value={average} />
-          <span className="vlt-review-summary__count vlt-num">{total} review{total === 1 ? '' : 's'}</span>
+          <span className="vlt-review-summary__count vlt-num">{t('product.reviews', { count: total })}</span>
         </div>
         <div className="vlt-review-summary__bars">
           {([5, 4, 3, 2, 1] as const).map((star) => {
@@ -66,7 +68,7 @@ export function Reviews(props: ReviewsProps): ReactElement | null {
       {shown < total ? (
         <div className="vlt-review-more">
           <Button variant="secondary" onClick={() => setShown((n) => n + pageSize)}>
-            Load more reviews ({total - shown})
+            {t('product.loadMoreReviewsCount', { count: total - shown })}
           </Button>
         </div>
       ) : null}

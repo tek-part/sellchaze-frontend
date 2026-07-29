@@ -5,6 +5,7 @@
  * announcements come from the shared data contract.
  */
 import { useState, type ReactElement } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { LayoutRenderProps } from '../../../theme-engine/rendering';
 import type { FooterGroup, NavItem } from '../../../types/navigation';
 import { CartProvider } from '../../../state/cart';
@@ -24,6 +25,7 @@ function announcementsOf(data: Readonly<Record<string, unknown>>): ReadonlyArray
 }
 
 export function DefaultLayout(props: LayoutRenderProps): ReactElement {
+  const { t } = useTranslation();
   const { context, children } = props;
   const nav = (context.navigation.header as ReadonlyArray<NavItem>) ?? [];
   const footerGroups = (context.navigation.footer as ReadonlyArray<FooterGroup>) ?? [];
@@ -54,14 +56,14 @@ export function DefaultLayout(props: LayoutRenderProps): ReactElement {
       />
 
       {menuOpen ? (
-        <div className="rge-mobilenav" role="dialog" aria-modal="true" aria-label="Menu">
+        <div className="rge-mobilenav" role="dialog" aria-modal="true" aria-label={t('nav.menu')}>
           <div className="rge-mobilenav__head">
-            <Eyebrow>Menu</Eyebrow>
-            <IconButton label="Close menu" onClick={() => setMenuOpen(false)}>
+            <Eyebrow>{t('nav.menu')}</Eyebrow>
+            <IconButton label={t('nav.closeMenu')} onClick={() => setMenuOpen(false)}>
               <IconClose />
             </IconButton>
           </div>
-          <nav aria-label="Mobile">
+          <nav aria-label={t('nav.mobileNav')}>
             {nav.map((item) => (
               <a key={item.label} href={item.url} className="rge-mobilenav__link" onClick={() => setMenuOpen(false)}>
                 {item.label}

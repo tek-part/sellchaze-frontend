@@ -3,6 +3,7 @@
  * is a quiet hairline tag, not a loud badge. See §32.4.
  */
 import type { ReactElement } from 'react';
+import { useTranslation } from 'react-i18next';
 import { cn } from '../../../../../shared/utils/cn';
 import type { ReviewModel } from '../../../types/catalog';
 import { formatDate } from '../../../utils/format';
@@ -19,6 +20,7 @@ export interface ReviewCardProps {
 
 export function ReviewCard(props: ReviewCardProps): ReactElement {
   const { review, locale, className } = props;
+  const { t } = useTranslation();
   const date = formatDate(review.createdAt, locale);
 
   return (
@@ -36,7 +38,7 @@ export function ReviewCard(props: ReviewCardProps): ReactElement {
 
       <p className="sf-review-card__body">{review.body}</p>
 
-      {review.verified ? <Tag variant="subtle">Verified purchase</Tag> : null}
+      {review.verified ? <Tag variant="subtle">{t('product.verifiedPurchase')}</Tag> : null}
 
       {review.photos && review.photos.length > 0 ? (
         <div className="sf-review-card__photos">

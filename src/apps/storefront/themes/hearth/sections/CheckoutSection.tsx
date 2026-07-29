@@ -6,6 +6,7 @@
  * back to the bag.
  */
 import { useState, type FormEvent, type ReactElement } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { SectionRenderProps } from '../../../theme-engine/rendering';
 import { useCart } from '../../../state/cart';
 import { ButtonLink } from '../components/ButtonLink';
@@ -17,31 +18,32 @@ import { Price } from '../components/Price';
 import { Section } from '../components/Section';
 
 const DELIVERY_METHODS = [
-  { value: 'standard', label: 'Standard courier — 3–5 days' },
-  { value: 'two-person', label: 'Two-person delivery (large items) — room of choice' },
-  { value: 'white-glove', label: 'White-glove + assembly' },
+  { value: 'standard', labelKey: 'checkout.methodStandard' },
+  { value: 'two-person', labelKey: 'checkout.methodTwoPerson' },
+  { value: 'white-glove', labelKey: 'checkout.methodWhiteGlove' },
 ] as const;
 
-const COUNTRIES = [
-  { value: 'US', label: 'United States' },
-  { value: 'GB', label: 'United Kingdom' },
-  { value: 'AE', label: 'United Arab Emirates' },
-];
-
 export function CheckoutSection(props: SectionRenderProps): ReactElement {
+  const { t } = useTranslation();
   const cart = useCart();
   const currency = cart.totals.currency || props.context.store.currency || 'USD';
   const [email, setEmail] = useState('');
   const [method, setMethod] = useState<string>('standard');
   const [busy, setBusy] = useState(false);
 
+  const countries = [
+    { value: 'US', label: t('checkout.countryUS') },
+    { value: 'GB', label: t('checkout.countryGB') },
+    { value: 'AE', label: t('checkout.countryAE') },
+  ];
+
   if (cart.lines.length === 0) {
     return (
       <Section>
         <Container narrow>
           <div className="hh-checkout__empty">
-            <h1 className="hh-page-title">Your bag is empty</h1>
-            <ButtonLink href="/rooms">Browse rooms</ButtonLink>
+            <h1 className="hh-page-title">{t('cart.empty')}</h1>
+            <ButtonLink href="/rooms">{t('hearth.browseRooms')}</ButtonLink>
           </div>
         </Container>
       </Section>
@@ -61,13 +63,13 @@ export function CheckoutSection(props: SectionRenderProps): ReactElement {
   return (
     <Section>
       <Container>
-        <h1 className="hh-page-title">Checkout</h1>
+        <h1 className="hh-page-title">{t('checkout.title')}</h1>
         <form className="hh-checkout" onSubmit={onSubmit} noValidate>
           <div className="hh-checkout__main">
             <fieldset className="hh-checkout__step">
-              <legend className="hh-checkout__legend">Contact</legend>
+              <legend className="hh-checkout__legend">{t('checkout.contact')}</legend>
               <Input
-                label="Email"
+                label={t('auth.email')}
                 type="email"
                 name="email"
                 autoComplete="email"
@@ -78,22 +80,22 @@ export function CheckoutSection(props: SectionRenderProps): ReactElement {
             </fieldset>
 
             <fieldset className="hh-checkout__step">
-              <legend className="hh-checkout__legend">Delivery address</legend>
+              <legend className="hh-checkout__legend">{t('checkout.deliveryAddress')}</legend>
               <div className="hh-checkout__grid">
-                <Input label="First name" name="given-name" autoComplete="given-name" required />
-                <Input label="Last name" name="family-name" autoComplete="family-name" required />
+                <Input label={t('checkout.firstName')} name="given-name" autoComplete="given-name" required />
+                <Input label={t('checkout.lastName')} name="family-name" autoComplete="family-name" required />
               </div>
-              <Input label="Address" name="address" autoComplete="street-address" required />
+              <Input label={t('checkout.address')} name="address" autoComplete="street-address" required />
               <div className="hh-checkout__grid">
-                <Input label="City" name="city" autoComplete="address-level2" required />
-                <Input label="Postcode" name="postcode" autoComplete="postal-code" required />
+                <Input label={t('account.city')} name="city" autoComplete="address-level2" required />
+                <Input label={t('account.postalCode')} name="postcode" autoComplete="postal-code" required />
               </div>
-              <Select label="Country" options={COUNTRIES} defaultValue="US" />
+              <Select label={t('account.country')} options={countries} defaultValue="US" />
             </fieldset>
 
             <fieldset className="hh-checkout__step">
-              <legend className="hh-checkout__legend">Delivery method</legend>
-              <div className="hh-checkout__methods" role="radiogroup" aria-label="Delivery method">
+              <legend className="hh-checkout__legend">{t('checkout.deliveryMethod')}</legend>
+              <div className="hh-checkout__methods" role="radiogroup" aria-label={t('checkout.deliveryMethod')}>
                 {DELIVERY_METHODS.map((m) => (
                   <label key={m.value} className="hh-checkout__method">
                     <input
@@ -103,23 +105,22 @@ export function CheckoutSection(props: SectionRenderProps): ReactElement {
                       checked={method === m.value}
                       onChange={() => setMethod(m.value)}
                     />
-                    <span>{m.label}</span>
+                    <span>{t(m.labelKey)}</span>
                   </label>
                 ))}
               </div>
             </fieldset>
 
             <fieldset className="hh-checkout__step">
-              <legend className="hh-checkout__legend">Payment</legend>
+              <legend className="hh-checkout__legend">{t('checkout.payment')}</legend>
               <p className="hh-checkout__payment-note">
-                Payment is completed securely on our provider’s hosted page. You’ll be redirected after
-                you review your order — no card details are entered here.
+                {t('checkout.paymentNote')}
               </p>
             </fieldset>
           </div>
 
-          <aside className="hh-checkout__summary" aria-label="Order summary">
-            <h2 className="hh-cart__summary-title">Your order</h2>
+          <aside className="hh-checkout__summary" aria-label={t('checkout.orderSummary')}>
+            <h2 className="hh-cart__summary-title">{t('checkout.yourOrder')}</h2>
             <ul className="hh-checkout__lines">
               {cart.lines.map((line) => (
                 <li key={line.id} className="hh-checkout__line">
@@ -131,12 +132,12 @@ export function CheckoutSection(props: SectionRenderProps): ReactElement {
               ))}
             </ul>
             <div className="hh-cart__row">
-              <span>Subtotal</span>
+              <span>{t('cart.subtotal')}</span>
               <Price value={cart.totals.subtotal} currency={currency} />
             </div>
-            <p className="hh-cart__note">Delivery &amp; taxes calculated on the next step.</p>
+            <p className="hh-cart__note">{t('checkout.deliveryTaxNext')}</p>
             <Button type="submit" block loading={busy}>
-              Continue to payment
+              {t('checkout.continueToPayment')}
             </Button>
           </aside>
         </form>

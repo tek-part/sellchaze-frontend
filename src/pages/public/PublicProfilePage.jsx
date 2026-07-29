@@ -179,34 +179,30 @@ export default function PublicProfilePage() {
                 ogImage={profile.cover_photo || profile.photo}
                 jsonLd={jsonLd}
             />
-            <div className="min-h-screen bg-linear-to-b from-slate-50 via-white to-slate-50">
+            <div className="min-h-screen bg-slate-50">
                 {/* Cover */}
-                <div className="relative h-56 w-full overflow-hidden md:h-72 lg:h-80">
+                <div className="relative h-48 w-full overflow-hidden md:h-60 lg:h-64">
                     {profile.cover_photo ? (
                         <img src={profile.cover_photo} alt="" fetchpriority="high" decoding="async" className="absolute inset-0 h-full w-full object-cover" />
                     ) : profile.cover_color ? (
                         <div className="absolute inset-0" style={{ background: profile.cover_color }} />
                     ) : (
-                        <div className="absolute inset-0 bg-linear-to-br from-indigo-500 via-brand to-fuchsia-500" />
+                        <div className="absolute inset-0 bg-gradient-to-br from-brand to-brand-dark" />
                     )}
-                    {/* decorative blurs */}
-                    <div className="pointer-events-none absolute -top-20 -inset-e-20 h-72 w-72 rounded-full bg-white/20 blur-3xl" />
-                    <div className="pointer-events-none absolute -bottom-24 -inset-s-10 h-80 w-80 rounded-full bg-black/20 blur-3xl" />
-                    <div className="absolute inset-0 bg-linear-to-t from-black/40 via-transparent to-transparent" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/25 via-transparent to-transparent" />
                 </div>
 
                 {/* Identity card */}
-                <div className="mx-auto -mt-20 max-w-5xl px-4">
-                    <div className="relative rounded-3xl border border-white/60 bg-white/90 p-6 shadow-[0_10px_40px_-10px_rgba(15,23,42,0.25)] backdrop-blur-sm md:p-8">
+                <div className="mx-auto -mt-16 max-w-5xl px-4">
+                    <div className="rounded-2xl border border-slate-200/80 bg-white p-6 shadow-card md:p-8">
                         <div className="flex flex-col items-start gap-5 md:flex-row md:items-end md:gap-6">
                             {/* Avatar */}
-                            <div className="relative -mt-20 md:-mt-24">
-                                <div className="absolute inset-0 rounded-3xl bg-linear-to-br from-brand/40 to-fuchsia-400/40 blur-xl" />
-                                <div className="relative h-28 w-28 overflow-hidden rounded-3xl border-4 border-white bg-white shadow-xl ring-1 ring-slate-200 md:h-36 md:w-36">
+                            <div className="relative -mt-16 md:-mt-20">
+                                <div className="relative h-28 w-28 overflow-hidden rounded-2xl border-4 border-white bg-white shadow-lg ring-1 ring-slate-200 md:h-32 md:w-32">
                                     {profile.photo ? (
                                         <img src={profile.photo} alt={displayName} decoding="async" className="h-full w-full object-cover" />
                                     ) : (
-                                        <div className="flex h-full w-full items-center justify-center bg-linear-to-br from-brand/20 to-fuchsia-200 text-4xl font-bold text-brand">
+                                        <div className="flex h-full w-full items-center justify-center bg-brand/10 text-4xl font-bold text-brand">
                                             {initials || '?'}
                                         </div>
                                     )}
@@ -284,27 +280,23 @@ export default function PublicProfilePage() {
                         <div className="mt-6 grid gap-3 sm:grid-cols-3">
                             <StatCard
                                 Icon={HiOutlineCalendarDays}
-                                gradient="from-indigo-500 to-sky-500"
                                 label={t('public_profile_years_active')}
                                 value={stats.years_active}
                             />
                             <StatCard
                                 Icon={HiOutlineUsers}
-                                gradient="from-emerald-500 to-teal-500"
                                 label={t('public_profile_partners')}
                                 value={stats.partners_count}
                             />
                             {user.role === 'supplier' ? (
                                 <StatCard
                                     Icon={HiOutlineShoppingBag}
-                                    gradient="from-fuchsia-500 to-rose-500"
                                     label={t('public_profile_products')}
                                     value={stats.products_count}
                                 />
                             ) : (
                                 <StatCard
                                     Icon={HiOutlineEnvelope}
-                                    gradient="from-amber-500 to-orange-500"
                                     label={t('public_profile_role') || 'Role'}
                                     value={roleLabel}
                                 />
@@ -315,7 +307,7 @@ export default function PublicProfilePage() {
                         {socials.length > 0 ? (
                             <div className="mt-6 flex flex-wrap items-center gap-2">
                                 {socials.map(({ key, url }) => {
-                                    const meta = SOCIAL_META[key] || { Icon: FaGlobe, color: 'from-slate-500 to-slate-700' };
+                                    const meta = SOCIAL_META[key] || { Icon: FaGlobe };
                                     const Icon = meta.Icon;
                                     return (
                                         <a
@@ -324,7 +316,7 @@ export default function PublicProfilePage() {
                                             target="_blank"
                                             rel="noopener noreferrer"
                                             title={key}
-                                            className={`group inline-flex h-10 w-10 items-center justify-center rounded-xl bg-linear-to-br ${meta.color} text-white shadow-xs ring-1 ring-black/5 transition hover:-translate-y-0.5 hover:shadow-md`}
+                                            className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-500 shadow-xs transition hover:border-brand hover:bg-brand/5 hover:text-brand"
                                         >
                                             <Icon className="h-4 w-4" aria-hidden />
                                         </a>
@@ -348,7 +340,7 @@ export default function PublicProfilePage() {
                         {tab === 'about' ? (
                             <div className="grid gap-5 lg:grid-cols-3">
                                 <div className="lg:col-span-2">
-                                    <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-xs">
+                                    <div className="rounded-2xl border border-slate-200/80 bg-white p-6 shadow-card">
                                         <h2 className="text-lg font-semibold text-slate-900">{t('public_profile_about') || 'About'}</h2>
                                         <div className="mt-3">
                                             {profile.biography ? (
@@ -388,8 +380,8 @@ export default function PublicProfilePage() {
                                     <>
                                         <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4">
                                             {products.map((p) => (
-                                                <div key={p.id} className="group flex flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xs transition hover:-translate-y-1 hover:shadow-lg">
-                                                    <div className="aspect-square overflow-hidden bg-linear-to-br from-slate-100 to-slate-200">
+                                                <div key={p.id} className="group flex flex-col overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-card transition hover:-translate-y-1 hover:shadow-lg">
+                                                    <div className="aspect-square overflow-hidden bg-slate-100">
                                                         {p.image ? (
                                                             <img src={p.image} alt={p.name} loading="lazy" decoding="async" className="h-full w-full object-cover transition duration-500 group-hover:scale-105" />
                                                         ) : (
@@ -437,12 +429,11 @@ export default function PublicProfilePage() {
     );
 }
 
-function StatCard({ Icon, gradient, label, value }) {
+function StatCard({ Icon, label, value }) {
     return (
-        <div className="relative overflow-hidden rounded-2xl border border-slate-200 bg-white p-4 shadow-xs">
-            <div className={`absolute -inset-e-6 -top-6 h-24 w-24 rounded-full bg-linear-to-br ${gradient} opacity-10 blur-2xl`} />
-            <div className="relative flex items-center gap-3">
-                <div className={`flex h-11 w-11 items-center justify-center rounded-xl bg-linear-to-br ${gradient} text-white shadow-xs`}>
+        <div className="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-xs">
+            <div className="flex items-center gap-3">
+                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-brand/10 text-brand">
                     <Icon className="h-5 w-5" aria-hidden />
                 </div>
                 <div className="min-w-0">

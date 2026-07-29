@@ -3,6 +3,7 @@
  * every section. Composes Eyebrow; the headline level is chosen for the document outline. §32.8.
  */
 import type { ReactElement, ReactNode } from 'react';
+import { useTranslation } from 'react-i18next';
 import { cn } from '../../../../../shared/utils/cn';
 import { Eyebrow } from './Typography';
 import { LinkButton } from './LinkButton';
@@ -19,6 +20,7 @@ export interface SectionHeadProps {
 }
 
 export function SectionHead(props: SectionHeadProps): ReactElement {
+  const { t } = useTranslation();
   const {
     eyebrow,
     title,
@@ -26,7 +28,7 @@ export function SectionHead(props: SectionHeadProps): ReactElement {
     align = 'start',
     headingLevel: Tag = 'h2',
     viewAllHref,
-    viewAllLabel = 'View all',
+    viewAllLabel = t('common.viewAll'),
     className,
   } = props;
 

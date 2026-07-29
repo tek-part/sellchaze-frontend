@@ -5,6 +5,7 @@
  */
 import { useState, type FormEvent, type ReactElement } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import type { SectionRenderProps } from '../../../theme-engine/rendering';
 import { Container } from '../components/Container';
 import { Section } from '../components/Section';
@@ -18,17 +19,18 @@ type Mode = 'login' | 'register' | 'forgot' | 'reset';
 const MODES = ['login', 'register', 'forgot', 'reset'] as const;
 
 const COPY: Record<Mode, { eyebrow: string; title: string }> = {
-  login: { eyebrow: '// Access', title: 'Sign in' },
-  register: { eyebrow: '// New account', title: 'Create your account' },
-  forgot: { eyebrow: '// Recovery', title: 'Reset your password' },
-  reset: { eyebrow: '// Recovery', title: 'Choose a new password' },
+  login: { eyebrow: 'auth.eyebrowAccess', title: 'auth.signIn' },
+  register: { eyebrow: 'auth.eyebrowNewAccount', title: 'auth.registerTitleAlt' },
+  forgot: { eyebrow: 'auth.eyebrowRecovery', title: 'auth.forgotTitle' },
+  reset: { eyebrow: 'auth.eyebrowRecovery', title: 'auth.resetTitle' },
 };
 
-function messageOf(error: unknown): string {
-  return error instanceof Error ? error.message : 'Something went wrong. Please try again.';
+function messageOf(error: unknown, fallback: string): string {
+  return error instanceof Error ? error.message : fallback;
 }
 
 export function AuthSection(props: SectionRenderProps): ReactElement {
+  const { t } = useTranslation();
   const mode = option(props.settings, 'mode', MODES, 'login') as Mode;
   const { login, register } = useAuth();
   const navigate = useNavigate();
@@ -65,7 +67,7 @@ export function AuthSection(props: SectionRenderProps): ReactElement {
         navigate('/login');
       }
     } catch (err) {
-      setError(messageOf(err));
+      setError(messageOf(err, t('auth.genericError')));
     } finally {
       setBusy(false);
     }
@@ -77,21 +79,21 @@ export function AuthSection(props: SectionRenderProps): ReactElement {
     <Section>
       <Container>
         <div className="vlt-auth">
-          <span className="vlt-eyebrow">{copy.eyebrow}</span>
-          <h1 className="vlt-auth__title">{copy.title}</h1>
+          <span className="vlt-eyebrow">{t(copy.eyebrow)}</span>
+          <h1 className="vlt-auth__title">{t(copy.title)}</h1>
 
           {mode === 'forgot' && done ? (
             <p className="vlt-auth__status" role="status">
-              If an account exists for {form.email}, a reset link is on its way.
+              {t('auth.resetLinkSent', { email: form.email })}
             </p>
           ) : (
             <form className="vlt-auth__form" onSubmit={(e) => void submit(e)} noValidate>
               {mode === 'register' ? (
-                <Input label="Full name" name="name" autoComplete="name" required value={form.name} onChange={set('name')} />
+                <Input label={t('auth.fullName')} name="name" autoComplete="name" required value={form.name} onChange={set('name')} />
               ) : null}
 
               <Input
-                label="Email"
+                label={t('auth.email')}
                 type="email"
                 name="email"
                 autoComplete="email"
@@ -103,7 +105,7 @@ export function AuthSection(props: SectionRenderProps): ReactElement {
 
               {mode !== 'forgot' ? (
                 <Input
-                  label={mode === 'reset' ? 'New password' : 'Password'}
+                  label={mode === 'reset' ? t('auth.newPassword') : t('auth.password')}
                   type="password"
                   name="password"
                   autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
@@ -115,7 +117,7 @@ export function AuthSection(props: SectionRenderProps): ReactElement {
 
               {mode === 'register' || mode === 'reset' ? (
                 <Input
-                  label="Confirm password"
+                  label={t('auth.confirmPassword')}
                   type="password"
                   name="password_confirmation"
                   autoComplete="new-password"
@@ -126,7 +128,7 @@ export function AuthSection(props: SectionRenderProps): ReactElement {
               ) : null}
 
               <Button type="submit" block loading={busy}>
-                {mode === 'login' ? 'Sign in' : mode === 'register' ? 'Create account' : mode === 'forgot' ? 'Send reset link' : 'Reset password'}
+                {mode === 'login' ? t('auth.signIn') : mode === 'register' ? t('auth.createAccount') : mode === 'forgot' ? t('auth.sendResetLink') : t('auth.resetPassword')}
               </Button>
             </form>
           )}
@@ -134,13 +136,13 @@ export function AuthSection(props: SectionRenderProps): ReactElement {
           <div className="vlt-auth__alt">
             {mode === 'login' ? (
               <>
-                <a href="/forgot-password">Forgot your password?</a>
-                <span>New here? <a href="/register">Create an account</a></span>
+                <a href="/forgot-password">{t('auth.forgotLink')}</a>
+                <span>{t('auth.newHere')} <a href="/register">{t('auth.createOne')}</a></span>
               </>
             ) : mode === 'register' ? (
-              <span>Already have an account? <a href="/login">Sign in</a></span>
+              <span>{t('auth.alreadyHaveAccount')} <a href="/login">{t('auth.signIn')}</a></span>
             ) : (
-              <a href="/login">Back to sign in</a>
+              <a href="/login">{t('auth.backToSignIn')}</a>
             )}
           </div>
         </div>

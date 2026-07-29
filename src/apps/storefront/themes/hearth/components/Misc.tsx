@@ -2,6 +2,7 @@
  * Small structural primitives — Divider, Chip and Breadcrumb — grouped to keep the library tidy.
  */
 import type { HTMLAttributes, ReactElement, ReactNode } from 'react';
+import { useTranslation } from 'react-i18next';
 import { cn } from '../../../../../shared/utils/cn';
 
 /* --------------------------------------------------------------------------- Divider */
@@ -25,6 +26,7 @@ export interface ChipProps {
 }
 export function Chip(props: ChipProps): ReactElement {
   const { children, href, selected = false, onClick, onRemove, className } = props;
+  const { t } = useTranslation();
   const cls = cn('hh-chip', selected && 'hh-chip--selected', className);
   const body = (
     <>
@@ -33,7 +35,7 @@ export function Chip(props: ChipProps): ReactElement {
         <button
           type="button"
           className="hh-chip__remove"
-          aria-label="Remove"
+          aria-label={t('common.remove')}
           onClick={(e) => {
             e.preventDefault();
             e.stopPropagation();
@@ -75,9 +77,10 @@ export interface BreadcrumbProps {
 }
 export function Breadcrumb(props: BreadcrumbProps): ReactElement | null {
   const { items, className } = props;
+  const { t } = useTranslation();
   if (items.length === 0) return null;
   return (
-    <nav className={cn('hh-breadcrumb', className)} aria-label="Breadcrumb">
+    <nav className={cn('hh-breadcrumb', className)} aria-label={t('misc.breadcrumb')}>
       <ol className="hh-breadcrumb__list">
         {items.map((c, i) => (
           <li key={c.url} className="hh-breadcrumb__item">

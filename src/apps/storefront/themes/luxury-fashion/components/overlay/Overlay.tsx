@@ -13,6 +13,7 @@ import {
   type ReactNode,
   type RefObject,
 } from 'react';
+import { useTranslation } from 'react-i18next';
 import { cn } from '../../../../../../shared/utils/cn';
 import { IconButton } from '../IconButton';
 import { IconClose } from '../icons';
@@ -68,6 +69,7 @@ export function Overlay(props: OverlayProps): ReactElement | null {
     panelClassName,
     children,
   } = props;
+  const { t } = useTranslation();
 
   const panelRef = useRef<HTMLDivElement>(null);
   const titleId = useId();
@@ -133,7 +135,7 @@ export function Overlay(props: OverlayProps): ReactElement | null {
                 {title}
               </h2>
               {hideClose ? null : (
-                <IconButton label="Close" onClick={onClose}>
+                <IconButton label={t('common.close')} onClick={onClose}>
                   <IconClose />
                 </IconButton>
               )}

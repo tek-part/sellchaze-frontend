@@ -11,6 +11,7 @@
  */
 import { useMemo, useState, type FormEvent, type ReactElement } from 'react';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Button, ButtonLink, Container, Input, Section, StoreImage, Textarea } from '../themes/luxury-fashion/components';
 import { Seo } from '../seo/Seo';
 import { breadcrumbSchema, faqSchema } from '../seo/schema';
@@ -55,11 +56,12 @@ function site(): string {
 /* ------------------------------------------------------------------ shared blocks */
 
 function Crumbs(props: { label: string }): ReactElement {
+  const { t } = useTranslation();
   return (
-    <nav className="sf-crumbs" aria-label="Breadcrumb">
+    <nav className="sf-crumbs" aria-label={t('misc.breadcrumb')}>
       <ol>
         <li>
-          <Link to="/">Home</Link>
+          <Link to="/">{t('nav.home')}</Link>
         </li>
         <li aria-current="page">{props.label}</li>
       </ol>
@@ -68,6 +70,7 @@ function Crumbs(props: { label: string }): ReactElement {
 }
 
 function StoreMap(props: { location: StoreLocation }): ReactElement {
+  const { t } = useTranslation();
   const { location } = props;
   return (
     <div className="sf-map">
@@ -77,13 +80,13 @@ function StoreMap(props: { location: StoreLocation }): ReactElement {
       */}
       <iframe
         className="sf-map__frame"
-        title={`Map showing ${location.name}, ${location.city}`}
+        title={t('contact.mapTitle', { name: location.name, city: location.city })}
         src={mapEmbedUrl(location)}
         loading="lazy"
         referrerPolicy="no-referrer-when-downgrade"
       />
       <a className="sf-map__link" href={mapLinkUrl(location)} rel="noreferrer noopener" target="_blank">
-        Open {location.city} in maps
+        {t('contact.openInMaps', { city: location.city })}
       </a>
     </div>
   );
@@ -92,6 +95,7 @@ function StoreMap(props: { location: StoreLocation }): ReactElement {
 /* ------------------------------------------------------------------ About */
 
 export function AboutPage(): ReactElement {
+  const { t } = useTranslation();
   const { store } = useStore();
   const manifest = useThemeManifest();
   const catalog = catalogFor(manifest.id);
@@ -101,7 +105,7 @@ export function AboutPage(): ReactElement {
   const mission = c.mission?.trim() || COMPANY.mission;
   const vision = c.vision?.trim() || COMPANY.vision;
   const heroImage = c.hero_image?.trim() || COMPANY.heroImage;
-  const heroTitle = c.heading?.trim() || 'Fewer, better things — and the truth about them';
+  const heroTitle = c.heading?.trim() || t('company.heroTitle');
   const heroSub = c.subheading?.trim() || mission;
   const story = (Array.isArray(c.story) && c.story.filter(Boolean).length ? c.story.filter(Boolean) : COMPANY.story) as ReadonlyArray<string>;
   const stats = (Array.isArray(c.stats) && c.stats.length ? c.stats : COMPANY.stats) as ReadonlyArray<{ value: string; label: string }>;
@@ -114,13 +118,10 @@ export function AboutPage(): ReactElement {
   const awards = (Array.isArray(c.awards) && c.awards.length ? c.awards : COMPANY.awards) as ReadonlyArray<{ year: string; title: string; body: string }>;
   const partners = (Array.isArray(c.partners) && c.partners.filter(Boolean).length ? c.partners.filter(Boolean) : COMPANY.partners) as ReadonlyArray<string>;
   const testimonials = (Array.isArray(c.testimonials) && c.testimonials.length ? c.testimonials : catalog.testimonials.slice(0, 3)) as ReadonlyArray<{ quote: string; author: string; detail: string }>;
-  const craftTitle = c.craft_title?.trim() || 'What we will and will not claim';
+  const craftTitle = c.craft_title?.trim() || t('company.craftTitle');
   const craftBody = (Array.isArray(c.craft_body) && c.craft_body.filter(Boolean).length
     ? c.craft_body.filter(Boolean)
-    : [
-        'Every product page carries full composition, the country of manufacture and the care instructions.',
-        'Our repair service has handled more than 11,000 pieces, and we hold spare components for discontinued lines.',
-      ]) as ReadonlyArray<string>;
+    : [t('company.craftBody1'), t('company.craftBody2')]) as ReadonlyArray<string>;
 
   return (
     <>
@@ -137,7 +138,7 @@ export function AboutPage(): ReactElement {
         <StoreImage className="sf-cohero__img" src={heroImage} alt="" eager />
         <div className="sf-cohero__scrim" aria-hidden />
         <Container className="sf-cohero__inner">
-          <span className="sf-cohero__eyebrow">Since {founded}</span>
+          <span className="sf-cohero__eyebrow">{t('company.since', { year: founded })}</span>
           <h1 className="sf-cohero__title">{heroTitle}</h1>
           <p className="sf-cohero__sub">{heroSub}</p>
         </Container>
@@ -145,13 +146,13 @@ export function AboutPage(): ReactElement {
 
       <Section>
         <Container>
-          <Crumbs label="About us" />
+          <Crumbs label={t('company.aboutUs')} />
 
           {/* Story */}
           <div className="sf-costory">
             <div className="sf-costory__copy">
-              <span className="sf-eyebrow">{L(c.story_eyebrow, 'Our story')}</span>
-              <h2 className="sf-coheading">{L(c.story_heading, 'How we got here')}</h2>
+              <span className="sf-eyebrow">{L(c.story_eyebrow, t('company.storyEyebrow'))}</span>
+              <h2 className="sf-coheading">{L(c.story_heading, t('company.storyHeading'))}</h2>
               {story.map((para) => (
                 <p key={para.slice(0, 28)} className="sf-coprose">
                   {para}
@@ -159,7 +160,7 @@ export function AboutPage(): ReactElement {
               ))}
             </div>
             <figure className="sf-costory__media">
-              <StoreImage src={storyImage} alt="Rolls of material stacked in a workshop" />
+              <StoreImage src={storyImage} alt={t('company.storyImageAlt')} />
             </figure>
           </div>
         </Container>
@@ -184,11 +185,11 @@ export function AboutPage(): ReactElement {
         <Container>
           <div className="sf-comv">
             <article className="sf-comv__card">
-              <span className="sf-eyebrow">Mission</span>
+              <span className="sf-eyebrow">{t('company.mission')}</span>
               <p className="sf-comv__text">{mission}</p>
             </article>
             <article className="sf-comv__card">
-              <span className="sf-eyebrow">Vision</span>
+              <span className="sf-eyebrow">{t('company.vision')}</span>
               <p className="sf-comv__text">{vision}</p>
             </article>
           </div>
@@ -199,8 +200,8 @@ export function AboutPage(): ReactElement {
       <Section className="sf-coband">
         <Container>
           <header className="sf-cosection-head">
-            <span className="sf-eyebrow">{L(c.values_eyebrow, 'What we hold to')}</span>
-            <h2 className="sf-coheading">{L(c.values_heading, 'Our values')}</h2>
+            <span className="sf-eyebrow">{L(c.values_eyebrow, t('company.valuesEyebrow'))}</span>
+            <h2 className="sf-coheading">{L(c.values_heading, t('company.valuesHeading'))}</h2>
           </header>
           <ul className="sf-covalues">
             {values.map((v, i) => (
@@ -220,8 +221,8 @@ export function AboutPage(): ReactElement {
       <Section>
         <Container>
           <header className="sf-cosection-head">
-            <span className="sf-eyebrow">{L(c.milestones_eyebrow, 'Milestones')}</span>
-            <h2 className="sf-coheading">{L(c.milestones_heading, 'Ten years, in order')}</h2>
+            <span className="sf-eyebrow">{L(c.milestones_eyebrow, t('company.milestonesEyebrow'))}</span>
+            <h2 className="sf-coheading">{L(c.milestones_heading, t('company.milestonesHeading'))}</h2>
           </header>
           <ol className="sf-cotimeline">
             {milestones.map((m) => (
@@ -241,8 +242,8 @@ export function AboutPage(): ReactElement {
       <Section className="sf-coband">
         <Container>
           <header className="sf-cosection-head">
-            <span className="sf-eyebrow">{L(c.leadership_eyebrow, 'The team')}</span>
-            <h2 className="sf-coheading">{L(c.leadership_heading, 'Who runs the place')}</h2>
+            <span className="sf-eyebrow">{L(c.leadership_eyebrow, t('company.leadershipEyebrow'))}</span>
+            <h2 className="sf-coheading">{L(c.leadership_heading, t('company.leadershipHeading'))}</h2>
           </header>
           <ul className="sf-coteam">
             {leadership.map((p) => (
@@ -264,15 +265,15 @@ export function AboutPage(): ReactElement {
         <Container>
           <div className="sf-costory sf-costory--reverse">
             <figure className="sf-costory__media">
-              <StoreImage src={craftImage} alt="Close detail of finished material" />
+              <StoreImage src={craftImage} alt={t('company.craftImageAlt')} />
             </figure>
             <div className="sf-costory__copy">
-              <span className="sf-eyebrow">{L(c.craft_eyebrow, 'Quality & sustainability')}</span>
+              <span className="sf-eyebrow">{L(c.craft_eyebrow, t('company.craftEyebrow'))}</span>
               <h2 className="sf-coheading">{craftTitle}</h2>
               {craftBody.map((para) => (
                 <p key={para.slice(0, 28)} className="sf-coprose">{para}</p>
               ))}
-              <ButtonLink href="/pages/sustainability">Read our approach</ButtonLink>
+              <ButtonLink href="/pages/sustainability">{t('company.readApproach')}</ButtonLink>
             </div>
           </div>
         </Container>
@@ -282,8 +283,8 @@ export function AboutPage(): ReactElement {
       <Section className="sf-coband">
         <Container>
           <header className="sf-cosection-head">
-            <span className="sf-eyebrow">{L(c.awards_eyebrow, 'Recognition')}</span>
-            <h2 className="sf-coheading">{L(c.awards_heading, 'Awards & accreditation')}</h2>
+            <span className="sf-eyebrow">{L(c.awards_eyebrow, t('company.awardsEyebrow'))}</span>
+            <h2 className="sf-coheading">{L(c.awards_heading, t('company.awardsHeading'))}</h2>
           </header>
           <ul className="sf-coawards">
             {awards.map((a) => (
@@ -302,8 +303,8 @@ export function AboutPage(): ReactElement {
         <Section>
           <Container>
             <header className="sf-cosection-head">
-              <span className="sf-eyebrow">{L(c.testimonials_eyebrow, 'In their words')}</span>
-              <h2 className="sf-coheading">{L(c.testimonials_heading, 'What customers say')}</h2>
+              <span className="sf-eyebrow">{L(c.testimonials_eyebrow, t('company.testimonialsEyebrow'))}</span>
+              <h2 className="sf-coheading">{L(c.testimonials_heading, t('company.testimonialsHeading'))}</h2>
             </header>
             <ul className="sf-coquotes">
               {testimonials.map((t) => (
@@ -324,8 +325,8 @@ export function AboutPage(): ReactElement {
       <Section className="sf-coband">
         <Container>
           <header className="sf-cosection-head">
-            <span className="sf-eyebrow">{L(c.partners_eyebrow, 'Standards we work to')}</span>
-            <h2 className="sf-coheading">{L(c.partners_heading, 'Partners & certification')}</h2>
+            <span className="sf-eyebrow">{L(c.partners_eyebrow, t('company.partnersEyebrow'))}</span>
+            <h2 className="sf-coheading">{L(c.partners_heading, t('company.partnersHeading'))}</h2>
           </header>
           <ul className="sf-copartners">
             {partners.map((p) => (
@@ -341,14 +342,14 @@ export function AboutPage(): ReactElement {
       <Section className="sf-coband">
         <Container>
           <div className="sf-cocta">
-            <h2 className="sf-cocta__title">{L(c.cta_title, 'Questions about anything here?')}</h2>
+            <h2 className="sf-cocta__title">{L(c.cta_title, t('company.ctaTitle'))}</h2>
             <p className="sf-cocta__text">
-              {L(c.cta_text, `Customer care is the largest team at ${store.name} and reachable by phone, not just a form.`)}
+              {L(c.cta_text, t('company.ctaText', { store: store.name }))}
             </p>
             <div className="sf-cocta__actions">
-              <ButtonLink href="/contact">Contact us</ButtonLink>
+              <ButtonLink href="/contact">{t('contact.contactUs')}</ButtonLink>
               <ButtonLink href="/collections/all" variant="secondary">
-                Shop the range
+                {t('company.shopRange')}
               </ButtonLink>
             </div>
           </div>
@@ -361,6 +362,7 @@ export function AboutPage(): ReactElement {
 /* ------------------------------------------------------------------ Contact */
 
 export function ContactPage(): ReactElement {
+  const { t } = useTranslation();
   const { store } = useStore();
   const manifest = useThemeManifest();
   const catalog = catalogFor(manifest.id);
@@ -370,8 +372,8 @@ export function ContactPage(): ReactElement {
     const items = (faqSource?.items ?? []).filter((x) => (x.question || '').trim());
     return items.length ? items.map((x) => ({ question: x.question || '', answer: x.answer || '' })) : catalog.faqs.slice(0, 6);
   }, [faqSource, catalog]);
-  const heroTitle = cc.heading?.trim() || 'Talk to a person';
-  const heroSub = cc.intro?.trim() || 'Six teams, four studios and a real phone number. Pick whoever fits your question.';
+  const heroTitle = cc.heading?.trim() || t('contact.heroTitle');
+  const heroSub = cc.intro?.trim() || t('contact.heroSub');
   const showForm = cc.show_form !== false;
   const hasContactInfo = !!(cc.email?.trim() || cc.phone?.trim() || cc.address?.trim() || cc.hours?.trim());
   const notice = { title: cc.notice_title?.trim() || COMPANY.notice.title, body: cc.notice_body?.trim() || COMPANY.notice.body };
@@ -395,11 +397,11 @@ export function ContactPage(): ReactElement {
   const onSubmit = (e: FormEvent<HTMLFormElement>): void => {
     e.preventDefault();
     if (!form.name.trim() || !form.email.trim() || !form.message.trim()) {
-      setError('Please complete your name, email and message.');
+      setError(t('contact.errorRequired'));
       return;
     }
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(form.email.trim())) {
-      setError('Please enter a valid email address.');
+      setError(t('contact.errorEmail'));
       return;
     }
     setError(undefined);
@@ -422,7 +424,7 @@ export function ContactPage(): ReactElement {
         <StoreImage className="sf-cohero__img" src={COMPANY.storyImage} alt="" eager />
         <div className="sf-cohero__scrim" aria-hidden />
         <Container className="sf-cohero__inner">
-          <span className="sf-cohero__eyebrow">{L(cc.hero_eyebrow, 'We reply within one business day')}</span>
+          <span className="sf-cohero__eyebrow">{L(cc.hero_eyebrow, t('contact.heroEyebrow'))}</span>
           <h1 className="sf-cohero__title">{heroTitle}</h1>
           <p className="sf-cohero__sub">{heroSub}</p>
         </Container>
@@ -430,15 +432,15 @@ export function ContactPage(): ReactElement {
 
       <Section>
         <Container>
-          <Crumbs label="Contact" />
+          <Crumbs label={t('nav.contact')} />
 
           {/* Store's own contact details (editable from the dashboard). */}
           {hasContactInfo ? (
             <dl className="sf-codept__meta" style={{ marginBottom: '1.5rem' }}>
-              {cc.email?.trim() ? (<><dt>Email</dt><dd><a href={`mailto:${cc.email.trim()}`}>{cc.email.trim()}</a></dd></>) : null}
-              {cc.phone?.trim() ? (<><dt>Phone</dt><dd><a href={`tel:${cc.phone.replace(/\s/g, '')}`}>{cc.phone.trim()}</a></dd></>) : null}
-              {cc.address?.trim() ? (<><dt>Address</dt><dd>{cc.address.trim()}</dd></>) : null}
-              {cc.hours?.trim() ? (<><dt>Hours</dt><dd>{cc.hours.trim()}</dd></>) : null}
+              {cc.email?.trim() ? (<><dt>{t('auth.email')}</dt><dd><a href={`mailto:${cc.email.trim()}`}>{cc.email.trim()}</a></dd></>) : null}
+              {cc.phone?.trim() ? (<><dt>{t('contact.phone')}</dt><dd><a href={`tel:${cc.phone.replace(/\s/g, '')}`}>{cc.phone.trim()}</a></dd></>) : null}
+              {cc.address?.trim() ? (<><dt>{t('checkout.address')}</dt><dd>{cc.address.trim()}</dd></>) : null}
+              {cc.hours?.trim() ? (<><dt>{t('contact.hours')}</dt><dd>{cc.hours.trim()}</dd></>) : null}
             </dl>
           ) : null}
 
@@ -450,8 +452,8 @@ export function ContactPage(): ReactElement {
 
           {/* Departments */}
           <header className="sf-cosection-head">
-            <span className="sf-eyebrow">{L(cc.departments_eyebrow, 'Departments')}</span>
-            <h2 className="sf-coheading">{L(cc.departments_heading, 'Who to contact')}</h2>
+            <span className="sf-eyebrow">{L(cc.departments_eyebrow, t('contact.departmentsEyebrow'))}</span>
+            <h2 className="sf-coheading">{L(cc.departments_heading, t('contact.departmentsHeading'))}</h2>
           </header>
           <ul className="sf-codepts">
             {departments.map((d) => (
@@ -459,15 +461,15 @@ export function ContactPage(): ReactElement {
                 <h3 className="sf-codept__name">{d.name}</h3>
                 <p className="sf-codept__desc">{d.description}</p>
                 <dl className="sf-codept__meta">
-                  <dt>Email</dt>
+                  <dt>{t('auth.email')}</dt>
                   <dd>
                     <a href={`mailto:${d.email}`}>{d.email}</a>
                   </dd>
-                  <dt>Phone</dt>
+                  <dt>{t('contact.phone')}</dt>
                   <dd>
                     <a href={`tel:${d.phone.replace(/\s/g, '')}`}>{d.phone}</a>
                   </dd>
-                  <dt>Hours</dt>
+                  <dt>{t('contact.hours')}</dt>
                   <dd>{d.hours}</dd>
                 </dl>
               </li>
@@ -482,11 +484,11 @@ export function ContactPage(): ReactElement {
           <div className="sf-cocontact">
             {showForm ? (
             <div className="sf-cocontact__form">
-              <h2 className="sf-coheading">{L(cc.form_heading, 'Send a message')}</h2>
+              <h2 className="sf-coheading">{L(cc.form_heading, t('contact.formHeading'))}</h2>
               {sent ? (
                 <div className="sf-conote" role="status">
                   <p>
-                    <strong>Thanks — your message is ready to send.</strong>
+                    <strong>{t('contact.sentTitle')}</strong>
                   </p>
                   {/*
                     Honest degradation: there is no contact-submit endpoint in the storefront API, so
@@ -494,43 +496,41 @@ export function ContactPage(): ReactElement {
                     the customer's own mail client, which genuinely does reach us.
                   */}
                   <p>
-                    We don’t yet have a form endpoint connected, so nothing has been transmitted.
-                    Use the button below to send it from your own mail app — it will reach the same
-                    inbox.
+                    {t('contact.sentBody')}
                   </p>
                   <ButtonLink
                     href={`mailto:${departments[0]?.email ?? COMPANY.departments[0]!.email}?subject=${encodeURIComponent(
-                      form.subject || 'Website enquiry',
+                      form.subject || t('contact.enquirySubject'),
                     )}&body=${encodeURIComponent(`${form.message}\n\n— ${form.name} (${form.email})`)}`}
                   >
-                    Open in mail app
+                    {t('contact.openInMail')}
                   </ButtonLink>
                   <button type="button" className="sf-colink" onClick={() => setSent(false)}>
-                    Edit the message
+                    {t('contact.editMessage')}
                   </button>
                 </div>
               ) : (
                 <form className="sf-coform" onSubmit={onSubmit} noValidate>
                   <Input
-                    label="Your name"
+                    label={t('contact.yourName')}
                     autoComplete="name"
                     value={form.name}
                     onChange={(e) => setForm({ ...form, name: e.target.value })}
                   />
                   <Input
-                    label="Email"
+                    label={t('auth.email')}
                     type="email"
                     autoComplete="email"
                     value={form.email}
                     onChange={(e) => setForm({ ...form, email: e.target.value })}
                   />
                   <Input
-                    label="Subject"
+                    label={t('contact.subject')}
                     value={form.subject}
                     onChange={(e) => setForm({ ...form, subject: e.target.value })}
                   />
                   <Textarea
-                    label="How can we help?"
+                    label={t('contact.howCanWeHelp')}
                     rows={6}
                     value={form.message}
                     onChange={(e) => setForm({ ...form, message: e.target.value })}
@@ -540,15 +540,15 @@ export function ContactPage(): ReactElement {
                       {error}
                     </p>
                   ) : null}
-                  <Button type="submit">Send message</Button>
+                  <Button type="submit">{t('contact.sendMessage')}</Button>
                 </form>
               )}
             </div>
             ) : null}
 
             <div className="sf-cocontact__locations">
-              <h2 className="sf-coheading">{L(cc.locations_heading, 'Our studios')}</h2>
-              <div className="sf-cotabs" role="tablist" aria-label="Store locations">
+              <h2 className="sf-coheading">{L(cc.locations_heading, t('contact.locationsHeading'))}</h2>
+              <div className="sf-cotabs" role="tablist" aria-label={t('contact.storeLocations')}>
                 {locations.map((loc, i) => (
                   <button
                     key={`${loc.name}-${i}`}
@@ -584,11 +584,11 @@ export function ContactPage(): ReactElement {
                   {location.city}, {location.country}
                 </address>
                 <dl className="sf-copanel__meta">
-                  <dt>Phone</dt>
+                  <dt>{t('contact.phone')}</dt>
                   <dd>
                     <a href={`tel:${location.phone.replace(/\s/g, '')}`}>{location.phone}</a>
                   </dd>
-                  <dt>Opening hours</dt>
+                  <dt>{t('contact.openingHours')}</dt>
                   <dd>{location.hours}</dd>
                 </dl>
                 {location.lat || location.lon ? <StoreMap location={location} /> : null}
@@ -602,8 +602,8 @@ export function ContactPage(): ReactElement {
       <Section>
         <Container>
           <header className="sf-cosection-head">
-            <span className="sf-eyebrow">{L(cc.faq_eyebrow, 'Before you write')}</span>
-            <h2 className="sf-coheading">{L(cc.faq_heading, 'Frequently asked')}</h2>
+            <span className="sf-eyebrow">{L(cc.faq_eyebrow, t('contact.faqEyebrow'))}</span>
+            <h2 className="sf-coheading">{L(cc.faq_heading, t('contact.faqHeading'))}</h2>
           </header>
           <ul className="sf-cofaqs">
             {faqs.map((f) => (
@@ -617,7 +617,7 @@ export function ContactPage(): ReactElement {
           </ul>
           <div className="sf-cocta__actions">
             <ButtonLink href="/faq" variant="secondary">
-              All questions
+              {t('contact.allQuestions')}
             </ButtonLink>
           </div>
         </Container>

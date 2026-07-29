@@ -5,6 +5,7 @@
  */
 import { useState, type FormEvent, type ReactElement } from 'react';
 import { Navigate, useNavigate, useSearchParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import {
   Button,
   Container,
@@ -19,6 +20,7 @@ import { ThemeRenderer, useTemplate } from '../theme-engine';
 import { flowContext } from './flow-context';
 
 export function CheckoutPage(): ReactElement {
+  const { t } = useTranslation();
   const cart = useCart();
   const { store } = useStore();
   const navigate = useNavigate();
@@ -43,10 +45,10 @@ export function CheckoutPage(): ReactElement {
       const res = (await applyCoupon(coupon)) as { data?: { discount?: number; message?: string } };
       const value = Number(res?.data?.discount ?? 0);
       setDiscount(Number.isFinite(value) ? value : 0);
-      setCouponMsg(value > 0 ? 'Coupon applied.' : (res?.data?.message ?? 'Coupon applied.'));
+      setCouponMsg(value > 0 ? t('checkout.couponApplied') : (res?.data?.message ?? t('checkout.couponApplied')));
     } catch (err) {
       setDiscount(0);
-      setCouponMsg(err instanceof Error ? err.message : 'That code could not be applied.');
+      setCouponMsg(err instanceof Error ? err.message : t('checkout.couponFailed'));
     }
   };
 
@@ -66,7 +68,7 @@ export function CheckoutPage(): ReactElement {
       const number = res?.data?.number;
       navigate(number ? `/order/success?number=${encodeURIComponent(number)}` : '/order/success');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'We could not place your order. Please try again.');
+      setError(err instanceof Error ? err.message : t('checkout.orderFailed'));
     } finally {
       setBusy(false);
     }
@@ -76,19 +78,19 @@ export function CheckoutPage(): ReactElement {
     <Section>
       <Container>
         <div className="sf-page-head" style={{ textAlign: 'start' }}>
-          <h1 className="sf-page-head__title">Checkout</h1>
+          <h1 className="sf-page-head__title">{t('checkout.title')}</h1>
         </div>
         <div className="sf-cart-page">
           <form className="sf-account__panel" onSubmit={(e) => void placeOrder(e)} noValidate>
-            <Input label="Email" type="email" value={form.email} onChange={set('email')} required autoComplete="email" />
-            <Input label="Full name" value={form.name} onChange={set('name')} required autoComplete="name" />
-            <Input label="Address" value={form.line1} onChange={set('line1')} required autoComplete="address-line1" />
-            <Input label="City" value={form.city} onChange={set('city')} required autoComplete="address-level2" />
-            <Input label="Postal code" value={form.postal_code} onChange={set('postal_code')} required autoComplete="postal-code" />
-            <Input label="Country" value={form.country} onChange={set('country')} required autoComplete="country-name" />
+            <Input label={t('auth.email')} type="email" value={form.email} onChange={set('email')} required autoComplete="email" />
+            <Input label={t('auth.fullName')} value={form.name} onChange={set('name')} required autoComplete="name" />
+            <Input label={t('checkout.address')} value={form.line1} onChange={set('line1')} required autoComplete="address-line1" />
+            <Input label={t('account.city')} value={form.city} onChange={set('city')} required autoComplete="address-level2" />
+            <Input label={t('account.postalCode')} value={form.postal_code} onChange={set('postal_code')} required autoComplete="postal-code" />
+            <Input label={t('account.country')} value={form.country} onChange={set('country')} required autoComplete="country-name" />
             {error ? <p className="sf-field__error" role="alert">{error}</p> : null}
             <Button type="submit" block loading={busy}>
-              Place order · {formatMoney(total, currency)}
+              {t('checkout.placeOrder')} · {formatMoney(total, currency)}
             </Button>
           </form>
 
@@ -102,24 +104,24 @@ export function CheckoutPage(): ReactElement {
               </div>
             ))}
             <div className="sf-pdp__row">
-              <Input label="Coupon code" value={coupon} onChange={(e) => setCoupon(e.target.value)} />
+              <Input label={t('checkout.couponCode')} value={coupon} onChange={(e) => setCoupon(e.target.value)} />
               <Button type="button" variant="secondary" onClick={() => void applyCode()} disabled={!coupon}>
-                Apply
+                {t('checkout.apply')}
               </Button>
             </div>
             {couponMsg ? <p className="sf-card-row__meta">{couponMsg}</p> : null}
             {discount > 0 ? (
               <div className="sf-cart-summary__row">
-                <span>Discount</span>
+                <span>{t('checkout.discount')}</span>
                 <span>−{formatMoney(discount, currency)}</span>
               </div>
             ) : null}
             <div className="sf-cart-summary__row">
-              <span>Shipping</span>
-              <span>Calculated after address</span>
+              <span>{t('checkout.shipping')}</span>
+              <span>{t('checkout.calculatedAfterAddress')}</span>
             </div>
             <div className="sf-cart-summary__total">
-              <span>Total</span>
+              <span>{t('checkout.total')}</span>
               <span className="sf-cart-summary__total-value">{formatMoney(total, currency)}</span>
             </div>
           </aside>
@@ -130,6 +132,7 @@ export function CheckoutPage(): ReactElement {
 }
 
 export function OrderSuccessPage(): ReactElement {
+  const { t } = useTranslation();
   const [params] = useSearchParams();
   const { store } = useStore();
   const tpl = useTemplate('order-success');
@@ -142,13 +145,13 @@ export function OrderSuccessPage(): ReactElement {
           <span className="sf-state__code" aria-hidden>
             ✓
           </span>
-          <h1 className="sf-state__title">Thank you for your order</h1>
+          <h1 className="sf-state__title">{t('checkout.thankYou')}</h1>
           <p className="sf-state__text">
-            {number ? `Your order ${number} is confirmed.` : 'Your order is confirmed.'} A confirmation email is on its way.
+            {number ? t('checkout.orderConfirmedNumber', { number }) : t('checkout.orderConfirmed')} {t('checkout.confirmationEmail')}
           </p>
           <div className="sf-state__actions">
             <a className="sf-btn sf-btn--primary sf-btn--md" href="/">
-              <span className="sf-btn__label">Continue shopping</span>
+              <span className="sf-btn__label">{t('cart.continueShopping')}</span>
             </a>
           </div>
         </div>

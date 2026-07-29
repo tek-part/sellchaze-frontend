@@ -3,25 +3,27 @@
  * The app sets the real 404 status; the theme provides the look.
  */
 import type { ReactElement } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { SectionRenderProps } from '../../../theme-engine/rendering';
 import { ButtonLink } from '../components/ButtonLink';
 import { Container } from '../components/Container';
 import { Section } from '../components/Section';
 
 export function NotFoundSection(_props: SectionRenderProps): ReactElement {
+  const { t } = useTranslation();
   return (
     <Section>
       <Container narrow>
         <div className="hh-notfound">
           <p className="hh-notfound__code">404</p>
-          <h1 className="hh-notfound__title">We can’t find that room</h1>
+          <h1 className="hh-notfound__title">{t('notFound.hearthTitle')}</h1>
           <p className="hh-notfound__body">
-            The page you’re after may have moved. Let’s get you back to something beautiful.
+            {t('notFound.hearthBody')}
           </p>
           <div className="hh-notfound__actions">
-            <ButtonLink href="/">Back home</ButtonLink>
+            <ButtonLink href="/">{t('notFound.backHome')}</ButtonLink>
             <ButtonLink href="/rooms" variant="outline">
-              Browse rooms
+              {t('hearth.browseRooms')}
             </ButtonLink>
           </div>
         </div>

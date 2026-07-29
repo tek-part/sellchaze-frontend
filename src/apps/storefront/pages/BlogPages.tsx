@@ -8,6 +8,7 @@
  */
 import { useMemo, useState, type ReactElement } from 'react';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import {
   Button,
   ButtonLink,
@@ -51,12 +52,13 @@ function site(): string {
 /* --------------------------------------------------------------------- shared bits */
 
 function ArticleMeta(props: { article: Article; className?: string }): ReactElement {
+  const { t } = useTranslation();
   const { article, className } = props;
   return (
     <p className={className ?? 'sf-article__meta'}>
       <time dateTime={article.published}>{formatArticleDate(article.published)}</time>
       <span aria-hidden> · </span>
-      <span>{article.readingMinutes} min read</span>
+      <span>{t('blog.readingTime', { count: article.readingMinutes })}</span>
       <span aria-hidden> · </span>
       <span>{article.category}</span>
     </p>
@@ -83,14 +85,15 @@ function ArticleCard(props: { article: Article; featured?: boolean }): ReactElem
 }
 
 function NewsletterCta(): ReactElement {
+  const { t } = useTranslation();
   const [email, setEmail] = useState('');
   const { status, message, submitting, subscribe } = useNewsletter();
   const done = status === 'saved' || status === 'subscribed';
 
   return (
     <aside className="sf-blogcta">
-      <h2 className="sf-blogcta__title">Get new writing by email</h2>
-      <p className="sf-blogcta__text">Occasional essays on materials, care and provenance. No offers.</p>
+      <h2 className="sf-blogcta__title">{t('newsletter.title')}</h2>
+      <p className="sf-blogcta__text">{t('blog.newsletterText')}</p>
       {done ? (
         <p className="sf-blogcta__done" role="status">
           {message}
@@ -105,7 +108,7 @@ function NewsletterCta(): ReactElement {
           }}
         >
           <Input
-            label="Email address"
+            label={t('footer.emailLabel')}
             type="email"
             autoComplete="email"
             value={email}
@@ -113,7 +116,7 @@ function NewsletterCta(): ReactElement {
             {...(status === 'invalid' || status === 'error' ? { error: message } : {})}
           />
           <Button type="submit" disabled={submitting}>
-            {submitting ? 'Signing up…' : 'Subscribe'}
+            {submitting ? t('newsletter.subscribing') : t('newsletter.subscribe')}
           </Button>
         </form>
       )}
@@ -124,6 +127,7 @@ function NewsletterCta(): ReactElement {
 /* --------------------------------------------------------------------- index */
 
 export function BlogPage(): ReactElement {
+  const { t } = useTranslation();
   const [params, setParams] = useSearchParams();
   const query = (params.get('q') ?? '').trim();
   const activeCategory = params.get('category') ?? '';
@@ -165,8 +169,8 @@ export function BlogPage(): ReactElement {
 
   // Store's own blog content (editable). When custom posts exist they replace the demo grid.
   const bc = useStoreContent<BlogContent>('blog') ?? {};
-  const blogHeading = bc.heading?.trim() || 'The journal';
-  const blogIntro = bc.intro?.trim() || 'Essays, guides and notes on materials, care and the long life of well-made things.';
+  const blogHeading = bc.heading?.trim() || t('blog.title');
+  const blogIntro = bc.intro?.trim() || t('blog.subtitle');
   const customPosts = (Array.isArray(bc.posts) ? bc.posts : []).filter((p) => (p.title || '').trim());
 
   return (
@@ -210,11 +214,11 @@ export function BlogPage(): ReactElement {
             {visible.length === 0 ? (
               <EmptyState
                 variant="search"
-                title="No articles found"
+                title={t('blog.noArticles')}
                 description={
                   query
-                    ? `Nothing matches “${query}”. Try a different term or clear the filters.`
-                    : 'No articles match these filters yet.'
+                    ? t('blog.noArticlesQuery', { query })
+                    : t('blog.noArticlesFilters')
                 }
                 actions={
                   <Button
@@ -222,7 +226,7 @@ export function BlogPage(): ReactElement {
                       setParams(new URLSearchParams());
                     }}
                   >
-                    Clear filters
+                    {t('blog.clearFilters')}
                   </Button>
                 }
               />
@@ -246,11 +250,11 @@ export function BlogPage(): ReactElement {
             />
           </div>
 
-          <aside className="sf-blog__aside" aria-label="Journal filters">
+          <aside className="sf-blog__aside" aria-label={t('blog.journalFilters')}>
             <div className="sf-blogside">
-              <h2 className="sf-blogside__title">Search</h2>
+              <h2 className="sf-blogside__title">{t('search.title')}</h2>
               <Input
-                label="Search articles"
+                label={t('blog.searchArticles')}
                 type="search"
                 value={query}
                 onChange={(e) => setParam('q', e.target.value)}
@@ -258,7 +262,7 @@ export function BlogPage(): ReactElement {
             </div>
 
             <div className="sf-blogside">
-              <h2 className="sf-blogside__title">Categories</h2>
+              <h2 className="sf-blogside__title">{t('nav.categories')}</h2>
               <ul className="sf-blogside__list">
                 {articleCategories().map((c) => (
                   <li key={c.name}>
@@ -276,7 +280,7 @@ export function BlogPage(): ReactElement {
             </div>
 
             <div className="sf-blogside">
-              <h2 className="sf-blogside__title">Trending</h2>
+              <h2 className="sf-blogside__title">{t('blog.trending')}</h2>
               <ol className="sf-blogside__trending">
                 {trending.map((a, i) => (
                   <li key={a.slug}>
@@ -290,7 +294,7 @@ export function BlogPage(): ReactElement {
             </div>
 
             <div className="sf-blogside">
-              <h2 className="sf-blogside__title">Tags</h2>
+              <h2 className="sf-blogside__title">{t('blog.tags')}</h2>
               <ul className="sf-blogside__tags">
                 {articleTags().map((t) => (
                   <li key={t}>
@@ -358,6 +362,7 @@ function renderBlock(block: ArticleBlock, index: number): ReactElement {
 }
 
 export function BlogDetailPage(): ReactElement {
+  const { t } = useTranslation();
   const { slug = '' } = useParams();
   const { store } = useStore();
   const article = getArticle(slug);
@@ -369,9 +374,9 @@ export function BlogDetailPage(): ReactElement {
         <Container narrow>
           <EmptyState
             variant="search"
-            title="Article not found"
-            description="That article may have moved, or the link may be out of date."
-            actions={<ButtonLink href="/blog">Back to the journal</ButtonLink>}
+            title={t('blog.articleNotFound')}
+            description={t('blog.articleNotFoundHint')}
+            actions={<ButtonLink href="/blog">{t('blog.backToJournal')}</ButtonLink>}
           />
         </Container>
       </Section>
@@ -386,9 +391,9 @@ export function BlogDetailPage(): ReactElement {
   const url = `${site()}/blog/${article.slug}`;
 
   const share = [
-    { label: 'Share on X', href: `https://x.com/intent/post?url=${encodeURIComponent(url)}&text=${encodeURIComponent(article.title)}` },
-    { label: 'Share on Facebook', href: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}` },
-    { label: 'Share by email', href: `mailto:?subject=${encodeURIComponent(article.title)}&body=${encodeURIComponent(url)}` },
+    { label: t('blog.shareOnX'), href: `https://x.com/intent/post?url=${encodeURIComponent(url)}&text=${encodeURIComponent(article.title)}` },
+    { label: t('blog.shareOnFacebook'), href: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}` },
+    { label: t('blog.shareByEmail'), href: `mailto:?subject=${encodeURIComponent(article.title)}&body=${encodeURIComponent(url)}` },
   ];
 
   return (
@@ -420,13 +425,13 @@ export function BlogDetailPage(): ReactElement {
         ]}
       />
       <Container>
-        <nav className="sf-crumbs" aria-label="Breadcrumb">
+        <nav className="sf-crumbs" aria-label={t('misc.breadcrumb')}>
           <ol>
             <li>
-              <Link to="/">Home</Link>
+              <Link to="/">{t('nav.home')}</Link>
             </li>
             <li>
-              <Link to="/blog">Journal</Link>
+              <Link to="/blog">{t('blog.journal')}</Link>
             </li>
             <li aria-current="page">{article.title}</li>
           </ol>
@@ -447,8 +452,8 @@ export function BlogDetailPage(): ReactElement {
           <div className="sf-article__layout">
             <div className="sf-article__aside">
               {headings.length > 1 ? (
-                <nav className="sf-toc" aria-label="On this page">
-                  <h2 className="sf-toc__title">On this page</h2>
+                <nav className="sf-toc" aria-label={t('blog.onThisPage')}>
+                  <h2 className="sf-toc__title">{t('blog.onThisPage')}</h2>
                   <ol>
                     {headings.map(({ block, i }) => (
                       <li key={i}>
@@ -460,7 +465,7 @@ export function BlogDetailPage(): ReactElement {
               ) : null}
 
               <div className="sf-share">
-                <h2 className="sf-share__title">Share</h2>
+                <h2 className="sf-share__title">{t('product.share')}</h2>
                 <ul>
                   {share.map((s) => (
                     <li key={s.label}>
@@ -496,10 +501,10 @@ export function BlogDetailPage(): ReactElement {
             </ul>
           </footer>
 
-          <nav className="sf-prevnext" aria-label="More articles">
+          <nav className="sf-prevnext" aria-label={t('blog.moreArticles')}>
             {prev ? (
               <Link className="sf-prevnext__item" to={`/blog/${prev.slug}`}>
-                <span className="sf-prevnext__label">Previous</span>
+                <span className="sf-prevnext__label">{t('common.previous')}</span>
                 <span className="sf-prevnext__title">{prev.title}</span>
               </Link>
             ) : (
@@ -507,7 +512,7 @@ export function BlogDetailPage(): ReactElement {
             )}
             {next ? (
               <Link className="sf-prevnext__item sf-prevnext__item--next" to={`/blog/${next.slug}`}>
-                <span className="sf-prevnext__label">Next</span>
+                <span className="sf-prevnext__label">{t('common.next')}</span>
                 <span className="sf-prevnext__title">{next.title}</span>
               </Link>
             ) : (
@@ -519,7 +524,7 @@ export function BlogDetailPage(): ReactElement {
         {related.length > 0 ? (
           <section className="sf-related" aria-labelledby="related-heading">
             <h2 id="related-heading" className="sf-related__title">
-              Related reading
+              {t('blog.relatedReading')}
             </h2>
             <div className="sf-blog__grid">
               {related.map((a) => (

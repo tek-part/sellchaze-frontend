@@ -4,6 +4,7 @@
  * shared ProductCardModel. Rouge's own markup + skin — no other theme reused.
  */
 import type { ReactElement } from 'react';
+import { useTranslation } from 'react-i18next';
 import { cn } from '../../../../../shared/utils/cn';
 import type { ProductCardModel } from '../../../types/catalog';
 import { Badge } from './Badge';
@@ -24,6 +25,7 @@ export interface ProductCardProps {
 
 export function ProductCard(props: ProductCardProps): ReactElement {
   const { product, locale, headingLevel: Heading = 'h3', showShades = true, eager = false, className } = props;
+  const { t } = useTranslation();
   const onSale = typeof product.compareAtPrice === 'number' && product.compareAtPrice > product.price;
   const shades = product.colors ?? [];
   return (
@@ -35,11 +37,11 @@ export function ProductCard(props: ProductCardProps): ReactElement {
         ) : null}
         <div className="rge-card__badges">
           {product.badge ? <Badge variant="new">{product.badge}</Badge> : null}
-          {onSale ? <Badge variant="sale">Sale</Badge> : null}
+          {onSale ? <Badge variant="sale">{t('product.sale')}</Badge> : null}
         </div>
         {product.soldOut ? (
           <div className="rge-card__soldout">
-            <Badge variant="outline">Sold out</Badge>
+            <Badge variant="outline">{t('product.soldOut')}</Badge>
           </div>
         ) : null}
       </div>

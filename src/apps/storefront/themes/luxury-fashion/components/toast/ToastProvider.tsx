@@ -12,6 +12,7 @@ import {
   type ReactElement,
   type ReactNode,
 } from 'react';
+import { useTranslation } from 'react-i18next';
 import { prefersReducedMotion } from '../../../../../../shared/env/media';
 import { cn } from '../../../../../../shared/utils/cn';
 import { IconButton } from '../IconButton';
@@ -27,6 +28,7 @@ const EXIT_MS = 340;
 
 function ToastItem(props: { record: ToastRecord; closing: boolean; onDismiss: (id: string) => void }): ReactElement {
   const { record, closing, onDismiss } = props;
+  const { t } = useTranslation();
   const [entered, setEntered] = useState(false);
   const [paused, setPaused] = useState(false);
   const duration = record.duration ?? 4000;
@@ -73,7 +75,7 @@ function ToastItem(props: { record: ToastRecord; closing: boolean; onDismiss: (i
           </button>
         ) : null}
       </div>
-      <IconButton label="Dismiss" onClick={() => onDismiss(record.id)}>
+      <IconButton label={t('misc.dismiss')} onClick={() => onDismiss(record.id)}>
         <IconClose />
       </IconButton>
       <span
@@ -86,6 +88,7 @@ function ToastItem(props: { record: ToastRecord; closing: boolean; onDismiss: (i
 }
 
 export function ToastProvider(props: { children: ReactNode }): ReactElement {
+  const { t } = useTranslation();
   const [toasts, setToasts] = useState<ReadonlyArray<ToastRecord>>([]);
   const [closing, setClosing] = useState<ReadonlySet<string>>(() => new Set());
   const counter = useRef(0);
@@ -127,7 +130,7 @@ export function ToastProvider(props: { children: ReactNode }): ReactElement {
       {props.children}
       {toasts.length > 0 ? (
         <Portal>
-          <div className="sf-toast-viewport" role="region" aria-label="Notifications">
+          <div className="sf-toast-viewport" role="region" aria-label={t('misc.notifications')}>
             {toasts.map((record) => (
               <ToastItem key={record.id} record={record} closing={closing.has(record.id)} onDismiss={dismiss} />
             ))}

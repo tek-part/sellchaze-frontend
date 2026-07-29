@@ -4,6 +4,7 @@
  * updates `active` immediately and reconciles on the server response. See §32.3.
  */
 import type { ReactElement } from 'react';
+import { useTranslation } from 'react-i18next';
 import { cn } from '../../../../../shared/utils/cn';
 import { IconHeart } from './icons';
 import { Spinner } from './Spinner';
@@ -19,7 +20,8 @@ export interface WishlistButtonProps {
 
 export function WishlistButton(props: WishlistButtonProps): ReactElement {
   const { active, onToggle, loading = false, labelledText, className } = props;
-  const label = active ? 'Remove from wishlist' : 'Add to wishlist';
+  const { t } = useTranslation();
+  const label = active ? t('product.removeFromWishlist') : t('product.addToWishlist');
   return (
     <button
       type="button"

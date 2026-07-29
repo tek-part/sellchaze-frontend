@@ -4,6 +4,7 @@
  * Ticks once a second (no flashing). See §32.3.
  */
 import { Fragment, useEffect, useRef, useState, type ReactElement } from 'react';
+import { useTranslation } from 'react-i18next';
 import { cn } from '../../../../../shared/utils/cn';
 
 export interface CountdownProps {
@@ -27,6 +28,7 @@ function pad(n: number): string {
 
 export function Countdown(props: CountdownProps): ReactElement | null {
   const { endsAt, onExpire, endingSoonMs = 3_600_000, className } = props;
+  const { t } = useTranslation();
   const target = toEpoch(endsAt);
   const [remaining, setRemaining] = useState(() => Math.max(0, target - Date.now()));
   const expiredFired = useRef(false);
@@ -54,17 +56,19 @@ export function Countdown(props: CountdownProps): ReactElement | null {
   const seconds = totalSec % 60;
 
   const units: Array<{ label: string; value: number }> = [
-    ...(days > 0 ? [{ label: 'Days', value: days }] : []),
-    { label: 'Hrs', value: hours },
-    { label: 'Min', value: minutes },
-    { label: 'Sec', value: seconds },
+    ...(days > 0 ? [{ label: t('misc.unitDays'), value: days }] : []),
+    { label: t('misc.unitHrs'), value: hours },
+    { label: t('misc.unitMin'), value: minutes },
+    { label: t('misc.unitSec'), value: seconds },
   ];
 
   return (
     <div
       className={cn('sf-countdown', remaining <= endingSoonMs && 'sf-countdown--ending', className)}
       role="timer"
-      aria-label={`${days ? `${days} days ` : ''}${hours} hours ${minutes} minutes ${seconds} seconds remaining`}
+      aria-label={days
+        ? t('misc.countdownRemaining', { days, hours, minutes, seconds })
+        : t('misc.countdownRemainingNoDays', { hours, minutes, seconds })}
     >
       {units.map((unit, i) => (
         <Fragment key={unit.label}>

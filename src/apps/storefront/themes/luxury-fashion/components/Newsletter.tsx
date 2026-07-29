@@ -3,6 +3,7 @@
  * confirmation, never a popup celebration. `inline` (footer row) / `banded` (centred section). §32.3.
  */
 import { useState, type FormEvent, type ReactElement, type ReactNode } from 'react';
+import { useTranslation } from 'react-i18next';
 import { cn } from '../../../../../shared/utils/cn';
 import { Button } from './Button';
 import { Eyebrow, Heading, Text } from './Typography';
@@ -25,6 +26,7 @@ export interface NewsletterProps {
 }
 
 export function Newsletter(props: NewsletterProps): ReactElement {
+  const { t } = useTranslation();
   const {
     onSubmit,
     status = 'idle',
@@ -32,10 +34,10 @@ export function Newsletter(props: NewsletterProps): ReactElement {
     title,
     text,
     variant = 'inline',
-    placeholder = 'Email address',
-    buttonLabel = 'Subscribe',
-    successMessage = 'Thank you — please check your inbox to confirm.',
-    errorMessage = 'Something went wrong. Please try again.',
+    placeholder = t('footer.emailLabel'),
+    buttonLabel = t('newsletter.subscribe'),
+    successMessage = t('newsletter.confirmInbox'),
+    errorMessage = t('auth.genericError'),
     className,
   } = props;
 

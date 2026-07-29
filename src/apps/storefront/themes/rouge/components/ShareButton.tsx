@@ -3,6 +3,7 @@
  * the caller can raise a toast. Rendered as a tertiary link button.
  */
 import { type ReactElement } from 'react';
+import { useTranslation } from 'react-i18next';
 import { IconShare } from './icons';
 
 export type ShareResult = 'shared' | 'copied' | 'error';
@@ -16,7 +17,8 @@ export interface ShareButtonProps {
 }
 
 export function ShareButton(props: ShareButtonProps): ReactElement {
-  const { url, title, label = 'Share', onResult, className } = props;
+  const { t } = useTranslation();
+  const { url, title, label = t('product.share'), onResult, className } = props;
 
   const onClick = async (): Promise<void> => {
     const nav = typeof navigator !== 'undefined' ? navigator : undefined;

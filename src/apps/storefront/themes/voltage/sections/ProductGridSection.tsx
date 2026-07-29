@@ -10,6 +10,7 @@
  * All behaviour is `shared-ui`; everything below is Voltage's own carbon-and-cyan markup.
  */
 import { useState, type CSSProperties, type ReactElement } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { SectionRenderProps } from '../../../theme-engine/rendering';
 import { Container } from '../components/Container';
 import { Section } from '../components/Section';
@@ -38,6 +39,7 @@ function gridStyle(columns: number): CSSProperties {
 }
 
 export function ProductGridSection(props: SectionRenderProps): ReactElement | null {
+  const { t } = useTranslation();
   const { settings, context } = props;
   const title = text(settings, 'title');
   const source = option(settings, 'source', SOURCES, 'featured');
@@ -68,7 +70,7 @@ export function ProductGridSection(props: SectionRenderProps): ReactElement | nu
       <Section>
         <Container>
           {title ? <SectionHead title={title} className="vlt-section__head-wrap" /> : null}
-          <ErrorState ns="vlt" title="Couldn’t load products" description={errorMessage(context)} />
+          <ErrorState ns="vlt" title={t('states.loadFailed')} description={errorMessage(context)} />
         </Container>
       </Section>
     );
@@ -80,7 +82,7 @@ export function ProductGridSection(props: SectionRenderProps): ReactElement | nu
       <Section>
         <Container>
           <SectionHead title={title} className="vlt-section__head-wrap" />
-          <EmptyState ns="vlt" title="Nothing here yet" description="New stock is on the way — check back shortly." />
+          <EmptyState ns="vlt" title={t('shop.nothingYet')} description={t('shop.nothingYetHint')} />
         </Container>
       </Section>
     );
@@ -106,7 +108,7 @@ export function ProductGridSection(props: SectionRenderProps): ReactElement | nu
           {sortable ? (
             <div className="vlt-grid-toolbar">
               <span className="vlt-grid-toolbar__count vlt-num">
-                {all.length} product{all.length === 1 ? '' : 's'}
+                {t('shop.productCount', { count: all.length })}
               </span>
               <SortSelect ns="vlt" id="vlt-block-sort" value={blockSort} onChange={setBlockSort} />
             </div>
@@ -125,7 +127,7 @@ export function ProductGridSection(props: SectionRenderProps): ReactElement | nu
 
         <div className="vlt-shop">
           {/* Desktop sidebar. On small screens the same panel is reused inside a drawer. */}
-          <aside className="vlt-shop__aside" aria-label="Product filters">
+          <aside className="vlt-shop__aside" aria-label={t('shop.productFilters')}>
             <FilterPanel
               ns="vlt"
               facets={controls.facets}
@@ -143,24 +145,24 @@ export function ProductGridSection(props: SectionRenderProps): ReactElement | nu
                 aria-expanded={drawerOpen}
                 onClick={() => setDrawerOpen(true)}
               >
-                Filters{filterCount > 0 ? ` (${filterCount})` : ''}
+                {filterCount > 0 ? t('shop.filtersWithCount', { count: filterCount }) : t('shop.filters')}
               </button>
 
               <p className="vlt-shop__count vlt-num" aria-live="polite">
                 {loading
-                  ? 'Loading…'
-                  : `${totalMatched} of ${controls.totalCount} product${controls.totalCount === 1 ? '' : 's'}`}
+                  ? t('common.loading')
+                  : t('shop.resultCount', { shown: totalMatched, total: controls.totalCount })}
               </p>
 
               <div className="vlt-shop__controls">
-                <div className="vlt-viewswitch" role="group" aria-label="View mode">
+                <div className="vlt-viewswitch" role="group" aria-label={t('shop.viewMode')}>
                   <button
                     type="button"
                     className="vlt-viewswitch__btn"
                     aria-pressed={controls.view === 'grid'}
                     onClick={() => controls.setView('grid')}
                   >
-                    Grid
+                    {t('shop.grid')}
                   </button>
                   <button
                     type="button"
@@ -168,7 +170,7 @@ export function ProductGridSection(props: SectionRenderProps): ReactElement | nu
                     aria-pressed={controls.view === 'list'}
                     onClick={() => controls.setView('list')}
                   >
-                    List
+                    {t('shop.list')}
                   </button>
                 </div>
                 <SortSelect ns="vlt" id="vlt-plp-sort" value={controls.sort} onChange={controls.setSort} />
@@ -187,11 +189,11 @@ export function ProductGridSection(props: SectionRenderProps): ReactElement | nu
             {!loading && totalMatched === 0 ? (
               <EmptyState
                 ns="vlt"
-                title="No products match those filters"
-                description="Try widening the price range or clearing a filter."
+                title={t('shop.noMatches')}
+                description={t('shop.noMatchesHint')}
                 actions={
                   <button type="button" className="vlt-btn vlt-btn--primary vlt-btn--md" onClick={controls.clearFilters}>
-                    Clear all filters
+                    {t('shop.clearAllFilters')}
                   </button>
                 }
               />
@@ -214,18 +216,18 @@ export function ProductGridSection(props: SectionRenderProps): ReactElement | nu
 
       {/* Mobile filter drawer — the same panel, so the two can never drift apart. */}
       {drawerOpen ? (
-        <div className="vlt-filterdrawer" role="dialog" aria-modal="true" aria-label="Filters">
+        <div className="vlt-filterdrawer" role="dialog" aria-modal="true" aria-label={t('shop.filters')}>
           <div className="vlt-filterdrawer__scrim" onClick={() => setDrawerOpen(false)} aria-hidden />
           <div className="vlt-filterdrawer__panel">
             <div className="vlt-filterdrawer__head">
-              <h2 className="vlt-filterdrawer__title">Filters</h2>
+              <h2 className="vlt-filterdrawer__title">{t('shop.filters')}</h2>
               <button
                 type="button"
                 className="vlt-filterdrawer__close"
                 onClick={() => setDrawerOpen(false)}
                 autoFocus
               >
-                Close
+                {t('common.close')}
               </button>
             </div>
             <div className="vlt-filterdrawer__body">
@@ -239,14 +241,14 @@ export function ProductGridSection(props: SectionRenderProps): ReactElement | nu
             </div>
             <div className="vlt-filterdrawer__foot">
               <button type="button" className="vlt-btn vlt-btn--ghost vlt-btn--md" onClick={controls.clearFilters}>
-                Clear all
+                {t('shop.clearAll')}
               </button>
               <button
                 type="button"
                 className="vlt-btn vlt-btn--primary vlt-btn--md"
                 onClick={() => setDrawerOpen(false)}
               >
-                Show {totalMatched} result{totalMatched === 1 ? '' : 's'}
+                {t('shop.showResults', { count: totalMatched })}
               </button>
             </div>
           </div>

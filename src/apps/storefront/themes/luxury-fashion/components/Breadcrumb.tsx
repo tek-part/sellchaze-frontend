@@ -3,6 +3,7 @@
  * plain --text, not a link. Renders nothing rather than faking a trail when there's no data. §32.6.
  */
 import type { ReactElement, ReactNode } from 'react';
+import { useTranslation } from 'react-i18next';
 import { cn } from '../../../../../shared/utils/cn';
 import { IconChevronRight } from './icons';
 
@@ -19,10 +20,11 @@ export interface BreadcrumbProps {
 
 export function Breadcrumb(props: BreadcrumbProps): ReactElement | null {
   const { items, separator, className } = props;
+  const { t } = useTranslation();
   if (items.length === 0) return null;
 
   return (
-    <nav aria-label="Breadcrumb" className={className}>
+    <nav aria-label={t('misc.breadcrumb')} className={className}>
       <ol className={cn('sf-breadcrumb')}>
         {items.map((crumb, i) => {
           const last = i === items.length - 1;

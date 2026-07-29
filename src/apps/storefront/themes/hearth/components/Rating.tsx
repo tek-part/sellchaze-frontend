@@ -4,6 +4,7 @@
  * fabricates a score.
  */
 import type { ReactElement } from 'react';
+import { useTranslation } from 'react-i18next';
 import { cn } from '../../../../../shared/utils/cn';
 
 export interface RatingProps {
@@ -18,8 +19,12 @@ const STARS = [1, 2, 3, 4, 5] as const;
 
 export function Rating(props: RatingProps): ReactElement | null {
   const { value, count, compact = false, className } = props;
+  const { t } = useTranslation();
   if (typeof value !== 'number' || value <= 0) return null;
   const rounded = Math.round(value * 10) / 10;
+  const ratedLabel = typeof count === 'number'
+    ? t('product.ratedOutOfMaxCount', { rating: rounded, max: 5, count })
+    : t('product.ratedOutOfMax', { rating: rounded, max: 5 });
 
   if (compact) {
     return (
@@ -29,9 +34,7 @@ export function Rating(props: RatingProps): ReactElement | null {
         </span>
         <span className="hh-rating__value">{rounded.toFixed(1)}</span>
         {typeof count === 'number' ? <span className="hh-rating__count">({count})</span> : null}
-        <span className="hh-visually-hidden">
-          Rated {rounded} out of 5{typeof count === 'number' ? `, ${count} reviews` : ''}
-        </span>
+        <span className="hh-visually-hidden">{ratedLabel}</span>
       </span>
     );
   }
@@ -40,7 +43,7 @@ export function Rating(props: RatingProps): ReactElement | null {
     <span
       className={cn('hh-rating', className)}
       role="img"
-      aria-label={`Rated ${rounded} out of 5${typeof count === 'number' ? `, ${count} reviews` : ''}`}
+      aria-label={ratedLabel}
     >
       <span className="hh-rating__stars" aria-hidden>
         {STARS.map((s) => (

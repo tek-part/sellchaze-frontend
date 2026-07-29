@@ -5,6 +5,7 @@
  * so it stays data-driven and theme-agnostic in wiring. §32.8.
  */
 import { useState, type ReactElement } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { LayoutRenderProps } from '../../../theme-engine/rendering';
 import type { FooterGroup, NavItem } from '../../../types/navigation';
 import { CartProvider } from '../../../state/cart';
@@ -23,6 +24,7 @@ interface LayoutData {
 }
 
 export function DefaultLayout(props: LayoutRenderProps): ReactElement {
+  const { t } = useTranslation();
   const { context, children } = props;
   const nav = (context.navigation.header as ReadonlyArray<NavItem>) ?? [];
   const footerGroups = (context.navigation.footer as ReadonlyArray<FooterGroup>) ?? [];
@@ -84,7 +86,7 @@ export function DefaultLayout(props: LayoutRenderProps): ReactElement {
           query={query}
           onQueryChange={setQuery}
           onSubmit={submitSearch}
-          placeholder="Search for pieces, categories…"
+          placeholder={t('search.placeholderPieces')}
         />
       </CartProvider>
     </ToastProvider>

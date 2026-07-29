@@ -3,6 +3,7 @@
  * URL per line), columns. Square media grid linking to the profile. Self-hides with no images. §08.
  */
 import type { CSSProperties, ReactElement } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { SectionRenderProps } from '../../../theme-engine/rendering';
 import { StoreImage } from '../components/Image';
 import { SectionShell } from './SectionShell';
@@ -10,10 +11,11 @@ import { lines, range, text } from './section-settings';
 import { ugcFrom } from '../../../content/home-data';
 
 export function InstagramSection(props: SectionRenderProps): ReactElement | null {
+  const { t } = useTranslation();
   const { settings, context } = props;
   const ugc = ugcFrom(context);
   const handle = ugc.handle ?? text(settings, 'handle');
-  const title = text(settings, 'title', handle ? `@${handle.replace(/^@/, '')}` : 'Follow us');
+  const title = text(settings, 'title', handle ? `@${handle.replace(/^@/, '')}` : t('social.followUs'));
   const columns = range(settings, 'columns', 4, 2, 6);
   const images = ugc.images.length ? ugc.images.map((u) => u.image) : lines(settings, 'images');
   if (images.length === 0) return null;
@@ -27,11 +29,11 @@ export function InstagramSection(props: SectionRenderProps): ReactElement | null
   } as CSSProperties;
 
   return (
-    <SectionShell title={title} align="center" {...(href ? { viewAllHref: href, viewAllLabel: 'Follow' } : {})}>
+    <SectionShell title={title} align="center" {...(href ? { viewAllHref: href, viewAllLabel: t('social.follow') } : {})}>
       <div className="sf-grid" style={style}>
         {images.map((src, i) =>
           href ? (
-            <a key={i} className="sf-ugc-tile" href={href} target="_blank" rel="noreferrer noopener" aria-label="View on Instagram">
+            <a key={i} className="sf-ugc-tile" href={href} target="_blank" rel="noreferrer noopener" aria-label={t('social.viewOnInstagram')}>
               <StoreImage className="sf-ugc-tile__img" src={src} alt="" />
             </a>
           ) : (

@@ -5,6 +5,7 @@
  * gallery_layout. §08 product-details.
  */
 import { useMemo, useState, type ReactElement } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { SectionRenderProps } from '../../../theme-engine/rendering';
 import { Container } from '../components/Container';
 import { ProductGallery } from '../components/ProductGallery';
@@ -24,6 +25,7 @@ import { productDetailOf, reviewsFor } from './section-data';
 import { flag } from './section-settings';
 
 export function ProductDetailsSection(props: SectionRenderProps): ReactElement | null {
+  const { t } = useTranslation();
   const { settings, context } = props;
   const product = productDetailOf(context);
   const cart = useCart();
@@ -61,12 +63,12 @@ export function ProductDetailsSection(props: SectionRenderProps): ReactElement |
       quantity: qty,
       ...(activeVariant ? { attributes: activeVariant.label } : {}),
     });
-    toast.toast({ message: `${product.title} added to your bag`, variant: 'success' });
+    toast.toast({ message: t('pdp.addedToBag', { title: product.title }), variant: 'success' });
   };
 
   const tabs = [
-    { id: 'description', label: 'Description' },
-    { id: 'shipping', label: 'Shipping & returns' },
+    { id: 'description', label: t('pdp.tabDescription') },
+    { id: 'shipping', label: t('pdp.tabShipping') },
   ];
 
   return (
@@ -84,11 +86,11 @@ export function ProductDetailsSection(props: SectionRenderProps): ReactElement |
               {typeof product.rating === 'number' ? <Rating value={product.rating} {...(product.reviewCount ? { count: product.reviewCount } : {})} /> : null}
             </div>
 
-            {showSku && product.sku ? <span className="sf-pdp__vendor">SKU {product.sku}</span> : null}
+            {showSku && product.sku ? <span className="sf-pdp__vendor">{t('pdp.skuLabel', { sku: product.sku })}</span> : null}
 
             {product.variants && product.variants.length > 0 ? (
               <Select
-                label="Variant"
+                label={t('pdp.variant')}
                 value={variantId ?? ''}
                 onChange={(e) => setVariantId(e.target.value)}
                 options={product.variants.map((v) => ({ value: v.id, label: v.label, disabled: !v.available }))}
@@ -96,21 +98,21 @@ export function ProductDetailsSection(props: SectionRenderProps): ReactElement |
             ) : null}
 
             <div className="sf-pdp__row">
-              <QuantityStepper value={qty} onChange={setQty} label={`Quantity for ${product.title}`} />
+              <QuantityStepper value={qty} onChange={setQty} label={t('pdp.quantityFor', { title: product.title })} />
               <Button className="sf-pdp__add" onClick={addToCart} disabled={outOfStock}>
-                {outOfStock ? 'Sold out' : 'Add to bag'}
+                {outOfStock ? t('product.soldOut') : t('product.addToCart')}
               </Button>
             </div>
 
-            {product.lowStock && !outOfStock ? <span className="sf-pdp__stock sf-pdp__stock--low">Low stock — order soon</span> : null}
+            {product.lowStock && !outOfStock ? <span className="sf-pdp__stock sf-pdp__stock--low">{t('pdp.lowStockSoon')}</span> : null}
 
             <div className="sf-pdp__actions">
-              <WishlistButton active={wishlist.has(product.id)} onToggle={() => wishlist.toggle(product.id)} labelledText="Save" />
+              <WishlistButton active={wishlist.has(product.id)} onToggle={() => wishlist.toggle(product.id)} labelledText={t('pdp.save')} />
               {showShare ? (
                 <ShareButton
                   url={typeof window !== 'undefined' ? window.location.href : product.url}
                   title={product.title}
-                  onResult={(r) => r === 'copied' && toast.toast({ message: 'Link copied' })}
+                  onResult={(r) => r === 'copied' && toast.toast({ message: t('pdp.linkCopied') })}
                 />
               ) : null}
             </div>
@@ -120,7 +122,7 @@ export function ProductDetailsSection(props: SectionRenderProps): ReactElement |
                 <div className="sf-prose" dangerouslySetInnerHTML={{ __html: product.descriptionHtml ?? '' }} />
               ) : (
                 <p className="sf-pdp__desc">
-                  Complimentary shipping on orders over $200. Returns accepted within 14 days on unworn pieces.
+                  {t('pdp.luxuryShipping')}
                 </p>
               )
             } />

@@ -3,6 +3,7 @@
  * select; disabled when the set is full. See §32.3.
  */
 import type { ReactElement } from 'react';
+import { useTranslation } from 'react-i18next';
 import { cn } from '../../../../../shared/utils/cn';
 import { IconCompare } from './icons';
 
@@ -17,7 +18,8 @@ export interface CompareButtonProps {
 
 export function CompareButton(props: CompareButtonProps): ReactElement {
   const { active, onToggle, disabled = false, labelledText, className } = props;
-  const label = active ? 'Remove from compare' : 'Add to compare';
+  const { t } = useTranslation();
+  const label = active ? t('product.removeFromCompare') : t('product.addToCompare');
   return (
     <button
       type="button"

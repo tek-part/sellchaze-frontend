@@ -4,6 +4,7 @@
  * Reads context.data.product (shared ProductDetailModel). Voltage's own component — no Theme 01 reuse.
  */
 import { useMemo, useState, type ReactElement } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { SectionRenderProps } from '../../../theme-engine/rendering';
 import { Container } from '../components/Container';
 import { Section } from '../components/Section';
@@ -23,6 +24,7 @@ import { productDetailOf, reviewsFor } from './section-data';
 import { flag } from './section-settings';
 
 export function ProductDetailsSection(props: SectionRenderProps): ReactElement | null {
+  const { t } = useTranslation();
   const { settings, context } = props;
   const product = productDetailOf(context);
   const reviews = reviewsFor(context);
@@ -59,10 +61,10 @@ export function ProductDetailsSection(props: SectionRenderProps): ReactElement |
 
   const hasShipping = Boolean(product.shippingReturns || product.careInstructions);
   const tabs = [
-    { id: 'overview', label: 'Overview' },
-    { id: 'specs', label: 'Specs' },
-    ...(hasShipping ? [{ id: 'shipping', label: 'Shipping & returns' }] : []),
-    ...(reviews.length > 0 ? [{ id: 'reviews', label: `Reviews (${reviews.length})` }] : []),
+    { id: 'overview', label: t('pdp.tabOverview') },
+    { id: 'specs', label: t('pdp.tabSpecs') },
+    ...(hasShipping ? [{ id: 'shipping', label: t('pdp.tabShipping') }] : []),
+    ...(reviews.length > 0 ? [{ id: 'reviews', label: t('pdp.tabReviews', { count: reviews.length }) }] : []),
   ];
 
   return (
@@ -77,11 +79,11 @@ export function ProductDetailsSection(props: SectionRenderProps): ReactElement |
               <Price amount={unitPrice} {...(product.compareAtPrice ? { compareAt: product.compareAtPrice } : {})} currency={product.currency} />
               {typeof product.rating === 'number' ? <Rating value={product.rating} {...(product.reviewCount ? { count: product.reviewCount } : {})} /> : null}
             </div>
-            {showSku && product.sku ? <span className="vlt-pdp__vendor">SKU {product.sku}</span> : null}
+            {showSku && product.sku ? <span className="vlt-pdp__vendor">{t('pdp.skuLabel', { sku: product.sku })}</span> : null}
 
             {product.variants && product.variants.length > 0 ? (
               <Select
-                label="Configuration"
+                label={t('pdp.configuration')}
                 value={variantId ?? ''}
                 onChange={(e) => setVariantId(e.target.value)}
                 options={product.variants.map((v) => ({ value: v.id, label: v.label, disabled: !v.available }))}
@@ -89,9 +91,9 @@ export function ProductDetailsSection(props: SectionRenderProps): ReactElement |
             ) : null}
 
             <div className="vlt-pdp__row">
-              <QuantityStepper value={qty} onChange={setQty} label={`Quantity for ${product.title}`} />
+              <QuantityStepper value={qty} onChange={setQty} label={t('pdp.quantityFor', { title: product.title })} />
               <Button className="vlt-pdp__add" onClick={addToCart} disabled={outOfStock}>
-                {outOfStock ? 'Sold out' : 'Add to cart'}
+                {outOfStock ? t('product.soldOut') : t('product.addToCart')}
               </Button>
               <div className="vlt-pdp__actions">
                 <WishlistButton active={wishlist.has(product.id)} onToggle={() => wishlist.toggle(product.id)} />
@@ -99,7 +101,7 @@ export function ProductDetailsSection(props: SectionRenderProps): ReactElement |
             </div>
 
             <span className={outOfStock ? 'vlt-pdp__stock vlt-pdp__stock--out' : 'vlt-pdp__stock'} style={{ color: outOfStock ? undefined : 'var(--success)' }}>
-              {outOfStock ? '// Out of stock' : '// In stock — ships in 24h'}
+              {outOfStock ? t('pdp.eyebrowOutOfStock') : t('pdp.eyebrowInStock')}
             </span>
 
             {showShare ? <ShareButtons title={product.title} url={product.url} /> : null}
@@ -107,7 +109,7 @@ export function ProductDetailsSection(props: SectionRenderProps): ReactElement |
             <Tabs tabs={tabs} value={tab} onChange={setTab} renderPanel={(id) =>
               id === 'overview' ? (
                 <div>
-                  <div className="vlt-pdp__desc" dangerouslySetInnerHTML={{ __html: product.descriptionHtml ?? '<p>No description available.</p>' }} />
+                  <div className="vlt-pdp__desc" dangerouslySetInnerHTML={{ __html: product.descriptionHtml ?? `<p>${t('pdp.noDescription')}</p>` }} />
                   {product.highlights && product.highlights.length > 0 ? (
                     <ul className="vlt-pdp__highlights">
                       {product.highlights.map((h, i) => (<li key={i}>{h}</li>))}
@@ -121,23 +123,23 @@ export function ProductDetailsSection(props: SectionRenderProps): ReactElement |
                   {product.shippingReturns ? <p style={{ whiteSpace: 'pre-line' }}>{product.shippingReturns}</p> : null}
                   {product.careInstructions ? (
                     <>
-                      <h4 className="vlt-pdp__spec-k" style={{ marginTop: '1rem' }}>Care</h4>
+                      <h4 className="vlt-pdp__spec-k" style={{ marginTop: '1rem' }}>{t('pdp.care')}</h4>
                       <p style={{ whiteSpace: 'pre-line' }}>{product.careInstructions}</p>
                     </>
                   ) : null}
                 </div>
               ) : (
                 <dl className="vlt-pdp__specs">
-                  {product.sku ? (<><dt className="vlt-pdp__spec-k">SKU</dt><dd className="vlt-pdp__spec-v">{product.sku}</dd></>) : null}
-                  {product.vendor ? (<><dt className="vlt-pdp__spec-k">Brand</dt><dd className="vlt-pdp__spec-v">{product.vendor}</dd></>) : null}
+                  {product.sku ? (<><dt className="vlt-pdp__spec-k">{t('pdp.sku')}</dt><dd className="vlt-pdp__spec-v">{product.sku}</dd></>) : null}
+                  {product.vendor ? (<><dt className="vlt-pdp__spec-k">{t('shop.brand')}</dt><dd className="vlt-pdp__spec-v">{product.vendor}</dd></>) : null}
                   {(product.specs ?? []).map((s, i) => (
                     <div key={i} style={{ display: 'contents' }}>
                       <dt className="vlt-pdp__spec-k">{s.label}</dt><dd className="vlt-pdp__spec-v">{s.value}</dd>
                     </div>
                   ))}
-                  <dt className="vlt-pdp__spec-k">Price</dt><dd className="vlt-pdp__spec-v">{unitPrice.toFixed(2)} {product.currency}</dd>
-                  <dt className="vlt-pdp__spec-k">Availability</dt><dd className="vlt-pdp__spec-v">{outOfStock ? 'Out of stock' : 'In stock'}</dd>
-                  {activeVariant ? (<><dt className="vlt-pdp__spec-k">Config</dt><dd className="vlt-pdp__spec-v">{activeVariant.label}</dd></>) : null}
+                  <dt className="vlt-pdp__spec-k">{t('shop.price')}</dt><dd className="vlt-pdp__spec-v">{unitPrice.toFixed(2)} {product.currency}</dd>
+                  <dt className="vlt-pdp__spec-k">{t('shop.availability')}</dt><dd className="vlt-pdp__spec-v">{outOfStock ? t('pdp.outOfStock') : t('product.inStock')}</dd>
+                  {activeVariant ? (<><dt className="vlt-pdp__spec-k">{t('pdp.config')}</dt><dd className="vlt-pdp__spec-v">{activeVariant.label}</dd></>) : null}
                 </dl>
               )
             } />

@@ -4,6 +4,7 @@
  * mobile. Self-heals when images are missing (monogram fallback). See §32.7.
  */
 import { useRef, useState, type KeyboardEvent, type ReactElement } from 'react';
+import { useTranslation } from 'react-i18next';
 import { cn } from '../../../../../shared/utils/cn';
 import type { ProductImage } from '../../../types/catalog';
 import { ImageZoom } from './ImageZoom';
@@ -18,6 +19,7 @@ export interface ProductGalleryProps {
 
 export function ProductGallery(props: ProductGalleryProps): ReactElement {
   const { images, title, enableZoom = true, className } = props;
+  const { t } = useTranslation();
   const [active, setActive] = useState(0);
   const thumbsRef = useRef<HTMLDivElement>(null);
 
@@ -38,14 +40,14 @@ export function ProductGallery(props: ProductGalleryProps): ReactElement {
   return (
     <div className={cn('sf-gallery', !hasThumbs && 'sf-gallery--single', className)}>
       {hasThumbs ? (
-        <div ref={thumbsRef} className="sf-gallery__thumbs" role="tablist" aria-label={`${title} images`} onKeyDown={onThumbKeyDown}>
+        <div ref={thumbsRef} className="sf-gallery__thumbs" role="tablist" aria-label={t('product.imagesOf', { title })} onKeyDown={onThumbKeyDown}>
           {images.map((image, i) => (
             <button
               key={i}
               type="button"
               role="tab"
               aria-current={i === active}
-              aria-label={`View image ${i + 1}`}
+              aria-label={t('product.viewImage', { n: i + 1 })}
               tabIndex={i === active ? 0 : -1}
               className="sf-gallery__thumb"
               onClick={() => setActive(i)}

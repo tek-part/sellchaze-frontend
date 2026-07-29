@@ -4,6 +4,7 @@
  * value. See §32.2.
  */
 import { useId, type ReactElement, type ReactNode } from 'react';
+import { useTranslation } from 'react-i18next';
 import { cn } from '../../../../../shared/utils/cn';
 
 export interface QuantityStepperProps {
@@ -28,6 +29,7 @@ function clamp(n: number, min: number, max: number): number {
 }
 
 export function QuantityStepper(props: QuantityStepperProps): ReactElement {
+  const { t } = useTranslation();
   const {
     value,
     onChange,
@@ -36,9 +38,9 @@ export function QuantityStepper(props: QuantityStepperProps): ReactElement {
     step = 1,
     disabled = false,
     compact = false,
-    label = 'Quantity',
-    decrementLabel = 'Decrease quantity',
-    incrementLabel = 'Increase quantity',
+    label = t('product.quantity'),
+    decrementLabel = t('product.decreaseQuantity'),
+    incrementLabel = t('product.increaseQuantity'),
     id,
     className,
   } = props;

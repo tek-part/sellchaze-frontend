@@ -4,6 +4,7 @@
  * nothing when closed (unmounts content). Voltage's own chrome — no Theme 01 reuse.
  */
 import { useRef, type ReactElement, type ReactNode } from 'react';
+import { useTranslation } from 'react-i18next';
 import { cn } from '../../../../../shared/utils/cn';
 import { IconButton } from './IconButton';
 import { IconClose } from './icons';
@@ -25,6 +26,7 @@ export interface DrawerProps {
 
 export function Drawer(props: DrawerProps): ReactElement | null {
   const { open, onClose, side = 'right', title, hideTitle = false, children, footer, className } = props;
+  const { t } = useTranslation();
   const panelRef = useRef<HTMLDivElement>(null);
   useOverlay(open, panelRef, onClose);
   if (!open) return null;
@@ -43,7 +45,7 @@ export function Drawer(props: DrawerProps): ReactElement | null {
       >
         <header className="vlt-drawer__head">
           <h2 id={titleId} className={hideTitle ? 'vlt-visually-hidden' : 'vlt-drawer__title'}>{title}</h2>
-          <IconButton label="Close" onClick={onClose} className="vlt-drawer__close"><IconClose /></IconButton>
+          <IconButton label={t('common.close')} onClick={onClose} className="vlt-drawer__close"><IconClose /></IconButton>
         </header>
         <div className="vlt-drawer__body">{children}</div>
         {footer ? <footer className="vlt-drawer__foot">{footer}</footer> : null}

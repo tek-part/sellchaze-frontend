@@ -4,6 +4,7 @@
  * is reserved for genuine urgency, applied by the caller. See §32.4.
  */
 import { useState, type ReactElement, type ReactNode } from 'react';
+import { useTranslation } from 'react-i18next';
 import { cn } from '../../../../../shared/utils/cn';
 import { Button } from './Button';
 import { LinkButton } from './LinkButton';
@@ -20,7 +21,8 @@ export interface PromoCardProps {
 }
 
 export function PromoCard(props: PromoCardProps): ReactElement {
-  const { title, text, code, onCopied, ctaHref, ctaLabel = 'Shop now', className } = props;
+  const { t } = useTranslation();
+  const { title, text, code, onCopied, ctaHref, ctaLabel = t('misc.shopNow'), className } = props;
   const [copied, setCopied] = useState(false);
 
   const copy = async (): Promise<void> => {
@@ -43,7 +45,7 @@ export function PromoCard(props: PromoCardProps): ReactElement {
         <div className="sf-promo__code">
           <span className="sf-promo__code-value">{code}</span>
           <Button size="sm" variant="secondary" onClick={() => void copy()}>
-            {copied ? 'Copied' : 'Copy'}
+            {copied ? t('product.copied') : t('product.copy')}
           </Button>
         </div>
       ) : null}

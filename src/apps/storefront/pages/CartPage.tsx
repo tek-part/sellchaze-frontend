@@ -3,6 +3,7 @@
  * Reads/writes the shared cart store; empty state when there's nothing in the bag.
  */
 import type { ReactElement } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   ButtonLink,
   Container,
@@ -31,6 +32,7 @@ function lineToProduct(line: CartLine): ProductCardModel {
 }
 
 export function CartPage(): ReactElement {
+  const { t } = useTranslation();
   const cart = useCart();
   const { store } = useStore();
   const tpl = useTemplate('cart');
@@ -43,9 +45,9 @@ export function CartPage(): ReactElement {
         <Container>
           <EmptyState
             variant="cart"
-            title="Your bag is empty"
-            description="Discover the new season — pieces made to last."
-            actions={<ButtonLink href="/collections/new-in">Shop new in</ButtonLink>}
+            title={t('cart.empty')}
+            description={t('cart.emptyBrowseHint')}
+            actions={<ButtonLink href="/collections/new-in">{t('cart.shopNewIn')}</ButtonLink>}
           />
         </Container>
       </Section>
@@ -56,7 +58,7 @@ export function CartPage(): ReactElement {
     <Section>
       <Container>
         <div className="sf-page-head">
-          <h1 className="sf-page-head__title">Your bag</h1>
+          <h1 className="sf-page-head__title">{t('cart.title')}</h1>
         </div>
         <div className="sf-cart-page">
           <div className="sf-cart-page__lines">
@@ -75,21 +77,21 @@ export function CartPage(): ReactElement {
           </div>
           <aside className="sf-cart-summary">
             <div className="sf-cart-summary__row">
-              <span>Subtotal</span>
+              <span>{t('cart.subtotal')}</span>
               <span>{formatMoney(cart.totals.subtotal, cart.totals.currency || store.currency)}</span>
             </div>
             <div className="sf-cart-summary__row">
-              <span>Shipping</span>
-              <span>Calculated at checkout</span>
+              <span>{t('checkout.shipping')}</span>
+              <span>{t('checkout.calculatedAtCheckout')}</span>
             </div>
             <div className="sf-cart-summary__total">
-              <span>Total</span>
+              <span>{t('checkout.total')}</span>
               <span className="sf-cart-summary__total-value">
                 {formatMoney(cart.totals.subtotal, cart.totals.currency || store.currency)}
               </span>
             </div>
             <ButtonLink href="/checkout" block>
-              Checkout
+              {t('cart.checkout')}
             </ButtonLink>
           </aside>
         </div>

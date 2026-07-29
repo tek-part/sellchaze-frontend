@@ -4,6 +4,7 @@
  * outline (accessibility), independent of visual scale.
  */
 import type { ReactElement, ReactNode } from 'react';
+import { useTranslation } from 'react-i18next';
 import { cn } from '../../../../../shared/utils/cn';
 import { SectionLabel } from './Typography';
 import { LinkButton } from './LinkButton';
@@ -21,6 +22,7 @@ export interface SectionHeadProps {
 }
 
 export function SectionHead(props: SectionHeadProps): ReactElement {
+  const { t } = useTranslation();
   const {
     label,
     title,
@@ -28,7 +30,7 @@ export function SectionHead(props: SectionHeadProps): ReactElement {
     align = 'start',
     headingLevel: Tag = 'h2',
     viewAllHref,
-    viewAllLabel = 'View all',
+    viewAllLabel = t('common.viewAll'),
     className,
   } = props;
 

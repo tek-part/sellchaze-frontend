@@ -3,6 +3,7 @@
  * products (threaded from the shared WishlistPage under context.data). Voltage's own markup.
  */
 import type { CSSProperties, ReactElement } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { SectionRenderProps } from '../../../theme-engine/rendering';
 import { Container } from '../components/Container';
 import { Section } from '../components/Section';
@@ -12,6 +13,7 @@ import { ProductCardSkeleton } from '../components/ProductCardSkeleton';
 import { isLoading, productsFor } from './section-data';
 
 export function WishlistSection(props: SectionRenderProps): ReactElement {
+  const { t } = useTranslation();
   const { context } = props;
   const loading = isLoading(context);
   const authenticated = context.data.authenticated === true;
@@ -19,8 +21,8 @@ export function WishlistSection(props: SectionRenderProps): ReactElement {
 
   const head = (
     <div className="vlt-flow-head">
-      <span className="vlt-eyebrow">// Saved</span>
-      <h1 className="vlt-flow-head__title">Wishlist</h1>
+      <span className="vlt-eyebrow">{t('wishlist.eyebrowSaved')}</span>
+      <h1 className="vlt-flow-head__title">{t('wishlist.title')}</h1>
     </div>
   );
 
@@ -43,9 +45,9 @@ export function WishlistSection(props: SectionRenderProps): ReactElement {
         <Container>
           {head}
           <div className="vlt-empty vlt-empty--pad">
-            <span className="vlt-empty__title">Sign in to view your wishlist</span>
-            <span className="vlt-empty__text">Save the gear you want and pick up where you left off.</span>
-            <ButtonLink href="/login" className="vlt-empty__cta">Sign in</ButtonLink>
+            <span className="vlt-empty__title">{t('wishlist.signInTitle')}</span>
+            <span className="vlt-empty__text">{t('wishlist.signInHintVoltage')}</span>
+            <ButtonLink href="/login" className="vlt-empty__cta">{t('auth.signIn')}</ButtonLink>
           </div>
         </Container>
       </Section>
@@ -58,9 +60,9 @@ export function WishlistSection(props: SectionRenderProps): ReactElement {
         <Container>
           {head}
           <div className="vlt-empty vlt-empty--pad">
-            <span className="vlt-empty__title">Your wishlist is empty</span>
-            <span className="vlt-empty__text">Tap the heart on any product to save it here.</span>
-            <ButtonLink href="/collections/new-in" className="vlt-empty__cta">Explore new in</ButtonLink>
+            <span className="vlt-empty__title">{t('wishlist.emptyTitle')}</span>
+            <span className="vlt-empty__text">{t('wishlist.emptyHintVoltage')}</span>
+            <ButtonLink href="/collections/new-in" className="vlt-empty__cta">{t('wishlist.exploreNewIn')}</ButtonLink>
           </div>
         </Container>
       </Section>

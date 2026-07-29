@@ -5,6 +5,7 @@
  * (PDP) fires `onSelect`.
  */
 import type { ReactElement } from 'react';
+import { useTranslation } from 'react-i18next';
 import { cn } from '../../../../../shared/utils/cn';
 import type { ProductSwatch } from '../../../types/catalog';
 
@@ -22,12 +23,13 @@ export interface ShadeDotsProps {
 
 export function ShadeDots(props: ShadeDotsProps): ReactElement | null {
   const { shades, selected, onSelect, readOnly = false, large = false, max, className } = props;
+  const { t } = useTranslation();
   if (!shades.length) return null;
   const shown = readOnly && typeof max === 'number' ? shades.slice(0, max) : shades;
   const overflow = shades.length - shown.length;
 
   return (
-    <div className={cn('rge-shades', className)} role={readOnly ? undefined : 'group'} aria-label={readOnly ? undefined : 'Choose a shade'}>
+    <div className={cn('rge-shades', className)} role={readOnly ? undefined : 'group'} aria-label={readOnly ? undefined : t('product.chooseShade')}>
       {shown.map((shade) => {
         const isSelected = shade.value === selected;
         const style = { background: shade.color } as const;
@@ -41,7 +43,7 @@ export function ShadeDots(props: ShadeDotsProps): ReactElement | null {
             className={cn('rge-shade', large && 'rge-shade--lg')}
             style={style}
             aria-pressed={isSelected}
-            aria-label={shade.label + (shade.available === false ? ' (out of stock)' : '')}
+            aria-label={shade.label + (shade.available === false ? ` (${t('pdp.outOfStock')})` : '')}
             title={shade.label}
             disabled={shade.available === false}
             onClick={() => onSelect?.(shade.value)}

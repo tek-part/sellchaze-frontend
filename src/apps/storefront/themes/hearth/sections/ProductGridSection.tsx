@@ -4,6 +4,7 @@
  * no products (never fabricated). The whole grid is token-driven and responsive.
  */
 import type { CSSProperties, ReactElement } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { SectionRenderProps } from '../../../theme-engine/rendering';
 import { Container } from '../components/Container';
 import { Section } from '../components/Section';
@@ -15,6 +16,7 @@ import { isLoading, productsFor, errorMessage, hasError, hasNoProductData } from
 import { option, range, text } from './section-settings';
 
 export function ProductGridSection(props: SectionRenderProps): ReactElement | null {
+  const { t } = useTranslation();
   const { settings, context } = props;
   const heading = text(settings, 'heading');
   const label = text(settings, 'label');
@@ -32,7 +34,7 @@ export function ProductGridSection(props: SectionRenderProps): ReactElement | nu
     return (
       <Section bg={bg}>
         <Container>
-          <ErrorState title="Couldn’t load products" description={errorMessage(context)} />
+          <ErrorState title={t('states.loadFailed')} description={errorMessage(context)} />
         </Container>
       </Section>
     );
@@ -69,8 +71,8 @@ export function ProductGridSection(props: SectionRenderProps): ReactElement | nu
           </ul>
         ) : (
           <div className="hh-empty">
-            <p className="hh-empty__title">Nothing here just yet</p>
-            <p className="hh-empty__body">New pieces are on their way — browse another room in the meantime.</p>
+            <p className="hh-empty__title">{t('hearth.gridEmptyTitle')}</p>
+            <p className="hh-empty__body">{t('hearth.gridEmptyBody')}</p>
           </div>
         )}
       </Container>

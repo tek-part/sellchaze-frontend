@@ -4,6 +4,7 @@
  * See §32.6.
  */
 import type { ReactElement, ReactNode } from 'react';
+import { useTranslation } from 'react-i18next';
 import { cn } from '../../../../../shared/utils/cn';
 import { IconClose } from './icons';
 
@@ -42,7 +43,8 @@ export interface FilterChipProps {
 
 /** Applied filter with a thin × remove affordance. */
 export function FilterChip(props: FilterChipProps): ReactElement {
-  const { children, onRemove, removeLabel = 'Remove filter', className } = props;
+  const { t } = useTranslation();
+  const { children, onRemove, removeLabel = t('shop.removeFilter'), className } = props;
   return (
     <span className={cn('sf-chip', 'sf-chip--selected', className)}>
       <span>{children}</span>

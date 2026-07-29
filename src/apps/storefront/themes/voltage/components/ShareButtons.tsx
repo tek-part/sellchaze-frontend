@@ -3,6 +3,7 @@
  * copy-link fallback with a transient "Copied" state. Voltage's own mono chip row.
  */
 import { useState, type ReactElement } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useToast } from './toast/toast-context';
 
 export interface ShareButtonsProps {
@@ -21,6 +22,7 @@ function absoluteUrl(url: string): string {
 
 export function ShareButtons(props: ShareButtonsProps): ReactElement {
   const { title, url } = props;
+  const { t } = useTranslation();
   const toast = useToast();
   const [copied, setCopied] = useState(false);
   const href = absoluteUrl(url);
@@ -43,22 +45,22 @@ export function ShareButtons(props: ShareButtonsProps): ReactElement {
     try {
       await nav?.clipboard?.writeText(href);
       setCopied(true);
-      toast.notify('Link copied', 'success');
+      toast.notify(t('pdp.linkCopied'), 'success');
       window.setTimeout(() => setCopied(false), 2000);
     } catch {
-      toast.notify('Could not copy link', 'danger');
+      toast.notify(t('product.copyFailed'), 'danger');
     }
   };
 
   return (
     <div className="vlt-share">
-      <span className="vlt-share__label">Share</span>
+      <span className="vlt-share__label">{t('product.share')}</span>
       {nav?.share ? (
-        <button type="button" className="vlt-share__btn" onClick={() => void share()}>Share…</button>
+        <button type="button" className="vlt-share__btn" onClick={() => void share()}>{t('product.share')}…</button>
       ) : null}
       <a className="vlt-share__btn" href={`https://twitter.com/intent/tweet?url=${encodeURIComponent(href)}&text=${encodeURIComponent(title)}`} target="_blank" rel="noopener noreferrer">X</a>
       <a className="vlt-share__btn" href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(href)}`} target="_blank" rel="noopener noreferrer">Facebook</a>
-      <button type="button" className="vlt-share__btn" onClick={() => void copy()}>{copied ? 'Copied ✓' : 'Copy link'}</button>
+      <button type="button" className="vlt-share__btn" onClick={() => void copy()}>{copied ? `${t('product.copied')} ✓` : t('product.copyLink')}</button>
     </div>
   );
 }

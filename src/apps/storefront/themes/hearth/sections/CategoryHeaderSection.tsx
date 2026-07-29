@@ -4,6 +4,7 @@
  * falls back to Home ▸ Category when the full trail is a data gap (never fabricated).
  */
 import type { ReactElement } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { SectionRenderProps } from '../../../theme-engine/rendering';
 import { Container } from '../components/Container';
 import { Heading, Text } from '../components/Typography';
@@ -11,6 +12,7 @@ import { pageHeaderOf } from './section-data';
 import { text } from './section-settings';
 
 export function CategoryHeaderSection(props: SectionRenderProps): ReactElement | null {
+  const { t } = useTranslation();
   const { settings, context } = props;
   const header = pageHeaderOf(context);
   const title = header.title || text(settings, 'heading');
@@ -23,7 +25,7 @@ export function CategoryHeaderSection(props: SectionRenderProps): ReactElement |
     <header className="hh-section hh-section--sand hh-section--tight hh-cat-header">
       <Container>
         {crumbs.length > 0 ? (
-          <nav className="hh-breadcrumb" aria-label="Breadcrumb">
+          <nav className="hh-breadcrumb" aria-label={t('misc.breadcrumb')}>
             <ol className="hh-breadcrumb__list">
               {crumbs.map((c, i) => (
                 <li key={c.url} className="hh-breadcrumb__item">
