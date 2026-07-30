@@ -8,6 +8,10 @@ import ForgotPasswordPage from './pages/ForgotPasswordPage';
 import ResetPasswordPage from './pages/ResetPasswordPage';
 import PendingApprovalPage from './pages/PendingApprovalPage';
 import Dashboard from './pages/Dashboard';
+// Route-level lazy loading: the community feed (pulls in the Quill rich-text
+// editor) and the pricing page load on demand instead of inflating the main bundle.
+const FeedPage = lazy(() => import('./pages/FeedPage'));
+const PricingPage = lazy(() => import('./pages/PricingPage'));
 import NotificationsPage from './pages/NotificationsPage';
 import OrdersPage from './pages/OrdersPage';
 import QuotationsPage from './pages/QuotationsPage';
@@ -51,6 +55,11 @@ import EmployeesPage from './pages/EmployeesPage';
 import LedgerPage from './pages/LedgerPage';
 import ChatPage from './pages/ChatPage';
 import DirectoryPage from './pages/public/DirectoryPage';
+// Public supplier-directory pages are code-split so the marketing/landing entry
+// stays lean — they load on demand when a visitor opens /suppliers/*.
+const SuppliersDirectoryPage = lazy(() => import('./pages/public/SuppliersDirectoryPage'));
+const SectorPage = lazy(() => import('./pages/public/SectorPage'));
+const SpecialtyPage = lazy(() => import('./pages/public/SpecialtyPage'));
 import PublicProfilePage from './pages/public/PublicProfilePage';
 import PublicLayout from './layouts/PublicLayout';
 import LandingPage from './pages/public/LandingPage';
@@ -147,6 +156,9 @@ export default function App() {
                 <Route path="/" element={<RootRoute />} />
                 <Route path="/features" element={<FeaturesPage />} />
                 <Route path="/directory" element={<DirectoryPage />} />
+                <Route path="/suppliers" element={<SuppliersDirectoryPage />} />
+                <Route path="/suppliers/:sector" element={<SectorPage />} />
+                <Route path="/suppliers/:sector/:specialty" element={<SpecialtyPage />} />
                 <Route path="/about" element={<AboutPage />} />
                 <Route path="/contact" element={<ContactPage />} />
                 <Route path="/legal/terms" element={<TermsPage />} />
@@ -162,6 +174,8 @@ export default function App() {
                 }
             >
                 <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/feed" element={<FeedPage />} />
+                <Route path="/pricing" element={<PricingPage />} />
                 <Route path="/admin/dashboard" element={<AdminDashboardPage />} />
                 <Route path="/admin/reports/users" element={<AdminReportsUsersPage />} />
                 <Route path="/admin/reports/orders" element={<AdminReportsOrdersPage />} />
@@ -189,10 +203,10 @@ export default function App() {
                 <Route path="/gateways" element={<GatewaysPage />} />
                 <Route path="/gateways/:id" element={<GatewayDetailPage />} />
                 <Route path="/gateways/:id/edit" element={<GatewayFormPage />} />
-                <Route path="/suppliers" element={<SuppliersPage />} />
-                <Route path="/suppliers/new" element={<SupplierFormPage />} />
-                <Route path="/suppliers/:id/edit" element={<SupplierFormPage />} />
-                <Route path="/suppliers/:id" element={<SupplierDetailPage />} />
+                <Route path="/crm/suppliers" element={<SuppliersPage />} />
+                <Route path="/crm/suppliers/new" element={<SupplierFormPage />} />
+                <Route path="/crm/suppliers/:id/edit" element={<SupplierFormPage />} />
+                <Route path="/crm/suppliers/:id" element={<SupplierDetailPage />} />
                 <Route path="/merchants" element={<MerchantsPage />} />
                 <Route path="/merchants/new" element={<MerchantFormPage />} />
                 <Route path="/merchants/:id/edit" element={<MerchantFormPage />} />

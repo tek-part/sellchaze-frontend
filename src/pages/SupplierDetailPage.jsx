@@ -47,7 +47,7 @@ export default function SupplierDetailPage() {
                     <p className="mt-1 text-sm text-slate-500">{t('suppliers_help')}</p>
                 </div>
                 {isAdmin ? (
-                    <Link to={`/suppliers/${id}/edit`} className="rounded-lg border border-slate-200 px-3 py-2 text-sm hover:bg-slate-50">
+                    <Link to={`/crm/suppliers/${id}/edit`} className="rounded-lg border border-slate-200 px-3 py-2 text-sm hover:bg-slate-50">
                         {t('action_edit')}
                     </Link>
                 ) : null}

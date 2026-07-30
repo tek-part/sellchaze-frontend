@@ -227,7 +227,7 @@ export default function SuppliersPage() {
             </div>
             {showAdminActions ? (
                 <div>
-                    <Link to="/suppliers/new" className="rounded-lg bg-brand px-3 py-2 text-sm font-semibold text-white">
+                    <Link to="/crm/suppliers/new" className="rounded-lg bg-brand px-3 py-2 text-sm font-semibold text-white">
                         {t('supplier_create')}
                     </Link>
                 </div>
@@ -379,8 +379,8 @@ export default function SuppliersPage() {
                                                 </a>
                                             ) : null}
                                             <TableIconActions
-                                                viewTo={`/suppliers/${row.id}`}
-                                                editTo={showAdminActions ? `/suppliers/${row.id}/edit` : undefined}
+                                                viewTo={`/crm/suppliers/${row.id}`}
+                                                editTo={showAdminActions ? `/crm/suppliers/${row.id}/edit` : undefined}
                                                 showEdit={showAdminActions}
                                                 onDelete={
                                                     showAdminActions ? () => setConfirmDelete(row) : undefined

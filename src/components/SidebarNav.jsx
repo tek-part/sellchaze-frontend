@@ -37,6 +37,7 @@ import {
     HiOutlineChartBar,
     HiOutlineNewspaper,
     HiOutlinePresentationChartLine,
+    HiOutlineSparkles,
 } from 'react-icons/hi2';
 
 function usePathPrefix(prefix) {
@@ -225,7 +226,11 @@ export default function SidebarNav({ isAdmin = false, isSupplier = false, roles 
 
                 <div className="mt-5 flex flex-col gap-1.5 border-t border-slate-200/80 pt-5">
                     <SectionLabel>{t('nav_sidebar_section_people', 'People')}</SectionLabel>
-                    <NavLink to="/suppliers" className={navLinkClass}>
+                    <NavLink to="/feed" className={navLinkClass}>
+                        <HiOutlineNewspaper className="h-5 w-5 shrink-0 opacity-95" aria-hidden />
+                        {t('feed_title', 'Community')}
+                    </NavLink>
+                    <NavLink to="/crm/suppliers" className={navLinkClass}>
                         <HiOutlineBuildingOffice2 className="h-5 w-5 shrink-0 opacity-95" aria-hidden />
                         {t('suppliers')}
                     </NavLink>
@@ -336,6 +341,10 @@ export default function SidebarNav({ isAdmin = false, isSupplier = false, roles 
                         defaultOpen={openAdminSettings}
                         groupActive={openAdminSettings}
                     >
+                        <NavLink to="/pricing" className={subNavLinkClass}>
+                            <HiOutlineSparkles className="h-4 w-4 shrink-0 opacity-90" aria-hidden />
+                            {t('sub_plans_title', 'Plans')}
+                        </NavLink>
                         <NavLink to="/settings/profile" className={subNavLinkClass}>
                             <HiOutlineUserCircle className="h-4 w-4 shrink-0 opacity-90" aria-hidden />
                             {t('nav_profile')}
@@ -582,12 +591,16 @@ export default function SidebarNav({ isAdmin = false, isSupplier = false, roles 
 
             <div className="mt-5 flex flex-col gap-1.5 border-t border-slate-200/80 pt-5">
                 <SectionLabel>{t('nav_sidebar_section_people')}</SectionLabel>
+                <NavLink to="/feed" className={navLinkClass}>
+                    <HiOutlineNewspaper className="h-5 w-5 shrink-0 opacity-95" aria-hidden />
+                    {t('feed_title', 'Community')}
+                </NavLink>
                 <NavLink to="/partners" className={navLinkClass}>
                     <HiOutlineUserGroup className="h-5 w-5 shrink-0 opacity-95" aria-hidden />
                     {t('nav_partners')}
                 </NavLink>
                 {!isSupplierOnly && (can('suppliers-list') || isAdmin) ? (
-                    <NavLink to="/suppliers" className={navLinkClass}>
+                    <NavLink to="/crm/suppliers" className={navLinkClass}>
                         <HiOutlineUserGroup className="h-5 w-5 shrink-0 opacity-95" aria-hidden />
                         {t('suppliers')}
                     </NavLink>
@@ -782,6 +795,10 @@ export default function SidebarNav({ isAdmin = false, isSupplier = false, roles 
                     <NavLink to="/notifications" className={subNavLinkClass}>
                         <HiOutlineBell className="h-4 w-4 shrink-0 opacity-90" aria-hidden />
                         {t('nav_notifications')}
+                    </NavLink>
+                    <NavLink to="/pricing" className={subNavLinkClass}>
+                        <HiOutlineSparkles className="h-4 w-4 shrink-0 opacity-90" aria-hidden />
+                        {t('sub_plans_title', 'Plans')}
                     </NavLink>
                     <NavLink to="/settings/profile" className={subNavLinkClass}>
                         <HiOutlineUserCircle className="h-4 w-4 shrink-0 opacity-90" aria-hidden />

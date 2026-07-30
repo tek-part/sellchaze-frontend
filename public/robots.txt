@@ -7,7 +7,7 @@ Disallow: /orders
 Disallow: /quotations
 Disallow: /deals
 Disallow: /gateways
-Disallow: /suppliers
+Disallow: /crm/suppliers
 Disallow: /shipping
 Disallow: /tickets
 Disallow: /inventory

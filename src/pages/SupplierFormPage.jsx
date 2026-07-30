@@ -63,9 +63,9 @@ export default function SupplierFormPage() {
             }
             if (supplierId > 0) {
                 await api.put(`/suppliers/${supplierId}/routing-categories`, { category_ids: selected });
-                navigate(`/suppliers/${supplierId}`);
+                navigate(`/crm/suppliers/${supplierId}`);
             } else {
-                navigate('/suppliers');
+                navigate('/crm/suppliers');
             }
         } catch (e2) {
             setErr(e2.response?.data?.message || e2.message);
@@ -110,7 +110,7 @@ export default function SupplierFormPage() {
                 </div>
                 <div className="flex gap-2">
                     <button type="submit" disabled={saving} className="rounded-lg bg-brand px-4 py-2 text-sm font-semibold text-white disabled:opacity-50">{t('save')}</button>
-                    <button type="button" onClick={() => navigate('/suppliers')} className="rounded-lg border border-slate-200 px-4 py-2 text-sm">{t('cancel')}</button>
+                    <button type="button" onClick={() => navigate('/crm/suppliers')} className="rounded-lg border border-slate-200 px-4 py-2 text-sm">{t('cancel')}</button>
                 </div>
             </form>
         </div>

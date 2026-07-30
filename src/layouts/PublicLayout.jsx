@@ -124,6 +124,7 @@ export default function PublicLayout() {
                     <nav className="hidden items-center gap-1 md:flex">
                         <NavItem to="/">{t('nav_home')}</NavItem>
                         <NavItem to="/features">{t('nav_features')}</NavItem>
+                        <NavItem to="/suppliers">{t('nav_suppliers', 'Suppliers')}</NavItem>
                         <NavItem to="/directory">{t('nav_directory', 'Directory')}</NavItem>
                         <NavItem to="/about">{t('nav_about')}</NavItem>
                         <NavItem to="/blog">{t('nav_blog', 'Blog')}</NavItem>
@@ -183,6 +184,7 @@ export default function PublicLayout() {
                         <div className="flex flex-col gap-1">
                             <NavItem to="/">{t('nav_home')}</NavItem>
                             <NavItem to="/features">{t('nav_features')}</NavItem>
+                            <NavItem to="/suppliers">{t('nav_suppliers', 'Suppliers')}</NavItem>
                             <NavItem to="/directory">{t('nav_directory', 'Directory')}</NavItem>
                             <NavItem to="/about">{t('nav_about')}</NavItem>
                             <NavItem to="/blog">{t('nav_blog', 'Blog')}</NavItem>

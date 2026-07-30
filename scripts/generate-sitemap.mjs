@@ -19,9 +19,43 @@ const routes = [
     { loc: '/about', priority: '0.7', changefreq: 'yearly' },
     { loc: '/blog', priority: '0.9', changefreq: 'weekly' },
     { loc: '/contact', priority: '0.7', changefreq: 'yearly' },
+    { loc: '/directory', priority: '0.7', changefreq: 'weekly' },
+    { loc: '/suppliers', priority: '0.9', changefreq: 'weekly' },
     { loc: '/legal/terms', priority: '0.3', changefreq: 'yearly' },
     { loc: '/legal/privacy', priority: '0.3', changefreq: 'yearly' },
 ];
+
+/**
+ * Supplier-directory URLs: the 8 sector pages + every specialty page. These are the SEO landing
+ * pages, so they belong in the sitemap. Fetched from the public directory API; on any failure the
+ * build still succeeds with just the static routes above.
+ */
+async function fetchSectorRoutes() {
+    if (!apiUrl) return [];
+    try {
+        const res = await fetch(`${apiUrl}/public/sectors`, { headers: { Accept: 'application/json' } });
+        if (!res.ok) return [];
+        const json = await res.json();
+        const sectors = Array.isArray(json?.sectors) ? json.sectors : [];
+        const out = [];
+        for (const s of sectors) {
+            if (!s?.slug) continue;
+            out.push({ loc: `/suppliers/${s.slug}`, priority: '0.8', changefreq: 'weekly' });
+            try {
+                const r2 = await fetch(`${apiUrl}/public/sectors/${s.slug}`, { headers: { Accept: 'application/json' } });
+                if (!r2.ok) continue;
+                const j2 = await r2.json();
+                for (const c of (Array.isArray(j2?.specialties) ? j2.specialties : [])) {
+                    if (c?.slug) out.push({ loc: `/suppliers/${s.slug}/${c.slug}`, priority: '0.7', changefreq: 'weekly' });
+                }
+            } catch { /* skip this sector's specialties */ }
+        }
+        return out;
+    } catch (e) {
+        console.warn('[sitemap] sectors fetch failed:', e.message);
+        return [];
+    }
+}
 
 async function fetchArticleSlugs() {
     if (!apiUrl) return [];
@@ -48,7 +82,8 @@ async function fetchArticleSlugs() {
 
 const today = new Date().toISOString().split('T')[0];
 const articles = await fetchArticleSlugs();
-const all = [...routes, ...articles];
+const sectorRoutes = await fetchSectorRoutes();
+const all = [...routes, ...sectorRoutes, ...articles];
 
 const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
@@ -66,4 +101,4 @@ ${all
 `;
 
 writeFileSync(resolve(outDir, 'sitemap.xml'), xml, 'utf8');
-console.log(`[sitemap] wrote ${all.length} urls (${articles.length} articles) → dist/sitemap.xml`);
+console.log(`[sitemap] wrote ${all.length} urls (${sectorRoutes.length} directory, ${articles.length} articles) → dist/sitemap.xml`);
