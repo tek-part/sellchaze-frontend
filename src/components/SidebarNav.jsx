@@ -26,6 +26,7 @@ import {
     HiOutlineRectangleStack,
     HiOutlineShieldCheck,
     HiOutlineShoppingBag,
+    HiOutlineSquares2X2,
     HiOutlineBuildingStorefront,
     HiOutlineTag,
     HiOutlineTicket,
@@ -348,6 +349,10 @@ export default function SidebarNav({ isAdmin = false, isSupplier = false, roles 
                         <NavLink to="/settings/profile" className={subNavLinkClass}>
                             <HiOutlineUserCircle className="h-4 w-4 shrink-0 opacity-90" aria-hidden />
                             {t('nav_profile')}
+                        </NavLink>
+                        <NavLink to="/settings/sectors" className={subNavLinkClass}>
+                            <HiOutlineSquares2X2 className="h-4 w-4 shrink-0 opacity-90" aria-hidden />
+                            {t('mysec_title', 'My sectors')}
                         </NavLink>
                         <NavLink to="/settings" end className={subNavLinkClass}>
                             <HiOutlineCog6Tooth className="h-4 w-4 shrink-0 opacity-90" aria-hidden />

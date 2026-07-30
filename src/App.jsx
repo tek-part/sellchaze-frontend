@@ -71,6 +71,7 @@ import PrivacyPage from './pages/public/PrivacyPage';
 import BlogIndexPage from './pages/public/BlogIndexPage';
 import BlogArticlePage from './pages/public/BlogArticlePage';
 const AdminDashboardPage = lazy(() => import('./pages/AdminDashboardPage'));
+const SectorsSettingsPage = lazy(() => import('./pages/SectorsSettingsPage'));
 import AdminReportsUsersPage from './pages/AdminReportsUsersPage';
 import AdminReportsOrdersPage from './pages/AdminReportsOrdersPage';
 import AdminReportsRevenuePage from './pages/AdminReportsRevenuePage';
@@ -195,6 +196,7 @@ export default function App() {
                 <Route path="/employees" element={<EmployeesPage />} />
                 <Route path="/ledger" element={<LedgerPage />} />
                 <Route path="/settings/verification" element={<VerificationRequestPage />} />
+                <Route path="/settings/sectors" element={<SectorsSettingsPage />} />
                 <Route path="/admin/verifications" element={<AdminVerificationsPage />} />
                 <Route path="/quotations/in" element={<Navigate to="/quotations" replace />} />
                 <Route path="/quotations/out" element={<Navigate to="/quotations" replace />} />
