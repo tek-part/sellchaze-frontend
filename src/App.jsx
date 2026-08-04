@@ -62,6 +62,7 @@ import DirectoryPage from './pages/public/DirectoryPage';
 const SuppliersDirectoryPage = lazy(() => import('./pages/public/SuppliersDirectoryPage'));
 const SectorPage = lazy(() => import('./pages/public/SectorPage'));
 const SpecialtyPage = lazy(() => import('./pages/public/SpecialtyPage'));
+const CityPage = lazy(() => import('./pages/public/CityPage'));
 import PublicProfilePage from './pages/public/PublicProfilePage';
 import PublicLayout from './layouts/PublicLayout';
 import LandingPage from './pages/public/LandingPage';
@@ -162,6 +163,9 @@ export default function App() {
                 <Route path="/directory" element={<DirectoryPage />} />
                 <Route path="/suppliers" element={<SuppliersDirectoryPage />} />
                 <Route path="/suppliers/:sector" element={<SectorPage />} />
+                {/* City landing pages sit on a reserved `city` segment so they never
+                    collide with a specialty slug. Declared before the specialty route. */}
+                <Route path="/suppliers/:sector/city/:city" element={<CityPage />} />
                 <Route path="/suppliers/:sector/:specialty" element={<SpecialtyPage />} />
                 <Route path="/about" element={<AboutPage />} />
                 <Route path="/contact" element={<ContactPage />} />

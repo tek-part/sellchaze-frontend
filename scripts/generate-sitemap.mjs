@@ -77,6 +77,30 @@ async function fetchSectorRoutes() {
     }
 }
 
+/**
+ * City landing pages ("<sector> suppliers in <city>"). The API only returns a city
+ * once a directory-eligible supplier from it has registered, so these pages come
+ * into existence automatically as the directory fills up — and never before,
+ * which keeps Google from seeing empty pages.
+ */
+async function fetchCityRoutes(sectorSlugs) {
+    if (!apiUrl) return [];
+    const out = [];
+    for (const sector of sectorSlugs) {
+        try {
+            const res = await fetch(`${apiUrl}/public/cities?sector=${encodeURIComponent(sector)}`, {
+                headers: { Accept: 'application/json' },
+            });
+            if (!res.ok) continue;
+            const json = await res.json();
+            for (const c of (Array.isArray(json?.cities) ? json.cities : [])) {
+                if (c?.slug) out.push({ loc: `/suppliers/${sector}/city/${c.slug}`, priority: '0.6', changefreq: 'weekly' });
+            }
+        } catch { /* skip this sector's cities */ }
+    }
+    return out;
+}
+
 async function fetchArticleSlugs() {
     if (!apiUrl) return [];
     try {
@@ -103,7 +127,13 @@ async function fetchArticleSlugs() {
 const today = new Date().toISOString().split('T')[0];
 const articles = await fetchArticleSlugs();
 const sectorRoutes = await fetchSectorRoutes();
-const all = [...routes, ...sectorRoutes, ...articles];
+// Top-level sector slugs = the one-segment /suppliers/<slug> routes.
+const sectorSlugs = sectorRoutes
+    .map((r) => r.loc.split('/').filter(Boolean))
+    .filter((p) => p.length === 2)
+    .map((p) => p[1]);
+const cityRoutes = await fetchCityRoutes(sectorSlugs);
+const all = [...routes, ...sectorRoutes, ...cityRoutes, ...articles];
 
 const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
