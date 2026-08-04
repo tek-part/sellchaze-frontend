@@ -41,3 +41,20 @@
         Header set Expires "0"
     </FilesMatch>
 </IfModule>
+
+# Compress text responses. The main bundle is ~1 MB raw but ~240 KB gzipped, so
+# this is the single biggest transfer win for LCP — especially on mobile, which
+# Google measures first. Images and fonts are already compressed formats and are
+# deliberately left alone.
+<IfModule mod_deflate.c>
+    AddOutputFilterByType DEFLATE text/html text/plain text/css text/xml
+    AddOutputFilterByType DEFLATE application/javascript application/x-javascript text/javascript
+    AddOutputFilterByType DEFLATE application/json application/xml application/rss+xml
+    AddOutputFilterByType DEFLATE image/svg+xml application/vnd.ms-fontobject application/x-font-ttf
+
+    # Proxies must key their cache on the encoding, or a gzipped body could be
+    # served to a client that did not ask for one.
+    <IfModule mod_headers.c>
+        Header append Vary Accept-Encoding
+    </IfModule>
+</IfModule>
