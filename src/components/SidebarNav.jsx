@@ -11,6 +11,7 @@ import {
     HiOutlineArrowTrendingUp,
     HiOutlineArrowUpTray,
     HiOutlineBanknotes,
+    HiOutlineRocketLaunch,
     HiOutlineBuildingOffice2,
     HiOutlineChatBubbleLeftRight,
     HiOutlineChevronDown,
@@ -237,6 +238,10 @@ export default function SidebarNav({ isAdmin = false, isSupplier = false, roles 
                     <NavLink to="/financing" className={navLinkClass}>
                         <HiOutlineBanknotes className="h-5 w-5 shrink-0 opacity-95" aria-hidden />
                         {t('nav_financing', 'Financing')}
+                    </NavLink>
+                    <NavLink to="/opportunities" className={navLinkClass}>
+                        <HiOutlineRocketLaunch className="h-5 w-5 shrink-0 opacity-95" aria-hidden />
+                        {t('nav_opportunities', 'Opportunities')}
                     </NavLink>
                     <NavLink to="/crm/suppliers" className={navLinkClass}>
                         <HiOutlineBuildingOffice2 className="h-5 w-5 shrink-0 opacity-95" aria-hidden />
@@ -614,6 +619,10 @@ export default function SidebarNav({ isAdmin = false, isSupplier = false, roles 
                 <NavLink to="/financing" className={navLinkClass}>
                     <HiOutlineBanknotes className="h-5 w-5 shrink-0 opacity-95" aria-hidden />
                     {t('nav_financing', 'Financing')}
+                </NavLink>
+                <NavLink to="/opportunities" className={navLinkClass}>
+                    <HiOutlineRocketLaunch className="h-5 w-5 shrink-0 opacity-95" aria-hidden />
+                    {t('nav_opportunities', 'Opportunities')}
                 </NavLink>
                 {!isSupplierOnly && (can('suppliers-list') || isAdmin) ? (
                     <NavLink to="/crm/suppliers" className={navLinkClass}>

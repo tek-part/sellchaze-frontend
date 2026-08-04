@@ -13,6 +13,7 @@ import Dashboard from './pages/Dashboard';
 const FeedPage = lazy(() => import('./pages/FeedPage'));
 const PricingPage = lazy(() => import('./pages/PricingPage'));
 const FinancingPage = lazy(() => import('./pages/FinancingPage'));
+const OpportunitiesPage = lazy(() => import('./pages/OpportunitiesPage'));
 import NotificationsPage from './pages/NotificationsPage';
 import OrdersPage from './pages/OrdersPage';
 import QuotationsPage from './pages/QuotationsPage';
@@ -180,6 +181,7 @@ export default function App() {
                 <Route path="/feed" element={<FeedPage />} />
                 <Route path="/pricing" element={<PricingPage />} />
                 <Route path="/financing" element={<FinancingPage />} />
+                <Route path="/opportunities" element={<OpportunitiesPage />} />
                 <Route path="/admin/dashboard" element={<AdminDashboardPage />} />
                 <Route path="/admin/reports/users" element={<AdminReportsUsersPage />} />
                 <Route path="/admin/reports/orders" element={<AdminReportsOrdersPage />} />
