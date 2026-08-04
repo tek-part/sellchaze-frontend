@@ -64,6 +64,14 @@ export default function AppLayout() {
 
     useEffect(() => {
         let cancelled = false;
+
+        const onSessionExpired = () => {
+            clearTokens();
+            navigate('/login', { replace: true });
+        };
+
+        window.addEventListener('sellchase:session-expired', onSessionExpired);
+
         const fetchMe = async () => {
             try {
                 const { data } = await api.get('/auth/me');
@@ -73,7 +81,7 @@ export default function AppLayout() {
             } catch {
                 if (!cancelled) {
                     clearTokens();
-                    navigate('/', { replace: true });
+                    navigate('/login', { replace: true });
                 }
             }
         };
@@ -85,6 +93,7 @@ export default function AppLayout() {
         window.addEventListener('sellchase:me-updated', onMeUpdated);
         return () => {
             cancelled = true;
+            window.removeEventListener('sellchase:session-expired', onSessionExpired);
             window.removeEventListener('sellchase:me-updated', onMeUpdated);
         };
     }, [navigate]);

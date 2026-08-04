@@ -63,8 +63,13 @@ export default function StoreFormPage() {
         };
         try {
             if (isNew) {
-                await api.post('/stores', payload);
+                const { data } = await api.post('/stores', payload);
                 toast.success(t('table_create'));
+                const newStoreId = data?.data?.id;
+                if (newStoreId) {
+                    navigate(`/stores/${newStoreId}/onboarding`);
+                    return;
+                }
             } else {
                 await api.put(`/stores/${id}`, payload);
                 toast.success(t('action_edit'));

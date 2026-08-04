@@ -94,6 +94,7 @@ import StoreSettingsPage from './pages/StoreSettingsPage';
 import StoreThemesPage from './pages/StoreThemesPage';
 import StoreThemeSettingsPage from './pages/StoreThemeSettingsPage';
 import StorePagesPage from './pages/StorePagesPage';
+import StoreSetupPage from './pages/StoreSetupPage';
 const StorePageBuilderPage = lazy(() => import('./pages/StorePageBuilderPage'));
 const StoreContentPageEditor = lazy(() => import('./pages/StoreContentPageEditor'));
 import StoreMenusPage from './pages/StoreMenusPage';
@@ -254,6 +255,7 @@ export default function App() {
                     the owner's store via /my-store. Admin multi-store console stays below. */}
                 <Route path="/store" element={<Navigate to="/store/orders" replace />} />
                 <Route path="/store/settings" element={<StoreSettingsPage />} />
+                <Route path="/store/onboarding" element={<StoreSetupPage />} />
                 <Route path="/store/themes/:themeId/settings" element={<StoreThemeSettingsPage />} />
                 <Route path="/store/themes" element={<StoreThemesPage />} />
                 <Route path="/store/pages/:pageId/builder" element={<StorePageBuilderPage />} />
@@ -274,6 +276,7 @@ export default function App() {
                 <Route path="/stores/new" element={<StoreFormPage />} />
                 <Route path="/stores/:id/edit" element={<StoreFormPage />} />
                 <Route path="/stores/:id/settings" element={<StoreSettingsPage />} />
+                <Route path="/stores/:id/onboarding" element={<StoreSetupPage />} />
                 <Route path="/stores/:id/themes/:themeId/settings" element={<StoreThemeSettingsPage />} />
                 <Route path="/stores/:id/themes" element={<StoreThemesPage />} />
                 <Route path="/stores/:id/pages/:pageId/builder" element={<StorePageBuilderPage />} />

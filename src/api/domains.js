@@ -3,47 +3,55 @@ import api from './client';
 /**
  * Custom-domain API.
  *
- * Every mutating call maps 1:1 to a backend endpoint under /my-store/domains.
+ * Every mutating call maps 1:1 to a backend endpoint under:
+ *   • /my-store/domains (owner scope)
+ *   • /stores/{id}/domains (admin scope)
+ *
+ * Use `makeDomainsApi(apiBase)` for any non-owner store scope.
  * Verification, DNS refresh and SSL actions return 202 (queued) — callers must
  * poll `list`/`health` rather than expecting an immediate result.
  */
-const base = '/my-store/domains';
+export function makeDomainsApi(apiBase = '/my-store') {
+    const base = `${apiBase.replace(/\/$/, '')}/domains`;
 
-export const domainsApi = {
-    list: () => api.get(base).then((r) => r.data?.data ?? []),
+    return {
+        list: () => api.get(base).then((r) => r.data?.data ?? []),
 
-    summary: () => api.get(`${base}/health`).then((r) => r.data?.data ?? null),
+        summary: () => api.get(`${base}/health`).then((r) => r.data?.data ?? null),
 
-    health: (id) => api.get(`${base}/${id}/health`).then((r) => r.data?.data ?? null),
+        health: (id) => api.get(`${base}/${id}/health`).then((r) => r.data?.data ?? null),
 
-    events: (params = {}) => api.get(`${base}/events`, { params }).then((r) => r.data),
+        events: (params = {}) => api.get(`${base}/events`, { params }).then((r) => r.data),
 
-    domainEvents: (id, params = {}) =>
-        api.get(`${base}/${id}/events`, { params }).then((r) => r.data),
+        domainEvents: (id, params = {}) =>
+            api.get(`${base}/${id}/events`, { params }).then((r) => r.data),
 
-    connect: (host) => api.post(base, { host }).then((r) => r.data?.data ?? null),
+        connect: (host) => api.post(base, { host }).then((r) => r.data?.data ?? null),
 
-    /** Rotates the challenge token — invalidates any previously published TXT record. */
-    restartVerification: (id) =>
-        api.post(`${base}/${id}/verification`).then((r) => r.data?.data ?? null),
+        /** Rotates the challenge token — invalidates any previously published TXT record. */
+        restartVerification: (id) =>
+            api.post(`${base}/${id}/verification`).then((r) => r.data?.data ?? null),
 
-    /** Queued: returns 202. */
-    verify: (id) => api.post(`${base}/${id}/verify`).then((r) => r.data),
+        /** Queued: returns 202. */
+        verify: (id) => api.post(`${base}/${id}/verify`).then((r) => r.data),
 
-    refreshDns: (id) => api.post(`${base}/${id}/dns`).then((r) => r.data),
+        refreshDns: (id) => api.post(`${base}/${id}/dns`).then((r) => r.data),
 
-    retrySsl: (id) => api.post(`${base}/${id}/ssl/retry`).then((r) => r.data),
+        retrySsl: (id) => api.post(`${base}/${id}/ssl/retry`).then((r) => r.data),
 
-    refreshSsl: (id) => api.post(`${base}/${id}/ssl/refresh`).then((r) => r.data),
+        refreshSsl: (id) => api.post(`${base}/${id}/ssl/refresh`).then((r) => r.data),
 
-    makePrimary: (id) => api.post(`${base}/${id}/primary`).then((r) => r.data?.data ?? null),
+        makePrimary: (id) => api.post(`${base}/${id}/primary`).then((r) => r.data?.data ?? null),
 
-    disable: (id) => api.post(`${base}/${id}/disable`).then((r) => r.data?.data ?? null),
+        disable: (id) => api.post(`${base}/${id}/disable`).then((r) => r.data?.data ?? null),
 
-    enable: (id) => api.post(`${base}/${id}/enable`).then((r) => r.data?.data ?? null),
+        enable: (id) => api.post(`${base}/${id}/enable`).then((r) => r.data?.data ?? null),
 
-    remove: (id) => api.delete(`${base}/${id}`).then((r) => r.data),
-};
+        remove: (id) => api.delete(`${base}/${id}`).then((r) => r.data),
+    };
+}
+
+const domainsApi = makeDomainsApi('/my-store');
 
 /**
  * Normalises an axios error into a message the UI can show directly.

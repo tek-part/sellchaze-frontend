@@ -219,7 +219,7 @@ export default function StoreSettingsPage() {
             </div>
 
             {/* Custom domains: connect, verify, SSL, health and audit history. */}
-            <CustomDomainsPanel />
+            <CustomDomainsPanel apiBase={apiBase} />
         </div>
     );
 }

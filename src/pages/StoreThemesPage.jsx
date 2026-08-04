@@ -416,7 +416,7 @@ function DetailsDrawer({ theme, engineVersion, canManage, onUninstall, onClose }
 /* ------------------------------------------------------------------ manager (platform-connected) */
 
 function ThemesManager() {
-    const { id } = useStoreScope();
+    const { id, uiBase } = useStoreScope();
     const { t } = useTranslation();
     const navigate = useNavigate();
     const { permissions } = useOutletContext();
@@ -551,6 +551,13 @@ function ThemesManager() {
                         <input ref={importInputRef} type="file" accept="application/json,.json" className="hidden" onChange={onImportFile} />
                         <button type="button" onClick={() => importInputRef.current?.click()} className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">
                             <HiOutlineArrowUpTray className="h-4 w-4" /> {t('theme_import', 'Import theme')}
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => navigate(`${uiBase}/onboarding`)}
+                            className="inline-flex items-center gap-1.5 rounded-xl border border-indigo-200 bg-indigo-50 px-3 py-2 text-sm font-medium text-indigo-700 hover:bg-indigo-100"
+                        >
+                            {t('store_setup_title', 'Store setup')}
                         </button>
                     </div>
                 ) : null}

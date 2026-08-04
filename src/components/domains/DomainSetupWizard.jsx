@@ -1,6 +1,6 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import domainsApi, { domainErrorMessage } from '../../api/domains';
+import { makeDomainsApi, domainErrorMessage } from '../../api/domains';
 import DnsRecordRow from './DnsRecordRow';
 import useModalA11y from './useModalA11y';
 
@@ -20,8 +20,9 @@ const STEPS = ['enter', 'dns', 'validate', 'verify', 'ssl', 'primary'];
 const POLL_MS = 5000;
 const MAX_POLLS = 60; // ~5 minutes, then hand back to the user
 
-export default function DomainSetupWizard({ onClose, onCompleted }) {
+export default function DomainSetupWizard({ onClose, onCompleted, apiBase = '/my-store' }) {
     const { t } = useTranslation();
+    const domainsApi = useMemo(() => makeDomainsApi(apiBase), [apiBase]);
 
     const [step, setStep] = useState(0);
     const [host, setHost] = useState('');
@@ -47,7 +48,7 @@ export default function DomainSetupWizard({ onClose, onCompleted }) {
     const refresh = useCallback(async (id) => {
         const all = await domainsApi.list();
         return all.find((d) => d.id === id) ?? null;
-    }, []);
+    }, [domainsApi]);
 
     // ---------------------------------------------------------------- step 1
     const connect = async (e) => {

@@ -1,6 +1,6 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import domainsApi, { domainErrorMessage } from '../../api/domains';
+import { domainErrorMessage, makeDomainsApi } from '../../api/domains';
 import DomainAuditHistory from './DomainAuditHistory';
 import { DnsBadge, HealthScore, PrimaryBadge, SslBadge, VerificationBadge } from './DomainBadges';
 import DomainHealthPanel from './DomainHealthPanel';
@@ -15,8 +15,9 @@ import { confirmDialog } from '../ui/confirmDialog';
  * state. A background refresh runs while anything is mid-flight and stops once
  * the list is stable, so an idle tab costs nothing.
  */
-export default function CustomDomainsPanel() {
+export default function CustomDomainsPanel({ apiBase = '/my-store' }) {
     const { t } = useTranslation();
+    const domainsApi = useMemo(() => makeDomainsApi(apiBase), [apiBase]);
 
     const [domains, setDomains] = useState([]);
     const [summary, setSummary] = useState(null);
@@ -39,7 +40,7 @@ export default function CustomDomainsPanel() {
         } finally {
             setLoading(false);
         }
-    }, [t]);
+    }, [domainsApi, t]);
 
     useEffect(() => {
         load();
@@ -291,7 +292,7 @@ export default function CustomDomainsPanel() {
             )}
 
             {wizardOpen && (
-                <DomainSetupWizard onClose={() => setWizardOpen(false)} onCompleted={load} />
+                <DomainSetupWizard apiBase={apiBase} onClose={() => setWizardOpen(false)} onCompleted={load} />
             )}
 
             {auditFor !== undefined && (

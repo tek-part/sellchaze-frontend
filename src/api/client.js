@@ -24,6 +24,9 @@ function resolveBaseURL() {
 
 const baseURL = resolveBaseURL();
 
+const ACCESS_TOKEN_KEY = 'sellchase_access_token';
+const REFRESH_TOKEN_KEY = 'sellchase_refresh_token';
+
 /** Default serializers (JSON, etc.) — must run after the FormData guard below. */
 const defaultTransformRequest = axios.defaults.transformRequest;
 const transformRequestChain = [
@@ -57,8 +60,66 @@ const api = axios.create({
     transformRequest: transformRequestChain,
 });
 
+let refreshPromise = null;
+
+function readToken(key) {
+    if (typeof localStorage === 'undefined') {
+        return null;
+    }
+    return localStorage.getItem(key);
+}
+
+function writeToken(key, value) {
+    if (typeof localStorage === 'undefined') {
+        return;
+    }
+    localStorage.setItem(key, value);
+}
+
+function removeToken(key) {
+    if (typeof localStorage === 'undefined') {
+        return;
+    }
+    localStorage.removeItem(key);
+}
+
+function requestRefresh() {
+    const refreshToken = readToken(REFRESH_TOKEN_KEY);
+    if (!refreshToken) {
+        return Promise.reject(new Error('Missing refresh token.'));
+    }
+
+    if (!refreshPromise) {
+        refreshPromise = api
+            .post(
+                '/auth/refresh',
+                { refresh_token: refreshToken },
+                { _skipRefresh: true },
+            )
+            .then((response) => {
+                const { data } = response;
+                if (!data?.access_token) {
+                    throw new Error('Refresh response missing access token.');
+                }
+                writeToken(ACCESS_TOKEN_KEY, data.access_token);
+                if (data.refresh_token) {
+                    writeToken(REFRESH_TOKEN_KEY, data.refresh_token);
+                }
+                return data.access_token;
+            })
+            .catch((error) => {
+                throw error;
+            })
+            .finally(() => {
+                refreshPromise = null;
+            });
+    }
+
+    return refreshPromise;
+}
+
 api.interceptors.request.use((config) => {
-    const token = localStorage.getItem('sellchase_access_token');
+    const token = readToken(ACCESS_TOKEN_KEY);
     if (token) {
         config.headers.Authorization = `Bearer ${token}`;
     }
@@ -81,20 +142,62 @@ api.interceptors.request.use((config) => {
     return config;
 });
 
+api.interceptors.response.use(
+    (response) => response,
+    async (error) => {
+        const status = error?.response?.status;
+        const original = error?.config || {};
+
+        if (!error?.response || status !== 401) {
+            throw error;
+        }
+
+        if (original._retry || original._skipRefresh) {
+            if (typeof window !== 'undefined') {
+                window.dispatchEvent(new CustomEvent('sellchase:session-expired'));
+            }
+            throw error;
+        }
+
+        const url = String(original.url || '');
+        if (url.includes('/auth/refresh') || url.includes('/auth/login') || url.includes('/auth/google')) {
+            if (typeof window !== 'undefined') {
+                window.dispatchEvent(new CustomEvent('sellchase:session-expired'));
+            }
+            throw error;
+        }
+
+        original._retry = true;
+        try {
+            const token = await requestRefresh();
+            if (!token) {
+                throw new Error('Could not refresh session.');
+            }
+            original.headers.Authorization = `Bearer ${token}`;
+            return api(original);
+        } catch (refreshError) {
+            if (typeof window !== 'undefined') {
+                window.dispatchEvent(new CustomEvent('sellchase:session-expired'));
+            }
+            throw refreshError;
+        }
+    },
+);
+
 export function setTokens({ access_token, refresh_token }) {
     if (access_token) {
-        localStorage.setItem('sellchase_access_token', access_token);
+        writeToken(ACCESS_TOKEN_KEY, access_token);
     }
     if (refresh_token) {
-        localStorage.setItem('sellchase_refresh_token', refresh_token);
+        writeToken(REFRESH_TOKEN_KEY, refresh_token);
     }
 }
 
 export function clearTokens() {
-    localStorage.removeItem('sellchase_access_token');
-    localStorage.removeItem('sellchase_refresh_token');
-    localStorage.removeItem('sellchase_impersonation_backup_access_token');
-    localStorage.removeItem('sellchase_impersonation_backup_refresh_token');
+    removeToken(ACCESS_TOKEN_KEY);
+    removeToken(REFRESH_TOKEN_KEY);
+    removeToken('sellchase_impersonation_backup_access_token');
+    removeToken('sellchase_impersonation_backup_refresh_token');
 }
 
 export default api;
