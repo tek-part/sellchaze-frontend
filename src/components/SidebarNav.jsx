@@ -231,6 +231,10 @@ export default function SidebarNav({ isAdmin = false, isSupplier = false, roles 
                         <HiOutlineNewspaper className="h-5 w-5 shrink-0 opacity-95" aria-hidden />
                         {t('feed_title', 'Community')}
                     </NavLink>
+                    <NavLink to="/financing" className={navLinkClass}>
+                        <HiOutlineBanknotes className="h-5 w-5 shrink-0 opacity-95" aria-hidden />
+                        {t('nav_financing', 'Financing')}
+                    </NavLink>
                     <NavLink to="/crm/suppliers" className={navLinkClass}>
                         <HiOutlineBuildingOffice2 className="h-5 w-5 shrink-0 opacity-95" aria-hidden />
                         {t('suppliers')}
@@ -603,6 +607,10 @@ export default function SidebarNav({ isAdmin = false, isSupplier = false, roles 
                 <NavLink to="/partners" className={navLinkClass}>
                     <HiOutlineUserGroup className="h-5 w-5 shrink-0 opacity-95" aria-hidden />
                     {t('nav_partners')}
+                </NavLink>
+                <NavLink to="/financing" className={navLinkClass}>
+                    <HiOutlineBanknotes className="h-5 w-5 shrink-0 opacity-95" aria-hidden />
+                    {t('nav_financing', 'Financing')}
                 </NavLink>
                 {!isSupplierOnly && (can('suppliers-list') || isAdmin) ? (
                     <NavLink to="/crm/suppliers" className={navLinkClass}>

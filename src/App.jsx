@@ -12,6 +12,7 @@ import Dashboard from './pages/Dashboard';
 // editor) and the pricing page load on demand instead of inflating the main bundle.
 const FeedPage = lazy(() => import('./pages/FeedPage'));
 const PricingPage = lazy(() => import('./pages/PricingPage'));
+const FinancingPage = lazy(() => import('./pages/FinancingPage'));
 import NotificationsPage from './pages/NotificationsPage';
 import OrdersPage from './pages/OrdersPage';
 import QuotationsPage from './pages/QuotationsPage';
@@ -178,6 +179,7 @@ export default function App() {
                 <Route path="/dashboard" element={<Dashboard />} />
                 <Route path="/feed" element={<FeedPage />} />
                 <Route path="/pricing" element={<PricingPage />} />
+                <Route path="/financing" element={<FinancingPage />} />
                 <Route path="/admin/dashboard" element={<AdminDashboardPage />} />
                 <Route path="/admin/reports/users" element={<AdminReportsUsersPage />} />
                 <Route path="/admin/reports/orders" element={<AdminReportsOrdersPage />} />
