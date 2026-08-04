@@ -28,6 +28,7 @@ import toast from 'react-hot-toast';
 import api from '../../api/client';
 import { CHAT_ENABLED } from '../../lib/features';
 import SEO from '../../components/SEO';
+import SimilarSuppliers from './SimilarSuppliers';
 
 const SOCIAL_META = {
     facebook: { Icon: FaFacebookF, color: 'from-[#1877F2] to-[#1877F2]' },
@@ -419,6 +420,9 @@ export default function PublicProfilePage() {
                             </div>
                         )}
                     </div>
+
+                    {/* Internal linking: same-sector suppliers (SEO + discovery). */}
+                    <SimilarSuppliers username={username} />
 
                     <div className="pb-10 text-center text-xs text-slate-400">
                         <Link to="/" className="hover:text-brand">B2B-Sellchase</Link>

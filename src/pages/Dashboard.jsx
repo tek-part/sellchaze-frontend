@@ -14,6 +14,7 @@ import {
 } from 'react-icons/hi2';
 import api from '../api/client';
 import DashboardAnalytics from '../components/dashboard/DashboardAnalytics';
+import OnboardingChecklist from '../components/OnboardingChecklist';
 import { usePermissions } from '../hooks/usePermissions';
 import {
     STAT_KEY_PERMISSION,
@@ -182,6 +183,9 @@ export default function Dashboard() {
                     {t('app_name')} — {t('overview')}
                 </p>
             </Reveal>
+
+            {/* Shown until the 5 setup steps are done; hides itself afterwards. */}
+            <OnboardingChecklist />
 
             {err && (
                 <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">{err}</div>
