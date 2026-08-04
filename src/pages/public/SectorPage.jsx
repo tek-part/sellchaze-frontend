@@ -8,7 +8,7 @@ import SEO from '../../components/SEO';
 import SupplierCard from './SupplierCard';
 import AddFactoryBanner from './AddFactoryBanner';
 
-const ORIGIN = 'https://sellchase.com';
+const ORIGIN = 'https://sellchaze.com';
 
 export default function SectorPage() {
     const { sector } = useParams();

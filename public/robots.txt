@@ -18,6 +18,12 @@ Disallow: /attributes
 Disallow: /balance
 Disallow: /wavex
 Disallow: /partners
+Disallow: /store
+Disallow: /chat
+Disallow: /feed
+Disallow: /financing
+Disallow: /opportunities
+Disallow: /pricing
 Disallow: /employees
 Disallow: /tasks
 Disallow: /ledger
@@ -27,4 +33,4 @@ Disallow: /register
 Disallow: /forgot-password
 Disallow: /reset-password
 
-Sitemap: /sitemap.xml
+Sitemap: https://sellchaze.com/sitemap.xml

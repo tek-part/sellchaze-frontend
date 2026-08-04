@@ -7,7 +7,7 @@ import { langParam } from '../../api/lang';
 import SEO from '../../components/SEO';
 import SupplierCard from './SupplierCard';
 
-const ORIGIN = 'https://sellchase.com';
+const ORIGIN = 'https://sellchaze.com';
 
 export default function SuppliersDirectoryPage() {
     const { t, i18n } = useTranslation();
