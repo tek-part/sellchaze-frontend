@@ -20,6 +20,10 @@ function FlagSA({ className = '' }) {
             className={className + ' rounded-xs ring-1 ring-black/5 shadow-xs'}
             style={{ width: '1.5rem', height: '1rem' }}
             aria-label="Saudi Arabia"
+            // The library renders an <img> without an alt attribute; supply one
+            // explicitly so every image on the site carries ALT text.
+            alt="Saudi Arabia"
+            loading="lazy"
         />
     );
 }
@@ -32,6 +36,8 @@ function FlagGB({ className = '' }) {
             className={className + ' rounded-xs ring-1 ring-black/5 shadow-xs'}
             style={{ width: '1.5rem', height: '1rem' }}
             aria-label="United Kingdom"
+            alt="United Kingdom"
+            loading="lazy"
         />
     );
 }
