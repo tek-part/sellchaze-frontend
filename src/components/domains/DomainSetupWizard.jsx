@@ -307,13 +307,25 @@ export default function DomainSetupWizard({ onClose, onCompleted, apiBase = '/my
                                 />
                             )}
                             <p className="text-xs text-slate-500">{t('domain_wizard_dns_propagation')}</p>
-                            <button
-                                type="button"
-                                onClick={() => setStep(2)}
-                                className="w-full rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-indigo-700 sm:w-auto"
-                            >
-                                {t('domain_wizard_added_records')}
-                            </button>
+                            <div className="flex flex-col gap-2 sm:flex-row">
+                                <button
+                                    type="button"
+                                    onClick={() => setStep(2)}
+                                    className="w-full rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-indigo-700 sm:w-auto"
+                                >
+                                    {t('domain_wizard_added_records')}
+                                </button>
+                                {/* Escape hatch: not every owner manages their own DNS.
+                                    Opens a support ticket pre-filled with the domain. */}
+                                <a
+                                    href={`/tickets?subject=${encodeURIComponent(
+                                        t('domain_help_subject', 'Help connecting my custom domain'),
+                                    )}&domain=${encodeURIComponent(domain?.host ?? '')}`}
+                                    className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-center text-sm font-semibold text-slate-700 transition hover:border-brand hover:text-brand sm:w-auto"
+                                >
+                                    {t('domain_help_cta', 'Request help')}
+                                </a>
+                            </div>
                         </div>
                     )}
 

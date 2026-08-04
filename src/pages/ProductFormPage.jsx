@@ -562,6 +562,15 @@ export default function ProductFormPage() {
                             className="hidden"
                             onChange={(e) => addGalleryFiles(e.target.files)}
                         />
+
+                        {/* Why image quality matters: these products are what
+                            buyers see on the public industry pages. */}
+                        <p className="mt-4 rounded-xl bg-amber-50 px-4 py-3 text-xs leading-relaxed text-amber-800 ring-1 ring-amber-100">
+                            {t(
+                                'product_seo_tip',
+                                'These products are what appear on your industry page and in Google search results — add clear, well-lit images.',
+                            )}
+                        </p>
                     </div>
 
                     {/* Category card */}

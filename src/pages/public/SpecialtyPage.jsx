@@ -6,6 +6,7 @@ import { langParam } from '../../api/lang';
 import SEO from '../../components/SEO';
 import SupplierCard from './SupplierCard';
 import AddFactoryBanner from './AddFactoryBanner';
+import CityLinks from './CityLinks';
 
 const ORIGIN = 'https://sellchaze.com';
 
@@ -112,6 +113,13 @@ export default function SpecialtyPage() {
             {!loading && suppliers.length === 0 ? (
                 <p className="mt-6 text-center text-sm text-slate-400">{t('sup_dir_no_results', 'No suppliers found.')}</p>
             ) : null}
+
+            {/* Deepest long-tail: this specialty, city by city. */}
+            <CityLinks
+                sectorSlug={sector}
+                specialtySlug={specialty}
+                basePath={`/suppliers/${sector}/${specialty}`}
+            />
 
             <AddFactoryBanner />
             <div className="pb-10" />

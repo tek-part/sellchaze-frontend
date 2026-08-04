@@ -7,6 +7,7 @@ import { langParam } from '../../api/lang';
 import SEO from '../../components/SEO';
 import SupplierCard from './SupplierCard';
 import AddFactoryBanner from './AddFactoryBanner';
+import CityLinks from './CityLinks';
 
 const ORIGIN = 'https://sellchaze.com';
 
@@ -178,6 +179,9 @@ export default function SectorPage() {
             {!listLoading && suppliers.length === 0 ? (
                 <p className="mt-6 text-center text-sm text-slate-400">{t('sup_dir_no_results', 'No suppliers found.')}</p>
             ) : null}
+
+            {/* Long-tail city pages for this sector (directory → sector → city). */}
+            <CityLinks sectorSlug={sector} basePath={`/suppliers/${sector}`} />
 
             <AddFactoryBanner />
             <div className="pb-10" />
