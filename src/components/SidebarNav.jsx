@@ -147,19 +147,22 @@ export default function SidebarNav({ isAdmin = false, isSupplier = false, roles 
     const hasBusinessRole = Array.isArray(roles)
         && roles.some((r) => ['Merchant', 'Supplier', 'Customer', 'Employee'].includes(r));
     const isAdminOnly = isAdmin && !isSupplier && !hasBusinessRole;
-    // Feature-based storefront permissions (single-store model). Each drives one
-    // sidebar entry; groups render only when they hold at least one permitted item.
-    const canStoreView = can('store.view');
-    const canStoreProducts = can('store.products.manage');
-    const canStoreCategories = can('store.categories.manage');
-    const canStoreOrders = can('store.orders.manage');
-    const canStoreCoupons = can('store.coupons.manage');
-    const canStoreReviews = can('store.reviews.manage');
-    const canStoreAnalytics = can('store.analytics.view');
-    const canStoreThemes = can('store.themes.manage');
-    const canStorePages = can('store.pages.manage');
-    const canStoreMenus = can('store.menus.manage');
-    const canStoreSettings = can('store.settings.manage');
+    // Type-based store access. A Merchant/Supplier OWNS exactly one store and
+    // sees its full dashboard by virtue of their account type — no per-feature
+    // permission needed. Granular store.* permissions still apply to their
+    // employees and to admin-internal users (who are not owners themselves).
+    const isStoreOwner = Array.isArray(roles) && roles.some((r) => ['Merchant', 'Supplier'].includes(r));
+    const canStoreView = isStoreOwner || can('store.view');
+    const canStoreProducts = isStoreOwner || can('store.products.manage');
+    const canStoreCategories = isStoreOwner || can('store.categories.manage');
+    const canStoreOrders = isStoreOwner || can('store.orders.manage');
+    const canStoreCoupons = isStoreOwner || can('store.coupons.manage');
+    const canStoreReviews = isStoreOwner || can('store.reviews.manage');
+    const canStoreAnalytics = isStoreOwner || can('store.analytics.view');
+    const canStoreThemes = isStoreOwner || can('store.themes.manage');
+    const canStorePages = isStoreOwner || can('store.pages.manage');
+    const canStoreMenus = isStoreOwner || can('store.menus.manage');
+    const canStoreSettings = isStoreOwner || can('store.settings.manage');
     const openStore = usePathPrefix('/store');
     const storeMyGroup = canStoreSettings || canStoreThemes || canStorePages || canStoreMenus;
     const storeCatalogGroup = canStoreProducts || canStoreCategories;
