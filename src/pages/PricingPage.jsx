@@ -78,9 +78,24 @@ export default function PricingPage() {
     };
 
     const formatPrice = (p) => {
-        const price = Number(p.price ?? 0);
+        const price = Number(p.price_monthly ?? 0);
         if (!price) return t('sub_free', 'Free');
         return `${price} ${p.currency ?? ''}`.trim();
+    };
+
+    // Turn the plan's numeric quotas map into a few human bullet lines.
+    const quotaLines = (p) => {
+        const q = p.quotas ?? {};
+        const labels = {
+            max_products: t('sub_q_products', '{{n}} products', { n: q.max_products }),
+            max_orders_per_month: t('sub_q_orders', '{{n}} orders / month', { n: q.max_orders_per_month }),
+            max_employees: t('sub_q_employees', '{{n}} team members', { n: q.max_employees }),
+        };
+        return Object.keys(labels)
+            .filter((k) => k in q)
+            .map((k) => (q[k] === null || q[k] === undefined
+                ? t('sub_q_unlimited', 'Unlimited') + ' ' + k.replace(/^max_/, '').replace(/_/g, ' ')
+                : labels[k]));
     };
 
     return (
@@ -132,20 +147,18 @@ export default function PricingPage() {
 
                                 <div className="mt-3 flex items-baseline gap-1">
                                     <span className="text-2xl font-bold text-slate-900">{formatPrice(p)}</span>
-                                    {Number(p.price ?? 0) ? (
+                                    {Number(p.price_monthly ?? 0) ? (
                                         <span className="text-sm text-slate-500">{t('sub_per_month', '/ month')}</span>
                                     ) : null}
                                 </div>
 
                                 <ul className="mt-4 flex-1 space-y-2 text-sm text-slate-600">
-                                    <li className="flex items-center gap-2">
-                                        <HiOutlineCheck className="h-4 w-4 shrink-0 text-brand" aria-hidden />
-                                        {p.unlimited
-                                            ? t('sub_unlimited_posts', 'Unlimited monthly posts')
-                                            : t('sub_monthly_posts', '{{num}} posts / month', {
-                                                  num: p.post_limit_monthly ?? 0,
-                                              })}
-                                    </li>
+                                    {quotaLines(p).map((line) => (
+                                        <li key={line} className="flex items-center gap-2">
+                                            <HiOutlineCheck className="h-4 w-4 shrink-0 text-brand" aria-hidden />
+                                            {line}
+                                        </li>
+                                    ))}
                                     {p.trial_days ? (
                                         <li className="flex items-center gap-2">
                                             <HiOutlineCheck className="h-4 w-4 shrink-0 text-brand" aria-hidden />
