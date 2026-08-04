@@ -24,6 +24,7 @@ export default function StoreSettingsPage() {
     const [store, setStore] = useState(null);
     const [status, setStatus] = useState('draft');
     const [currency, setCurrency] = useState('USD');
+    const [description, setDescription] = useState('');
     const [logoFile, setLogoFile] = useState(null);
     const [bannerFile, setBannerFile] = useState(null);
     const [loading, setLoading] = useState(false);
@@ -50,6 +51,7 @@ export default function StoreSettingsPage() {
                 setStore(s);
                 setStatus(s.status ?? 'draft');
                 setCurrency(s.currency ?? 'USD');
+                setDescription(s.description ?? '');
             })
             .catch((e) => setErr(e.response?.data?.message || e.message));
     }, [id, permissions]);
@@ -67,6 +69,7 @@ export default function StoreSettingsPage() {
             fd.append('_method', 'PUT');
             fd.append('status', status);
             fd.append('currency', currency);
+            fd.append('description', description ?? '');
             if (logoFile) fd.append('logo', logoFile);
             if (bannerFile) fd.append('banner', bannerFile);
             const { data } = await api.post(`${apiBase}`, fd);
@@ -122,6 +125,39 @@ export default function StoreSettingsPage() {
                         </SearchableSelect>
                     </div>
                 </div>
+
+                {/* Company description — shown on the storefront and used as its
+                    meta description, so it is worth writing properly. */}
+                <div>
+                    <label className={label}>{t('store_description', 'Company description')}</label>
+                    <textarea
+                        rows={4}
+                        value={description}
+                        maxLength={1000}
+                        onChange={(e) => setDescription(e.target.value)}
+                        placeholder={t('store_description_ph', 'What does your company make, and who do you serve?')}
+                        className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-800 outline-none transition focus:border-brand focus:ring-2 focus:ring-brand/20"
+                    />
+                    <p className="mt-1 text-xs text-slate-400">
+                        {t('store_description_hint', 'Appears on your site and in search results.')}
+                    </p>
+                </div>
+
+                {status !== 'active' ? (
+                    <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl bg-emerald-50 px-4 py-3 ring-1 ring-emerald-100">
+                        <p className="text-sm text-emerald-800">
+                            {t('store_publish_hint', 'Your site is not public yet. Publish it to make it live.')}
+                        </p>
+                        <button
+                            type="submit"
+                            onClick={() => setStatus('active')}
+                            disabled={loading}
+                            className="rounded-xl bg-emerald-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-700 disabled:opacity-50"
+                        >
+                            {t('store_publish', 'Publish site')}
+                        </button>
+                    </div>
+                ) : null}
 
                 <div className="grid gap-4 sm:grid-cols-2">
                     <div>
