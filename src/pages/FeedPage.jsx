@@ -5,6 +5,8 @@ import api from '../api/client';
 import { langParam } from '../api/lang';
 import PostComposer from '../components/feed/PostComposer';
 import PostCard from '../components/feed/PostCard';
+import CommunityWelcome from '../components/feed/CommunityWelcome';
+import FollowSuggestions from '../components/feed/FollowSuggestions';
 
 export default function FeedPage() {
     const { t, i18n } = useTranslation();
@@ -100,6 +102,10 @@ export default function FeedPage() {
             </div>
 
             <PostComposer onCreated={prependPost} />
+
+            {/* Welcome + "follow these" — the community on-ramp for new members. */}
+            <CommunityWelcome />
+            <FollowSuggestions />
 
             {/* Filter bar: scope tabs + sector select */}
             <div className="flex flex-wrap items-center justify-between gap-3">
