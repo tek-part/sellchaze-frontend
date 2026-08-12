@@ -13,7 +13,7 @@ export default function CommunityHero() {
     return (
         <section className="relative isolate overflow-hidden rounded-2xl bg-slate-950 shadow-[0_18px_55px_-30px_rgba(10,61,124,.7)]">
             <img
-                src="/community/sellchaze-community-hero-v1.png"
+                src="/media/community/sellchaze-community-hero-v1.png"
                 alt=""
                 fetchPriority="high"
                 decoding="async"

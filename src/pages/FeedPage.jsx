@@ -147,13 +147,9 @@ export default function FeedPage({ initialScope = 'all', titleKey = null, title 
                     <FollowSuggestions />
                 </div>
 
-                {/* Filter bar — pinned flush under the app header.
-                    The scroll container is the padded <main>, and `top: 0` would
-                    park the bar one padding-step below the header; the negative
-                    offsets cancel that padding (p-3 / md:p-5 / lg:p-7) so the bar
-                    stops exactly at the top. Its own blurred backdrop covers the
-                    band the posts scroll through underneath. */}
-                <div className="sticky top-[-0.75rem] z-30 -mx-1 bg-surface/80 px-1 py-2 backdrop-blur-xl md:top-[-1.25rem] lg:top-[-1.75rem]">
+                {/* Filter bar — sits in the flow and scrolls away with the page
+                    (it used to stick over the posts, which read as clutter). */}
+                <div>
                     <div className="flex items-center justify-between gap-3 rounded-2xl bg-white p-1.5 shadow-[0_10px_30px_-20px_rgba(15,23,42,.5)] ring-1 ring-slate-200/80">
                         {showScopeTabs ? (
                             <div className="inline-flex rounded-xl bg-slate-100/80 p-1">

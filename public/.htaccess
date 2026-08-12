@@ -26,6 +26,14 @@
     RewriteRule ^ index.html [L]
 </IfModule>
 
+# Never expose a directory listing. mod_autoindex only runs for directories
+# with no index file; hiding every entry keeps a stray directory URL from
+# advertising the files inside it. (IndexIgnore, unlike `Options -Indexes`,
+# cannot 500 the site if the host's AllowOverride excludes Options.)
+<IfModule mod_autoindex.c>
+    IndexIgnore *
+</IfModule>
+
 # Long cache for hashed assets (Vite emits filenames with content hash)
 <IfModule mod_headers.c>
     <FilesMatch "\.(js|css|woff2?|png|jpg|jpeg|gif|svg|ico|webp)$">

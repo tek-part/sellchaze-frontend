@@ -1,5 +1,8 @@
+import { useEffect, useState } from 'react';
 import { NavLink } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import api from '../../../api/client';
+import { initials } from '../../../components/feed/helpers';
 import {
     HiBookmark,
     HiFire,
@@ -86,7 +89,7 @@ function OpportunitiesPromo() {
     return (
         <section className="group relative isolate min-h-48 overflow-hidden rounded-2xl text-white shadow-[0_14px_40px_-26px_rgba(15,23,42,.6)]">
             <img
-                src="/community/b2b-opportunity-cover-v1.png"
+                src="/media/community/b2b-opportunity-cover-v1.png"
                 alt=""
                 loading="lazy"
                 decoding="async"
@@ -109,6 +112,23 @@ function OpportunitiesPromo() {
  */
 export default function CommunityShell({ children, rightRail = true }) {
     const { t } = useTranslation();
+    const [me, setMe] = useState(null);
+
+    useEffect(() => {
+        let alive = true;
+        api.get('/auth/me')
+            .then(({ data }) => {
+                if (alive) setMe(data.user || data);
+            })
+            .catch(() => {});
+        return () => {
+            alive = false;
+        };
+    }, []);
+
+    const myUsername = me?.profile?.username;
+    const myPhoto = me?.profile?.photo_url || me?.avatar;
+    const myName = me?.profile?.company || me?.name;
 
     return (
         <div className="mx-auto w-full max-w-[1400px] pb-24 lg:pb-0">
@@ -123,6 +143,35 @@ export default function CommunityShell({ children, rightRail = true }) {
                         {NAV_ITEMS.map((item) => (
                             <SidebarLink key={item.to} {...item} />
                         ))}
+
+                        {/* My profile — an Instagram-style row with the real avatar. */}
+                        {myUsername ? (
+                            <NavLink
+                                to={`/community/u/${myUsername}`}
+                                className={({ isActive }) =>
+                                    `sc-press flex items-center gap-4 rounded-xl px-3 py-3 text-[15px] transition hover:bg-slate-100/80 ${
+                                        isActive ? 'font-bold text-slate-900' : 'font-medium text-slate-700'
+                                    }`
+                                }
+                            >
+                                {({ isActive }) => (
+                                    <>
+                                        {myPhoto ? (
+                                            <img
+                                                src={myPhoto}
+                                                alt=""
+                                                className={`h-6 w-6 shrink-0 rounded-full object-cover ${isActive ? 'ring-2 ring-slate-900' : 'ring-1 ring-slate-200'}`}
+                                            />
+                                        ) : (
+                                            <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-brand-dark to-brand text-[10px] font-bold text-white">
+                                                {initials(myName)}
+                                            </span>
+                                        )}
+                                        <span className="truncate">{t('community_nav_profile', 'Profile')}</span>
+                                    </>
+                                )}
+                            </NavLink>
+                        ) : null}
                     </nav>
 
                     <NavLink

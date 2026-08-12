@@ -255,14 +255,26 @@ export default function PostCard({ post, onDeleted, index = 0 }) {
             style={{ '--sc-delay': `${Math.min(index, 6) * 55}ms` }}
             className="sc-rise rounded-2xl bg-white shadow-[0_10px_35px_-26px_rgba(15,23,42,.5)] ring-1 ring-slate-200/80 transition-shadow hover:shadow-[0_16px_45px_-28px_rgba(15,23,42,.55)]"
         >
-            {/* Author header */}
+            {/* Author header — the photo and the name both open the profile. */}
             <header className="flex items-start gap-3 px-5 pt-5">
-                <Avatar name={author.name || author.company} photo={author.photo} />
+                {author.username ? (
+                    <Link to={`/community/u/${author.username}`} aria-label={author.name || author.company} className="shrink-0">
+                        <Avatar name={author.name || author.company} photo={author.photo} />
+                    </Link>
+                ) : (
+                    <Avatar name={author.name || author.company} photo={author.photo} />
+                )}
                 <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-x-1.5">
-                        <span className="truncate text-sm font-bold text-slate-900">
-                            {post.acting_as?.type === 'organization' ? post.acting_as.name : author.name}
-                        </span>
+                        {author.username ? (
+                            <Link to={`/community/u/${author.username}`} className="truncate text-sm font-bold text-slate-900 hover:underline">
+                                {post.acting_as?.type === 'organization' ? post.acting_as.name : author.name}
+                            </Link>
+                        ) : (
+                            <span className="truncate text-sm font-bold text-slate-900">
+                                {post.acting_as?.type === 'organization' ? post.acting_as.name : author.name}
+                            </span>
+                        )}
                         {author.is_verified ? (
                             <HiCheckBadge className="h-4 w-4 shrink-0 text-brand" title={t('feed_verified', 'Verified')} aria-label={t('feed_verified', 'Verified')} />
                         ) : null}
