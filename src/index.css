@@ -87,6 +87,32 @@ layer(base);
   }
 }
 
+/* ------------------------------------------------------------------ */
+/*  Platform density: the whole dashboard renders at 90%, like a       */
+/*  browser set to 90% zoom. `zoom` scales px and rem alike, so the    */
+/*  design stays proportional. Every viewport-height utility inside    */
+/*  the zoomed tree must be divided back by the factor, or the shell   */
+/*  would fill only 90% of the screen and leave a dead band below.     */
+/*  (Browsers without `zoom` — old Firefox — simply render at 100%.)   */
+/* ------------------------------------------------------------------ */
+@supports (zoom: 0.9) {
+    #root {
+        zoom: 0.9;
+    }
+
+    #root .h-dvh {
+        height: calc(100dvh / 0.9);
+    }
+
+    #root .max-h-dvh {
+        max-height: calc(100dvh / 0.9);
+    }
+
+    #root .min-h-dvh {
+        min-height: calc(100dvh / 0.9);
+    }
+}
+
 @layer base {
     html {
         margin: 0;

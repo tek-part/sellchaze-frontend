@@ -8,7 +8,7 @@ import { HiOutlineChevronLeft, HiOutlineChevronRight } from 'react-icons/hi2';
  * doubles as a position indicator. Index tracking runs off the scroll
  * position itself so touch swipes and button steps stay in sync.
  */
-export default function MediaCarousel({ media }) {
+export default function MediaCarousel({ media, onOpen }) {
     const { t } = useTranslation();
     const railRef = useRef(null);
     const [index, setIndex] = useState(0);
@@ -36,14 +36,15 @@ export default function MediaCarousel({ media }) {
                 onScroll={onScroll}
                 className="sc-rail flex snap-x snap-mandatory overflow-x-auto bg-slate-950"
             >
-                {items.map((item) => (
+                {items.map((item, i) => (
                     <img
                         key={item.id}
                         src={item.url}
                         alt={item.alt_text || ''}
                         loading="lazy"
                         decoding="async"
-                        className="aspect-square w-full shrink-0 snap-center object-cover"
+                        onClick={() => onOpen?.(i)}
+                        className={`aspect-[4/3] max-h-[420px] w-full shrink-0 snap-center object-cover ${onOpen ? 'cursor-zoom-in' : ''}`}
                     />
                 ))}
             </div>

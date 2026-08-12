@@ -24,6 +24,7 @@ import notify from '../ui/notify';
 import { initials, relativeTime } from './helpers';
 import CommentThread from './CommentThread';
 import MediaCarousel from '../../features/community/components/MediaCarousel';
+import Lightbox from '../../features/community/components/Lightbox';
 import { decorateSocialHtml } from '../../features/community/social/socialText';
 import { trackFeedEvent } from '../../features/community/api/events';
 
@@ -84,6 +85,7 @@ export default function PostCard({ post, onDeleted, index = 0 }) {
     const [reactionSummary, setReactionSummary] = useState(post.reaction_summary || {});
     const [pickerOpen, setPickerOpen] = useState(false);
     const [burst, setBurst] = useState(false);
+    const [lightboxAt, setLightboxAt] = useState(null); // image index | null
     const cardRef = useRef(null);
     const pickerTimer = useRef(null);
 
@@ -371,57 +373,78 @@ export default function PostCard({ post, onDeleted, index = 0 }) {
                 </p>
             ) : null}
 
-            {post.format === 'carousel' && media.filter((item) => item.kind === 'image').length >= 2 ? (
-                <div className="mt-4">
-                    <MediaCarousel media={media} />
-                </div>
-            ) : media.length > 0 ? (
-                <div className={`mt-4 grid gap-0.5 bg-slate-950 ${media.length === 1 ? 'grid-cols-1' : 'grid-cols-2'}`}>
-                    {media.map((item, i) => {
-                        // An odd gallery reads better with a full-width lead image.
-                        const lead = media.length === 3 && i === 0 ? 'col-span-2' : '';
-                        if (item.kind === 'video') {
-                            return (
-                                <video
-                                    key={item.id}
-                                    src={item.variants?.web?.url || item.url}
-                                    poster={item.variants?.poster?.url}
-                                    controls
-                                    preload="metadata"
-                                    playsInline
-                                    className={`max-h-[420px] w-full bg-black object-contain ${lead}`}
-                                />
-                            );
-                        }
-                        if (item.kind === 'document') {
-                            return (
-                                <a
-                                    key={item.id}
-                                    href={item.url}
-                                    target="_blank"
-                                    rel="noreferrer"
-                                    className={`flex min-h-32 items-center justify-center gap-2 bg-brand-light p-6 text-sm font-bold text-brand-dark transition hover:bg-brand-light/70 ${lead}`}
-                                >
-                                    <HiOutlineDocumentText className="h-5 w-5 shrink-0" aria-hidden />
-                                    <span className="truncate">{item.name || t('feed_open_document', 'Open document')}</span>
-                                </a>
-                            );
-                        }
-                        // Single image: natural ratio capped in height. In a
-                        // grid: uniform 4:3 tiles so the gallery stays compact.
-                        return (
-                            <img
+            {(() => {
+                const images = media.filter((item) => item.kind === 'image');
+                const videos = media.filter((item) => item.kind === 'video');
+                const documents = media.filter((item) => item.kind === 'document');
+                const isCarousel = post.format === 'carousel' && images.length >= 2;
+                const extra = images.length - 2;
+
+                return (
+                    <>
+                        {videos.map((item) => (
+                            <video
                                 key={item.id}
-                                src={item.url}
-                                alt={item.alt_text || ''}
-                                loading="lazy"
-                                decoding="async"
-                                className={`w-full object-cover ${media.length === 1 ? 'max-h-[420px]' : `aspect-[4/3] ${lead ? 'max-h-[300px]' : ''}`} ${lead}`}
+                                src={item.variants?.web?.url || item.url}
+                                poster={item.variants?.poster?.url}
+                                controls
+                                preload="metadata"
+                                playsInline
+                                className="mt-4 max-h-[420px] w-full bg-black object-contain"
                             />
-                        );
-                    })}
-                </div>
-            ) : null}
+                        ))}
+
+                        {isCarousel ? (
+                            <div className="mt-4">
+                                <MediaCarousel media={media} onOpen={(i) => setLightboxAt(i)} />
+                            </div>
+                        ) : images.length > 0 ? (
+                            // The feed shows at most two tiles; the rest hide
+                            // behind a "+N" veil and everything opens the viewer.
+                            <div className={`mt-4 grid gap-0.5 ${images.length === 1 ? 'grid-cols-1' : 'grid-cols-2'}`}>
+                                {images.slice(0, 2).map((item, i) => (
+                                    <button
+                                        key={item.id}
+                                        type="button"
+                                        onClick={() => setLightboxAt(i)}
+                                        className="relative block w-full cursor-zoom-in"
+                                    >
+                                        <img
+                                            src={item.url}
+                                            alt={item.alt_text || ''}
+                                            loading="lazy"
+                                            decoding="async"
+                                            className={`w-full object-cover ${images.length === 1 ? 'max-h-[420px]' : 'aspect-[4/3]'}`}
+                                        />
+                                        {i === 1 && extra > 0 ? (
+                                            <span className="absolute inset-0 flex items-center justify-center bg-black/55 text-2xl font-bold text-white">
+                                                +{extra}
+                                            </span>
+                                        ) : null}
+                                    </button>
+                                ))}
+                            </div>
+                        ) : null}
+
+                        {documents.map((item) => (
+                            <a
+                                key={item.id}
+                                href={item.url}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="mx-5 mt-3 flex items-center justify-center gap-2 rounded-xl bg-brand-light p-4 text-sm font-bold text-brand-dark transition hover:bg-brand-light/70"
+                            >
+                                <HiOutlineDocumentText className="h-5 w-5 shrink-0" aria-hidden />
+                                <span className="truncate">{item.name || t('feed_open_document', 'Open document')}</span>
+                            </a>
+                        ))}
+
+                        {lightboxAt !== null ? (
+                            <Lightbox images={images} index={lightboxAt} onClose={() => setLightboxAt(null)} />
+                        ) : null}
+                    </>
+                );
+            })()}
 
             {/* Attached product mini-card */}
             {post.product ? (
