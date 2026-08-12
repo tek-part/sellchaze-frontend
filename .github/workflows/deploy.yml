@@ -44,9 +44,7 @@ jobs:
             APP_DIR=/home/sellchaze/repos/frontend
             WEB_ROOT=/home/sellchaze/public_html
 
-            case "$DEPLOY_SHA" in
-              ''|*[!0-9a-f]*) echo "Invalid deployment SHA" >&2; exit 1 ;;
-            esac
+            printf '%s\n' "$DEPLOY_SHA" | grep -Eq '^[0-9a-f]{40}$'
 
             mkdir -p /home/sellchaze/repos
             if [ ! -d "$APP_DIR/.git" ]; then
