@@ -1,6 +1,7 @@
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { HiOutlineArrowUpTray, HiOutlineDocumentText, HiOutlineXMark } from 'react-icons/hi2';
+import { HiOutlineArrowUpTray, HiOutlineDocumentText, HiOutlinePencilSquare, HiOutlineXMark } from 'react-icons/hi2';
+import ImageEditorDialog from './ImageEditorDialog';
 
 const ACCEPT = 'image/jpeg,image/png,image/webp,image/gif,video/mp4,video/webm,video/quicktime,application/pdf';
 const VIDEO_ACCEPT = 'video/mp4,video/webm,video/quicktime';
@@ -23,6 +24,18 @@ export default function ComposerMediaTray({ files, onChange, mode = 'post' }) {
     const { t } = useTranslation();
     const inputRef = useRef(null);
     const videoOnly = mode === 'reel';
+    const [editingKey, setEditingKey] = useState(null);
+
+    const applyEdit = (blob) => {
+        const target = files.find((file) => file.key === editingKey);
+        setEditingKey(null);
+        if (!target) return;
+        if (target.previewUrl) URL.revokeObjectURL(target.previewUrl);
+        const edited = new File([blob], target.name.replace(/\.\w+$/, '') + '.jpg', { type: 'image/jpeg' });
+        onChange?.(files.map((file) => (file.key === target.key
+            ? { ...file, blob: edited, previewUrl: URL.createObjectURL(edited) }
+            : file)));
+    };
 
     const addFiles = (picked) => {
         const room = Math.max(0, MAX_FILES - files.length);
@@ -81,6 +94,15 @@ export default function ComposerMediaTray({ files, onChange, mode = 'post' }) {
                             >
                                 <HiOutlineXMark className="h-4 w-4" aria-hidden />
                             </button>
+                            <button
+                                type="button"
+                                onClick={() => setEditingKey(file.key)}
+                                aria-label={t('image_edit', 'Edit image')}
+                                className="sc-press absolute bottom-1.5 end-1.5 flex items-center gap-1 rounded-full bg-black/60 px-2.5 py-1 text-[11px] font-bold text-white backdrop-blur transition hover:bg-black/80"
+                            >
+                                <HiOutlinePencilSquare className="h-3.5 w-3.5" aria-hidden />
+                                {t('image_edit', 'Edit image')}
+                            </button>
                         </div>
                     ))}
                 </div>
@@ -131,6 +153,13 @@ export default function ComposerMediaTray({ files, onChange, mode = 'post' }) {
                     addFiles(event.target.files);
                     event.target.value = '';
                 }}
+            />
+
+            <ImageEditorDialog
+                open={!!editingKey}
+                file={files.find((file) => file.key === editingKey)?.blob ?? null}
+                onClose={() => setEditingKey(null)}
+                onApply={applyEdit}
             />
         </div>
     );

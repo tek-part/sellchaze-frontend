@@ -29,11 +29,10 @@ export function extractHashtags(html) {
  */
 export function decorateSocialHtml(html) {
     let out = String(html ?? '');
-    // Hashtags → trending search links. The negative lookahead on `<` keeps us
-    // out of tag internals; hashtags only ever sit in text nodes here because
-    // the body was sanitised first.
+    // Hashtags → the tag's own page. Hashtags only ever sit in text nodes here
+    // because the body was sanitised first.
     out = out.replace(HASHTAG_RE, (full, prefix, tag) =>
-        `${prefix}<a href="/community/trending?tag=${encodeURIComponent(tag)}" class="sc-hashtag">#${tag}</a>`);
+        `${prefix}<a href="/community/tag/${encodeURIComponent(tag)}" class="sc-hashtag">#${tag}</a>`);
     // Stored mention anchors get the pill class (idempotent).
     out = out.replace(/<a([^>]*data-mention[^>]*)>/g, (full, attrs) =>
         attrs.includes('class=') ? full : `<a${attrs} class="sc-mention">`);

@@ -69,7 +69,7 @@ export default function FollowSuggestions() {
                                 )}
                                 <span className="flex items-center gap-1 text-xs text-slate-400">
                                     {s.is_verified ? <HiOutlineCheckBadge className="h-3.5 w-3.5 text-brand" aria-hidden /> : null}
-                                    {s.city || t('feed_follow_member', 'Member')}
+                                    {s.city || (s.role ? t(`role_${s.role}`, s.role) : t('feed_follow_member', 'Member'))}
                                 </span>
                             </span>
                             <button

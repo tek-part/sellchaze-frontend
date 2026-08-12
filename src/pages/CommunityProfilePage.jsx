@@ -7,15 +7,18 @@ import {
     HiOutlineBriefcase,
     HiOutlineCamera,
     HiOutlineCalendarDays,
+    HiOutlineCheck,
     HiOutlineGlobeAlt,
     HiOutlineMapPin,
     HiOutlinePencilSquare,
+    HiOutlinePlus,
     HiOutlineUsers,
     HiOutlineXMark,
 } from 'react-icons/hi2';
 import api from '../api/client';
 import { langParam } from '../api/lang';
 import FeedSkeleton from '../features/community/components/FeedSkeleton';
+import ImageEditorDialog from '../features/community/components/ImageEditorDialog';
 import QuickComposer from '../features/community/components/QuickComposer';
 import PostCard from '../components/feed/PostCard';
 import notify from '../components/ui/notify';
@@ -41,6 +44,8 @@ export default function CommunityProfilePage() {
 
     const [posts, setPosts] = useState([]);
     const [postsLoading, setPostsLoading] = useState(true);
+    const [followBusy, setFollowBusy] = useState(false);
+    const [following, setFollowing] = useState(false);
 
     const [editing, setEditing] = useState(false);
     const [form, setForm] = useState({ biography: '', tagline: '', website: '', company: '', city: '', country: '' });
@@ -54,6 +59,7 @@ export default function CommunityProfilePage() {
         api.get(`/public/profile/${encodeURIComponent(username)}`)
             .then(({ data: payload }) => {
                 setData(payload);
+                setFollowing(!!payload.viewer?.is_following);
                 setForm({
                     biography: payload.profile?.biography ?? '',
                     tagline: payload.profile?.tagline ?? '',
@@ -77,10 +83,11 @@ export default function CommunityProfilePage() {
         api.get('/auth/me').then(({ data: payload }) => setMe(payload.user || payload)).catch(() => {});
     }, []);
 
+    const wantArchive = tab === 'archive';
     useEffect(() => {
         let alive = true;
         setPostsLoading(true);
-        api.get('/feed', { params: { author: username, per_page: 10, lang } })
+        api.get('/feed', { params: { author: username, per_page: 10, lang, ...(wantArchive ? { archived: 1 } : {}) } })
             .then(({ data: payload }) => {
                 if (alive) setPosts(payload.data ?? []);
             })
@@ -93,9 +100,35 @@ export default function CommunityProfilePage() {
         return () => {
             alive = false;
         };
-    }, [username, lang]);
+    }, [username, lang, wantArchive]);
+
+    const toggleFollow = async () => {
+        if (followBusy || !data) return;
+        setFollowBusy(true);
+        const next = !following;
+        setFollowing(next);
+        try {
+            if (next) await api.post('/follows', { user_id: data.user.id });
+            else await api.delete(`/follows/${data.user.id}`);
+            setData((prev) => prev && ({
+                ...prev,
+                stats: { ...prev.stats, followers_count: Math.max(0, (prev.stats?.followers_count ?? 0) + (next ? 1 : -1)) },
+            }));
+            if (next) notify.success(t('toast_following', 'Now following'));
+        } catch {
+            setFollowing(!next);
+            notify.error(t('toast_failed', 'Something went wrong'));
+        } finally {
+            setFollowBusy(false);
+        }
+    };
 
     const isMe = !!me?.profile?.username && me.profile.username === username;
+
+    // Picking a file opens the editor first (avatar crops square, cover 10:3 —
+    // the exact ratio the server force-fits to 1600×480); Apply uploads the
+    // edited blob.
+    const [editorState, setEditorState] = useState(null); // { kind, file }
 
     const uploadImage = async (kind, file) => {
         if (!file) return;
@@ -103,7 +136,7 @@ export default function CommunityProfilePage() {
         setBusy(true);
         try {
             const body = new FormData();
-            body.append(kind === 'cover' ? 'cover' : 'avatar', file);
+            body.append(kind === 'cover' ? 'cover' : 'avatar', new File([file], `${kind}.jpg`, { type: 'image/jpeg' }));
             await api.post(kind === 'cover' ? '/auth/me/cover' : '/auth/me/avatar', body, {
                 headers: { 'Content-Type': 'multipart/form-data' },
             });
@@ -286,7 +319,7 @@ export default function CommunityProfilePage() {
                                 <HiOutlineCamera className="h-4.5 w-4.5" aria-hidden />
                                 {coverBusy ? t('profile_saving', 'Saving…') : t('profile_edit_cover', 'Edit cover')}
                             </button>
-                            <input ref={coverInputRef} type="file" hidden accept="image/jpeg,image/png,image/webp" onChange={(e) => { uploadImage('cover', e.target.files?.[0]); e.target.value = ''; }} />
+                            <input ref={coverInputRef} type="file" hidden accept="image/jpeg,image/png,image/webp" onChange={(e) => { const f = e.target.files?.[0]; if (f) setEditorState({ kind: 'cover', file: f }); e.target.value = ''; }} />
                         </>
                     ) : null}
                 </div>
@@ -313,7 +346,7 @@ export default function CommunityProfilePage() {
                                     >
                                         <HiOutlineCamera className="h-5 w-5" aria-hidden />
                                     </button>
-                                    <input ref={photoInputRef} type="file" hidden accept="image/jpeg,image/png,image/webp" onChange={(e) => { uploadImage('avatar', e.target.files?.[0]); e.target.value = ''; }} />
+                                    <input ref={photoInputRef} type="file" hidden accept="image/jpeg,image/png,image/webp" onChange={(e) => { const f = e.target.files?.[0]; if (f) setEditorState({ kind: 'avatar', file: f }); e.target.value = ''; }} />
                                 </>
                             ) : null}
                         </div>
@@ -328,13 +361,46 @@ export default function CommunityProfilePage() {
                                 {profile.tagline ? ` · ${profile.tagline}` : ''}
                             </p>
                             <p className="mt-1 text-sm font-semibold text-slate-600">
-                                {stats.partners_count ?? 0} {t('profile_partners', 'Partners')}
+                                <span className="me-1 rounded-full bg-brand-light px-2 py-0.5 text-xs font-bold text-brand-dark">
+                                    {t(`role_${user.role}`, user.role)}
+                                </span>
+                                {data.viewer?.follows_you ? (
+                                    <span className="me-1 rounded-full bg-slate-100 px-2 py-0.5 text-xs font-bold text-slate-500">
+                                        {t('follows_you', 'Follows you')}
+                                    </span>
+                                ) : null}
+                                <Link to={`/community/connections/${profile.username}`} className="hover:underline">
+                                    <strong>{stats.followers_count ?? 0}</strong> {t('followers_title', 'Followers')}
+                                </Link>
+                                {' · '}
+                                <Link to={`/community/connections/${profile.username}?tab=following`} className="hover:underline">
+                                    <strong>{stats.following_count ?? 0}</strong> {t('following_title', 'Following')}
+                                </Link>
+                                {' · '}{stats.partners_count ?? 0} {t('profile_partners', 'Partners')}
                                 {stats.products_count ? <> · {stats.products_count} {t('profile_products', 'Products')}</> : null}
                                 {memberYear ? <span className="text-slate-400"> · {t('profile_member_since', 'Member since {{year}}', { year: memberYear })}</span> : null}
                             </p>
                         </div>
 
                         <div className="flex shrink-0 flex-wrap items-center gap-2 pb-1 sm:pb-4">
+                            {!isMe ? (
+                                <button
+                                    type="button"
+                                    disabled={followBusy}
+                                    onClick={toggleFollow}
+                                    className={`sc-press inline-flex items-center gap-1.5 rounded-xl px-4 py-2.5 text-sm font-bold transition disabled:opacity-50 ${
+                                        following
+                                            ? 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                                            : 'bg-brand text-white shadow-md shadow-brand/25 hover:bg-brand-dark'
+                                    }`}
+                                >
+                                    {following ? (
+                                        <><HiOutlineCheck className="h-4 w-4" aria-hidden />{t('feed_following', 'Following')}</>
+                                    ) : (
+                                        <><HiOutlinePlus className="h-4 w-4" aria-hidden />{data.viewer?.follows_you ? t('follow_back', 'Follow back') : t('feed_follow', 'Follow')}</>
+                                    )}
+                                </button>
+                            ) : null}
                             {profile.website ? (
                                 <a
                                     href={profile.website}
@@ -359,9 +425,13 @@ export default function CommunityProfilePage() {
                         </div>
                     </div>
 
-                    {/* Tab strip */}
+                    {/* Tab strip — the archive is the owner's private third tab. */}
                     <div className="mt-4 flex gap-1 border-t border-slate-200/80">
-                        {[['posts', t('profile_tab_posts', 'Posts')], ['about', t('profile_tab_about', 'About')]].map(([id, label]) => (
+                        {[
+                            ['posts', t('profile_tab_posts', 'Posts')],
+                            ['about', t('profile_tab_about', 'About')],
+                            ...(isMe ? [['archive', t('profile_tab_archive', 'Archive')]] : []),
+                        ].map(([id, label]) => (
                             <button
                                 key={id}
                                 type="button"
@@ -379,7 +449,21 @@ export default function CommunityProfilePage() {
                 </div>
             </section>
 
-            {/* Body — intro card beside the wall, exactly the Facebook column split. */}
+            {/* Crop/rotate/enhance before anything is uploaded. */}
+            <ImageEditorDialog
+                open={!!editorState}
+                file={editorState?.file ?? null}
+                aspect={editorState?.kind === 'avatar' ? 1 : 10 / 3}
+                onClose={() => setEditorState(null)}
+                onApply={(blob) => {
+                    const kind = editorState?.kind;
+                    setEditorState(null);
+                    if (kind) uploadImage(kind, blob);
+                }}
+            />
+
+            {/* Body — intro card beside the wall, exactly the Facebook column split.
+                The archive tab reuses the wall renderer over ?archived=1. */}
             <div className="mt-5">
                 {tab === 'about' ? (
                     <div className="mx-auto max-w-2xl">{introCard}</div>

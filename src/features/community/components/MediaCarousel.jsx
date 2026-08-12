@@ -44,7 +44,7 @@ export default function MediaCarousel({ media, onOpen }) {
                         loading="lazy"
                         decoding="async"
                         onClick={() => onOpen?.(i)}
-                        className={`aspect-[4/3] max-h-[420px] w-full shrink-0 snap-center object-cover ${onOpen ? 'cursor-zoom-in' : ''}`}
+                        className={`aspect-[4/5] max-h-[600px] w-full shrink-0 snap-center object-cover ${onOpen ? 'cursor-zoom-in' : ''}`}
                     />
                 ))}
             </div>

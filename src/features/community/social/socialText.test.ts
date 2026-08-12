@@ -19,9 +19,9 @@ describe('extractHashtags', () => {
 });
 
 describe('decorateSocialHtml', () => {
-    it('linkifies hashtags to the trending page', () => {
+    it('linkifies hashtags to the tag page', () => {
         const out = decorateSocialHtml('<p>فرصة #تصدير</p>');
-        expect(out).toContain('href="/community/trending?tag=%D8%AA%D8%B5%D8%AF%D9%8A%D8%B1"');
+        expect(out).toContain('href="/community/tag/%D8%AA%D8%B5%D8%AF%D9%8A%D8%B1"');
         expect(out).toContain('class="sc-hashtag"');
     });
 

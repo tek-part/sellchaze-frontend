@@ -7,9 +7,11 @@ import {
     HiBookmark,
     HiFire,
     HiHome,
+    HiMagnifyingGlass,
     HiOutlineBookmark,
     HiOutlineFire,
     HiOutlineHome,
+    HiOutlineMagnifyingGlass,
     HiOutlinePlayCircle,
     HiOutlinePlus,
     HiOutlineUserGroup,
@@ -28,15 +30,20 @@ import FollowSuggestions from '../../../components/feed/FollowSuggestions';
  */
 const NAV_ITEMS = [
     { to: '/community', end: true, labelKey: 'community_nav_home', Icon: HiOutlineHome, ActiveIcon: HiHome },
+    { to: '/community/search', labelKey: 'community_nav_search', Icon: HiOutlineMagnifyingGlass, ActiveIcon: HiMagnifyingGlass },
     { to: '/community/trending', labelKey: 'community_nav_trending', Icon: HiOutlineFire, ActiveIcon: HiFire },
     { to: '/reels', labelKey: 'community_nav_reels', Icon: HiOutlinePlayCircle, ActiveIcon: HiPlayCircle },
+    { to: '/community/connections', end: true, labelKey: 'followers_title', Icon: HiOutlineUsers, ActiveIcon: HiUsers },
     { to: '/community/following', labelKey: 'community_nav_following', Icon: HiOutlineUsers, ActiveIcon: HiUsers },
     { to: '/community/groups', labelKey: 'community_nav_groups', Icon: HiOutlineUserGroup, ActiveIcon: HiUserGroup },
     { to: '/community/saved', labelKey: 'community_nav_saved', Icon: HiOutlineBookmark, ActiveIcon: HiBookmark },
 ];
 
-/** The five destinations that fit a phone tab bar, in browse-first order. */
-const MOBILE_ITEMS = [NAV_ITEMS[0], NAV_ITEMS[1], NAV_ITEMS[2], NAV_ITEMS[4], NAV_ITEMS[5]];
+/** The five destinations that fit a phone tab bar, in browse-first order.
+ *  (Keyed by route, not position — inserting into NAV_ITEMS must not
+ *  silently reshuffle the bottom bar.) */
+const MOBILE_ROUTES = ['/community', '/community/search', '/reels', '/community/groups', '/community/saved'];
+const MOBILE_ITEMS = MOBILE_ROUTES.map((route) => NAV_ITEMS.find((item) => item.to === route));
 
 function SidebarLink({ to, end, labelKey, Icon, ActiveIcon }) {
     const { t } = useTranslation();

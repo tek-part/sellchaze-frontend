@@ -1,18 +1,22 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/react';
+import { Dialog, DialogBackdrop, DialogPanel, DialogTitle, Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/react';
 import {
     HiOutlineHeart,
     HiHeart,
     HiOutlineChatBubbleOvalLeft,
     HiOutlineArrowUpTray,
+    HiOutlineArrowPathRoundedSquare,
+    HiOutlineArchiveBox,
     HiOutlineTrash,
     HiCheckBadge,
     HiOutlineBookmark,
     HiBookmark,
+    HiOutlineLink,
     HiOutlineNoSymbol,
     HiOutlineFlag,
+    HiOutlinePencilSquare,
     HiOutlineUserMinus,
     HiOutlineEllipsisHorizontal,
     HiOutlineMapPin,
@@ -21,10 +25,14 @@ import {
 import api from '../../api/client';
 import { langParam } from '../../api/lang';
 import notify from '../ui/notify';
+import { confirmDialog } from '../ui/confirmDialog';
 import { initials, relativeTime } from './helpers';
 import CommentThread from './CommentThread';
 import MediaCarousel from '../../features/community/components/MediaCarousel';
 import Lightbox from '../../features/community/components/Lightbox';
+import ReportDialog from '../../features/community/components/ReportDialog';
+import PostEditDialog from '../../features/community/components/PostEditDialog';
+import ReactionsDialog from '../../features/community/components/ReactionsDialog';
 import { decorateSocialHtml } from '../../features/community/social/socialText';
 import { trackFeedEvent } from '../../features/community/api/events';
 
@@ -69,9 +77,14 @@ const ACTION_CLASS =
  * mute, block, report, delete — lives behind the overflow menu in the header,
  * which keeps the action bar down to the four things people actually do.
  */
-export default function PostCard({ post, onDeleted, index = 0 }) {
+export default function PostCard({ post: postProp, onDeleted, index = 0 }) {
     const { t, i18n } = useTranslation();
     const { lang } = langParam(i18n);
+
+    // An in-place edit (PATCH) hands back a fresh card; it overrides the prop
+    // until the parent list reloads.
+    const [override, setOverride] = useState(null);
+    const post = override ?? postProp;
 
     const [liked, setLiked] = useState(!!post.liked);
     const [counts, setCounts] = useState(post.counts ?? { likes: 0, comments: 0, shares: 0 });
@@ -86,6 +99,14 @@ export default function PostCard({ post, onDeleted, index = 0 }) {
     const [pickerOpen, setPickerOpen] = useState(false);
     const [burst, setBurst] = useState(false);
     const [lightboxAt, setLightboxAt] = useState(null); // image index | null
+    const [reportTarget, setReportTarget] = useState(null); // ReportDialog control
+    const [editOpen, setEditOpen] = useState(false);
+    const [repostOpen, setRepostOpen] = useState(false);
+    const [repostCaption, setRepostCaption] = useState('');
+    const [reactionsOpen, setReactionsOpen] = useState(false);
+    const [bodyExpanded, setBodyExpanded] = useState(false);
+    const [bodyOverflows, setBodyOverflows] = useState(false);
+    const bodyRef = useRef(null);
     const cardRef = useRef(null);
     const pickerTimer = useRef(null);
 
@@ -110,6 +131,13 @@ export default function PostCard({ post, onDeleted, index = 0 }) {
 
     // The picker must not vanish while the pointer travels from the button to it.
     useEffect(() => () => clearTimeout(pickerTimer.current), []);
+
+    // Show the "more" toggle only when the clamped body actually overflows.
+    useEffect(() => {
+        const node = bodyRef.current;
+        if (!node || bodyExpanded) return;
+        setBodyOverflows(node.scrollHeight > node.clientHeight + 2);
+    }, [post.body, bodyExpanded]);
 
     const openPicker = () => {
         clearTimeout(pickerTimer.current);
@@ -161,16 +189,12 @@ export default function PostCard({ post, onDeleted, index = 0 }) {
         }
     };
 
-    const share = async () => {
+    const postUrl = () => `${window.location.origin}/community/post/${post.id}`;
+
+    const recordShare = async (caption) => {
         if (shareBusy) return;
         setShareBusy(true);
         try {
-            const caption = window.prompt(t('feed_share_caption_prompt', 'Add a caption (optional)'));
-            // A null return means the user cancelled the prompt — abort the share.
-            if (caption === null) {
-                setShareBusy(false);
-                return;
-            }
             const { data } = await api.post(`/posts/${post.id}/share`, caption ? { caption } : {});
             if (data && typeof data.shares_count === 'number') {
                 setCounts((c) => ({ ...c, shares: data.shares_count }));
@@ -178,24 +202,73 @@ export default function PostCard({ post, onDeleted, index = 0 }) {
                 setCounts((c) => ({ ...c, shares: (c.shares ?? 0) + 1 }));
             }
             trackFeedEvent(post.id, 'share');
-        } catch {
-            /* no-op; count stays as-is */
+            notify.success(t('share_done', 'Shared'));
+        } catch (error) {
+            notify.error(t('toast_failed', 'Something went wrong'), error?.response?.data?.message || '');
         } finally {
             setShareBusy(false);
         }
     };
 
+    const copyLink = async () => {
+        try {
+            await navigator.clipboard.writeText(postUrl());
+            notify.success(t('reels_link_copied', 'Link copied'));
+        } catch {
+            notify.error(t('toast_failed', 'Something went wrong'));
+        }
+    };
+
+    const shareVia = async () => {
+        try {
+            await navigator.share({ url: postUrl() });
+            recordShare('');
+        } catch {
+            /* member dismissed the sheet */
+        }
+    };
+
+    const submitRepost = async (event) => {
+        event.preventDefault();
+        await recordShare(repostCaption.trim());
+        setRepostCaption('');
+        setRepostOpen(false);
+    };
+
+    const toggleArchive = async () => {
+        const archived = post.lifecycle_status === 'archived';
+        const ok = await confirmDialog({
+            title: archived ? t('post_unarchive_confirm', 'Unarchive this post?') : t('post_archive_confirm', 'Archive this post?'),
+            text: archived ? t('post_unarchive_hint', 'It becomes visible to its audience again.') : t('post_archive_hint', 'Only you will see it, under the Archive tab of your profile.'),
+            danger: false,
+            icon: 'question',
+        });
+        if (!ok) return;
+        try {
+            await api.patch(`/posts/${post.id}`, { lifecycle_status: archived ? 'published' : 'archived' });
+            notify.success(archived ? t('post_unarchived_toast', 'Post is live again') : t('post_archived_toast', 'Post archived'));
+            onDeleted?.(post.id); // leaves whichever list it no longer belongs to
+        } catch (error) {
+            notify.error(t('toast_failed', 'Something went wrong'), error?.response?.data?.message || '');
+        }
+    };
+
     const remove = async () => {
         if (deleting) return;
-        if (!window.confirm(t('feed_confirm_delete_post', 'Delete this post?'))) return;
+        const ok = await confirmDialog({
+            title: t('feed_confirm_delete_post', 'Delete this post?'),
+            text: t('feed_confirm_delete_post_hint', 'This cannot be undone.'),
+            danger: true,
+        });
+        if (!ok) return;
         setDeleting(true);
         try {
             await api.delete(`/posts/${post.id}`);
             notify.success(t('toast_post_deleted', 'Post deleted'));
             onDeleted?.(post.id);
-        } catch {
+        } catch (error) {
             setDeleting(false);
-            notify.error(t('toast_failed', 'Something went wrong'), t('toast_failed_hint', 'Please try again.'));
+            notify.error(t('toast_failed', 'Something went wrong'), error?.response?.data?.message || t('toast_failed_hint', 'Please try again.'));
         }
     };
 
@@ -230,16 +303,7 @@ export default function PostCard({ post, onDeleted, index = 0 }) {
         } finally { setSafetyBusy(false); }
     };
 
-    const report = async () => {
-        const details = window.prompt(t('feed_report_details', 'Describe the problem (optional)'));
-        if (details === null) return;
-        try {
-            await api.post('/reports', { target_type: 'post', target_id: post.id, reason: 'spam', details });
-            notify.success(t('toast_reported', 'Report sent'), t('toast_reported_hint', 'Our team will review it.'));
-        } catch {
-            notify.error(t('toast_failed', 'Something went wrong'), t('toast_failed_hint', 'Please try again.'));
-        }
-    };
+    const report = () => setReportTarget({ type: 'post', id: post.id });
 
     const chooseReaction = async (type) => {
         clearTimeout(pickerTimer.current);
@@ -287,13 +351,20 @@ export default function PostCard({ post, onDeleted, index = 0 }) {
                         ) : null}
                     </div>
                     <div className="flex flex-wrap items-center gap-x-1.5 text-[12px] text-slate-500">
-                        {author.company ? (
+                        {/* The member's type leads the meta row — supplier or merchant, not just "member". */}
+                        {author.role ? (
                             <>
-                                <span className="truncate">{author.company}</span>
+                                <span className="font-semibold text-slate-600">{t(`role_${author.role}`, author.role)}</span>
                                 <span className="text-slate-300" aria-hidden>·</span>
                             </>
                         ) : null}
                         <span>{relativeTime(post.created_at, lang)}</span>
+                        {post.edited_at ? (
+                            <>
+                                <span className="text-slate-300" aria-hidden>·</span>
+                                <span className="italic text-slate-400">{t('post_edited', 'Edited')}</span>
+                            </>
+                        ) : null}
                         <span className="text-slate-300" aria-hidden>·</span>
                         <span className="font-semibold text-brand">{typeLabel}</span>
                         {post.sector ? (
@@ -325,12 +396,28 @@ export default function PostCard({ post, onDeleted, index = 0 }) {
                             </button>
                         </MenuItem>
                         {post.can_delete ? (
-                            <MenuItem>
-                                <button type="button" onClick={remove} disabled={deleting} className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-semibold text-red-600 disabled:opacity-50 data-focus:bg-red-50">
-                                    <HiOutlineTrash className="h-5 w-5" aria-hidden />
-                                    {t('feed_delete', 'Delete')}
-                                </button>
-                            </MenuItem>
+                            <>
+                                {post.can_edit ? (
+                                    <MenuItem>
+                                        <button type="button" onClick={() => setEditOpen(true)} className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-semibold text-slate-700 data-focus:bg-slate-100">
+                                            <HiOutlinePencilSquare className="h-5 w-5 text-slate-400" aria-hidden />
+                                            {t('post_edit', 'Edit post')}
+                                        </button>
+                                    </MenuItem>
+                                ) : null}
+                                <MenuItem>
+                                    <button type="button" onClick={toggleArchive} className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-semibold text-slate-700 data-focus:bg-slate-100">
+                                        <HiOutlineArchiveBox className="h-5 w-5 text-slate-400" aria-hidden />
+                                        {post.lifecycle_status === 'archived' ? t('post_unarchive', 'Unarchive') : t('post_archive', 'Archive')}
+                                    </button>
+                                </MenuItem>
+                                <MenuItem>
+                                    <button type="button" onClick={remove} disabled={deleting} className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-semibold text-red-600 disabled:opacity-50 data-focus:bg-red-50">
+                                        <HiOutlineTrash className="h-5 w-5" aria-hidden />
+                                        {t('feed_delete', 'Delete')}
+                                    </button>
+                                </MenuItem>
+                            </>
                         ) : (
                             <>
                                 <MenuItem>
@@ -358,12 +445,27 @@ export default function PostCard({ post, onDeleted, index = 0 }) {
             </header>
 
             {/* Body (HTML from the rich editor), with hashtags linkified and
-                mention anchors styled at render time. */}
+                mention anchors styled at render time. Long text clamps to two
+                lines with a "show more" toggle — the Facebook rhythm. */}
             {post.body ? (
-                <div
-                    className="prose prose-sm mt-3 max-w-none break-words px-5 text-slate-700 prose-p:my-1.5 prose-a:text-brand prose-headings:text-slate-900"
-                    dangerouslySetInnerHTML={{ __html: decorateSocialHtml(post.body) }}
-                />
+                <div className="px-5">
+                    <div
+                        ref={bodyRef}
+                        className={`prose prose-sm mt-3 max-w-none break-words text-slate-700 prose-p:my-1.5 prose-a:text-brand prose-headings:text-slate-900 ${
+                            bodyExpanded ? '' : 'line-clamp-2'
+                        }`}
+                        dangerouslySetInnerHTML={{ __html: decorateSocialHtml(post.body) }}
+                    />
+                    {bodyOverflows || bodyExpanded ? (
+                        <button
+                            type="button"
+                            onClick={() => setBodyExpanded((v) => !v)}
+                            className="mt-0.5 text-xs font-bold text-slate-500 transition hover:text-brand"
+                        >
+                            {bodyExpanded ? t('reels_show_less', 'less') : t('reels_show_more', 'more')}
+                        </button>
+                    ) : null}
+                </div>
             ) : null}
 
             {post.location_name ? (
@@ -382,7 +484,20 @@ export default function PostCard({ post, onDeleted, index = 0 }) {
 
                 return (
                     <>
-                        {videos.map((item) => (
+                        {/* Reels keep the tall 9:16 frame they were shot for;
+                            ordinary post videos stay capped like images. */}
+                        {videos.map((item) => post.format === 'reel' ? (
+                            <div key={item.id} className="mt-4 flex justify-center bg-black">
+                                <video
+                                    src={item.variants?.web?.url || item.url}
+                                    poster={item.variants?.poster?.url}
+                                    controls
+                                    preload="metadata"
+                                    playsInline
+                                    className="aspect-[9/16] max-h-[600px] w-auto max-w-full object-contain"
+                                />
+                            </div>
+                        ) : (
                             <video
                                 key={item.id}
                                 src={item.variants?.web?.url || item.url}
@@ -446,6 +561,8 @@ export default function PostCard({ post, onDeleted, index = 0 }) {
                 );
             })()}
 
+            <ReportDialog target={reportTarget} onClose={() => setReportTarget(null)} />
+
             {/* Attached product mini-card */}
             {post.product ? (
                 (() => {
@@ -499,7 +616,14 @@ export default function PostCard({ post, onDeleted, index = 0 }) {
             {responses > 0 || counts.comments > 0 || counts.shares > 0 ? (
                 <div className="mt-4 flex items-center justify-between gap-3 px-5 text-xs text-slate-500">
                     {responses > 0 ? (
-                        <span className="flex items-center gap-1.5">
+                        // Opens the who-reacted viewer, exactly like tapping the
+                        // reaction cluster on the big networks.
+                        <button
+                            type="button"
+                            onClick={() => setReactionsOpen(true)}
+                            aria-label={t('reactions_title', 'Reactions')}
+                            className="sc-press flex items-center gap-1.5 rounded-lg px-1 py-0.5 transition hover:bg-slate-50"
+                        >
                             <span className="flex items-center gap-0.5">
                                 {counts.likes > 0 ? (
                                     <span className="flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[10px] text-white ring-2 ring-white" aria-hidden>
@@ -513,7 +637,7 @@ export default function PostCard({ post, onDeleted, index = 0 }) {
                                 ))}
                             </span>
                             <span className="font-semibold">{responses}</span>
-                        </span>
+                        </button>
                     ) : <span />}
                     {/* Counts sit next to their icon rather than a noun, so the
                         row never needs plural rules in either language. */}
@@ -603,10 +727,39 @@ export default function PostCard({ post, onDeleted, index = 0 }) {
                     <span className="truncate">{t('feed_comment', 'Comment')}</span>
                 </button>
 
-                <button type="button" onClick={share} disabled={shareBusy} className={`${ACTION_CLASS} text-slate-600 disabled:opacity-50`}>
-                    <HiOutlineArrowUpTray className="h-5 w-5" aria-hidden />
-                    <span className="truncate">{t('feed_share', 'Share')}</span>
-                </button>
+                {/* Share is a popover of real choices — no prompt() in sight. */}
+                <Menu as="div" className="relative flex flex-1">
+                    <MenuButton disabled={shareBusy} className={`${ACTION_CLASS} text-slate-600 disabled:opacity-50`}>
+                        <HiOutlineArrowUpTray className="h-5 w-5" aria-hidden />
+                        <span className="truncate">{t('feed_share', 'Share')}</span>
+                    </MenuButton>
+                    <MenuItems
+                        transition
+                        anchor="top"
+                        className="z-50 w-56 origin-bottom rounded-xl bg-white p-1.5 shadow-xl ring-1 ring-slate-200 transition duration-150 ease-out data-closed:scale-95 data-closed:opacity-0 [--anchor-gap:6px]"
+                    >
+                        <MenuItem>
+                            <button type="button" onClick={copyLink} className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-semibold text-slate-700 data-focus:bg-slate-100">
+                                <HiOutlineLink className="h-5 w-5 text-slate-400" aria-hidden />
+                                {t('share_copy_link', 'Copy link')}
+                            </button>
+                        </MenuItem>
+                        {typeof navigator !== 'undefined' && navigator.share ? (
+                            <MenuItem>
+                                <button type="button" onClick={shareVia} className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-semibold text-slate-700 data-focus:bg-slate-100">
+                                    <HiOutlineArrowUpTray className="h-5 w-5 text-slate-400" aria-hidden />
+                                    {t('share_via', 'Share via…')}
+                                </button>
+                            </MenuItem>
+                        ) : null}
+                        <MenuItem>
+                            <button type="button" onClick={() => setRepostOpen(true)} className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-semibold text-slate-700 data-focus:bg-slate-100">
+                                <HiOutlineArrowPathRoundedSquare className="h-5 w-5 text-slate-400" aria-hidden />
+                                {t('share_repost', 'Repost with caption')}
+                            </button>
+                        </MenuItem>
+                    </MenuItems>
+                </Menu>
 
                 <button type="button" onClick={toggleSave} aria-pressed={saved} className={`${ACTION_CLASS} ${saved ? 'text-brand' : 'text-slate-600'}`}>
                     {saved ? <HiBookmark className="h-5 w-5" aria-hidden /> : <HiOutlineBookmark className="h-5 w-5" aria-hidden />}
@@ -622,6 +775,39 @@ export default function PostCard({ post, onDeleted, index = 0 }) {
                     />
                 </div>
             ) : null}
+
+            {post.can_edit ? (
+                <PostEditDialog post={post} open={editOpen} onClose={() => setEditOpen(false)} onUpdated={(fresh) => setOverride(fresh)} />
+            ) : null}
+            <ReactionsDialog postId={post.id} open={reactionsOpen} onClose={() => setReactionsOpen(false)} />
+
+            {/* Repost with caption */}
+            <Dialog open={repostOpen} onClose={() => setRepostOpen(false)} className="relative z-[90]">
+                <DialogBackdrop transition className="fixed inset-0 bg-slate-900/45 backdrop-blur-xs transition duration-200 data-closed:opacity-0" />
+                <div className="fixed inset-0 flex items-center justify-center p-4">
+                    <DialogPanel transition className="w-full max-w-md rounded-2xl bg-white p-5 shadow-2xl ring-1 ring-slate-200/80 transition duration-200 data-closed:scale-95 data-closed:opacity-0">
+                        <DialogTitle className="text-base font-bold text-slate-900">{t('share_repost', 'Repost with caption')}</DialogTitle>
+                        <form onSubmit={submitRepost} className="mt-3 space-y-3">
+                            <textarea
+                                rows={3}
+                                value={repostCaption}
+                                onChange={(event) => setRepostCaption(event.target.value)}
+                                maxLength={500}
+                                placeholder={t('share_repost_ph', 'Say something about this…')}
+                                className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm"
+                            />
+                            <div className="flex justify-end gap-2">
+                                <button type="button" onClick={() => setRepostOpen(false)} className="sc-press rounded-xl bg-slate-100 px-4 py-2.5 text-sm font-bold text-slate-600 transition hover:bg-slate-200/70">
+                                    {t('action_cancel', 'Cancel')}
+                                </button>
+                                <button type="submit" disabled={shareBusy} className="sc-press rounded-xl bg-brand px-5 py-2.5 text-sm font-bold text-white shadow-md shadow-brand/25 transition hover:bg-brand-dark disabled:opacity-50">
+                                    {t('share_repost_submit', 'Repost')}
+                                </button>
+                            </div>
+                        </form>
+                    </DialogPanel>
+                </div>
+            </Dialog>
         </article>
     );
 }
