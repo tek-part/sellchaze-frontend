@@ -1,35 +1,28 @@
 /**
  * Store Theme Manager — the merchant/supplier Appearance dashboard.
  *
- * SINGLE SOURCE OF TRUTH: this page is wired to the FRONTEND production Theme Platform
- * (`PlatformProvider` / `usePlatform` → `THEME_CATALOG` + the pure domain lifecycle), exactly like
- * Theme Studio. It reads every theme directly from the production Theme Registry (the marketplace
- * catalog: luxury-fashion / voltage / hearth / rouge) and every action executes the REAL platform
- * lifecycle — install (compatibility + validation), activate (license/entitlement gate), update
- * (version + migration), export/import (signed package pipeline), uninstall. It does NOT read the
- * backend demo-theme API (Default / aurora / modern seed rows) and contains no mock/placeholder/
- * hardcoded theme objects. The Theme Engine, themes, registry, and Theme Studio are untouched.
+ * The backend theme registry and per-store install state are the source of truth.
+ * Every lifecycle action below is persisted through `/my-store/themes` (or the
+ * equivalent admin store scope), so onboarding and the public storefront see
+ * exactly the same active theme as this screen.
  */
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Navigate, useNavigate, useOutletContext } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
 import {
     HiOutlineEye,
     HiOutlineAdjustmentsHorizontal,
-    HiOutlineArrowDownTray,
-    HiOutlineArrowUpTray,
     HiOutlineInformationCircle,
     HiOutlineArrowUpCircle,
     HiOutlineArrowPath,
     HiOutlineCheckBadge,
     HiOutlineSparkles,
     HiOutlineXMark,
-    HiOutlineTrash,
     HiOutlineSwatch,
 } from 'react-icons/hi2';
 import useStoreScope from '../hooks/useStoreScope';
-import { PlatformProvider, usePlatform } from '../apps/storefront/platform/state/platform-context';
+import api from '../api/client';
 
 /* ------------------------------------------------------------------ helpers */
 
@@ -38,33 +31,6 @@ function fmtDate(iso) {
     const d = new Date(iso);
     if (Number.isNaN(d.getTime())) return null;
     return d.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
-}
-
-/**
- * Real storefront preview — the storefront root with `?theme=…&preview=1`.
- *
- * The URL must stay a CLEAN path (`/`), not `/storefront.html`: the storefront
- * uses BrowserRouter, which reads the literal path as the route, and
- * `/storefront.html` matches nothing → its own 404. Instead, `?preview=1` is
- * served as storefront.html by a rewrite (the Vite middleware in dev, the
- * .htaccess rule in production) while the browser URL stays `/`, so the router
- * resolves the home route. In preview mode the storefront renders from demo
- * data (see ../apps/storefront/preview.ts), since there is no store to resolve
- * on the dashboard host.
- */
-function previewUrl(id) {
-    return `/?theme=${encodeURIComponent(id)}&preview=1`;
-}
-
-/** Real Theme Studio (live editor) entry for a theme — shares the same platform install state. */
-function studioUrl(id) {
-    return `/theme-studio.html?theme=${encodeURIComponent(id)}`;
-}
-
-/** Latest authored changelog date for an entry (used for the Newest/Oldest sort). */
-function entryDate(entry) {
-    const cl = entry.changelog || [];
-    return cl.length ? cl[cl.length - 1].date || '' : '';
 }
 
 /* ------------------------------------------------------------------ small UI atoms */
@@ -88,104 +54,23 @@ function Badge({ tone = 'slate', icon: Icon, children }) {
 
 /* ------------------------------------------------------------------ theme screenshot */
 
-/** Desktop viewport the preview frame renders at, before being scaled to the card. */
-const PREVIEW_WIDTH = 1280;
-const PREVIEW_HEIGHT = 800;
-
-/**
- * Live theme preview.
- *
- * Renders the REAL storefront for this theme, scaled down — not a captured screenshot. A stored
- * image would be a second source of truth that silently goes stale the moment a theme's tokens,
- * sections or demo content change, and every one of those has changed repeatedly. This is always
- * what the theme actually looks like right now.
- *
- * Cost is managed rather than ignored: each frame boots the storefront app, so a frame is mounted
- * only once its card scrolls into view, and the accent gradient stands in until then. The frame is
- * inert — pointer-events off, not focusable, hidden from assistive tech — because the card's own
- * Preview button is the real affordance and a nested tab stop would trap keyboard users.
- */
 function ThemeShot({ theme }) {
-    const holderRef = useRef(null);
-    const [visible, setVisible] = useState(false);
-    const [loaded, setLoaded] = useState(false);
-    const [scale, setScale] = useState(0.25);
-
-    // The frame renders at a fixed 1280px and is scaled to whatever width the card actually has,
-    // so the thumbnail stays sharp and correctly proportioned in any grid or column count.
-    useEffect(() => {
-        const node = holderRef.current;
-        if (!node) return undefined;
-        const measure = () => setScale(node.clientWidth / PREVIEW_WIDTH);
-        measure();
-        if (typeof ResizeObserver === 'undefined') return undefined;
-        const observer = new ResizeObserver(measure);
-        observer.observe(node);
-        return () => observer.disconnect();
-    }, []);
-
-    useEffect(() => {
-        const node = holderRef.current;
-        if (!node || visible) return undefined;
-        // No IntersectionObserver (old browser, jsdom) → show it rather than leave a permanent
-        // placeholder. Degrading to "heavier but correct" beats degrading to "empty".
-        if (typeof IntersectionObserver === 'undefined') {
-            setVisible(true);
-            return undefined;
-        }
-        const observer = new IntersectionObserver(
-            (entries) => {
-                if (entries.some((e) => e.isIntersecting)) {
-                    setVisible(true);
-                    observer.disconnect();
-                }
-            },
-            { rootMargin: '200px' },
-        );
-        observer.observe(node);
-        return () => observer.disconnect();
-    }, [visible]);
-
     return (
         <div
-            ref={holderRef}
-            className="relative aspect-[16/10] overflow-hidden bg-gradient-to-br"
+            className="relative flex aspect-[16/10] items-center justify-center overflow-hidden bg-gradient-to-br"
             style={{ backgroundImage: `linear-gradient(135deg, ${theme.accent || '#0f172a'}, ${theme.accentAlt || theme.accent || '#334155'})` }}
         >
-            {!loaded ? (
-                <div className="absolute inset-0 flex items-center justify-center" aria-hidden>
-                    <HiOutlineSwatch className="h-9 w-9 text-white/85" />
-                </div>
-            ) : null}
-
-            {visible ? (
-                <iframe
-                    // 1280px wide, scaled to the card. Rendering at desktop width and scaling down
-                    // shows the real desktop layout; sizing the frame to the card would trigger the
-                    // theme's mobile breakpoints and misrepresent it.
-                    src={previewUrl(theme.id)}
-                    title={`${theme.name} preview`}
-                    tabIndex={-1}
-                    aria-hidden
-                    loading="lazy"
-                    onLoad={() => setLoaded(true)}
-                    className="pointer-events-none absolute left-0 top-0 origin-top-left border-0"
-                    style={{
-                        width: `${PREVIEW_WIDTH}px`,
-                        height: `${PREVIEW_HEIGHT}px`,
-                        transform: `scale(${scale})`,
-                        opacity: loaded ? 1 : 0,
-                        transition: 'opacity 240ms ease',
-                    }}
-                />
-            ) : null}
+            <div className="text-center text-white" aria-hidden>
+                <HiOutlineSwatch className="mx-auto h-10 w-10 text-white/85" />
+                <span className="mt-2 block text-sm font-semibold text-white/90">{theme.name}</span>
+            </div>
         </div>
     );
 }
 
 /* ------------------------------------------------------------------ card */
 
-function ThemeCard({ theme, isActive, canManage, busy, onPreview, onActivate, onCustomize, onExport, onDetails, onUpdate, onUninstall }) {
+function ThemeCard({ theme, isActive, canManage, busy, onPreview, onActivate, onCustomize, onDetails, onUpdate }) {
     const { t } = useTranslation();
     return (
         <article className="group flex flex-col overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-card transition hover:shadow-lg">
@@ -252,16 +137,6 @@ function ThemeCard({ theme, isActive, canManage, busy, onPreview, onActivate, on
                     <button type="button" onClick={() => onDetails(theme)} className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 px-3 py-1.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50">
                         <HiOutlineInformationCircle className="h-4 w-4" /> {t('theme_details', 'Details')}
                     </button>
-                    {theme.installed ? (
-                        <button type="button" onClick={() => onExport(theme)} className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 px-3 py-1.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50" title={t('theme_export', 'Export')} aria-label={t('theme_export', 'Export')}>
-                            <HiOutlineArrowDownTray className="h-4 w-4" />
-                        </button>
-                    ) : null}
-                    {theme.installed && !isActive && canManage ? (
-                        <button type="button" onClick={() => onUninstall(theme)} className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 px-3 py-1.5 text-sm font-medium text-slate-500 transition hover:border-red-200 hover:bg-red-50 hover:text-red-600" title={t('theme_uninstall', 'Uninstall')} aria-label={t('theme_uninstall', 'Uninstall')}>
-                            <HiOutlineTrash className="h-4 w-4" />
-                        </button>
-                    ) : null}
                 </div>
             </div>
         </article>
@@ -319,7 +194,7 @@ function DetailRow({ label, children }) {
     );
 }
 
-function DetailsDrawer({ theme, engineVersion, canManage, onUninstall, onClose }) {
+function DetailsDrawer({ theme, engineVersion, onClose }) {
     const { t } = useTranslation();
     if (!theme) return null;
 
@@ -402,132 +277,146 @@ function DetailsDrawer({ theme, engineVersion, canManage, onUninstall, onClose }
                         )}
                     </div>
 
-                    {theme.installed && !theme.isActive && canManage ? (
-                        <button type="button" onClick={() => { onUninstall(theme); onClose(); }} className="mt-6 inline-flex items-center gap-1.5 rounded-lg border border-slate-200 px-3 py-1.5 text-sm font-medium text-red-600 transition hover:border-red-200 hover:bg-red-50">
-                            <HiOutlineTrash className="h-4 w-4" /> {t('theme_uninstall', 'Uninstall theme')}
-                        </button>
-                    ) : null}
                 </div>
             </aside>
         </div>
     );
 }
 
-/* ------------------------------------------------------------------ manager (platform-connected) */
+/* ------------------------------------------------------------------ manager (API-connected) */
+
+const THEME_ACCENTS = [
+    ['#312e81', '#7c3aed'],
+    ['#075985', '#0ea5e9'],
+    ['#064e3b', '#10b981'],
+    ['#7c2d12', '#f97316'],
+    ['#831843', '#ec4899'],
+];
 
 function ThemesManager() {
-    const { id, uiBase } = useStoreScope();
+    const { id, apiBase, uiBase } = useStoreScope();
     const { t } = useTranslation();
     const navigate = useNavigate();
     const { permissions } = useOutletContext();
     const can = (p) => permissions.includes(p);
     const canManage = can('store.themes.manage') || can('stores-edit');
-
-    // The production Theme Platform — the single source of truth (registry + lifecycle + state).
-    const platform = usePlatform();
-    const { catalog, state, engineVersion, updates, pending, notice, error, clearMessages } = platform;
-
+    const [rows, setRows] = useState([]);
+    const [activeThemeId, setActiveThemeId] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [loadError, setLoadError] = useState('');
+    const [pending, setPending] = useState(() => new Set());
     const [confirmTheme, setConfirmTheme] = useState(null);
     const [detailTheme, setDetailTheme] = useState(null);
-    const importInputRef = useRef(null);
 
-    // Surface every platform lifecycle result (install/activate/update/import/export/uninstall) as a toast.
-    useEffect(() => {
-        if (notice) { toast.success(notice); clearMessages(); }
-    }, [notice, clearMessages]);
-    useEffect(() => {
-        if (error) { toast.error(error); clearMessages(); }
-    }, [error, clearMessages]);
+    const load = useCallback(async () => {
+        setLoading(true);
+        try {
+            const { data } = await api.get(`${apiBase}/themes`);
+            setRows(Array.isArray(data?.data) ? data.data : []);
+            setActiveThemeId(data?.active_theme_id ?? null);
+            setLoadError('');
+        } catch (error) {
+            setLoadError(error.response?.data?.message || error.message);
+        } finally {
+            setLoading(false);
+        }
+    }, [apiBase]);
 
-    // View-models: derived ENTIRELY from the production registry (catalog) + install state + updates.
+    useEffect(() => {
+        void load();
+    }, [load]);
+
     const themes = useMemo(() => {
-        const updateById = new Map(updates.map((u) => [u.id, u]));
-        return catalog.map((entry) => {
-            const record = state.installed[entry.id];
-            const upd = updateById.get(entry.id);
+        return rows.map((entry, index) => {
+            const [accent, accentAlt] = THEME_ACCENTS[index % THEME_ACCENTS.length];
             return {
                 id: entry.id,
-                key: entry.id,
+                key: entry.key,
                 name: entry.name,
-                description: entry.description,
+                description: entry.description || t('theme_no_description', 'Storefront theme'),
                 author: entry.author,
-                latest_version: entry.version,
-                minEngineVersion: entry.minEngineVersion,
-                category: entry.archetype,
-                accent: entry.accent,
-                accentAlt: entry.accentAlt,
-                capabilities: entry.capabilities || [],
-                tags: entry.tags || [],
-                changelog: entry.changelog || [],
-                premium: Boolean(entry.license && entry.license.type && entry.license.type !== 'free'),
-                is_featured: Boolean(entry.featured),
-                installed: Boolean(record),
-                installedAt: record?.installedAt ?? null,
-                installedVersion: record?.version ?? null,
-                isActive: state.activeId === entry.id,
-                updateAvailable: Boolean(upd),
-                availableVersion: upd?.availableVersion ?? null,
-                updateNotes: upd?.notes ?? [],
-                _sortDate: entryDate(entry),
+                latest_version: entry.latest_version,
+                minEngineVersion: '1.0.0',
+                accent,
+                accentAlt,
+                capabilities: [],
+                tags: [],
+                changelog: [],
+                premium: false,
+                is_featured: index === 0,
+                installed: Boolean(entry.installed),
+                installedVersion: entry.installed ? entry.latest_version : null,
+                isActive: Number(activeThemeId) === Number(entry.id),
+                updateAvailable: entry.status === 'outdated',
+                _sortDate: String(entry.id).padStart(12, '0'),
             };
         });
-    }, [catalog, state, updates]);
+    }, [activeThemeId, rows, t]);
 
-    /* ---- actions: every one calls the REAL platform lifecycle ---- */
+    const run = useCallback(async (theme, action) => {
+        setPending((current) => new Set(current).add(theme.id));
+        try {
+            return await action();
+        } catch (error) {
+            const message = error.response?.data?.message || error.message;
+            toast.error(message);
+            throw error;
+        } finally {
+            setPending((current) => {
+                const next = new Set(current);
+                next.delete(theme.id);
+                return next;
+            });
+        }
+    }, []);
 
-    const doPreview = (theme) => window.open(previewUrl(theme.id), '_blank', 'noopener');
+    const installIfNeeded = useCallback(async (theme) => {
+        if (!theme.installed) {
+            await api.post(`${apiBase}/themes/install`, { theme_id: theme.id });
+        }
+    }, [apiBase]);
+
+    const doPreview = (theme) => {
+        // Open synchronously while the click still has browser activation, then
+        // navigate it after the signed preview URL is returned by the API.
+        const previewWindow = window.open('about:blank', '_blank');
+        if (previewWindow) previewWindow.opener = null;
+        void run(theme, async () => {
+            await installIfNeeded(theme);
+            const { data } = await api.post(`${apiBase}/themes/preview`, { theme_id: theme.id });
+            if (!data?.preview_url) throw new Error(t('theme_preview_failed', 'Preview URL was not returned.'));
+            if (previewWindow) previewWindow.location.href = data.preview_url;
+            else window.open(data.preview_url, '_blank', 'noopener');
+            await load();
+        }).catch(() => previewWindow?.close());
+    };
 
     const doActivate = async (theme) => {
         setConfirmTheme(null);
-        // Install runs compatibility + validation; activate runs the license/entitlement gate.
-        if (!state.installed[theme.id]) await platform.installTheme(theme.id);
-        platform.activateTheme(theme.id);
+        await run(theme, async () => {
+            await installIfNeeded(theme);
+            await api.post(`${apiBase}/themes/activate`, { theme_id: theme.id });
+            toast.success(t('theme_activated', 'Theme activated and published.'));
+            await load();
+        });
     };
 
-    const doUpdate = (theme) => platform.updateTheme(theme.id);
-
-    const doCustomize = (theme) => window.open(studioUrl(theme.id), '_blank', 'noopener');
-
-    const doUninstall = (theme) => {
-        if (theme.isActive) { toast.error(t('theme_uninstall_active', 'Deactivate or switch away before uninstalling the live theme.')); return; }
-        platform.uninstallTheme(theme.id);
+    const doUpdate = (theme) => {
+        void run(theme, async () => {
+            await api.post(`${apiBase}/themes/upgrade`, { theme_id: theme.id });
+            toast.success(t('theme_updated', 'Theme updated.'));
+            await load();
+        });
     };
 
-    const doExport = (theme) => {
-        const json = platform.exportTheme(theme.id);
-        if (!json) { toast.error(t('theme_export_needs_install', 'Install the theme before exporting.')); return; }
-        const blob = new Blob([json], { type: 'application/json' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `${theme.id}.theme-pkg.json`;
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-        URL.revokeObjectURL(url);
-    };
-
-    const onImportFile = useCallback(async (e) => {
-        const file = e.target.files?.[0];
-        e.target.value = ''; // allow re-selecting the same file
-        if (!file) return;
-        try {
-            const text = await file.text();
-            await platform.importPackageJson(text);
-        } catch (err) {
-            toast.error(err?.message || 'Import failed.');
-        }
-    }, [platform]);
+    const doCustomize = (theme) => navigate(`${uiBase}/themes/${theme.id}/settings`);
 
     /* ---- ordering ---- */
 
     // The search box, filter chips and sort control were removed: the page shows
     // every theme. Newest-first is kept as the fixed order so the list is stable
     // and predictable rather than following whatever order the API returned.
-    const visible = useMemo(
-        () => [...themes].sort((a, b) => String(b._sortDate).localeCompare(String(a._sortDate))),
-        [themes],
-    );
+    const visible = themes;
 
     const activeTheme = themes.find((th) => th.isActive) || null;
 
@@ -548,10 +437,6 @@ function ThemesManager() {
                 </div>
                 {canManage ? (
                     <div className="flex items-center gap-2">
-                        <input ref={importInputRef} type="file" accept="application/json,.json" className="hidden" onChange={onImportFile} />
-                        <button type="button" onClick={() => importInputRef.current?.click()} className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">
-                            <HiOutlineArrowUpTray className="h-4 w-4" /> {t('theme_import', 'Import theme')}
-                        </button>
                         <button
                             type="button"
                             onClick={() => navigate(`${uiBase}/onboarding`)}
@@ -562,6 +447,15 @@ function ThemesManager() {
                     </div>
                 ) : null}
             </div>
+
+            {loadError ? (
+                <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                    {loadError}
+                    <button type="button" onClick={() => void load()} className="ms-3 font-semibold underline">
+                        {t('action_retry', 'Retry')}
+                    </button>
+                </div>
+            ) : null}
 
             {/* Active theme banner */}
             {activeTheme ? (
@@ -585,7 +479,11 @@ function ThemesManager() {
             ) : null}
 
             {/* Grid */}
-            {visible.length === 0 ? (
+            {loading ? (
+                <div className="flex items-center justify-center rounded-2xl border border-slate-200 bg-white py-16">
+                    <HiOutlineArrowPath className="h-7 w-7 animate-spin text-brand" />
+                </div>
+            ) : visible.length === 0 ? (
                 <div className="flex flex-col items-center gap-2 rounded-2xl border border-slate-200 bg-white px-6 py-16 text-center">
                     <HiOutlineSwatch className="h-9 w-9 text-slate-300" />
                     {/* With no filters left, empty can only mean the catalogue is
@@ -605,10 +503,8 @@ function ThemesManager() {
                             onPreview={doPreview}
                             onActivate={setConfirmTheme}
                             onCustomize={doCustomize}
-                            onExport={doExport}
                             onDetails={setDetailTheme}
                             onUpdate={doUpdate}
-                            onUninstall={doUninstall}
                         />
                     ))}
                 </div>
@@ -623,17 +519,11 @@ function ThemesManager() {
 
             {/* Overlays */}
             {confirmTheme ? <ActivateDialog theme={confirmTheme} busy={pending.has(confirmTheme.id)} onConfirm={doActivate} onClose={() => setConfirmTheme(null)} /> : null}
-            {detailTheme ? <DetailsDrawer theme={detailTheme} engineVersion={engineVersion} canManage={canManage} onUninstall={doUninstall} onClose={() => setDetailTheme(null)} /> : null}
+            {detailTheme ? <DetailsDrawer theme={detailTheme} engineVersion="1.0.0" onClose={() => setDetailTheme(null)} /> : null}
         </div>
     );
 }
 
-/* ------------------------------------------------------------------ page (platform boundary) */
-
 export default function StoreThemesPage() {
-    return (
-        <PlatformProvider>
-            <ThemesManager />
-        </PlatformProvider>
-    );
+    return <ThemesManager />;
 }

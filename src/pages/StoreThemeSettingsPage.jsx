@@ -53,7 +53,7 @@ export default function StoreThemeSettingsPage() {
             })
             .catch((e) => setErr(e.response?.data?.message || e.message))
             .finally(() => setLoading(false));
-    }, [id, themeId]);
+    }, [apiBase, themeId]);
 
     useEffect(() => {
         load();
@@ -78,7 +78,12 @@ export default function StoreThemeSettingsPage() {
         if (hasErrors) return;
         setSaving(true);
         try {
-            await api.put(`${apiBase}/themes/settings`, { theme_id: Number(themeId), settings: values });
+            // POST is an explicit backend alias because some production
+            // proxies do not preserve PUT before PHP receives it.
+            await api.post(`${apiBase}/themes/settings`, {
+                theme_id: Number(themeId),
+                settings: values,
+            });
             toast.success(t('theme_settings_saved', 'Settings saved'));
         } catch (e) {
             const serverErrors = e.response?.data?.errors?.settings;

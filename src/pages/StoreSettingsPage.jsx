@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Navigate, useNavigate, useParams } from 'react-router-dom';
+import { Navigate, useNavigate } from 'react-router-dom';
 import useStoreScope from '../hooks/useStoreScope';
 import { useOutletContext } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -15,7 +15,7 @@ const CURRENCIES = ['USD', 'SAR', 'AED', 'EGP', 'KWD', 'QAR', 'BHD', 'OMR', 'EUR
  * so we POST with method spoofing (_method=PUT) to the update route.
  */
 export default function StoreSettingsPage() {
-    const { id, apiBase, uiBase } = useStoreScope();
+    const { id, apiBase } = useStoreScope();
     const { t } = useTranslation();
     const navigate = useNavigate();
     const { permissions } = useOutletContext();
@@ -54,7 +54,7 @@ export default function StoreSettingsPage() {
                 setDescription(s.description ?? '');
             })
             .catch((e) => setErr(e.response?.data?.message || e.message));
-    }, [id, permissions]);
+    }, [apiBase, id, permissions]);
 
     if (id && !can('stores-edit')) {
         return <Navigate to="/stores" replace />;
@@ -62,18 +62,22 @@ export default function StoreSettingsPage() {
 
     async function submit(e) {
         e.preventDefault();
+        const publishing = e.nativeEvent?.submitter?.value === 'publish';
         setLoading(true);
         setErr('');
         try {
             const fd = new FormData();
             fd.append('_method', 'PUT');
-            fd.append('status', status);
+            // Read the actual submitter instead of relying on an asynchronous
+            // state update from the Publish button's click handler.
+            fd.append('status', publishing ? 'active' : status);
             fd.append('currency', currency);
             fd.append('description', description ?? '');
             if (logoFile) fd.append('logo', logoFile);
             if (bannerFile) fd.append('banner', bannerFile);
             const { data } = await api.post(`${apiBase}`, fd);
             setStore(data.data);
+            setStatus(data.data?.status ?? status);
             setLogoFile(null);
             setBannerFile(null);
             toast.success(t('action_edit'));
@@ -150,7 +154,8 @@ export default function StoreSettingsPage() {
                         </p>
                         <button
                             type="submit"
-                            onClick={() => setStatus('active')}
+                            name="intent"
+                            value="publish"
                             disabled={loading}
                             className="rounded-xl bg-emerald-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-700 disabled:opacity-50"
                         >

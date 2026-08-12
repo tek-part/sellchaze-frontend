@@ -47,7 +47,9 @@ export function makeDomainsApi(apiBase = '/my-store') {
 
         enable: (id) => api.post(`${base}/${id}/enable`).then((r) => r.data?.data ?? null),
 
-        remove: (id) => api.delete(`${base}/${id}`).then((r) => r.data),
+        // POST is an explicit backend alias for hosting proxies that normalize
+        // DELETE before PHP receives the request.
+        remove: (id) => api.post(`${base}/${id}`).then((r) => r.data),
     };
 }
 
