@@ -38,8 +38,8 @@ export default function FollowSuggestions() {
     if (suggestions.length === 0) return null;
 
     return (
-        <section className="rounded-2xl bg-white p-5 shadow-xs ring-1 ring-slate-200">
-            <h2 className="text-base font-bold text-slate-900">{t('feed_follow_title', 'Follow these')}</h2>
+        <section className="rounded-2xl bg-white p-5 shadow-[0_8px_30px_-22px_rgba(15,23,42,.4)] ring-1 ring-slate-200/80">
+            <h2 className="text-sm font-bold text-slate-900">{t('feed_follow_title', 'Follow these')}</h2>
             <p className="mt-0.5 text-xs text-slate-500">
                 {t('feed_follow_hint', 'Companies in your sector.')}
             </p>
@@ -73,7 +73,7 @@ export default function FollowSuggestions() {
                                 type="button"
                                 disabled={isFollowed || busy === s.id}
                                 onClick={() => follow(s.id)}
-                                className={`inline-flex shrink-0 items-center gap-1 rounded-full px-3 py-1.5 text-xs font-semibold transition ${
+                                className={`sc-press inline-flex shrink-0 items-center gap-1 rounded-full px-3 py-1.5 text-xs font-bold transition ${
                                     isFollowed
                                         ? 'bg-emerald-50 text-emerald-600'
                                         : 'bg-brand text-white hover:bg-brand-dark disabled:opacity-50'

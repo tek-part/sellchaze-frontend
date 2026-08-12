@@ -297,3 +297,232 @@ div#_rht_toaster {
         transform: none !important;
     }
 }
+
+/* ==================================================================== */
+/*  Community feed motion system                                        */
+/*                                                                      */
+/*  The social surfaces (/feed, /reels, groups, post detail) share one   */
+/*  motion vocabulary so the whole network feels like a single product:  */
+/*                                                                      */
+/*    .sc-rise      entrance for a card in a list (stagger via           */
+/*                  `--sc-delay`, set inline per index)                  */
+/*    .sc-lift      hover elevation for a whole card                     */
+/*    .sc-press     tactile scale-down while a control is held           */
+/*    .sc-pop       a layer appearing under the cursor (reaction bar,    */
+/*                  overflow menu)                                       */
+/*    .sc-burst     the like/reaction confirmation beat                  */
+/*    .sc-skeleton  loading placeholder shimmer                          */
+/*                                                                      */
+/*  Every one of them collapses to a no-op under reduced motion, so the  */
+/*  feed stays fully usable without any movement at all.                 */
+/* ==================================================================== */
+
+@keyframes sc-feed-rise {
+    from {
+        opacity: 0;
+        transform: translateY(14px) scale(0.985);
+    }
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}
+
+@keyframes sc-feed-pop {
+    from {
+        opacity: 0;
+        transform: translateY(10px) scale(0.92);
+    }
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}
+
+@keyframes sc-feed-burst {
+    0% {
+        transform: scale(1);
+    }
+    35% {
+        transform: scale(1.34);
+    }
+    62% {
+        transform: scale(0.9);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
+/* The halo that expands out of a reaction the moment it is chosen. */
+@keyframes sc-feed-halo {
+    0% {
+        opacity: 0.5;
+        transform: scale(0.55);
+    }
+    100% {
+        opacity: 0;
+        transform: scale(2.2);
+    }
+}
+
+/* Direction-agnostic: shifts the gradient stop, not the element. */
+@keyframes sc-feed-shimmer {
+    0% {
+        background-position: 100% 50%;
+    }
+    100% {
+        background-position: 0 50%;
+    }
+}
+
+.sc-rise {
+    opacity: 0;
+    animation: sc-feed-rise 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+    animation-delay: var(--sc-delay, 0ms);
+}
+
+.sc-pop {
+    animation: sc-feed-pop 0.18s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+.sc-lift {
+    transition:
+        transform 0.25s cubic-bezier(0.22, 1, 0.36, 1),
+        box-shadow 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.sc-lift:hover {
+    transform: translateY(-2px);
+}
+
+.sc-press {
+    transition: transform 0.12s ease;
+}
+
+.sc-press:active {
+    transform: scale(0.94);
+}
+
+.sc-burst {
+    animation: sc-feed-burst 0.42s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.sc-halo::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 9999px;
+    background: currentcolor;
+    animation: sc-feed-halo 0.5s ease-out forwards;
+    pointer-events: none;
+}
+
+.sc-skeleton {
+    background-image: linear-gradient(
+        90deg,
+        var(--color-slate-200) 25%,
+        var(--color-slate-100) 37%,
+        var(--color-slate-200) 63%
+    );
+    background-size: 400% 100%;
+    animation: sc-feed-shimmer 1.4s ease-in-out infinite;
+}
+
+/* Horizontal shortcut rails scroll without a visible scrollbar. */
+.sc-rail {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+.sc-rail::-webkit-scrollbar {
+    display: none;
+}
+
+/* ---- Reels ------------------------------------------------------- */
+
+/* The heart thrown up by a double-tap, and the play/pause glyph that
+   flashes once in the centre of the video on a single tap. */
+@keyframes sc-reel-heart {
+    0% {
+        opacity: 0;
+        transform: scale(0.4) rotate(-14deg);
+    }
+    28% {
+        opacity: 1;
+        transform: scale(1.15) rotate(0deg);
+    }
+    62% {
+        opacity: 1;
+        transform: scale(1);
+    }
+    100% {
+        opacity: 0;
+        transform: scale(1.35);
+    }
+}
+
+@keyframes sc-reel-flash {
+    0% {
+        opacity: 0;
+        transform: scale(0.7);
+    }
+    30% {
+        opacity: 0.95;
+        transform: scale(1);
+    }
+    100% {
+        opacity: 0;
+        transform: scale(1.3);
+    }
+}
+
+.sc-reel-heart {
+    animation: sc-reel-heart 0.9s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.sc-reel-flash {
+    animation: sc-reel-flash 0.6s ease-out forwards;
+}
+
+/* Snap stage: one reel per viewport, no rubber-banding onto the page. */
+.sc-reel-stage {
+    scroll-snap-type: y mandatory;
+    overscroll-behavior: contain;
+    scrollbar-width: none;
+}
+
+.sc-reel-stage::-webkit-scrollbar {
+    display: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .sc-rise,
+    .sc-pop {
+        opacity: 1 !important;
+        animation: none !important;
+        transform: none !important;
+    }
+
+    .sc-lift:hover,
+    .sc-press:active {
+        transform: none !important;
+    }
+
+    .sc-burst,
+    .sc-halo::after,
+    .sc-skeleton,
+    .sc-reel-heart,
+    .sc-reel-flash {
+        animation: none !important;
+    }
+
+    .sc-halo::after {
+        content: none;
+    }
+
+    /* Snapping itself is fine without motion; the smooth scroll is not. */
+    .sc-reel-stage {
+        scroll-behavior: auto !important;
+    }
+}

@@ -6,7 +6,8 @@ export const POST_TYPES = ['new_product', 'ad_offer', 'rfq', 'update_news', 'que
 /** Initials from a name/company (up to two letters), matching the dashboard avatar look. */
 export function initials(name) {
     const s = String(name ?? '').trim();
-    if (!s) return '؟';
+    // Language-neutral: this avatar renders in both the Arabic and English shell.
+    if (!s) return '?';
     const parts = s.split(/\s+/).filter(Boolean);
     if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
     return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/react';
 import {
     HiOutlineHeart,
     HiHeart,
@@ -13,12 +14,23 @@ import {
     HiOutlineNoSymbol,
     HiOutlineFlag,
     HiOutlineUserMinus,
+    HiOutlineEllipsisHorizontal,
+    HiOutlineMapPin,
+    HiOutlineDocumentText,
 } from 'react-icons/hi2';
 import api from '../../api/client';
 import { langParam } from '../../api/lang';
 import { initials, relativeTime } from './helpers';
 import CommentThread from './CommentThread';
 import { trackFeedEvent } from '../../features/community/api/events';
+
+/** The four business reactions, offered from the picker above the Like button. */
+const REACTIONS = [
+    { type: 'celebrate', emoji: '👏', labelKey: 'feed_react_celebrate' },
+    { type: 'insightful', emoji: '💡', labelKey: 'feed_react_insightful' },
+    { type: 'support', emoji: '🤝', labelKey: 'feed_react_support' },
+    { type: 'interested', emoji: '🎯', labelKey: 'feed_react_interested' },
+];
 
 /** Author avatar — photo or initials. */
 function Avatar({ name, photo }) {
@@ -39,11 +51,21 @@ const mediaKind = (source) => {
     return 'image';
 };
 
+/** Shared shape for the four controls in the action bar. */
+const ACTION_CLASS =
+    'sc-press inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg px-2 py-2 text-sm font-semibold transition hover:bg-slate-50';
+
 /**
- * One post in the feed. Owns its own like/comment/share/delete state so the parent
- * list only needs to remove the card when deleted (via onDeleted).
+ * One post in the feed. Owns its own like/reaction/comment/share/delete state so
+ * the parent list only needs to remove the card when deleted (via onDeleted).
+ *
+ * Interaction model follows the one members already know from social apps:
+ * clicking the primary button likes the post, hovering (or focusing) it opens a
+ * picker for the four business reactions. Everything destructive or rare —
+ * mute, block, report, delete — lives behind the overflow menu in the header,
+ * which keeps the action bar down to the four things people actually do.
  */
-export default function PostCard({ post, onDeleted }) {
+export default function PostCard({ post, onDeleted, index = 0 }) {
     const { t, i18n } = useTranslation();
     const { lang } = langParam(i18n);
 
@@ -57,7 +79,10 @@ export default function PostCard({ post, onDeleted }) {
     const [safetyBusy, setSafetyBusy] = useState(false);
     const [reaction, setReaction] = useState(post.reaction || null);
     const [reactionSummary, setReactionSummary] = useState(post.reaction_summary || {});
+    const [pickerOpen, setPickerOpen] = useState(false);
+    const [burst, setBurst] = useState(false);
     const cardRef = useRef(null);
+    const pickerTimer = useRef(null);
 
     useEffect(() => {
         const node = cardRef.current;
@@ -73,8 +98,31 @@ export default function PostCard({ post, onDeleted }) {
         return () => { observer.disconnect(); if (startedAt) trackFeedEvent(post.id, 'dwell', { value_ms: Date.now() - startedAt }); };
     }, [post.id]);
 
+    // The picker must not vanish while the pointer travels from the button to it.
+    useEffect(() => () => clearTimeout(pickerTimer.current), []);
+
+    const openPicker = () => {
+        clearTimeout(pickerTimer.current);
+        setPickerOpen(true);
+    };
+
+    const closePicker = () => {
+        clearTimeout(pickerTimer.current);
+        pickerTimer.current = setTimeout(() => setPickerOpen(false), 220);
+    };
+
     const author = post.author ?? {};
     const typeLabel = t(`feed_type_${post.type}`, post.type);
+    const activeReaction = REACTIONS.find((r) => r.type === reaction) ?? null;
+
+    const reactionTotal = Object.values(reactionSummary).reduce((sum, n) => sum + (Number(n) || 0), 0);
+    const responses = (counts.likes ?? 0) + reactionTotal;
+    const topReactions = REACTIONS.filter((r) => (reactionSummary[r.type] ?? 0) > 0).slice(0, 3);
+
+    const celebrate = () => {
+        setBurst(true);
+        setTimeout(() => setBurst(false), 480);
+    };
 
     const toggleLike = async () => {
         if (likeBusy) return;
@@ -82,6 +130,7 @@ export default function PostCard({ post, onDeleted }) {
         // Optimistic flip.
         const nextLiked = !liked;
         setLiked(nextLiked);
+        if (nextLiked) celebrate();
         setCounts((c) => ({ ...c, likes: Math.max(0, (c.likes ?? 0) + (nextLiked ? 1 : -1)) }));
         try {
             const { data } = nextLiked
@@ -164,59 +213,167 @@ export default function PostCard({ post, onDeleted }) {
     };
 
     const chooseReaction = async (type) => {
+        clearTimeout(pickerTimer.current);
+        setPickerOpen(false);
+        const removing = reaction === type;
+        if (!removing) celebrate();
         try {
-            const { data } = reaction === type ? await api.delete(`/posts/${post.id}/reaction`) : await api.post(`/posts/${post.id}/reaction`, { type });
+            const { data } = removing
+                ? await api.delete(`/posts/${post.id}/reaction`)
+                : await api.post(`/posts/${post.id}/reaction`, { type });
             setReaction(data.reaction); setReactionSummary(data.summary || {});
         } catch { /* keep previous selection */ }
     };
 
+    const media = Array.isArray(post.media) ? post.media : [];
+
     return (
-        <article ref={cardRef} className="rounded-[22px] bg-white p-5 shadow-[0_10px_35px_-26px_rgba(15,23,42,.5)] ring-1 ring-slate-200/80 transition-shadow hover:shadow-[0_16px_45px_-28px_rgba(15,23,42,.55)]">
+        <article
+            ref={cardRef}
+            style={{ '--sc-delay': `${Math.min(index, 6) * 55}ms` }}
+            className="sc-rise rounded-2xl bg-white shadow-[0_10px_35px_-26px_rgba(15,23,42,.5)] ring-1 ring-slate-200/80 transition-shadow hover:shadow-[0_16px_45px_-28px_rgba(15,23,42,.55)]"
+        >
             {/* Author header */}
-            <header className="flex items-start gap-3">
+            <header className="flex items-start gap-3 px-5 pt-5">
                 <Avatar name={author.name || author.company} photo={author.photo} />
                 <div className="min-w-0 flex-1">
-                    <div className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5">
-                        <span className="truncate text-sm font-semibold text-slate-900">{post.acting_as?.type === 'organization' ? post.acting_as.name : author.name}</span>
+                    <div className="flex flex-wrap items-center gap-x-1.5">
+                        <span className="truncate text-sm font-bold text-slate-900">
+                            {post.acting_as?.type === 'organization' ? post.acting_as.name : author.name}
+                        </span>
                         {author.is_verified ? (
                             <HiCheckBadge className="h-4 w-4 shrink-0 text-brand" title={t('feed_verified', 'Verified')} aria-label={t('feed_verified', 'Verified')} />
                         ) : null}
                     </div>
-                    <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[12px] text-slate-500">
-                        {author.company ? <span className="truncate">{author.company}</span> : null}
-                        <span className="text-slate-300" aria-hidden>·</span>
+                    <div className="flex flex-wrap items-center gap-x-1.5 text-[12px] text-slate-500">
+                        {author.company ? (
+                            <>
+                                <span className="truncate">{author.company}</span>
+                                <span className="text-slate-300" aria-hidden>·</span>
+                            </>
+                        ) : null}
                         <span>{relativeTime(post.created_at, lang)}</span>
+                        <span className="text-slate-300" aria-hidden>·</span>
+                        <span className="font-semibold text-brand">{typeLabel}</span>
+                        {post.sector ? (
+                            <>
+                                <span className="text-slate-300" aria-hidden>·</span>
+                                <span className="truncate">{post.sector.name}</span>
+                            </>
+                        ) : null}
                     </div>
                 </div>
-                <div className="flex shrink-0 items-center gap-1.5">
-                    {post.sector ? (
-                        <span className="rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-medium text-slate-600">
-                            {post.sector.name}
-                        </span>
-                    ) : null}
-                    <span className="rounded-full bg-brand/10 px-2.5 py-1 text-[11px] font-semibold text-brand">
-                        {typeLabel}
-                    </span>
-                </div>
+
+                {/* Everything rare or destructive lives here, not in the action bar. */}
+                <Menu as="div" className="relative shrink-0">
+                    <MenuButton
+                        className="sc-press rounded-full p-1.5 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
+                        aria-label={t('feed_more_actions', 'More actions')}
+                    >
+                        <HiOutlineEllipsisHorizontal className="h-5 w-5" aria-hidden />
+                    </MenuButton>
+                    <MenuItems
+                        transition
+                        anchor="bottom end"
+                        className="z-50 w-52 origin-top rounded-xl bg-white p-1.5 shadow-xl ring-1 ring-slate-200 transition duration-150 ease-out data-closed:scale-95 data-closed:opacity-0 [--anchor-gap:6px]"
+                    >
+                        <MenuItem>
+                            <button type="button" onClick={toggleSave} className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-semibold text-slate-700 data-focus:bg-slate-100">
+                                {saved ? <HiBookmark className="h-5 w-5 text-brand" aria-hidden /> : <HiOutlineBookmark className="h-5 w-5 text-slate-400" aria-hidden />}
+                                {saved ? t('feed_saved', 'Saved') : t('feed_save', 'Save')}
+                            </button>
+                        </MenuItem>
+                        {post.can_delete ? (
+                            <MenuItem>
+                                <button type="button" onClick={remove} disabled={deleting} className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-semibold text-red-600 disabled:opacity-50 data-focus:bg-red-50">
+                                    <HiOutlineTrash className="h-5 w-5" aria-hidden />
+                                    {t('feed_delete', 'Delete')}
+                                </button>
+                            </MenuItem>
+                        ) : (
+                            <>
+                                <MenuItem>
+                                    <button type="button" disabled={safetyBusy} onClick={() => safetyAction('mute')} className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-semibold text-slate-700 disabled:opacity-50 data-focus:bg-slate-100">
+                                        <HiOutlineNoSymbol className="h-5 w-5 text-slate-400" aria-hidden />
+                                        {t('feed_mute', 'Mute')}
+                                    </button>
+                                </MenuItem>
+                                <MenuItem>
+                                    <button type="button" disabled={safetyBusy} onClick={() => safetyAction('block')} className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-semibold text-slate-700 disabled:opacity-50 data-focus:bg-slate-100">
+                                        <HiOutlineUserMinus className="h-5 w-5 text-slate-400" aria-hidden />
+                                        {t('feed_block', 'Block')}
+                                    </button>
+                                </MenuItem>
+                                <MenuItem>
+                                    <button type="button" onClick={report} className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-semibold text-red-600 data-focus:bg-red-50">
+                                        <HiOutlineFlag className="h-5 w-5" aria-hidden />
+                                        {t('feed_report', 'Report')}
+                                    </button>
+                                </MenuItem>
+                            </>
+                        )}
+                    </MenuItems>
+                </Menu>
             </header>
 
             {/* Body (HTML from the rich editor) */}
             {post.body ? (
                 <div
-                    className="prose prose-sm mt-3 max-w-none break-words text-slate-700 prose-p:my-1.5 prose-a:text-brand prose-headings:text-slate-900"
+                    className="prose prose-sm mt-3 max-w-none break-words px-5 text-slate-700 prose-p:my-1.5 prose-a:text-brand prose-headings:text-slate-900"
                     dangerouslySetInnerHTML={{ __html: post.body }}
                 />
             ) : null}
 
-            {post.location_name ? <p className="mt-2 text-xs font-medium text-slate-500">📍 {post.location_name}</p> : null}
+            {post.location_name ? (
+                <p className="mt-2 flex items-center gap-1 px-5 text-xs font-medium text-slate-500">
+                    <HiOutlineMapPin className="h-4 w-4 shrink-0 text-slate-400" aria-hidden />
+                    {post.location_name}
+                </p>
+            ) : null}
 
-            {Array.isArray(post.media) && post.media.length > 0 ? (
-                <div className={`mt-4 grid overflow-hidden rounded-2xl bg-slate-950 ${post.media.length === 1 ? 'grid-cols-1' : 'grid-cols-2'} gap-1`}>
-                    {post.media.map((media) => media.kind === 'video'
-                        ? <video key={media.id} src={media.variants?.web?.url || media.url} poster={media.variants?.poster?.url} controls preload="metadata" playsInline className="max-h-[560px] w-full bg-black object-contain" />
-                        : media.kind === 'document'
-                            ? <a key={media.id} href={media.url} target="_blank" rel="noreferrer" className="flex min-h-32 items-center justify-center bg-blue-50 p-6 text-sm font-bold text-blue-700">فتح {media.name || 'المستند'}</a>
-                            : <img key={media.id} src={media.url} alt={media.alt_text || ''} loading="lazy" decoding="async" className="max-h-[560px] w-full object-cover" />)}
+            {media.length > 0 ? (
+                <div className={`mt-4 grid gap-0.5 bg-slate-950 ${media.length === 1 ? 'grid-cols-1' : 'grid-cols-2'}`}>
+                    {media.map((item, i) => {
+                        // An odd gallery reads better with a full-width lead image.
+                        const lead = media.length === 3 && i === 0 ? 'col-span-2' : '';
+                        if (item.kind === 'video') {
+                            return (
+                                <video
+                                    key={item.id}
+                                    src={item.variants?.web?.url || item.url}
+                                    poster={item.variants?.poster?.url}
+                                    controls
+                                    preload="metadata"
+                                    playsInline
+                                    className={`max-h-[560px] w-full bg-black object-contain ${lead}`}
+                                />
+                            );
+                        }
+                        if (item.kind === 'document') {
+                            return (
+                                <a
+                                    key={item.id}
+                                    href={item.url}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className={`flex min-h-32 items-center justify-center gap-2 bg-brand-light p-6 text-sm font-bold text-brand-dark transition hover:bg-brand-light/70 ${lead}`}
+                                >
+                                    <HiOutlineDocumentText className="h-5 w-5 shrink-0" aria-hidden />
+                                    <span className="truncate">{item.name || t('feed_open_document', 'Open document')}</span>
+                                </a>
+                            );
+                        }
+                        return (
+                            <img
+                                key={item.id}
+                                src={item.url}
+                                alt={item.alt_text || ''}
+                                loading="lazy"
+                                decoding="async"
+                                className={`max-h-[560px] w-full object-cover ${lead}`}
+                            />
+                        );
+                    })}
                 </div>
             ) : null}
 
@@ -236,7 +393,7 @@ export default function PostCard({ post, onDeleted }) {
                             </div>
                         </>
                     );
-                    const cls = 'mt-3 flex items-center gap-3 rounded-xl border border-slate-200 bg-slate-50/60 p-2.5';
+                    const cls = 'mx-5 mt-3 flex items-center gap-3 rounded-xl border border-slate-200 bg-slate-50/60 p-2.5';
                     return author.username ? (
                         <Link to={`/u/${author.username}`} className={`${cls} transition hover:bg-slate-100`}>
                             {inner}
@@ -249,75 +406,152 @@ export default function PostCard({ post, onDeleted }) {
 
             {/* Image, video and document attachments */}
             {Array.isArray(post.attachments) && post.attachments.length > 0 ? (
-                <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3">
+                <div className="mt-3 grid grid-cols-2 gap-2 px-5 sm:grid-cols-3">
                     {post.attachments.map((src, i) => mediaKind(src) === 'video'
                         ? <video key={i} src={src} controls preload="metadata" className="h-32 w-full rounded-xl bg-black object-cover ring-1 ring-slate-200" />
                         : mediaKind(src) === 'document'
-                            ? <a key={i} href={src} target="_blank" rel="noreferrer" className="flex h-32 items-center justify-center rounded-xl bg-slate-50 p-3 text-center text-xs font-semibold text-brand ring-1 ring-slate-200">{decodeURIComponent(String(src).split('/').pop()?.split('?')[0] || 'Open document')}</a>
+                            ? <a key={i} href={src} target="_blank" rel="noreferrer" className="flex h-32 items-center justify-center rounded-xl bg-slate-50 p-3 text-center text-xs font-semibold text-brand ring-1 ring-slate-200">{decodeURIComponent(String(src).split('/').pop()?.split('?')[0] || t('feed_open_document', 'Open document'))}</a>
                             : <img key={i} src={src} alt="" loading="lazy" decoding="async" className="h-32 w-full rounded-xl object-cover ring-1 ring-slate-200" />)}
                 </div>
             ) : null}
 
-            {post.cta ? <a href={post.cta.url || '#'} target={post.cta.url ? '_blank' : undefined} rel="noreferrer" className="mt-3 flex items-center justify-center rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-bold text-white hover:bg-blue-700">{post.cta.label || (post.cta.type === 'request_quote' ? 'طلب عرض سعر' : 'تواصل الآن')}</a> : null}
-
-            <div className="mt-3 flex flex-wrap items-center gap-1.5" aria-label="تفاعلات المنشور">
-                {Object.entries({ celebrate: ['👏', 'أحسنت'], insightful: ['💡', 'مفيد'], support: ['🤝', 'دعم'], interested: ['🎯', 'مهتم'] }).map(([type, [icon, label]]) => <button key={type} type="button" onClick={() => chooseReaction(type)} className={`rounded-full border px-2.5 py-1 text-xs font-semibold transition ${reaction === type ? 'border-blue-300 bg-blue-50 text-blue-700' : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'}`}>{icon} {label}{reactionSummary[type] ? ` ${reactionSummary[type]}` : ''}</button>)}
-            </div>
-
-            {/* Action row */}
-            <footer className="mt-4 flex items-center gap-1 border-t border-slate-100 pt-3">
-                <button
-                    type="button"
-                    onClick={toggleLike}
-                    className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition hover:bg-slate-50 ${
-                        liked ? 'text-red-600' : 'text-slate-600'
-                    }`}
+            {post.cta ? (
+                <a
+                    href={post.cta.url || '#'}
+                    target={post.cta.url ? '_blank' : undefined}
+                    rel="noreferrer"
+                    className="sc-press mx-5 mt-4 flex items-center justify-center rounded-xl bg-brand px-4 py-2.5 text-sm font-bold text-white transition hover:bg-brand-dark"
                 >
-                    {liked ? <HiHeart className="h-5 w-5" aria-hidden /> : <HiOutlineHeart className="h-5 w-5" aria-hidden />}
-                    <span>{t('feed_like', 'Like')}</span>
-                    {counts.likes ? <span className="text-xs text-slate-400">{counts.likes}</span> : null}
-                </button>
+                    {post.cta.label || (post.cta.type === 'request_quote' ? t('feed_cta_request_quote', 'Request a quote') : t('feed_cta_contact', 'Contact now'))}
+                </a>
+            ) : null}
+
+            {/* Engagement summary — who responded, how many talked about it */}
+            {responses > 0 || counts.comments > 0 || counts.shares > 0 ? (
+                <div className="mt-4 flex items-center justify-between gap-3 px-5 text-xs text-slate-500">
+                    {responses > 0 ? (
+                        <span className="flex items-center gap-1.5">
+                            <span className="flex items-center gap-0.5">
+                                {counts.likes > 0 ? (
+                                    <span className="flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[10px] text-white ring-2 ring-white" aria-hidden>
+                                        <HiHeart className="h-3 w-3" />
+                                    </span>
+                                ) : null}
+                                {topReactions.map((r) => (
+                                    <span key={r.type} className="flex h-5 w-5 items-center justify-center rounded-full bg-slate-100 text-[11px] ring-2 ring-white" aria-hidden>
+                                        {r.emoji}
+                                    </span>
+                                ))}
+                            </span>
+                            <span className="font-semibold">{responses}</span>
+                        </span>
+                    ) : <span />}
+                    {/* Counts sit next to their icon rather than a noun, so the
+                        row never needs plural rules in either language. */}
+                    <span className="flex items-center gap-3">
+                        {counts.comments ? (
+                            <button
+                                type="button"
+                                onClick={() => setShowComments(true)}
+                                aria-label={t('feed_comment', 'Comment')}
+                                className="inline-flex items-center gap-1 font-semibold transition hover:text-brand"
+                            >
+                                <HiOutlineChatBubbleOvalLeft className="h-4 w-4" aria-hidden />
+                                {counts.comments}
+                            </button>
+                        ) : null}
+                        {counts.shares ? (
+                            <span className="inline-flex items-center gap-1 font-semibold" aria-label={t('feed_share', 'Share')}>
+                                <HiOutlineArrowUpTray className="h-4 w-4" aria-hidden />
+                                {counts.shares}
+                            </span>
+                        ) : null}
+                    </span>
+                </div>
+            ) : null}
+
+            {/* Action bar */}
+            <footer className="mt-2 flex items-center gap-1 border-t border-slate-100 px-3 py-1.5">
+                {/* Click likes; hover or focus opens the reaction picker. */}
+                <div
+                    className="relative flex flex-1"
+                    onMouseEnter={openPicker}
+                    onMouseLeave={closePicker}
+                    onFocus={openPicker}
+                    onBlur={closePicker}
+                >
+                    {pickerOpen ? (
+                        <div
+                            className="sc-pop absolute bottom-full start-0 z-30 mb-2 flex gap-1 rounded-full bg-white p-1.5 shadow-xl ring-1 ring-slate-200"
+                            role="group"
+                            aria-label={t('feed_reactions_label', 'Post reactions')}
+                        >
+                            {REACTIONS.map((r) => (
+                                <button
+                                    key={r.type}
+                                    type="button"
+                                    onClick={() => chooseReaction(r.type)}
+                                    title={t(r.labelKey)}
+                                    aria-label={t(r.labelKey)}
+                                    aria-pressed={reaction === r.type}
+                                    className={`flex h-9 w-9 items-center justify-center rounded-full text-lg transition duration-150 hover:-translate-y-1 hover:scale-110 ${
+                                        reaction === r.type ? 'bg-brand-light ring-1 ring-brand/25' : 'hover:bg-slate-100'
+                                    }`}
+                                >
+                                    {r.emoji}
+                                </button>
+                            ))}
+                        </div>
+                    ) : null}
+
+                    <button
+                        type="button"
+                        onClick={toggleLike}
+                        disabled={likeBusy}
+                        aria-pressed={liked}
+                        className={`${ACTION_CLASS} ${liked || activeReaction ? 'text-red-600' : 'text-slate-600'}`}
+                    >
+                        <span className={`relative flex items-center justify-center ${burst ? 'sc-burst sc-halo' : ''}`}>
+                            {activeReaction ? (
+                                <span className="text-lg leading-none" aria-hidden>{activeReaction.emoji}</span>
+                            ) : liked ? (
+                                <HiHeart className="h-5 w-5" aria-hidden />
+                            ) : (
+                                <HiOutlineHeart className="h-5 w-5" aria-hidden />
+                            )}
+                        </span>
+                        <span className="truncate">{activeReaction ? t(activeReaction.labelKey) : t('feed_like', 'Like')}</span>
+                    </button>
+                </div>
+
                 <button
                     type="button"
                     onClick={() => setShowComments((v) => !v)}
-                    className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition hover:bg-slate-50 ${
-                        showComments ? 'text-brand' : 'text-slate-600'
-                    }`}
+                    aria-expanded={showComments}
+                    className={`${ACTION_CLASS} ${showComments ? 'text-brand' : 'text-slate-600'}`}
                 >
                     <HiOutlineChatBubbleOvalLeft className="h-5 w-5" aria-hidden />
-                    <span>{t('feed_comment', 'Comment')}</span>
-                    {counts.comments ? <span className="text-xs text-slate-400">{counts.comments}</span> : null}
+                    <span className="truncate">{t('feed_comment', 'Comment')}</span>
                 </button>
-                <button
-                    type="button"
-                    onClick={share}
-                    disabled={shareBusy}
-                    className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium text-slate-600 transition hover:bg-slate-50 disabled:opacity-50"
-                >
+
+                <button type="button" onClick={share} disabled={shareBusy} className={`${ACTION_CLASS} text-slate-600 disabled:opacity-50`}>
                     <HiOutlineArrowUpTray className="h-5 w-5" aria-hidden />
-                    <span>{t('feed_share', 'Share')}</span>
-                    {counts.shares ? <span className="text-xs text-slate-400">{counts.shares}</span> : null}
+                    <span className="truncate">{t('feed_share', 'Share')}</span>
                 </button>
-                <button type="button" onClick={toggleSave} className={`inline-flex items-center gap-1 rounded-lg px-3 py-1.5 text-sm ${saved ? 'text-brand' : 'text-slate-600'}`}>{saved ? <HiBookmark className="h-5 w-5" /> : <HiOutlineBookmark className="h-5 w-5" />}<span className="hidden sm:inline">{t('feed_save', 'Save')}</span></button>
-                {!post.can_delete && <div className="ms-auto flex items-center"><button type="button" disabled={safetyBusy} onClick={() => safetyAction('mute')} title={t('feed_mute', 'Mute')} className="rounded-lg p-2 text-slate-500 hover:bg-slate-50"><HiOutlineNoSymbol className="h-5 w-5" /></button><button type="button" disabled={safetyBusy} onClick={() => safetyAction('block')} title={t('feed_block', 'Block')} className="rounded-lg p-2 text-slate-500 hover:bg-slate-50"><HiOutlineUserMinus className="h-5 w-5" /></button><button type="button" onClick={report} title={t('feed_report', 'Report')} className="rounded-lg p-2 text-slate-500 hover:bg-red-50 hover:text-red-600"><HiOutlineFlag className="h-5 w-5" /></button></div>}
-                {post.can_delete ? (
-                    <button
-                        type="button"
-                        onClick={remove}
-                        disabled={deleting}
-                        className="ms-auto inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium text-slate-500 transition hover:bg-red-50 hover:text-red-600 disabled:opacity-50"
-                    >
-                        <HiOutlineTrash className="h-5 w-5" aria-hidden />
-                        <span className="hidden sm:inline">{t('feed_delete', 'Delete')}</span>
-                    </button>
-                ) : null}
+
+                <button type="button" onClick={toggleSave} aria-pressed={saved} className={`${ACTION_CLASS} ${saved ? 'text-brand' : 'text-slate-600'}`}>
+                    {saved ? <HiBookmark className="h-5 w-5" aria-hidden /> : <HiOutlineBookmark className="h-5 w-5" aria-hidden />}
+                    <span className="hidden truncate sm:inline">{saved ? t('feed_saved', 'Saved') : t('feed_save', 'Save')}</span>
+                </button>
             </footer>
 
             {showComments && post.comments_enabled !== false ? (
-                <CommentThread
-                    postId={post.id}
-                    onCountChange={(delta) => setCounts((c) => ({ ...c, comments: Math.max(0, (c.comments ?? 0) + delta) }))}
-                />
+                <div className="px-5 pb-4">
+                    <CommentThread
+                        postId={post.id}
+                        onCountChange={(delta) => setCounts((c) => ({ ...c, comments: Math.max(0, (c.comments ?? 0) + delta) }))}
+                    />
+                </div>
             ) : null}
         </article>
     );

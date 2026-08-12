@@ -192,9 +192,9 @@ export default function App() {
                 <Route path="/feed" element={<FeedPage />} />
                 <Route path="/community/create" element={<CommunityCreatePage />} />
                 <Route path="/community/post/:id" element={<CommunityPostPage />} />
-                <Route path="/community/following" element={<FeedPage initialScope="following" title="من أتابعهم" />} />
-                <Route path="/community/saved" element={<FeedPage initialScope="saved" title="المنشورات المحفوظة" />} />
-                <Route path="/community/trending" element={<FeedPage initialScope="trending" title="الرائج في مجتمع الأعمال" />} />
+                <Route path="/community/following" element={<FeedPage initialScope="following" titleKey="community_page_following" />} />
+                <Route path="/community/saved" element={<FeedPage initialScope="saved" titleKey="community_page_saved" />} />
+                <Route path="/community/trending" element={<FeedPage initialScope="trending" titleKey="community_page_trending" />} />
                 <Route path="/community/groups" element={<CommunityGroupsPage />} />
                 <Route path="/community/groups/:id" element={<CommunityGroupPage />} />
                 <Route path="/reels" element={<ReelsPage />} />
