@@ -189,7 +189,10 @@ export default function App() {
                 }
             >
                 <Route path="/dashboard" element={<Dashboard />} />
-                <Route path="/feed" element={<FeedPage />} />
+                {/* The community section lives under /community. /feed is kept
+                    as a permanent redirect so older links and bookmarks work. */}
+                <Route path="/community" element={<FeedPage />} />
+                <Route path="/feed" element={<Navigate to="/community" replace />} />
                 <Route path="/community/create" element={<CommunityCreatePage />} />
                 <Route path="/community/post/:id" element={<CommunityPostPage />} />
                 <Route path="/community/following" element={<FeedPage initialScope="following" titleKey="community_page_following" />} />

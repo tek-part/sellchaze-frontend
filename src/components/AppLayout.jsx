@@ -39,6 +39,7 @@ import NotificationsMenu from './NotificationsMenu';
 import { useChatUnread } from '../lib/useChatUnread';
 import { CHAT_ENABLED } from '../lib/features';
 import SidebarNav from './SidebarNav';
+import { isAnySection } from '../shared/utils/activeSection';
 import UserAvatar from './UserAvatar';
 import AdminSidebar from './admin/AdminSidebar';
 
@@ -160,6 +161,43 @@ export default function AppLayout() {
     const currentLng = i18n.language?.startsWith('ar') ? 'ar' : 'en';
     const headerIconBtnClass =
         'inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-white/80 transition-all duration-200 hover:bg-white/10 hover:text-white focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-accent/60';
+
+    // The header highlights the *section* you are in, not one exact URL — the
+    // links point at an entry page (/orders/in) while any route below the
+    // section root keeps the item lit.
+    const here = (...roots) => isAnySection(location.pathname, roots);
+    const primaryNav = [
+        { key: 'home', to: '/dashboard', label: t('nav_home', 'Home'), Icon: HiOutlineHome, active: here('/dashboard') },
+        { key: 'orders', to: '/orders/in', label: t('orders', 'Orders'), Icon: HiOutlineClipboardDocumentList, active: here('/orders') },
+        { key: 'products', to: '/products', label: t('products', 'Products'), Icon: HiOutlineCube, active: here('/products') },
+        {
+            key: 'community',
+            to: '/community',
+            label: t('feed_title', 'Community'),
+            Icon: HiOutlineMegaphone,
+            // Reels and the legacy /feed URL are part of the same destination.
+            active: here('/community', '/reels', '/feed'),
+            className: 'hidden xl:flex',
+        },
+        {
+            key: 'store',
+            to: '/store/onboarding',
+            label: t('store_and_channels', 'Store & Channels'),
+            Icon: HiOutlineBuildingStorefront,
+            active: here('/store'),
+            className: 'hidden 2xl:flex',
+        },
+        ...(isAdmin
+            ? [{
+                key: 'reports',
+                to: '/admin/reports/orders',
+                label: t('reports', 'Reports'),
+                Icon: HiOutlinePresentationChartLine,
+                active: here('/admin/reports'),
+                className: 'hidden 2xl:flex',
+            }]
+            : []),
+    ];
 
     function toggleLanguage() {
         const next = currentLng === 'en' ? 'ar' : 'en';
@@ -298,32 +336,21 @@ export default function AppLayout() {
                             <span className="hidden sm:inline">{t('nav_all', 'All')}</span>
                         </button>
                         <nav className="hidden min-w-0 items-center gap-1 lg:flex" aria-label={t('primary_navigation', 'Primary navigation')}>
-                            <Link to="/dashboard" className="flex items-center gap-2 rounded-xl bg-white px-3.5 py-2.5 text-sm font-semibold text-brand-dark shadow-sm">
-                                <HiOutlineHome className="h-5 w-5" aria-hidden />
-                                {t('nav_home', 'Home')}
-                            </Link>
-                            <Link to="/orders/in" className="flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-semibold text-white/90 transition hover:bg-white/10 hover:text-white">
-                                <HiOutlineClipboardDocumentList className="h-5 w-5" aria-hidden />
-                                {t('orders', 'Orders')}
-                            </Link>
-                            <Link to="/products" className="flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-semibold text-white/90 transition hover:bg-white/10 hover:text-white">
-                                <HiOutlineCube className="h-5 w-5" aria-hidden />
-                                {t('products', 'Products')}
-                            </Link>
-                            <Link to="/feed" className="hidden items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-semibold text-white/90 transition hover:bg-white/10 hover:text-white xl:flex">
-                                <HiOutlineMegaphone className="h-5 w-5" aria-hidden />
-                                {t('feed_title', 'Community')}
-                            </Link>
-                            <Link to="/store/onboarding" className="hidden items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-semibold text-white/90 transition hover:bg-white/10 hover:text-white 2xl:flex">
-                                <HiOutlineBuildingStorefront className="h-5 w-5" aria-hidden />
-                                {t('store_and_channels', 'Store & Channels')}
-                            </Link>
-                            {isAdmin ? (
-                                <Link to="/admin/reports/orders" className="hidden items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-semibold text-white/90 transition hover:bg-white/10 hover:text-white 2xl:flex">
-                                    <HiOutlinePresentationChartLine className="h-5 w-5" aria-hidden />
-                                    {t('reports', 'Reports')}
+                            {primaryNav.map(({ key, to, label, Icon, active, className = '' }) => (
+                                <Link
+                                    key={key}
+                                    to={to}
+                                    aria-current={active ? 'page' : undefined}
+                                    className={`items-center gap-2 rounded-xl py-2.5 text-sm font-semibold transition ${className || 'flex'} ${
+                                        active
+                                            ? 'bg-white px-3.5 text-brand-dark shadow-sm'
+                                            : 'px-3 text-white/90 hover:bg-white/10 hover:text-white'
+                                    }`}
+                                >
+                                    <Icon className="h-5 w-5" aria-hidden />
+                                    {label}
                                 </Link>
-                            ) : null}
+                            ))}
                         </nav>
                     </div>
                     {/* hide actions on mobile/tablet; show on desktop */}

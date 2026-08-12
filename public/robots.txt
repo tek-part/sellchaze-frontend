@@ -21,6 +21,8 @@ Disallow: /partners
 Disallow: /store
 Disallow: /chat
 Disallow: /feed
+Disallow: /community
+Disallow: /reels
 Disallow: /financing
 Disallow: /opportunities
 Disallow: /pricing

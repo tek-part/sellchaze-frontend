@@ -123,7 +123,10 @@ export default function FeedPage({ initialScope = 'all', titleKey = null, title 
                     </div>
                 )}
 
-                <div className="xl:hidden">
+                {/* The right rail's suggestions fold into the column only on the
+                    mid-size screens that have room for them. A phone keeps the
+                    main column to posts alone, with the bottom bar for navigation. */}
+                <div className="hidden lg:block xl:hidden">
                     <FollowSuggestions />
                 </div>
 

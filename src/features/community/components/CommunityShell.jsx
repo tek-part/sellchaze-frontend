@@ -33,7 +33,7 @@ const NAV_GROUPS = [
         labelKey: 'community_nav_group_browse',
         items: [
             {
-                to: '/feed',
+                to: '/community',
                 end: true,
                 labelKey: 'community_nav_home',
                 Icon: HiOutlineHome,

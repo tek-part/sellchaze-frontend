@@ -95,7 +95,7 @@ export default function ReelsPage() {
     // load — go back where the member came from when there is a history entry.
     const close = useCallback(() => {
         if (location.key && location.key !== 'default') navigate(-1);
-        else navigate('/feed');
+        else navigate('/community');
     }, [location.key, navigate]);
 
     // Arrow keys step between reels; Escape closes the viewer.

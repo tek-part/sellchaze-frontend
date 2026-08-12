@@ -301,8 +301,8 @@ div#_rht_toaster {
 /* ==================================================================== */
 /*  Community feed motion system                                        */
 /*                                                                      */
-/*  The social surfaces (/feed, /reels, groups, post detail) share one   */
-/*  motion vocabulary so the whole network feels like a single product:  */
+/*  The social surfaces (/community, /reels, groups, post detail) share  */
+/*  one motion vocabulary so the network feels like a single product:    */
 /*                                                                      */
 /*    .sc-rise      entrance for a card in a list (stagger via           */
 /*                  `--sc-delay`, set inline per index)                  */
