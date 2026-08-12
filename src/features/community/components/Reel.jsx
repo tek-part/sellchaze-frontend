@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import toast from 'react-hot-toast';
+import notify from '../../../components/ui/notify';
 import {
     HiCheckBadge,
     HiHeart,
@@ -179,9 +179,15 @@ export default function Reel({ post, index, active, near, muted, onToggleMute, l
         try {
             if (next) await api.post(`/posts/${post.id}/save`);
             else await api.delete(`/posts/${post.id}/save`);
-            if (next) trackFeedEvent(post.id, 'save');
+            if (next) {
+                trackFeedEvent(post.id, 'save');
+                notify.success(t('toast_saved', 'Saved'), t('toast_saved_hint', 'Find it under Saved posts.'));
+            } else {
+                notify.info(t('toast_unsaved', 'Removed from saved'));
+            }
         } catch {
             setSaved(!next);
+            notify.error(t('toast_failed', 'Something went wrong'), t('toast_failed_hint', 'Please try again.'));
         }
     };
 
@@ -191,7 +197,7 @@ export default function Reel({ post, index, active, near, muted, onToggleMute, l
             if (navigator.share) await navigator.share({ url, title: displayName });
             else if (navigator.clipboard?.writeText) {
                 await navigator.clipboard.writeText(url);
-                toast.success(t('reels_link_copied', 'Link copied'));
+                notify.success(t('reels_link_copied', 'Link copied'));
             } else {
                 return; // nothing we can do on this browser; leave the count alone
             }

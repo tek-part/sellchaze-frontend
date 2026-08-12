@@ -5,6 +5,7 @@ import { HelmetProvider } from 'react-helmet-async';
 import { Toaster } from 'react-hot-toast';
 import App from './App';
 import { ConfirmDialogHost } from './components/ui/confirmDialog';
+import { PlatformToast } from './components/ui/notify';
 import './index.css';
 import './i18n';
 
@@ -37,24 +38,13 @@ if (el) {
                 <HelmetProvider>
                 <App />
                 <ConfirmDialogHost />
-                <Toaster
-                    position="top-center"
-                    gutter={12}
-                    toastOptions={{
-                        className: 'text-sm font-medium',
-                        duration: 4000,
-                        style: {
-                            background: '#fff',
-                            color: '#0f172a',
-                            borderRadius: '12px',
-                            border: '1px solid rgba(0, 75, 180, 0.12)',
-                            boxShadow: '0 8px 28px -6px rgba(15, 23, 42, 0.12)',
-                            maxWidth: '420px',
-                        },
-                        success: { iconTheme: { primary: '#00C0A9', secondary: '#fff' } },
-                        error: { iconTheme: { primary: '#dc2626', secondary: '#fff' } },
-                    }}
-                />
+                {/* One renderer for every toast in the app: the render prop
+                    means each existing toast.success/error call site across the
+                    dashboard gets the platform's action-state design without
+                    being rewritten. */}
+                <Toaster position="top-center" gutter={12} toastOptions={{ duration: 4000 }}>
+                    {(t) => <PlatformToast t={t} />}
+                </Toaster>
                 </HelmetProvider>
             </BrowserRouter>
         </React.StrictMode>,

@@ -20,28 +20,85 @@ import FollowSuggestions from '../../../components/feed/FollowSuggestions';
 
 /**
  * Community navigation, grouped the way members actually think about the
- * network: what they browse, and what is theirs. Each destination carries an
- * outline icon that swaps to its solid twin while active, so the current place
- * is readable from the icon alone (the pattern every social app trained users
- * on).
+ * network: what they browse, and what is theirs.
+ *
+ * Each destination owns a colour. The icon sits in a tinted chip that fills
+ * solid while the route is active, and the outline icon swaps to its solid
+ * twin — so the current place is readable from the icon alone, and the rail
+ * scans as a set of distinct places rather than six grey rows.
  */
 const NAV_GROUPS = [
     {
         id: 'browse',
         labelKey: 'community_nav_group_browse',
         items: [
-            { to: '/feed', end: true, labelKey: 'community_nav_home', Icon: HiOutlineHome, ActiveIcon: HiHome },
-            { to: '/community/trending', labelKey: 'community_nav_trending', Icon: HiOutlineFire, ActiveIcon: HiFire },
-            { to: '/reels', labelKey: 'community_nav_reels', Icon: HiOutlinePlayCircle, ActiveIcon: HiPlayCircle },
+            {
+                to: '/feed',
+                end: true,
+                labelKey: 'community_nav_home',
+                Icon: HiOutlineHome,
+                ActiveIcon: HiHome,
+                chip: 'bg-blue-50 text-blue-600 ring-blue-100',
+                solid: 'bg-blue-600 text-white ring-blue-600 shadow-lg shadow-blue-600/25',
+                active: 'bg-blue-50/70 text-blue-900',
+                bar: 'bg-blue-600',
+            },
+            {
+                to: '/community/trending',
+                labelKey: 'community_nav_trending',
+                Icon: HiOutlineFire,
+                ActiveIcon: HiFire,
+                chip: 'bg-amber-50 text-amber-600 ring-amber-100',
+                solid: 'bg-amber-500 text-white ring-amber-500 shadow-lg shadow-amber-500/25',
+                active: 'bg-amber-50/70 text-amber-900',
+                bar: 'bg-amber-500',
+            },
+            {
+                to: '/reels',
+                labelKey: 'community_nav_reels',
+                Icon: HiOutlinePlayCircle,
+                ActiveIcon: HiPlayCircle,
+                chip: 'bg-fuchsia-50 text-fuchsia-600 ring-fuchsia-100',
+                solid: 'bg-fuchsia-600 text-white ring-fuchsia-600 shadow-lg shadow-fuchsia-600/25',
+                active: 'bg-fuchsia-50/70 text-fuchsia-900',
+                bar: 'bg-fuchsia-600',
+            },
         ],
     },
     {
         id: 'you',
         labelKey: 'community_nav_group_you',
         items: [
-            { to: '/community/following', labelKey: 'community_nav_following', Icon: HiOutlineUsers, ActiveIcon: HiUsers },
-            { to: '/community/groups', labelKey: 'community_nav_groups', Icon: HiOutlineUserGroup, ActiveIcon: HiUserGroup },
-            { to: '/community/saved', labelKey: 'community_nav_saved', Icon: HiOutlineBookmark, ActiveIcon: HiBookmark },
+            {
+                to: '/community/following',
+                labelKey: 'community_nav_following',
+                Icon: HiOutlineUsers,
+                ActiveIcon: HiUsers,
+                chip: 'bg-emerald-50 text-emerald-600 ring-emerald-100',
+                solid: 'bg-emerald-600 text-white ring-emerald-600 shadow-lg shadow-emerald-600/25',
+                active: 'bg-emerald-50/70 text-emerald-900',
+                bar: 'bg-emerald-600',
+            },
+            {
+                to: '/community/groups',
+                labelKey: 'community_nav_groups',
+                Icon: HiOutlineUserGroup,
+                ActiveIcon: HiUserGroup,
+                chip: 'bg-cyan-50 text-cyan-600 ring-cyan-100',
+                solid: 'bg-cyan-600 text-white ring-cyan-600 shadow-lg shadow-cyan-600/25',
+                active: 'bg-cyan-50/70 text-cyan-900',
+                bar: 'bg-cyan-600',
+            },
+            {
+                to: '/community/saved',
+                labelKey: 'community_nav_saved',
+                Icon: HiOutlineBookmark,
+                ActiveIcon: HiBookmark,
+                chip: 'bg-violet-50 text-violet-600 ring-violet-100',
+                solid: 'bg-violet-600 text-white ring-violet-600 shadow-lg shadow-violet-600/25',
+                active: 'bg-violet-50/70 text-violet-900',
+                bar: 'bg-violet-600',
+            },
         ],
     },
 ];
@@ -55,27 +112,34 @@ const MOBILE_ITEMS = [
     NAV_GROUPS[1].items[2],
 ];
 
-function SidebarLink({ to, end, labelKey, Icon, ActiveIcon }) {
+function SidebarLink({ to, end, labelKey, Icon, ActiveIcon, chip, solid, active, bar }) {
     const { t } = useTranslation();
     return (
         <NavLink
             to={to}
             end={end}
             className={({ isActive }) =>
-                `sc-press relative flex items-center gap-3 rounded-xl py-2.5 pe-3 ps-4 text-sm font-semibold transition ${
-                    isActive ? 'bg-brand-light text-brand-dark' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+                `sc-press relative flex items-center gap-3 rounded-2xl py-2.5 pe-3 ps-4 text-[15px] font-bold transition ${
+                    isActive ? active : 'text-slate-600 hover:bg-slate-100/70 hover:text-slate-900'
                 }`
             }
         >
             {({ isActive }) => (
                 <>
                     <span
-                        className={`absolute inset-y-2 start-0 w-1 origin-center rounded-full bg-brand transition-transform duration-300 ${
+                        className={`absolute inset-y-3 start-0 w-1 origin-center rounded-full transition-transform duration-300 ${bar} ${
                             isActive ? 'scale-y-100' : 'scale-y-0'
                         }`}
                         aria-hidden
                     />
-                    {isActive ? <ActiveIcon className="h-5 w-5 shrink-0 text-brand" aria-hidden /> : <Icon className="h-5 w-5 shrink-0" aria-hidden />}
+                    <span
+                        className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ring-1 transition duration-200 ${
+                            isActive ? solid : chip
+                        }`}
+                        aria-hidden
+                    >
+                        {isActive ? <ActiveIcon className="h-5 w-5" /> : <Icon className="h-5 w-5" />}
+                    </span>
                     <span className="truncate">{t(labelKey)}</span>
                 </>
             )}
@@ -83,24 +147,29 @@ function SidebarLink({ to, end, labelKey, Icon, ActiveIcon }) {
     );
 }
 
-function MobileLink({ to, end, labelKey, Icon, ActiveIcon }) {
+function MobileLink({ to, end, labelKey, Icon, ActiveIcon, chip, solid, bar }) {
     const { t } = useTranslation();
     return (
         <NavLink
             to={to}
             end={end}
             className={({ isActive }) =>
-                `sc-press flex flex-col items-center gap-1 rounded-lg px-1 pb-1.5 pt-2 text-[10px] font-bold transition ${
-                    isActive ? 'text-brand' : 'text-slate-500'
+                `sc-press flex flex-col items-center gap-1 rounded-xl px-1 pb-1.5 pt-2 text-[10px] font-bold transition ${
+                    isActive ? 'text-slate-900' : 'text-slate-500'
                 }`
             }
         >
             {({ isActive }) => (
                 <>
-                    {isActive ? <ActiveIcon className="h-6 w-6" aria-hidden /> : <Icon className="h-6 w-6" aria-hidden />}
+                    <span
+                        className={`flex h-8 w-8 items-center justify-center rounded-lg transition duration-200 ${isActive ? solid : chip}`}
+                        aria-hidden
+                    >
+                        {isActive ? <ActiveIcon className="h-5 w-5" /> : <Icon className="h-5 w-5" />}
+                    </span>
                     <span className="truncate">{t(labelKey)}</span>
                     <span
-                        className={`h-0.5 w-6 rounded-full bg-brand transition-transform duration-300 ${isActive ? 'scale-x-100' : 'scale-x-0'}`}
+                        className={`h-0.5 w-6 rounded-full transition-transform duration-300 ${bar} ${isActive ? 'scale-x-100' : 'scale-x-0'}`}
                         aria-hidden
                     />
                 </>
@@ -144,22 +213,22 @@ export default function CommunityShell({ children, rightRail = true }) {
     const { t } = useTranslation();
 
     return (
-        <div className="mx-auto w-full max-w-[1400px] pb-24 lg:pb-0">
-            <div className="grid items-start gap-6 lg:grid-cols-[248px_minmax(0,1fr)] xl:grid-cols-[248px_minmax(0,720px)_320px] xl:justify-center">
-                <aside className="sticky top-1 hidden rounded-2xl bg-white p-3 shadow-[0_12px_40px_-28px_rgba(15,23,42,.55)] ring-1 ring-slate-200/80 lg:block">
-                    <div className="flex items-center gap-3 px-1 pb-3 pt-1">
-                        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-brand-dark to-brand text-white shadow-lg shadow-brand/25">
+        <div className="mx-auto w-full max-w-[1440px] pb-24 lg:pb-0">
+            <div className="grid items-start gap-6 lg:grid-cols-[288px_minmax(0,1fr)] xl:grid-cols-[288px_minmax(0,720px)_320px] xl:justify-center">
+                <aside className="sticky top-1 hidden rounded-2xl bg-white p-4 shadow-[0_12px_40px_-28px_rgba(15,23,42,.55)] ring-1 ring-slate-200/80 lg:block">
+                    <div className="flex items-center gap-3 px-1 pb-4 pt-1">
+                        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-brand-dark to-brand text-white shadow-lg shadow-brand/25">
                             <HiOutlineSquares2X2 className="h-6 w-6" aria-hidden />
                         </span>
                         <div className="min-w-0">
-                            <p className="truncate text-sm font-bold text-slate-900">{t('community_brand_title')}</p>
+                            <p className="truncate text-[15px] font-bold text-slate-900">{t('community_brand_title')}</p>
                             <p className="truncate text-xs text-slate-500">{t('community_brand_subtitle')}</p>
                         </div>
                     </div>
 
-                    <nav aria-label={t('community_brand_title')} className="space-y-4 border-t border-slate-100 pt-3">
+                    <nav aria-label={t('community_brand_title')} className="space-y-5 border-t border-slate-100 pt-4">
                         {NAV_GROUPS.map((group) => (
-                            <div key={group.id} className="space-y-1">
+                            <div key={group.id} className="space-y-1.5">
                                 <p className="px-4 pb-1 text-[11px] font-bold uppercase tracking-wider text-slate-400">{t(group.labelKey)}</p>
                                 {group.items.map((item) => (
                                     <SidebarLink key={item.to} {...item} />
@@ -170,7 +239,7 @@ export default function CommunityShell({ children, rightRail = true }) {
 
                     <NavLink
                         to="/community/create"
-                        className="sc-lift sc-press mt-4 flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-brand-dark to-brand px-4 py-3 text-sm font-bold text-white shadow-lg shadow-brand/25"
+                        className="sc-lift sc-press mt-5 flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-brand-dark to-brand px-4 py-3.5 text-[15px] font-bold text-white shadow-lg shadow-brand/25"
                     >
                         <HiOutlineVideoCamera className="h-5 w-5" aria-hidden />
                         {t('community_create_cta')}

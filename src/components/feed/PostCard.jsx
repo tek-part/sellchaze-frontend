@@ -20,6 +20,7 @@ import {
 } from 'react-icons/hi2';
 import api from '../../api/client';
 import { langParam } from '../../api/lang';
+import notify from '../ui/notify';
 import { initials, relativeTime } from './helpers';
 import CommentThread from './CommentThread';
 import { trackFeedEvent } from '../../features/community/api/events';
@@ -181,9 +182,11 @@ export default function PostCard({ post, onDeleted, index = 0 }) {
         setDeleting(true);
         try {
             await api.delete(`/posts/${post.id}`);
+            notify.success(t('toast_post_deleted', 'Post deleted'));
             onDeleted?.(post.id);
         } catch {
             setDeleting(false);
+            notify.error(t('toast_failed', 'Something went wrong'), t('toast_failed_hint', 'Please try again.'));
         }
     };
 
@@ -193,8 +196,16 @@ export default function PostCard({ post, onDeleted, index = 0 }) {
         try {
             if (next) await api.post(`/posts/${post.id}/save`);
             else await api.delete(`/posts/${post.id}/save`);
-            if (next) trackFeedEvent(post.id, 'save');
-        } catch { setSaved(!next); }
+            if (next) {
+                trackFeedEvent(post.id, 'save');
+                notify.success(t('toast_saved', 'Saved'), t('toast_saved_hint', 'Find it under Saved posts.'));
+            } else {
+                notify.info(t('toast_unsaved', 'Removed from saved'));
+            }
+        } catch {
+            setSaved(!next);
+            notify.error(t('toast_failed', 'Something went wrong'), t('toast_failed_hint', 'Please try again.'));
+        }
     };
 
     const safetyAction = async (type) => {
@@ -202,14 +213,23 @@ export default function PostCard({ post, onDeleted, index = 0 }) {
         setSafetyBusy(true);
         try {
             await api.post(`/users/${author.id}/${type}`);
+            if (type === 'mute') notify.success(t('toast_muted', 'Muted'), t('toast_muted_hint', 'Their posts will stay out of your feed.'));
+            else notify.success(t('toast_blocked', 'Blocked'));
             onDeleted?.(post.id);
+        } catch {
+            notify.error(t('toast_failed', 'Something went wrong'), t('toast_failed_hint', 'Please try again.'));
         } finally { setSafetyBusy(false); }
     };
 
     const report = async () => {
         const details = window.prompt(t('feed_report_details', 'Describe the problem (optional)'));
         if (details === null) return;
-        await api.post('/reports', { target_type: 'post', target_id: post.id, reason: 'spam', details });
+        try {
+            await api.post('/reports', { target_type: 'post', target_id: post.id, reason: 'spam', details });
+            notify.success(t('toast_reported', 'Report sent'), t('toast_reported_hint', 'Our team will review it.'));
+        } catch {
+            notify.error(t('toast_failed', 'Something went wrong'), t('toast_failed_hint', 'Please try again.'));
+        }
     };
 
     const chooseReaction = async (type) => {

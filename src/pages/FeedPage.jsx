@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
-import { HiOutlineArrowPath, HiOutlineFunnel, HiOutlinePencilSquare, HiOutlineUsers } from 'react-icons/hi2';
+import { HiOutlineArrowPath, HiOutlineChevronDown, HiOutlineFunnel, HiOutlinePencilSquare, HiOutlineUsers } from 'react-icons/hi2';
 import api from '../api/client';
 import { langParam } from '../api/lang';
 import PostCard from '../components/feed/PostCard';
@@ -127,44 +127,55 @@ export default function FeedPage({ initialScope = 'all', titleKey = null, title 
                     <FollowSuggestions />
                 </div>
 
-                {/* Filter bar — stays reachable while the feed scrolls under it. */}
-                <div className="sticky top-0 z-20 flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-white/90 p-2 shadow-[0_8px_30px_-22px_rgba(15,23,42,.4)] ring-1 ring-slate-200/80 backdrop-blur-xl">
-                    {showScopeTabs ? (
-                        <div className="inline-flex rounded-xl bg-slate-100 p-1">
-                            {scopeTabs.map((tab) => (
-                                <button
-                                    key={tab.id}
-                                    type="button"
-                                    onClick={() => setScope(tab.id)}
-                                    aria-pressed={scope === tab.id}
-                                    className={`sc-press rounded-lg px-4 py-1.5 text-sm font-bold transition ${
-                                        scope === tab.id ? 'bg-white text-brand shadow-sm' : 'text-slate-500 hover:text-slate-800'
-                                    }`}
-                                >
-                                    {tab.label}
-                                </button>
-                            ))}
-                        </div>
-                    ) : (
-                        <span />
-                    )}
+                {/* Filter bar — pinned flush under the app header.
+                    The scroll container is the padded <main>, and `top: 0` would
+                    park the bar one padding-step below the header; the negative
+                    offsets cancel that padding (p-3 / md:p-5 / lg:p-7) so the bar
+                    stops exactly at the top. Its own blurred backdrop covers the
+                    band the posts scroll through underneath. */}
+                <div className="sticky top-[-0.75rem] z-30 -mx-1 bg-surface/80 px-1 py-2 backdrop-blur-xl md:top-[-1.25rem] lg:top-[-1.75rem]">
+                    <div className="flex items-center justify-between gap-3 rounded-2xl bg-white p-1.5 shadow-[0_10px_30px_-20px_rgba(15,23,42,.5)] ring-1 ring-slate-200/80">
+                        {showScopeTabs ? (
+                            <div className="inline-flex rounded-xl bg-slate-100/80 p-1">
+                                {scopeTabs.map((tab) => (
+                                    <button
+                                        key={tab.id}
+                                        type="button"
+                                        onClick={() => setScope(tab.id)}
+                                        aria-pressed={scope === tab.id}
+                                        className={`sc-press rounded-lg px-4 py-1.5 text-sm font-bold transition duration-200 ${
+                                            scope === tab.id
+                                                ? 'bg-brand text-white shadow-md shadow-brand/25'
+                                                : 'text-slate-500 hover:text-slate-900'
+                                        }`}
+                                    >
+                                        {tab.label}
+                                    </button>
+                                ))}
+                            </div>
+                        ) : (
+                            <span className="ps-2 text-sm font-bold text-slate-400">{t('feed_filter_sector', 'Sector')}</span>
+                        )}
 
-                    <label className="flex items-center gap-2 ps-1 text-slate-500">
-                        <HiOutlineFunnel className="h-5 w-5 shrink-0" aria-hidden />
-                        <span className="sr-only">{t('feed_filter_sector', 'Sector')}</span>
-                        <select
-                            value={sector}
-                            onChange={(e) => setSector(e.target.value)}
-                            className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-900 outline-hidden transition focus:border-brand focus:ring-2 focus:ring-brand/20"
-                        >
-                            <option value="">{t('feed_all_sectors', 'All sectors')}</option>
-                            {sectors.map((s) => (
-                                <option key={s.slug} value={s.slug}>
-                                    {s.name}
-                                </option>
-                            ))}
-                        </select>
-                    </label>
+                        {/* Native select, styled: an icon in front, our own chevron behind. */}
+                        <label className="relative flex items-center">
+                            <span className="sr-only">{t('feed_filter_sector', 'Sector')}</span>
+                            <HiOutlineFunnel className="pointer-events-none absolute start-3 h-4 w-4 text-slate-400" aria-hidden />
+                            <select
+                                value={sector}
+                                onChange={(e) => setSector(e.target.value)}
+                                className="appearance-none rounded-xl bg-slate-100/80 py-2 pe-9 ps-9 text-sm font-bold text-slate-700 outline-hidden transition hover:bg-slate-200/70 focus:ring-2 focus:ring-brand/30"
+                            >
+                                <option value="">{t('feed_all_sectors', 'All sectors')}</option>
+                                {sectors.map((s) => (
+                                    <option key={s.slug} value={s.slug}>
+                                        {s.name}
+                                    </option>
+                                ))}
+                            </select>
+                            <HiOutlineChevronDown className="pointer-events-none absolute end-3 h-4 w-4 text-slate-400" aria-hidden />
+                        </label>
+                    </div>
                 </div>
 
                 {err ? (

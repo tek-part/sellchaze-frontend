@@ -439,6 +439,40 @@ div#_rht_toaster {
     display: none;
 }
 
+/* ---- Action-state toasts ----------------------------------------- */
+
+/* The toaster is top-centred, so the entrance is vertical and needs no
+   direction handling. */
+@keyframes sc-toast-in {
+    from {
+        opacity: 0;
+        transform: translateY(-14px) scale(0.96);
+    }
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}
+
+@keyframes sc-toast-out {
+    from {
+        opacity: 1;
+        transform: none;
+    }
+    to {
+        opacity: 0;
+        transform: translateY(-10px) scale(0.96);
+    }
+}
+
+.sc-toast-in {
+    animation: sc-toast-in 0.28s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.sc-toast-out {
+    animation: sc-toast-out 0.2s ease-in both;
+}
+
 /* ---- Reels ------------------------------------------------------- */
 
 /* The heart thrown up by a double-tap, and the play/pause glyph that
@@ -515,6 +549,17 @@ div#_rht_toaster {
     .sc-reel-heart,
     .sc-reel-flash {
         animation: none !important;
+    }
+
+    /* Toasts still need to appear and disappear — drop the movement only. */
+    .sc-toast-in,
+    .sc-toast-out {
+        animation: none !important;
+        transform: none !important;
+    }
+
+    .sc-toast-out {
+        opacity: 0 !important;
     }
 
     .sc-halo::after {

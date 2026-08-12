@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { HiOutlineCheckBadge, HiOutlinePlus, HiOutlineCheck } from 'react-icons/hi2';
 import api from '../../api/client';
+import notify from '../ui/notify';
 
 /**
  * "Follow these" — companies in the member's own sector that they don't follow
@@ -28,8 +29,10 @@ export default function FollowSuggestions() {
         try {
             await api.post('/follows', { user_id: id });
             setFollowed((prev) => new Set(prev).add(id));
+            notify.success(t('toast_following', 'Now following'));
         } catch {
             /* leave the row actionable so the member can retry */
+            notify.error(t('toast_failed', 'Something went wrong'), t('toast_failed_hint', 'Please try again.'));
         } finally {
             setBusy(null);
         }
