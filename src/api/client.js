@@ -161,6 +161,16 @@ api.interceptors.response.use(
         const status = error?.response?.status;
         const original = error?.config || {};
 
+        // A deactivated account 403s on every call; individual components
+        // swallow their own errors, so the session must end centrally or the
+        // member is left on a half-dead page logging silent failures.
+        if (status === 403 && error.response?.data?.code === 'account_deactivated') {
+            if (typeof window !== 'undefined') {
+                window.dispatchEvent(new CustomEvent('sellchase:session-expired'));
+            }
+            throw error;
+        }
+
         if (!error?.response || status !== 401) {
             throw error;
         }
