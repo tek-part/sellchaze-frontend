@@ -13,6 +13,7 @@ const Dashboard = lazy(() => import('./pages/Dashboard'));
 const FeedPage = lazy(() => import('./pages/FeedPage'));
 const CommunityCreatePage = lazy(() => import('./pages/CommunityCreatePage'));
 const CommunityPostPage = lazy(() => import('./pages/CommunityPostPage'));
+const CommunityProfilePage = lazy(() => import('./pages/CommunityProfilePage'));
 const CommunityGroupsPage = lazy(() => import('./pages/CommunityGroupsPage'));
 const CommunityGroupPage = lazy(() => import('./pages/CommunityGroupPage'));
 const ReelsPage = lazy(() => import('./pages/ReelsPage'));
@@ -195,6 +196,7 @@ export default function App() {
                 <Route path="/feed" element={<Navigate to="/community" replace />} />
                 <Route path="/community/create" element={<CommunityCreatePage />} />
                 <Route path="/community/post/:id" element={<CommunityPostPage />} />
+                <Route path="/community/u/:username" element={<CommunityProfilePage />} />
                 <Route path="/community/following" element={<FeedPage initialScope="following" titleKey="community_page_following" />} />
                 <Route path="/community/saved" element={<FeedPage initialScope="saved" titleKey="community_page_saved" />} />
                 <Route path="/community/trending" element={<FeedPage initialScope="trending" titleKey="community_page_trending" />} />

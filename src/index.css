@@ -439,6 +439,20 @@ div#_rht_toaster {
     display: none;
 }
 
+/* ---- Social text: hashtags and mentions -------------------------- */
+
+.sc-hashtag,
+.sc-mention {
+    color: var(--color-brand);
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.sc-hashtag:hover,
+.sc-mention:hover {
+    text-decoration: underline;
+}
+
 /* ---- Action-state toasts ----------------------------------------- */
 
 /* The toaster is top-centred, so the entrance is vertical and needs no

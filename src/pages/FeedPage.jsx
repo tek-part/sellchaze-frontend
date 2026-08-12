@@ -11,6 +11,9 @@ import CommunityHero from '../features/community/components/CommunityHero';
 import QuickComposer from '../features/community/components/QuickComposer';
 import BusinessHighlights from '../features/community/components/BusinessHighlights';
 import FeedSkeleton from '../features/community/components/FeedSkeleton';
+import PublishProgressCard from '../features/community/components/PublishProgressCard';
+import notify from '../components/ui/notify';
+import { dismissPublish, usePublishJobs } from '../features/community/publish/publishQueue';
 
 /**
  * The community feed, and — via `initialScope` / `titleKey` — the focused lists
@@ -36,6 +39,20 @@ export default function FeedPage({ initialScope = 'all', titleKey = null, title 
     const [loadingMore, setLoadingMore] = useState(false);
     const [err, setErr] = useState('');
     const [reloadKey, setReloadKey] = useState(0);
+
+    // Background publishing: pending jobs render as progress cards above the
+    // posts; a finished job's post is adopted into the list and the card goes.
+    const publishJobs = usePublishJobs();
+    useEffect(() => {
+        publishJobs
+            .filter((job) => job.status === 'done' && job.post)
+            .forEach((job) => {
+                setPosts((prev) => (prev.some((p) => p.id === job.post.id) ? prev : [job.post, ...prev]));
+                notify.success(t('publish_done', 'Your post is live'));
+                dismissPublish(job.id);
+            });
+    }, [publishJobs, t]);
+    const activeJobs = publishJobs.filter((job) => job.status !== 'done');
 
     const heading = titleKey ? t(titleKey) : title;
     const isMainFeed = !heading;
@@ -180,6 +197,10 @@ export default function FeedPage({ initialScope = 'all', titleKey = null, title 
                         </label>
                     </div>
                 </div>
+
+                {activeJobs.map((job) => (
+                    <PublishProgressCard key={job.id} job={job} />
+                ))}
 
                 {err ? (
                     <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-700">

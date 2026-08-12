@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import notify from '../../../components/ui/notify';
+import { decorateSocialHtml } from '../social/socialText';
 import {
     HiCheckBadge,
     HiHeart,
@@ -286,7 +287,7 @@ export default function Reel({ post, index, active, near, muted, onToggleMute, l
                             </span>
                         )}
                         {post.author?.username ? (
-                            <Link to={`/u/${post.author.username}`} className="flex items-center gap-1 text-sm font-bold hover:underline">
+                            <Link to={`/community/u/${post.author.username}`} className="flex items-center gap-1 text-sm font-bold hover:underline">
                                 {displayName}
                                 {author?.is_verified ? <HiCheckBadge className="h-4 w-4 text-sky-300" aria-hidden /> : null}
                             </Link>
@@ -300,7 +301,7 @@ export default function Reel({ post, index, active, near, muted, onToggleMute, l
 
                     {post.body ? (
                         <div className="mt-2 text-sm leading-6 text-white/90">
-                            <div className={expanded ? 'max-h-40 overflow-y-auto' : 'line-clamp-2'} dangerouslySetInnerHTML={{ __html: post.body }} />
+                            <div className={expanded ? 'max-h-40 overflow-y-auto' : 'line-clamp-2'} dangerouslySetInnerHTML={{ __html: decorateSocialHtml(post.body) }} />
                             <button
                                 type="button"
                                 onClick={() => setExpanded((v) => !v)}

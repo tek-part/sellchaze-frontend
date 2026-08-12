@@ -23,6 +23,8 @@ import { langParam } from '../../api/lang';
 import notify from '../ui/notify';
 import { initials, relativeTime } from './helpers';
 import CommentThread from './CommentThread';
+import MediaCarousel from '../../features/community/components/MediaCarousel';
+import { decorateSocialHtml } from '../../features/community/social/socialText';
 import { trackFeedEvent } from '../../features/community/api/events';
 
 /** The four business reactions, offered from the picker above the Like button. */
@@ -336,11 +338,12 @@ export default function PostCard({ post, onDeleted, index = 0 }) {
                 </Menu>
             </header>
 
-            {/* Body (HTML from the rich editor) */}
+            {/* Body (HTML from the rich editor), with hashtags linkified and
+                mention anchors styled at render time. */}
             {post.body ? (
                 <div
                     className="prose prose-sm mt-3 max-w-none break-words px-5 text-slate-700 prose-p:my-1.5 prose-a:text-brand prose-headings:text-slate-900"
-                    dangerouslySetInnerHTML={{ __html: post.body }}
+                    dangerouslySetInnerHTML={{ __html: decorateSocialHtml(post.body) }}
                 />
             ) : null}
 
@@ -351,7 +354,11 @@ export default function PostCard({ post, onDeleted, index = 0 }) {
                 </p>
             ) : null}
 
-            {media.length > 0 ? (
+            {post.format === 'carousel' && media.filter((item) => item.kind === 'image').length >= 2 ? (
+                <div className="mt-4">
+                    <MediaCarousel media={media} />
+                </div>
+            ) : media.length > 0 ? (
                 <div className={`mt-4 grid gap-0.5 bg-slate-950 ${media.length === 1 ? 'grid-cols-1' : 'grid-cols-2'}`}>
                     {media.map((item, i) => {
                         // An odd gallery reads better with a full-width lead image.
@@ -415,7 +422,7 @@ export default function PostCard({ post, onDeleted, index = 0 }) {
                     );
                     const cls = 'mx-5 mt-3 flex items-center gap-3 rounded-xl border border-slate-200 bg-slate-50/60 p-2.5';
                     return author.username ? (
-                        <Link to={`/u/${author.username}`} className={`${cls} transition hover:bg-slate-100`}>
+                        <Link to={`/community/u/${author.username}`} className={`${cls} transition hover:bg-slate-100`}>
                             {inner}
                         </Link>
                     ) : (

@@ -61,7 +61,7 @@ export default function FollowSuggestions() {
                             </span>
                             <span className="min-w-0 flex-1">
                                 {s.username ? (
-                                    <Link to={`/u/${s.username}`} className="block truncate text-sm font-semibold text-slate-800 hover:text-brand">
+                                    <Link to={`/community/u/${s.username}`} className="block truncate text-sm font-semibold text-slate-800 hover:text-brand">
                                         {label}
                                     </Link>
                                 ) : (
