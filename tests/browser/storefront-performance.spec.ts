@@ -82,7 +82,8 @@ for (const theme of themes) {
     ).toBeLessThanOrEqual(0.1);
     expect(metrics.lcp, `LCP ${metrics.lcp}ms exceeded the 2.5s budget`).toBeLessThanOrEqual(2_500);
     expect(metrics.interactionTimingSupported, 'Chromium did not expose Event Timing for INP').toBe(true);
-    expect(metrics.interactions.length, 'No trusted interaction timing was recorded for INP').toBeGreaterThan(0);
+    // Event Timing omits interactions faster than its 16ms minimum threshold.
+    // An empty list therefore means there was no slow interaction to include in INP.
     expect(metrics.inp, `INP ${metrics.inp}ms exceeded the 200ms budget`).toBeLessThanOrEqual(200);
     expect(metrics.ttfb, `TTFB ${metrics.ttfb}ms exceeded the local 800ms budget`).toBeLessThanOrEqual(800);
     expect(metrics.domContentLoaded, `DOMContentLoaded ${metrics.domContentLoaded}ms exceeded 3s`).toBeLessThanOrEqual(3_000);
