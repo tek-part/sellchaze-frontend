@@ -80,7 +80,7 @@ export default function SectorPage() {
     const description =
         meta?.seo_description ||
         meta?.intro ||
-        t('sup_dir_sector_seo_fallback', 'Browse verified {{sector}} factories and suppliers in Egypt on Sellchase — view profiles, product catalogs and contact details.', { sector: meta?.name || sector });
+        t('sup_dir_sector_seo_fallback', 'Browse verified {{sector}} factories and suppliers in Egypt on Sellchaze — view profiles, product catalogs and contact details.', { sector: meta?.name || sector });
 
     // BreadcrumbList (Home › Suppliers › {sector}) + a CollectionPage listing the
     // suppliers currently rendered. Emitted only once the sector meta has loaded.

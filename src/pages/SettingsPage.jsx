@@ -3,7 +3,6 @@ import { useOutletContext } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { HiOutlineArrowPath, HiOutlineEnvelope, HiOutlineCog6Tooth } from 'react-icons/hi2';
 import { FaGoogle } from 'react-icons/fa';
-import { TbCurrencyDollar } from 'react-icons/tb';
 
 export default function SettingsPage() {
     const { t } = useTranslation();

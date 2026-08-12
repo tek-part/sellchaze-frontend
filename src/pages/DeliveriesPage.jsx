@@ -98,7 +98,7 @@ export default function DeliveriesPage() {
     }, []);
 
     useEffect(() => {
-        if (!can('deliveries-list')) {
+        if (!(isAdmin || permissions.includes('deliveries-list'))) {
             return;
         }
         setLoading(true);

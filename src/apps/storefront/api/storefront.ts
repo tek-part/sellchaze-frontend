@@ -17,7 +17,18 @@ import type {
 
 /* ---- catalog (public) ---- */
 
-export function getStore(): Promise<{ store: ApiStoreSummary; seo?: unknown }> {
+export interface ApiStorefrontBootstrap {
+  store: ApiStoreSummary;
+  seo?: unknown;
+  theme?: {
+    key: string;
+    version: string;
+    settings: Record<string, string | number | boolean>;
+    custom_css?: string | null;
+  } | null;
+}
+
+export function getStore(): Promise<ApiStorefrontBootstrap> {
   return apiGet('/');
 }
 

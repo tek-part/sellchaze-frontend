@@ -22,7 +22,7 @@ export default function GatewayFormPage() {
     const [err, setErr] = useState('');
 
     useEffect(() => {
-        if (!id || !can('gateways-list')) {
+        if (!id || !(isAdmin || permissions.includes('gateways-list'))) {
             return;
         }
         setErr('');
@@ -33,7 +33,7 @@ export default function GatewayFormPage() {
                 setSlug(row?.slug ?? '');
             })
             .catch((e) => setErr(e.response?.data?.message || e.message));
-    }, [id, isAdmin]);
+    }, [id, isAdmin, permissions]);
 
     if (!can('gateways-edit')) {
         return <Navigate to="/gateways" replace />;

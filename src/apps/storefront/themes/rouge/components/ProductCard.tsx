@@ -31,7 +31,7 @@ export function ProductCard(props: ProductCardProps): ReactElement {
   return (
     <article className={cn('rge-card', className)}>
       <div className="rge-card__media">
-        <StoreImage className="rge-card__img" src={product.image?.src} alt={product.image?.alt ?? product.title} eager={eager} />
+        <StoreImage className="rge-card__img" src={product.image?.src} srcSet={product.image?.srcSet} sizes={product.image?.sizes} alt={product.image?.alt ?? product.title} eager={eager} />
         {product.hoverImage ? (
           <StoreImage className="rge-card__img rge-card__img--hover" src={product.hoverImage.src} alt="" aria-hidden />
         ) : null}

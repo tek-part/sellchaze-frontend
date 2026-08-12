@@ -20,7 +20,7 @@ export const THEME_CATALOG: ThemeCatalog = [
     description:
       'Editorial ivory-and-ink fashion — hairline structure, champagne-gold focus, a Canela-style ' +
       'serif over a clean grotesque, restrained motion, and gallery-grade whitespace.',
-    author: 'SellChase',
+    author: 'Sellchaze',
     tags: ['luxury', 'fashion', 'editorial', 'minimal', 'premium'],
     accent: '#0B0B0C',
     accentAlt: '#C8A96A',
@@ -39,7 +39,7 @@ export const THEME_CATALOG: ThemeCatalog = [
     description:
       'High-contrast dark-first tech commerce — carbon canvas, voltage-cyan + signal-lime, a ' +
       'geometric grotesque with tabular numerals, neon focus glow, and dense spec-led layouts.',
-    author: 'SellChase',
+    author: 'Sellchaze',
     tags: ['tech', 'electronics', 'dark', 'high-contrast', 'spec-led'],
     accent: '#22D3EE',
     accentAlt: '#A3E635',
@@ -57,7 +57,7 @@ export const THEME_CATALOG: ThemeCatalog = [
     description:
       'Warm, tactile home retail — soft oat-and-clay canvas, terracotta + sage accents, a humanist ' +
       'serif over a soft sans, large soft radii, and room-context photography.',
-    author: 'SellChase',
+    author: 'Sellchaze',
     tags: ['furniture', 'home', 'living', 'warm', 'lifestyle', 'tactile'],
     accent: '#B4623C',
     accentAlt: '#6E7F5B',
@@ -76,7 +76,7 @@ export const THEME_CATALOG: ThemeCatalog = [
       'Editorial luxury beauty & cosmetics — porcelain lit from within, a rouge primary with gilded-' +
       'rose flourishes, a didone display serif over a humanist sans, pillowy radii, soft rose bloom, ' +
       'and shade-first merchandising.',
-    author: 'SellChase',
+    author: 'Sellchaze',
     tags: ['beauty', 'cosmetics', 'luxury', 'editorial', 'feminine'],
     accent: '#B23052',
     accentAlt: '#C79A6D',

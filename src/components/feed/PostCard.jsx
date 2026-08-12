@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
@@ -8,11 +8,17 @@ import {
     HiOutlineArrowUpTray,
     HiOutlineTrash,
     HiCheckBadge,
+    HiOutlineBookmark,
+    HiBookmark,
+    HiOutlineNoSymbol,
+    HiOutlineFlag,
+    HiOutlineUserMinus,
 } from 'react-icons/hi2';
 import api from '../../api/client';
 import { langParam } from '../../api/lang';
 import { initials, relativeTime } from './helpers';
 import CommentThread from './CommentThread';
+import { trackFeedEvent } from '../../features/community/api/events';
 
 /** Author avatar — photo or initials. */
 function Avatar({ name, photo }) {
@@ -25,6 +31,13 @@ function Avatar({ name, photo }) {
         </div>
     );
 }
+
+const mediaKind = (source) => {
+    const path = String(source).split(/[?#]/)[0].toLowerCase();
+    if (/\.(mp4|webm|ogg|mov)$/.test(path)) return 'video';
+    if (/\.(pdf|docx?|xlsx?|pptx?|zip|csv)$/.test(path)) return 'document';
+    return 'image';
+};
 
 /**
  * One post in the feed. Owns its own like/comment/share/delete state so the parent
@@ -40,6 +53,25 @@ export default function PostCard({ post, onDeleted }) {
     const [likeBusy, setLikeBusy] = useState(false);
     const [shareBusy, setShareBusy] = useState(false);
     const [deleting, setDeleting] = useState(false);
+    const [saved, setSaved] = useState(!!post.saved);
+    const [safetyBusy, setSafetyBusy] = useState(false);
+    const [reaction, setReaction] = useState(post.reaction || null);
+    const [reactionSummary, setReactionSummary] = useState(post.reaction_summary || {});
+    const cardRef = useRef(null);
+
+    useEffect(() => {
+        const node = cardRef.current;
+        if (!node || !('IntersectionObserver' in window)) return undefined;
+        let startedAt = 0; let viewed = false;
+        const observer = new IntersectionObserver(([entry]) => {
+            if (entry.isIntersecting && entry.intersectionRatio >= 0.5) {
+                startedAt = Date.now(); trackFeedEvent(post.id, 'impression');
+                setTimeout(() => { if (!viewed && startedAt) { viewed = true; trackFeedEvent(post.id, 'view_2s'); } }, 2000);
+            } else if (startedAt) { trackFeedEvent(post.id, 'dwell', { value_ms: Date.now() - startedAt }); startedAt = 0; }
+        }, { threshold: [0.5] });
+        observer.observe(node);
+        return () => { observer.disconnect(); if (startedAt) trackFeedEvent(post.id, 'dwell', { value_ms: Date.now() - startedAt }); };
+    }, [post.id]);
 
     const author = post.author ?? {};
     const typeLabel = t(`feed_type_${post.type}`, post.type);
@@ -60,6 +92,7 @@ export default function PostCard({ post, onDeleted }) {
                 setCounts((c) => ({ ...c, likes: data.likes_count }));
             }
             if (data && typeof data.liked === 'boolean') setLiked(data.liked);
+            if (nextLiked) trackFeedEvent(post.id, 'like');
         } catch {
             // Revert on failure.
             setLiked(!nextLiked);
@@ -85,6 +118,7 @@ export default function PostCard({ post, onDeleted }) {
             } else {
                 setCounts((c) => ({ ...c, shares: (c.shares ?? 0) + 1 }));
             }
+            trackFeedEvent(post.id, 'share');
         } catch {
             /* no-op; count stays as-is */
         } finally {
@@ -104,14 +138,46 @@ export default function PostCard({ post, onDeleted }) {
         }
     };
 
+    const toggleSave = async () => {
+        const next = !saved;
+        setSaved(next);
+        try {
+            if (next) await api.post(`/posts/${post.id}/save`);
+            else await api.delete(`/posts/${post.id}/save`);
+            if (next) trackFeedEvent(post.id, 'save');
+        } catch { setSaved(!next); }
+    };
+
+    const safetyAction = async (type) => {
+        if (!author.id || safetyBusy) return;
+        setSafetyBusy(true);
+        try {
+            await api.post(`/users/${author.id}/${type}`);
+            onDeleted?.(post.id);
+        } finally { setSafetyBusy(false); }
+    };
+
+    const report = async () => {
+        const details = window.prompt(t('feed_report_details', 'Describe the problem (optional)'));
+        if (details === null) return;
+        await api.post('/reports', { target_type: 'post', target_id: post.id, reason: 'spam', details });
+    };
+
+    const chooseReaction = async (type) => {
+        try {
+            const { data } = reaction === type ? await api.delete(`/posts/${post.id}/reaction`) : await api.post(`/posts/${post.id}/reaction`, { type });
+            setReaction(data.reaction); setReactionSummary(data.summary || {});
+        } catch { /* keep previous selection */ }
+    };
+
     return (
-        <article className="rounded-2xl bg-white p-5 shadow-xs ring-1 ring-slate-200">
+        <article ref={cardRef} className="rounded-[22px] bg-white p-5 shadow-[0_10px_35px_-26px_rgba(15,23,42,.5)] ring-1 ring-slate-200/80 transition-shadow hover:shadow-[0_16px_45px_-28px_rgba(15,23,42,.55)]">
             {/* Author header */}
             <header className="flex items-start gap-3">
                 <Avatar name={author.name || author.company} photo={author.photo} />
                 <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5">
-                        <span className="truncate text-sm font-semibold text-slate-900">{author.name}</span>
+                        <span className="truncate text-sm font-semibold text-slate-900">{post.acting_as?.type === 'organization' ? post.acting_as.name : author.name}</span>
                         {author.is_verified ? (
                             <HiCheckBadge className="h-4 w-4 shrink-0 text-brand" title={t('feed_verified', 'Verified')} aria-label={t('feed_verified', 'Verified')} />
                         ) : null}
@@ -142,6 +208,18 @@ export default function PostCard({ post, onDeleted }) {
                 />
             ) : null}
 
+            {post.location_name ? <p className="mt-2 text-xs font-medium text-slate-500">📍 {post.location_name}</p> : null}
+
+            {Array.isArray(post.media) && post.media.length > 0 ? (
+                <div className={`mt-4 grid overflow-hidden rounded-2xl bg-slate-950 ${post.media.length === 1 ? 'grid-cols-1' : 'grid-cols-2'} gap-1`}>
+                    {post.media.map((media) => media.kind === 'video'
+                        ? <video key={media.id} src={media.variants?.web?.url || media.url} poster={media.variants?.poster?.url} controls preload="metadata" playsInline className="max-h-[560px] w-full bg-black object-contain" />
+                        : media.kind === 'document'
+                            ? <a key={media.id} href={media.url} target="_blank" rel="noreferrer" className="flex min-h-32 items-center justify-center bg-blue-50 p-6 text-sm font-bold text-blue-700">فتح {media.name || 'المستند'}</a>
+                            : <img key={media.id} src={media.url} alt={media.alt_text || ''} loading="lazy" decoding="async" className="max-h-[560px] w-full object-cover" />)}
+                </div>
+            ) : null}
+
             {/* Attached product mini-card */}
             {post.product ? (
                 (() => {
@@ -169,14 +247,22 @@ export default function PostCard({ post, onDeleted }) {
                 })()
             ) : null}
 
-            {/* Attachment images */}
+            {/* Image, video and document attachments */}
             {Array.isArray(post.attachments) && post.attachments.length > 0 ? (
                 <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3">
-                    {post.attachments.map((src, i) => (
-                        <img key={i} src={src} alt="" loading="lazy" decoding="async" className="h-32 w-full rounded-xl object-cover ring-1 ring-slate-200" />
-                    ))}
+                    {post.attachments.map((src, i) => mediaKind(src) === 'video'
+                        ? <video key={i} src={src} controls preload="metadata" className="h-32 w-full rounded-xl bg-black object-cover ring-1 ring-slate-200" />
+                        : mediaKind(src) === 'document'
+                            ? <a key={i} href={src} target="_blank" rel="noreferrer" className="flex h-32 items-center justify-center rounded-xl bg-slate-50 p-3 text-center text-xs font-semibold text-brand ring-1 ring-slate-200">{decodeURIComponent(String(src).split('/').pop()?.split('?')[0] || 'Open document')}</a>
+                            : <img key={i} src={src} alt="" loading="lazy" decoding="async" className="h-32 w-full rounded-xl object-cover ring-1 ring-slate-200" />)}
                 </div>
             ) : null}
+
+            {post.cta ? <a href={post.cta.url || '#'} target={post.cta.url ? '_blank' : undefined} rel="noreferrer" className="mt-3 flex items-center justify-center rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-bold text-white hover:bg-blue-700">{post.cta.label || (post.cta.type === 'request_quote' ? 'طلب عرض سعر' : 'تواصل الآن')}</a> : null}
+
+            <div className="mt-3 flex flex-wrap items-center gap-1.5" aria-label="تفاعلات المنشور">
+                {Object.entries({ celebrate: ['👏', 'أحسنت'], insightful: ['💡', 'مفيد'], support: ['🤝', 'دعم'], interested: ['🎯', 'مهتم'] }).map(([type, [icon, label]]) => <button key={type} type="button" onClick={() => chooseReaction(type)} className={`rounded-full border px-2.5 py-1 text-xs font-semibold transition ${reaction === type ? 'border-blue-300 bg-blue-50 text-blue-700' : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'}`}>{icon} {label}{reactionSummary[type] ? ` ${reactionSummary[type]}` : ''}</button>)}
+            </div>
 
             {/* Action row */}
             <footer className="mt-4 flex items-center gap-1 border-t border-slate-100 pt-3">
@@ -212,6 +298,8 @@ export default function PostCard({ post, onDeleted }) {
                     <span>{t('feed_share', 'Share')}</span>
                     {counts.shares ? <span className="text-xs text-slate-400">{counts.shares}</span> : null}
                 </button>
+                <button type="button" onClick={toggleSave} className={`inline-flex items-center gap-1 rounded-lg px-3 py-1.5 text-sm ${saved ? 'text-brand' : 'text-slate-600'}`}>{saved ? <HiBookmark className="h-5 w-5" /> : <HiOutlineBookmark className="h-5 w-5" />}<span className="hidden sm:inline">{t('feed_save', 'Save')}</span></button>
+                {!post.can_delete && <div className="ms-auto flex items-center"><button type="button" disabled={safetyBusy} onClick={() => safetyAction('mute')} title={t('feed_mute', 'Mute')} className="rounded-lg p-2 text-slate-500 hover:bg-slate-50"><HiOutlineNoSymbol className="h-5 w-5" /></button><button type="button" disabled={safetyBusy} onClick={() => safetyAction('block')} title={t('feed_block', 'Block')} className="rounded-lg p-2 text-slate-500 hover:bg-slate-50"><HiOutlineUserMinus className="h-5 w-5" /></button><button type="button" onClick={report} title={t('feed_report', 'Report')} className="rounded-lg p-2 text-slate-500 hover:bg-red-50 hover:text-red-600"><HiOutlineFlag className="h-5 w-5" /></button></div>}
                 {post.can_delete ? (
                     <button
                         type="button"
@@ -225,7 +313,7 @@ export default function PostCard({ post, onDeleted }) {
                 ) : null}
             </footer>
 
-            {showComments ? (
+            {showComments && post.comments_enabled !== false ? (
                 <CommentThread
                     postId={post.id}
                     onCountChange={(delta) => setCounts((c) => ({ ...c, comments: Math.max(0, (c.comments ?? 0) + delta) }))}

@@ -218,7 +218,7 @@ function CenterLogoChip() {
     return (
         <div className="inline-flex items-center gap-1.5 rounded-full bg-brand px-3 py-1.5 text-xs font-semibold text-white shadow-lg ring-4 ring-white">
             <img src="/icon.png" alt="" className="h-3.5 w-3.5 rounded-xs object-contain" />
-            Sellchase
+            Sellchaze
         </div>
     );
 }
@@ -232,11 +232,11 @@ export default function LandingPage() {
     const jsonLd = {
         '@context': 'https://schema.org',
         '@type': 'Organization',
-        name: 'Sellchase',
+        name: 'Sellchaze',
         url: typeof window !== 'undefined' ? window.location.origin : '',
         logo: typeof window !== 'undefined' ? window.location.origin + '/logo.png' : '',
         description: t('landing_meta_description'),
-        email: 'sellcahase@wigpleasure.com',
+        email: 'sellchaze@wigpleasure.com',
     };
 
     const features = [

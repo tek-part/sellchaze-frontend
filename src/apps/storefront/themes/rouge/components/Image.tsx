@@ -15,7 +15,10 @@ export function StoreImage(props: StoreImageProps): ReactElement {
   const [failed, setFailed] = useState(false);
   if (!src || failed) {
     return (
-      <span className={cn('rge-img-fallback', className)} role="img" aria-label={alt}>
+      <span
+        className={cn('rge-img-fallback', className)}
+        {...(alt.trim() ? { role: 'img', 'aria-label': alt } : { 'aria-hidden': true })}
+      >
         <span aria-hidden>✿</span>
       </span>
     );

@@ -1,18 +1,20 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { HiOutlineUsers } from 'react-icons/hi2';
+import { HiOutlineAdjustmentsHorizontal, HiOutlineUsers } from 'react-icons/hi2';
 import api from '../api/client';
 import { langParam } from '../api/lang';
-import PostComposer from '../components/feed/PostComposer';
 import PostCard from '../components/feed/PostCard';
-import CommunityWelcome from '../components/feed/CommunityWelcome';
 import FollowSuggestions from '../components/feed/FollowSuggestions';
+import CommunityShell from '../features/community/components/CommunityShell';
+import CommunityHero from '../features/community/components/CommunityHero';
+import QuickComposer from '../features/community/components/QuickComposer';
+import BusinessHighlights from '../features/community/components/BusinessHighlights';
 
-export default function FeedPage() {
+export default function FeedPage({ initialScope = 'all', title = null }) {
     const { t, i18n } = useTranslation();
     const { lang } = langParam(i18n);
 
-    const [scope, setScope] = useState('all'); // 'all' | 'mine'
+    const [scope, setScope] = useState(initialScope);
     const [sector, setSector] = useState(''); // sector slug ('' = all sectors)
     const [sectors, setSectors] = useState([]);
 
@@ -75,12 +77,6 @@ export default function FeedPage() {
         }
     };
 
-    const prependPost = (post) => {
-        if (!post) return;
-        setPosts((prev) => [post, ...prev]);
-        setMeta((m) => (m ? { ...m, total: (m.total ?? 0) + 1 } : m));
-    };
-
     const removePost = (id) => setPosts((prev) => prev.filter((p) => p.id !== id));
 
     const hasMore = meta && (meta.current_page ?? 1) < (meta.last_page ?? 1);
@@ -91,24 +87,25 @@ export default function FeedPage() {
     ];
 
     return (
-        <div className="mx-auto max-w-2xl space-y-5">
+        <CommunityShell><div className="space-y-5">
+            <CommunityHero />
             <div className="flex items-center gap-3 border-s-4 border-brand ps-4">
                 <div>
                     <h1 className="flex items-center gap-2 text-2xl font-semibold tracking-tight text-slate-900">
                         <HiOutlineUsers className="h-6 w-6 text-brand" aria-hidden />
-                        {t('feed_title', 'Community')}
+                        {title || t('feed_title', 'Community')}
                     </h1>
                 </div>
             </div>
 
-            <PostComposer onCreated={prependPost} />
+            <QuickComposer />
 
             {/* Welcome + "follow these" — the community on-ramp for new members. */}
-            <CommunityWelcome />
-            <FollowSuggestions />
+            <BusinessHighlights />
+            <div className="xl:hidden"><FollowSuggestions /></div>
 
             {/* Filter bar: scope tabs + sector select */}
-            <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="sticky top-20 z-20 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200/80 bg-white/90 p-2 shadow-sm backdrop-blur-xl">
                 <div className="inline-flex rounded-xl border border-slate-200 bg-white p-1 shadow-xs">
                     {scopeTabs.map((tab) => (
                         <button
@@ -123,7 +120,7 @@ export default function FeedPage() {
                         </button>
                     ))}
                 </div>
-                <select
+                <label className="flex items-center gap-2 text-slate-500"><HiOutlineAdjustmentsHorizontal className="h-5 w-5" /><select
                     value={sector}
                     onChange={(e) => setSector(e.target.value)}
                     className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-hidden transition focus:border-brand focus:ring-2 focus:ring-brand/20"
@@ -134,7 +131,7 @@ export default function FeedPage() {
                             {s.name}
                         </option>
                     ))}
-                </select>
+                </select></label>
             </div>
 
             {err ? (
@@ -149,7 +146,7 @@ export default function FeedPage() {
                     <p className="mt-3 text-sm font-medium text-slate-500">{t('feed_no_posts', 'No posts yet')}</p>
                 </div>
             ) : (
-                <div className="space-y-4">
+                <div className="space-y-5">
                     {posts.map((p) => (
                         <PostCard key={p.id} post={p} onDeleted={removePost} />
                     ))}
@@ -168,6 +165,6 @@ export default function FeedPage() {
                     </button>
                 </div>
             ) : null}
-        </div>
+        </div></CommunityShell>
     );
 }

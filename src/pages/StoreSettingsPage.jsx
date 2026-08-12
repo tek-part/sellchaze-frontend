@@ -24,6 +24,16 @@ export default function StoreSettingsPage() {
     const [store, setStore] = useState(null);
     const [status, setStatus] = useState('draft');
     const [currency, setCurrency] = useState('USD');
+    const [defaultLocale, setDefaultLocale] = useState('en');
+    const [supportedCurrencies, setSupportedCurrencies] = useState(['USD']);
+    const [supportedLocales, setSupportedLocales] = useState(['ar', 'en']);
+    const [timezone, setTimezone] = useState('UTC');
+    const [taxEnabled, setTaxEnabled] = useState(false);
+    const [taxRate, setTaxRate] = useState('0');
+    const [taxIncluded, setTaxIncluded] = useState(false);
+    const [shippingEnabled, setShippingEnabled] = useState(false);
+    const [shippingRate, setShippingRate] = useState('0');
+    const [shippingFreeOver, setShippingFreeOver] = useState('');
     const [description, setDescription] = useState('');
     const [logoFile, setLogoFile] = useState(null);
     const [bannerFile, setBannerFile] = useState(null);
@@ -51,6 +61,16 @@ export default function StoreSettingsPage() {
                 setStore(s);
                 setStatus(s.status ?? 'draft');
                 setCurrency(s.currency ?? 'USD');
+                setDefaultLocale(s.default_locale ?? 'en');
+                setSupportedCurrencies(s.supported_currencies?.length ? s.supported_currencies : [s.currency ?? 'USD']);
+                setSupportedLocales(s.supported_locales?.length ? s.supported_locales : ['ar', 'en']);
+                setTimezone(s.timezone ?? 'UTC');
+                setTaxEnabled(Boolean(s.tax?.enabled));
+                setTaxRate(s.tax?.rate ?? '0');
+                setTaxIncluded(Boolean(s.tax?.prices_include_tax));
+                setShippingEnabled(Boolean(s.shipping?.enabled));
+                setShippingRate(s.shipping?.flat_rate ?? '0');
+                setShippingFreeOver(s.shipping?.free_over ?? '');
                 setDescription(s.description ?? '');
             })
             .catch((e) => setErr(e.response?.data?.message || e.message));
@@ -72,6 +92,16 @@ export default function StoreSettingsPage() {
             // state update from the Publish button's click handler.
             fd.append('status', publishing ? 'active' : status);
             fd.append('currency', currency);
+            fd.append('default_locale', defaultLocale);
+            [...new Set([...supportedLocales, defaultLocale])].forEach((locale) => fd.append('supported_locales[]', locale));
+            [...new Set([...supportedCurrencies, currency])].forEach((code) => fd.append('supported_currencies[]', code));
+            fd.append('timezone', timezone);
+            fd.append('tax_enabled', taxEnabled ? '1' : '0');
+            fd.append('tax_rate', taxRate || '0');
+            fd.append('tax_prices_include', taxIncluded ? '1' : '0');
+            fd.append('shipping_enabled', shippingEnabled ? '1' : '0');
+            fd.append('shipping_flat_rate', shippingRate || '0');
+            if (shippingFreeOver !== '') fd.append('shipping_free_over', shippingFreeOver);
             fd.append('description', description ?? '');
             if (logoFile) fd.append('logo', logoFile);
             if (bannerFile) fd.append('banner', bannerFile);
@@ -128,6 +158,30 @@ export default function StoreSettingsPage() {
                             ))}
                         </SearchableSelect>
                     </div>
+                    <fieldset className="sm:col-span-2">
+                        <legend className={label}>{t('store_supported_currencies', 'Currencies available to shoppers')}</legend>
+                        <div className="flex flex-wrap gap-3">{CURRENCIES.map((code) => <label key={code} className="flex items-center gap-1.5 text-xs text-slate-600"><input type="checkbox" checked={supportedCurrencies.includes(code)} disabled={code === currency} onChange={(e) => setSupportedCurrencies((rows) => e.target.checked ? [...new Set([...rows, code])] : rows.filter((value) => value !== code))} />{code}</label>)}</div>
+                    </fieldset>
+                </div>
+
+                <div className="grid gap-4 rounded-xl border border-slate-200 p-4 sm:grid-cols-2">
+                    <div>
+                        <label className={label}>{t('store_default_locale', 'Default language')}</label>
+                        <SearchableSelect value={defaultLocale} onChange={(e) => setDefaultLocale(e.target.value)} className="w-full">
+                            <option value="ar">العربية</option><option value="en">English</option>
+                        </SearchableSelect>
+                        <div className="mt-2 flex gap-3">{['ar', 'en'].map((locale) => <label key={locale} className="flex items-center gap-1.5 text-xs text-slate-600"><input type="checkbox" checked={supportedLocales.includes(locale)} disabled={locale === defaultLocale} onChange={(e) => setSupportedLocales((rows) => e.target.checked ? [...new Set([...rows, locale])] : rows.filter((value) => value !== locale))} />{locale.toUpperCase()}</label>)}</div>
+                    </div>
+                    <div>
+                        <label className={label}>{t('store_timezone', 'Timezone')}</label>
+                        <input value={timezone} onChange={(e) => setTimezone(e.target.value)} className={field} placeholder="Africa/Cairo" />
+                    </div>
+                    <label className="flex items-center gap-2 text-sm text-slate-700"><input type="checkbox" checked={taxEnabled} onChange={(e) => setTaxEnabled(e.target.checked)} /> {t('store_tax_enabled', 'Apply tax')}</label>
+                    <div><label className={label}>{t('store_tax_rate', 'Tax rate %')}</label><input type="number" min="0" max="100" step="0.001" value={taxRate} onChange={(e) => setTaxRate(e.target.value)} className={field} /></div>
+                    <label className="flex items-center gap-2 text-sm text-slate-700"><input type="checkbox" checked={taxIncluded} onChange={(e) => setTaxIncluded(e.target.checked)} /> {t('store_tax_included', 'Prices include tax')}</label>
+                    <label className="flex items-center gap-2 text-sm text-slate-700"><input type="checkbox" checked={shippingEnabled} onChange={(e) => setShippingEnabled(e.target.checked)} /> {t('store_shipping_enabled', 'Apply shipping')}</label>
+                    <div><label className={label}>{t('store_shipping_rate', 'Flat shipping rate')}</label><input type="number" min="0" step="0.01" value={shippingRate} onChange={(e) => setShippingRate(e.target.value)} className={field} /></div>
+                    <div><label className={label}>{t('store_shipping_free_over', 'Free shipping over')}</label><input type="number" min="0" step="0.01" value={shippingFreeOver} onChange={(e) => setShippingFreeOver(e.target.value)} className={field} placeholder={t('optional', 'Optional')} /></div>
                 </div>
 
                 {/* Company description — shown on the storefront and used as its

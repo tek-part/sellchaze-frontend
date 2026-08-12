@@ -268,7 +268,7 @@ export function ContactPage(): ReactElement {
     // No contact endpoint in the storefront API — open the client's mail app with the message.
     const subject = encodeURIComponent(`Enquiry from ${form.name}`);
     const body = encodeURIComponent(`${form.message}\n\n— ${form.name} (${form.email})`);
-    window.location.href = `mailto:client.care@selchase.example?subject=${subject}&body=${body}`;
+    window.location.href = `mailto:client.care@sellchaze.example?subject=${subject}&body=${body}`;
   };
 
   if (themed) return themed;

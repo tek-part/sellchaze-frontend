@@ -39,7 +39,7 @@ export function CategoryPage(): ReactElement | null {
   );
 
   const dev = previewOrDev();
-  let products: ProductCardModel[] = productsQ.data ? productsQ.data.data.map((p) => toProductCard(p, currency)) : [];
+  let products: ProductCardModel[] = productsQ.data ? productsQ.data.data.map((p) => toProductCard(p, currency, store.currencyMultipliers[currency] ?? 1)) : [];
   if (dev && !productsQ.data) products = sampleNewest(manifest.id, locale);
   if (curated?.rank) products = [...curated.rank(products)];
 

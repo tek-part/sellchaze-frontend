@@ -4,6 +4,7 @@
 import js from '@eslint/js';
 import globals from 'globals';
 import reactHooks from 'eslint-plugin-react-hooks';
+import react from 'eslint-plugin-react';
 import tseslint from 'typescript-eslint';
 
 export default [
@@ -18,7 +19,7 @@ export default [
       globals: { ...globals.browser, ...globals.es2021, ...globals.node },
       parserOptions: { ecmaFeatures: { jsx: true } },
     },
-    plugins: { 'react-hooks': reactHooks },
+    plugins: { 'react-hooks': reactHooks, react },
     rules: {
       ...js.configs.recommended.rules,
       'no-unused-vars': ['warn', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
@@ -27,8 +28,9 @@ export default [
       // Pre-existing dashboard debt (never linted). Kept as warnings so it doesn't force a
       // risky UI rewrite; still surfaced. The storefront TS tier below keeps these as errors.
       'no-dupe-keys': 'warn',
-      'react-hooks/rules-of-hooks': 'warn',
+      'react-hooks/rules-of-hooks': 'error',
       'react-hooks/exhaustive-deps': 'warn',
+      'react/jsx-uses-vars': 'error',
     },
   },
 

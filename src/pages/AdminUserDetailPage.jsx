@@ -71,7 +71,7 @@ export default function AdminUserDetailPage() {
         } else if (user && !user.pending_approval) {
             setApprovalRole('Staff');
         }
-    }, [user?.pending_approval, user?.registration_role, user?.id]);
+    }, [user]);
 
     useEffect(() => {
         let active = true;

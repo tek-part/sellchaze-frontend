@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import useStoreScope from '../hooks/useStoreScope';
 import { useTranslation } from 'react-i18next';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
@@ -13,7 +13,7 @@ const STATUS_KEYS = ['pending', 'confirmed', 'processing', 'shipped', 'delivered
 const STATUS_COLORS = ['#f59e0b', '#0ea5e9', '#6366f1', '#8b5cf6', '#10b981', '#ef4444'];
 
 export default function StoreAnalyticsPage() {
-    const { id, apiBase, uiBase } = useStoreScope();
+    const { id, apiBase } = useStoreScope();
     const { t } = useTranslation();
     const [ov, setOv] = useState(null);
     const [categories, setCategories] = useState([]);
@@ -31,7 +31,7 @@ export default function StoreAnalyticsPage() {
             .catch((e) => active && setErr(e.response?.data?.message || e.message))
             .finally(() => active && setLoading(false));
         return () => { active = false; };
-    }, [id]);
+    }, [id, apiBase]);
 
     const doughnut = useMemo(() => {
         if (!ov) return null;

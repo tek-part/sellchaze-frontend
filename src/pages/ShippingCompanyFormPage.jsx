@@ -29,7 +29,7 @@ export default function ShippingCompanyFormPage() {
     const [err, setErr] = useState('');
 
     useEffect(() => {
-        if (!isEdit || (!can('shipping-companies-list') && !can('shipping-companies-edit'))) {
+        if (!isEdit || (!(isAdmin || permissions.includes('shipping-companies-list')) && !(isAdmin || permissions.includes('shipping-companies-edit')))) {
             setFetching(false);
             return;
         }
@@ -48,7 +48,7 @@ export default function ShippingCompanyFormPage() {
             })
             .catch((e) => setErr(e.response?.data?.message || e.message))
             .finally(() => setFetching(false));
-    }, [id, isEdit, isAdmin]);
+    }, [id, isEdit, isAdmin, permissions]);
 
     if (isEdit && !can('shipping-companies-edit')) {
         return <Navigate to="/shipping/companies" replace />;

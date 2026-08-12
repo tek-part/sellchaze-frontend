@@ -45,7 +45,7 @@ export const LUXURY_AR: CatalogOverlay = {
   },
 
   brandNotes: {
-    'MAISON SELCHASE': 'دار الأزياء',
+    SELLCHAZE: 'دار الأزياء',
     'ATELIER NORD': 'التفصيل',
     CARRERA: 'المصنوعات الجلدية',
     LINNEA: 'التريكو',

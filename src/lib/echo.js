@@ -39,7 +39,7 @@ export function getEcho() {
 
 export function resetEcho() {
     if (instance) {
-        try { instance.disconnect(); } catch (e) { /* noop */ }
+        try { instance.disconnect(); } catch { /* noop */ }
         instance = null;
     }
 }

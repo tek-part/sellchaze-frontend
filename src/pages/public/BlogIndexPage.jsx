@@ -42,7 +42,7 @@ export default function BlogIndexPage() {
     const jsonLd = {
         '@context': 'https://schema.org',
         '@type': 'Blog',
-        name: 'Sellchase Blog',
+        name: 'Sellchaze Blog',
         url: typeof window !== 'undefined' ? window.location.href : undefined,
     };
 
@@ -51,8 +51,8 @@ export default function BlogIndexPage() {
     return (
         <div className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6 md:py-16" dir={lang === 'ar' ? 'rtl' : 'ltr'}>
             <SEO
-                title={`${t('blog_title', 'Blog')} — Sellchase`}
-                description={t('blog_subtitle', 'Insights, guides, and updates from the Sellchase team.')}
+                title={`${t('blog_title', 'Blog')} — Sellchaze`}
+                description={t('blog_subtitle', 'Insights, guides, and updates from the Sellchaze team.')}
                 jsonLd={jsonLd}
             />
 
@@ -61,7 +61,7 @@ export default function BlogIndexPage() {
                     {t('blog_title', 'Blog')}
                 </h1>
                 <p className="mx-auto mt-2 max-w-2xl text-sm text-slate-600 sm:mt-3 sm:text-base">
-                    {t('blog_subtitle', 'Insights, guides, and updates from the Sellchase team.')}
+                    {t('blog_subtitle', 'Insights, guides, and updates from the Sellchaze team.')}
                 </p>
             </header>
 

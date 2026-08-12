@@ -12,6 +12,18 @@ const lng = localStorage.getItem('sellchase_locale') || 'en';
 document.documentElement.setAttribute('dir', lng === 'ar' ? 'rtl' : 'ltr');
 document.documentElement.setAttribute('lang', lng);
 
+// A storefront preview used to register its worker for the whole platform
+// origin. Remove that legacy registration when the dashboard application is
+// loaded so it cannot cache or provide offline fallbacks for admin/marketplace
+// routes such as /products.
+if ('serviceWorker' in navigator) {
+    void navigator.serviceWorker.getRegistrations().then((registrations) => Promise.all(
+        registrations
+            .filter((registration) => registration.active?.scriptURL.includes('/storefront-sw.js'))
+            .map((registration) => registration.unregister()),
+    ));
+}
+
 const el = document.getElementById('root');
 if (el) {
     createRoot(el).render(

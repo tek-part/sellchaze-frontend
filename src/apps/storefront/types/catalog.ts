@@ -6,6 +6,8 @@
 
 export interface ProductImage {
   src: string;
+  srcSet?: string;
+  sizes?: string;
   alt?: string;
   width?: number;
   height?: number;

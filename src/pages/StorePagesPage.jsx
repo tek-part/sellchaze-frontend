@@ -24,7 +24,7 @@ export default function StorePagesPage() {
         api.get(`${apiBase}/content`)
             .then(({ data }) => setContentPages(data.data ?? []))
             .catch((e) => setErr(e.response?.data?.message || e.message));
-    }, [id]);
+    }, [apiBase]);
 
     useEffect(() => { load(); }, [load]);
 

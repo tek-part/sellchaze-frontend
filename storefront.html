@@ -4,7 +4,16 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/png" href="/icon.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#073f4b" />
+    <link rel="manifest" href="/storefront.webmanifest" />
+    <link rel="icon" href="/pwa/icon.svg" />
     <meta name="color-scheme" content="light dark" />
+    <style>
+      /* The active theme is code-split. Keep its fully laid-out first frame hidden to prevent the
+         empty mount from becoming a visible layout shift; ThemeProvider reveals it atomically. */
+      #storefront-root { visibility: hidden; }
+      html[data-storefront-ready='true'] #storefront-root { visibility: visible; }
+    </style>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <!--

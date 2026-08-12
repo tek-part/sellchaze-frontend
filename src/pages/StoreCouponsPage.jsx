@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import useStoreScope from '../hooks/useStoreScope';
 import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
@@ -47,7 +47,7 @@ export default function StoreCouponsPage() {
             })
             .catch((e) => setErr(e.response?.data?.message || e.message))
             .finally(() => setLoading(false));
-    }, [id, loadParams]);
+    }, [apiBase, loadParams]);
 
     useEffect(() => { reload(); }, [reload]);
 

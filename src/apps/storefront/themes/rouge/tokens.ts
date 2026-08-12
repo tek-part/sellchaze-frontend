@@ -21,17 +21,17 @@ export const rougeBaseTokens = {
       onPrimary: '#FFF4F6',
       accent: '#C79A6D',
       // AA-safe gilt for *text*/underlines (the bright gilt fails small-text contrast on light).
-      accentInk: '#A87C4E',
+      accentInk: '#895B32',
       bg: '#FBF5F3',
       surface: '#FFFFFF',
       surface2: '#FAF0EC',
       text: '#2B1B20',
       // Mauve-gray secondary text. Nudged darker from the spec #8C767B to meet WCAG AA (4.5:1) on
       // both --bg (4.6:1) and --surface (4.97:1) for small meta/caption text (QA audit, 2026-07-16).
-      muted: '#816A70',
+      muted: '#765D64',
       border: '#EFDFD9',
       borderStrong: '#E2C9C0',
-      sale: '#E4577E',
+      sale: '#A62D50',
       success: '#4FA87E',
       danger: '#D45A5A',
       warning: '#D9A036',

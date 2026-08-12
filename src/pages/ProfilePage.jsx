@@ -120,7 +120,7 @@ export default function ProfilePage() {
         let active = true;
         (async () => {
             try {
-                await Promise.all([loadProfile(), loadHistory(historyPage), loadSessions()]);
+                await Promise.all([loadProfile(), loadHistory(1), loadSessions()]);
             } catch (e) {
                 if (active) setErr(e.response?.data?.message || e.message);
             } finally {
@@ -136,7 +136,7 @@ export default function ProfilePage() {
         if (!loading) {
             void loadHistory(historyPage);
         }
-    }, [historyPage]);
+    }, [historyPage, loading, loadHistory]);
 
     const onSubmit = async (e) => {
         e.preventDefault();

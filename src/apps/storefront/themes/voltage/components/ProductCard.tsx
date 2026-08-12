@@ -34,7 +34,7 @@ export function ProductCard(props: ProductCardProps): ReactElement {
   return (
     <article className={cn('vlt-card', className)}>
       <div className="vlt-card__media">
-        <StoreImage className="vlt-card__img" src={product.image?.src} alt={product.image?.alt ?? product.title} />
+        <StoreImage className="vlt-card__img" src={product.image?.src} srcSet={product.image?.srcSet} sizes={product.image?.sizes} alt={product.image?.alt ?? product.title} />
         <div className="vlt-card__badges">
           {product.badge ? <Badge variant="new">{product.badge}</Badge> : null}
           {onSale ? <Badge variant="sale">{t('product.sale')}</Badge> : null}

@@ -10,6 +10,7 @@
 import {
   useCallback,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useState,
   type ReactElement,
@@ -128,11 +129,24 @@ export function ThemeProvider(props: ThemeProviderProps): ReactElement | null {
   const registries = useMemo(() => (module ? buildThemeRegistries(module) : null), [module]);
 
   // Project tokens onto the DOM + set dir/data-theme on every relevant change.
-  useEffect(() => {
+  useLayoutEffect(() => {
     const el = target ?? (typeof document !== 'undefined' ? document.documentElement : null);
     if (!el || !tokens) return;
     applyTokensToElement(el, tokens, colorScheme);
     el.setAttribute('dir', direction);
+
+    let active = true;
+    const reveal = (): void => {
+      if (active) el.setAttribute('data-storefront-ready', 'true');
+    };
+    if (typeof document !== 'undefined' && document.fonts) {
+      void document.fonts.ready.then(reveal);
+    } else {
+      reveal();
+    }
+    return () => {
+      active = false;
+    };
   }, [target, tokens, colorScheme, direction]);
 
   const updateSettings = useCallback((patch: Partial<Record<string, ThemeSettingValue>>) => {

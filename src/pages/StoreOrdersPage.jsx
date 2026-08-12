@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import useStoreScope from '../hooks/useStoreScope';
 import { useTranslation } from 'react-i18next';
 import api from '../api/client';
@@ -47,7 +47,7 @@ export default function StoreOrdersPage() {
             .then(({ data }) => { setRows(data.data ?? []); setMeta(data.meta ?? null); })
             .catch((e) => setErr(e.response?.data?.message || e.message))
             .finally(() => setLoading(false));
-    }, [id, loadParams]);
+    }, [id, apiBase, loadParams]);
 
     return (
         <div className="space-y-5">

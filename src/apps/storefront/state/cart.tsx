@@ -14,8 +14,9 @@ import {
   type ReactNode,
 } from 'react';
 import type { CartLine, CartTotals } from '../types/cart';
+import { useStore } from './store-context';
 
-const STORAGE_KEY = 'sf-cart-v1';
+const storageKey = (currency: string): string => `sf-cart-v1:${currency}`;
 
 export type AddCartInput = Omit<CartLine, 'quantity'> & { quantity?: number };
 
@@ -30,10 +31,10 @@ export interface CartApi {
 
 const CartContext = createContext<CartApi | null>(null);
 
-function loadInitial(): CartLine[] {
+function loadInitial(currency: string): CartLine[] {
   if (typeof window === 'undefined') return [];
   try {
-    const raw = window.localStorage.getItem(STORAGE_KEY);
+    const raw = window.localStorage.getItem(storageKey(currency));
     const parsed: unknown = raw ? JSON.parse(raw) : null;
     return Array.isArray(parsed) ? (parsed as CartLine[]) : [];
   } catch {
@@ -42,16 +43,23 @@ function loadInitial(): CartLine[] {
 }
 
 export function CartProvider(props: { children: ReactNode }): ReactElement {
-  const [lines, setLines] = useState<CartLine[]>(loadInitial);
+  const { store } = useStore();
+  const [lines, setLines] = useState<CartLine[]>(() => loadInitial(store.currency));
+  const [loadedCurrency, setLoadedCurrency] = useState(store.currency);
+
+  if (loadedCurrency !== store.currency) {
+    setLoadedCurrency(store.currency);
+    setLines(loadInitial(store.currency));
+  }
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
     try {
-      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(lines));
+      window.localStorage.setItem(storageKey(store.currency), JSON.stringify(lines));
     } catch {
       /* storage full / disabled — cart still works in-memory */
     }
-  }, [lines]);
+  }, [lines, store.currency]);
 
   const add = useCallback((line: AddCartInput) => {
     const quantity = line.quantity ?? 1;

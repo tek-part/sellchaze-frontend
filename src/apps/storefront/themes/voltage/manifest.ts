@@ -14,7 +14,7 @@ export const voltageManifest: ThemeManifest = {
     'voltage-cyan and signal-lime, a geometric grotesque with tabular numerals for every price and ' +
     'spec, 10–12px radii, neon focus glow, and dense comparison-led layouts. The deliberate ' +
     'antithesis of the editorial fashion theme.',
-  author: 'SellChase',
+  author: 'Sellchaze',
   archetype: 'Tech Commerce',
   tags: ['tech', 'electronics', 'dark', 'high-contrast', 'spec-led'],
   schemaVersion: CURRENT_MANIFEST_SCHEMA_VERSION,

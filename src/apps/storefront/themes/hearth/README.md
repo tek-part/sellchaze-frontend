@@ -1,6 +1,6 @@
 # Theme 03 — Hearth · Home & Living
 
-Warm, tactile home-retail storefront theme for the SellChase Theme Engine. Bespoke, isolated, and
+Warm, tactile home-retail storefront theme for the Sellchaze Theme Engine. Bespoke, isolated, and
 token-driven — it reuses **only** the frozen platform contracts (engine, data contract, shared state
 hooks) and shares **zero** visual DNA with Theme 01 (Luxury Fashion), Theme 02 (Voltage) or Theme 04
 (Rouge).

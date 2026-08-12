@@ -46,6 +46,8 @@ export function ProductCard(props: ProductCardProps): ReactElement {
         <StoreImage
           className="sf-product-card__img sf-product-card__img--primary"
           src={product.image?.src}
+          srcSet={product.image?.srcSet}
+          sizes={product.image?.sizes}
           alt={product.image?.alt ?? product.title}
         />
         {product.hoverImage ? (

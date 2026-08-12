@@ -18,7 +18,7 @@ import { StoreProvider } from './state/store-context';
 import { AuthProvider } from './state/auth-context';
 import { RecentlyViewedProvider } from './state/recently-viewed';
 import { WishlistProvider } from './state/wishlist';
-import { PLATFORM_STORAGE_KEY, createLocalStoragePort } from './platform/domain';
+import { getStore, type ApiStorefrontBootstrap } from './api/storefront';
 import './styles/index.css';
 // Editorial layout for the journal/brands pages. App-level, not theme-level: these render the
 // shared `.sf-*` library, so a theme stylesheet would leave three themes unstyled. Every value
@@ -42,6 +42,7 @@ const rootElement = document.getElementById('storefront-root');
 if (!rootElement) {
   throw new Error('Storefront failed to start: #storefront-root element is missing from the document.');
 }
+const storefrontContainer = rootElement;
 
 // Theme resolution order:
 //   1. explicit `?theme=voltage` (Preview / QA override, optionally `&scheme=dark|light`)
@@ -49,14 +50,7 @@ if (!rootElement) {
 //      dashboard "Activate" writes and what the "View store" link relies on to show the live theme
 //   3. the configured default (StorefrontThemeRoot's `defaultThemeId`)
 const params = new URLSearchParams(window.location.search);
-const activeThemeId = (() => {
-  try {
-    return createLocalStoragePort(PLATFORM_STORAGE_KEY).load().activeId ?? undefined;
-  } catch {
-    return undefined;
-  }
-})();
-const themeOverride = params.get('theme') ?? activeThemeId;
+const explicitTheme = params.get('theme') ?? undefined;
 const schemeParam = params.get('scheme');
 const schemeOverride =
   schemeParam === 'dark' || schemeParam === 'light' || schemeParam === 'auto' ? schemeParam : undefined;
@@ -80,8 +74,35 @@ if (settingsParam) {
   }
 }
 
-createRoot(rootElement).render(
-  <StrictMode>
+const legacyThemeAliases: Readonly<Record<string, string>> = {
+  default: 'luxury-fashion',
+  aurora: 'rouge',
+};
+
+async function bootstrap(): Promise<void> {
+  let initialData: ApiStorefrontBootstrap | undefined;
+  if (!params.has('preview')) {
+    try {
+      initialData = await getStore();
+    } catch {
+      // The store context below exposes the normal unresolved-host state. Preview/local mode can
+      // still render without Laravel, but production never reads merchant activation from storage.
+    }
+  }
+
+  const serverThemeKey = initialData?.theme?.key;
+  const themeId = explicitTheme ?? (serverThemeKey ? legacyThemeAliases[serverThemeKey] ?? serverThemeKey : undefined);
+  const effectiveSettings = settingsOverride ?? initialData?.theme?.settings;
+  const customCss = initialData?.theme?.custom_css;
+  if (customCss) {
+    const style = document.createElement('style');
+    style.id = 'sellchaze-merchant-css';
+    style.textContent = customCss;
+    document.head.appendChild(style);
+  }
+
+  createRoot(storefrontContainer).render(
+    <StrictMode>
     {/*
       i18n wraps the theme root: switching language must not remount the theme (which would drop
       cart, filters and scroll position). Direction is derived from the language by useLocale and
@@ -89,9 +110,9 @@ createRoot(rootElement).render(
     */}
     <I18nextProvider i18n={storefrontI18n()}>
     <StorefrontThemeRoot
-      {...(themeOverride ? { themeId: themeOverride } : {})}
+      {...(themeId ? { themeId } : {})}
       {...(schemeOverride ? { colorScheme: schemeOverride } : {})}
-      {...(settingsOverride ? { settings: settingsOverride } : {})}
+      {...(effectiveSettings ? { settings: effectiveSettings } : {})}
     >
       {/*
         BrowserRouter, not HashRouter. In production the storefront is the ROOT of a store's own
@@ -104,7 +125,7 @@ createRoot(rootElement).render(
         automatically — no special handling needed to keep a preview session alive.
       */}
       <BrowserRouter>
-        <StoreProvider>
+        <StoreProvider {...(initialData ? { initialData } : {})}>
           <AuthProvider>
             <WishlistProvider>
               <RecentlyViewedProvider>
@@ -116,5 +137,17 @@ createRoot(rootElement).render(
       </BrowserRouter>
     </StorefrontThemeRoot>
     </I18nextProvider>
-  </StrictMode>,
-);
+    </StrictMode>,
+  );
+}
+
+void bootstrap();
+
+const platformHosts = new Set(['sellchaze.com', 'www.sellchaze.com']);
+const isStoreHost = !platformHosts.has(window.location.hostname.toLowerCase());
+
+if ('serviceWorker' in navigator && import.meta.env.PROD && isStoreHost) {
+  window.addEventListener('load', () => {
+    void navigator.serviceWorker.register('/storefront-sw.js', { scope: '/' });
+  });
+}

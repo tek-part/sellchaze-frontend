@@ -26,7 +26,8 @@ export interface ApiProduct {
   price: string | number;
   compare_price?: string | number | null;
   image?: string | null;
-  image_url?: string | null;
+    image_url?: string | null;
+    image_responsive?: { src: string; srcset?: string | null; sizes?: string; widths?: ReadonlyArray<number> } | null;
   images?: ReadonlyArray<string> | null;
   is_active?: boolean;
   is_featured?: boolean;
@@ -98,6 +99,11 @@ export interface ApiStoreSummary {
   name: string;
   slug: string;
   currency: string;
+  supported_currencies?: ReadonlyArray<string>;
+  currency_multipliers?: Readonly<Record<string, number>>;
+  default_locale?: string;
+  supported_locales?: ReadonlyArray<string>;
+  timezone?: string;
   status?: string;
   logo_url?: string | null;
   banner_url?: string | null;

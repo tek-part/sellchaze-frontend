@@ -39,6 +39,8 @@ export function ProductCard(props: ProductCardProps): ReactElement {
         <StoreImage
           className="hh-product-card__img"
           src={product.image?.src}
+          srcSet={product.image?.srcSet}
+          sizes={product.image?.sizes}
           alt={product.image?.alt ?? product.title}
         />
         <div className="hh-product-card__tags">

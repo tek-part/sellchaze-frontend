@@ -46,7 +46,7 @@ export default function WavexGroupsPage() {
     }, []);
 
     useEffect(() => {
-        if (!can('wavex-access')) return;
+        if (!permissions.includes('wavex-access')) return;
         void loadGroups();
     }, [loadGroups, permissions]);
 

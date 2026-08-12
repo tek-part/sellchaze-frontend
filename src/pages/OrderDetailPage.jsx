@@ -305,7 +305,7 @@ export default function OrderDetailPage() {
 
     const [qPrice, setQPrice] = useState('');
     const [qDeliveryDate, setQDeliveryDate] = useState('');
-    const [qCurrency, setQCurrency] = useState('EGP');
+    const [, setQCurrency] = useState('EGP');
     const [qShippingCompany, setQShippingCompany] = useState('');
     const [qPriceIncludesShipping, setQPriceIncludesShipping] = useState(true);
     const [qNotes, setQNotes] = useState('');
@@ -371,7 +371,7 @@ export default function OrderDetailPage() {
         }
         setWigpleasureStoreDraft(row.wigpleasure_store_status || 'pending');
         setWigpleasureReturnWarehouseDraft('');
-    }, [row?.code, row?.wigpleasure_store_status]);
+    }, [row]);
 
     useEffect(() => {
         if (!canQuotationsOut && !canQuotationsIn) {
@@ -420,7 +420,7 @@ export default function OrderDetailPage() {
             .filter((v) => Number.isFinite(v) && v > 0);
         setAssignDetailSelected([...new Set(ids)]);
         setAssignDetailSearch('');
-    }, [assignDetailOpen, row?.code, row?.suppliers]);
+    }, [assignDetailOpen, row]);
 
     useEffect(() => {
         if (!canDeliveriesUpdate || !row) {
@@ -442,7 +442,7 @@ export default function OrderDetailPage() {
             setDeliveryNotes('');
             setDeliveryStatus('pending');
         }
-    }, [row?.code, row?.deliveries, row?.shipping_type, canDeliveriesUpdate]);
+    }, [row, canDeliveriesUpdate]);
 
     useEffect(() => {
         if (!canAdminDeliveriesUpdate || !row) {
@@ -480,7 +480,7 @@ export default function OrderDetailPage() {
             setAdminDeliveryNotes('');
             setAdminDeliveryStatus('pending');
         }
-    }, [row?.code, row?.deliveries, row?.shipping_type, canAdminDeliveriesUpdate]);
+    }, [row, canAdminDeliveriesUpdate]);
 
     const locale = i18n.language;
 

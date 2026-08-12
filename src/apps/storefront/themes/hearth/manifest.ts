@@ -17,7 +17,7 @@ export const hearthManifest: ThemeManifest = {
     'Warm, tactile home retail — soft oat-and-clay canvas, terracotta + sage earthy accents, a ' +
     'warm humanist serif over a soft sans, large soft radii, and big room-context photography. ' +
     'Roomset heroes, shop-the-room, material swatches and dimension clarity.',
-  author: 'SellChase',
+  author: 'Sellchaze',
   archetype: 'Furniture & Home',
   tags: ['furniture', 'home', 'living', 'warm', 'lifestyle', 'tactile'],
   schemaVersion: CURRENT_MANIFEST_SCHEMA_VERSION,

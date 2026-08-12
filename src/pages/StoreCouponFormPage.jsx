@@ -37,7 +37,7 @@ export default function StoreCouponFormPage() {
                 });
             })
             .catch((e) => setErr(e.response?.data?.message || e.message));
-    }, [id, couponId, isEdit]);
+    }, [id, apiBase, couponId, isEdit]);
 
     const set = (k, v) => setForm((f) => ({ ...f, [k]: v }));
 

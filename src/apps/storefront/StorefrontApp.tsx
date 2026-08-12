@@ -8,7 +8,7 @@
  * nav/footer so the chrome is fully populated without a seeded backend.
  */
 import { previewOrDev } from './preview';
-import { useEffect, useMemo, type ReactElement } from 'react';
+import { useEffect, useMemo, useState, type ReactElement } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useLocale } from './i18n/useLocale';
 import { useDirection, useLayout, useThemeManifest, type StorefrontContext } from './theme-engine';
@@ -20,7 +20,8 @@ import { AppRoutes } from './pages/AppRoutes';
 import { AppErrorBoundary } from './AppErrorBoundary';
 import { NavigationInterceptor } from './pages/NavigationInterceptor';
 import { RouteAnnouncer } from './pages/RouteAnnouncer';
-import { sampleAnnouncements, sampleFooter, sampleNav, sampleSocial } from './dev/sampleData';
+
+type PreviewData = typeof import('./dev/sampleData');
 
 /**
  * Copyright year for rendered chrome. A literal, not `new Date()`: engine invariant I4 requires
@@ -109,8 +110,22 @@ export function StorefrontApp(): ReactElement {
   const { locale } = useLocale();
   const direction = useDirection();
   const Layout = useLayout('default');
-  const { store } = useStore();
+  const { store, setCurrency } = useStore();
   const categoriesQ = useAsync(() => getCategories(), []);
+  const [previewData, setPreviewData] = useState<PreviewData | null>(null);
+
+  useEffect(() => {
+    if (!previewOrDev()) return;
+
+    let active = true;
+    void import('./dev/sampleData').then((module) => {
+      if (active) setPreviewData(module);
+    });
+
+    return () => {
+      active = false;
+    };
+  }, []);
 
   useEffect(() => {
     document.documentElement.dir = direction;
@@ -121,12 +136,16 @@ export function StorefrontApp(): ReactElement {
     const categoryNav: NavItem[] = categoriesQ.data
       ? categoriesQ.data.data.map((c) => ({ label: c.name, url: `/collections/${c.slug}` }))
       : [];
-    const header: NavItem[] = dev && categoryNav.length === 0 ? sampleNav(manifest.id, t, locale) : buildHeaderNav(categoryNav, t);
+    const header: NavItem[] = dev && previewData && categoryNav.length === 0
+      ? previewData.sampleNav(manifest.id, t, locale)
+      : buildHeaderNav(categoryNav, t);
     // Production previously rendered an EMPTY footer (`[]`), so every live storefront shipped a
     // footer with no links. Build real groups from the store's own categories plus the routes that
     // actually exist in AppRoutes — never links to routes we do not serve.
-    const footer: FooterGroup[] = dev && categoryNav.length === 0 ? sampleFooter(manifest.id, t, locale) : buildFooter(categoryNav, t);
-    const announcements = dev ? sampleAnnouncements(manifest.id, locale) : [];
+    const footer: FooterGroup[] = dev && previewData && categoryNav.length === 0
+      ? previewData.sampleFooter(manifest.id, t, locale)
+      : buildFooter(categoryNav, t);
+    const announcements = dev && previewData ? previewData.sampleAnnouncements(manifest.id, locale) : [];
 
     return {
       store: {
@@ -145,13 +164,21 @@ export function StorefrontApp(): ReactElement {
         payments: ['Visa', 'Mastercard', 'American Express', 'PayPal', 'Apple Pay'],
         // Social handles are merchant data the storefront API does not expose yet; shown in DEV
         // preview only so the chrome reads complete, never fabricated for a live store.
-        ...(dev ? { social: sampleSocial() } : {}),
+        ...(dev && previewData ? { social: previewData.sampleSocial() } : {}),
       },
     };
-  }, [categoriesQ.data, store.name, store.currency, store.description, manifest.id, t, locale]);
+  }, [categoriesQ.data, store.name, store.currency, store.description, manifest.id, t, locale, previewData]);
 
   return (
     <div className="sf-root" data-theme-id={manifest.id}>
+      {store.supportedCurrencies.length > 1 ? (
+        <label className="fixed bottom-4 end-4 z-[var(--z-toast,9999)] rounded-full border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 text-xs shadow-lg">
+          <span className="sr-only">Display currency</span>
+          <select aria-label="Display currency" value={store.currency} onChange={(event) => setCurrency(event.target.value)} className="bg-transparent font-semibold outline-none">
+            {store.supportedCurrencies.map((currency) => <option key={currency} value={currency}>{currency}</option>)}
+          </select>
+        </label>
+      ) : null}
       <NavigationInterceptor />
       <RouteAnnouncer />
       <a

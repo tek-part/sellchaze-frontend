@@ -124,6 +124,8 @@ export default function RegisterPage() {
     const [password, setPassword] = useState('');
     const [passwordConfirmation, setPasswordConfirmation] = useState('');
     const [registrationRole, setRegistrationRole] = useState('Supplier');
+    const [companyName, setCompanyName] = useState('');
+    const [storeName, setStoreName] = useState('');
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
 
@@ -138,6 +140,8 @@ export default function RegisterPage() {
                 password,
                 password_confirmation: passwordConfirmation,
                 registration_role: registrationRole,
+                company_name: companyName,
+                store_name: storeName,
             });
             if (data.pending_approval) {
                 if (data.access_token && data.refresh_token) {
@@ -149,7 +153,7 @@ export default function RegisterPage() {
                 // Auto-activated account → sign in and continue to the intended page.
                 setTokens({ access_token: data.access_token, refresh_token: data.refresh_token });
                 toast.success(t('toast_welcome'));
-                navigate(redirectTo, { replace: true });
+                navigate(data.onboarding?.next || redirectTo, { replace: true });
             }
         } catch (err) {
             const msg = loginErrorMessage(err, t);
@@ -165,8 +169,8 @@ export default function RegisterPage() {
             <BackgroundDecor />
 
             <header className="relative flex items-center justify-between px-4 py-4 md:px-8">
-                <Link to="/" className="flex items-center" aria-label="Sellchase">
-                    <img src="/logo.png" alt="Sellchase" className="h-12 w-auto object-contain md:h-14" />
+                <Link to="/" className="flex items-center" aria-label="Sellchaze">
+                    <img src="/logo.png" alt="Sellchaze" className="h-12 w-auto object-contain md:h-14" />
                 </Link>
                 <LanguageSwitcher />
             </header>
@@ -235,6 +239,16 @@ export default function RegisterPage() {
                                     className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm outline-hidden transition focus:border-brand focus:bg-white focus:ring-2 focus:ring-brand/20"
                                     required
                                 />
+                            </div>
+                            <div className="grid gap-4 md:grid-cols-2">
+                                <div>
+                                    <label htmlFor="reg-company" className="mb-1 block text-sm font-semibold text-slate-900">{t('profile_company', 'Company name')}</label>
+                                    <input id="reg-company" type="text" value={companyName} onChange={(e) => { setCompanyName(e.target.value); if (!storeName) setStoreName(e.target.value); }} className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm outline-hidden transition focus:border-brand focus:bg-white focus:ring-2 focus:ring-brand/20" required />
+                                </div>
+                                <div>
+                                    <label htmlFor="reg-store" className="mb-1 block text-sm font-semibold text-slate-900">{t('store_name', 'Store name')}</label>
+                                    <input id="reg-store" type="text" value={storeName} onChange={(e) => setStoreName(e.target.value)} className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm outline-hidden transition focus:border-brand focus:bg-white focus:ring-2 focus:ring-brand/20" required />
+                                </div>
                             </div>
                             <div className="grid gap-4 md:grid-cols-2">
                                 <div>

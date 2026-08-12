@@ -24,6 +24,19 @@ function resolveBaseURL() {
 
 const baseURL = resolveBaseURL();
 
+function resolveV2BaseURL() {
+    const normalized = String(baseURL || '').replace(/\/$/, '');
+    if (/\/api\/v1$/i.test(normalized)) {
+        return normalized.replace(/\/api\/v1$/i, '/api/v2');
+    }
+    if (/\/v1$/i.test(normalized)) {
+        return normalized.replace(/\/v1$/i, '/v2');
+    }
+    return `${normalized}/api/v2`;
+}
+
+const v2BaseURL = resolveV2BaseURL();
+
 const ACCESS_TOKEN_KEY = 'sellchase_access_token';
 const REFRESH_TOKEN_KEY = 'sellchase_refresh_token';
 
@@ -198,6 +211,23 @@ export function clearTokens() {
     removeToken(REFRESH_TOKEN_KEY);
     removeToken('sellchase_impersonation_backup_access_token');
     removeToken('sellchase_impersonation_backup_refresh_token');
+}
+
+/**
+ * Run a request through the same auth/refresh interceptors against the v2
+ * contract. Keeping one configured Axios instance prevents token behavior from
+ * diverging while v1 and v2 coexist.
+ */
+export function v2Request(config) {
+    const method = String(config?.method || 'get').toLowerCase();
+    const mutating = ['post', 'put', 'patch'].includes(method);
+    const headers = { ...(config?.headers || {}) };
+    if (mutating && !headers['Idempotency-Key']) {
+        headers['Idempotency-Key'] = globalThis.crypto?.randomUUID?.()
+            || `web-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    }
+
+    return api.request({ ...config, headers, baseURL: v2BaseURL });
 }
 
 export default api;

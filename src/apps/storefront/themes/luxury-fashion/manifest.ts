@@ -13,7 +13,7 @@ export const luxuryManifest: ThemeManifest = {
     'Editorial high-fashion minimalism — warm-ivory whitespace, a high-contrast serif over a ' +
     'quiet grotesque, full-bleed photography, sharp corners, hairline rules, and a single ' +
     'champagne-gold flourish. Timeless, premium, Apple-quality.',
-  author: 'SellChase',
+  author: 'Sellchaze',
   archetype: 'Luxury Fashion',
   tags: ['luxury', 'fashion', 'editorial', 'minimal', 'premium'],
   schemaVersion: CURRENT_MANIFEST_SCHEMA_VERSION,

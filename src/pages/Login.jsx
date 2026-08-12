@@ -59,7 +59,7 @@ export default function Login() {
     const [searchParams] = useSearchParams();
     const redirectTo = searchParams.get('redirect') || '/dashboard';
     const { clientId: googleClientId, resolved: googleConfigResolved } = useGoogleOAuthClientId();
-    const [googleRegisterRole, setGoogleRegisterRole] = useState('Supplier');
+    const googleRegisterRole = 'Supplier';
 
     useEffect(() => {
         const token = localStorage.getItem('sellchase_access_token');
@@ -74,7 +74,7 @@ export default function Login() {
             }
         })();
         return () => { cancelled = true; };
-    }, [navigate]);
+    }, [navigate, redirectTo]);
 
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -106,8 +106,8 @@ export default function Login() {
             <BackgroundDecor />
 
             <header className="relative flex items-center justify-between px-4 py-4 md:px-8">
-                <Link to="/" className="flex items-center" aria-label="Sellchase">
-                    <img src="/logo.png" alt="Sellchase" className="h-12 w-auto object-contain md:h-14" />
+                <Link to="/" className="flex items-center" aria-label="Sellchaze">
+                    <img src="/logo.png" alt="Sellchaze" className="h-12 w-auto object-contain md:h-14" />
                 </Link>
                 <LanguageSwitcher />
             </header>

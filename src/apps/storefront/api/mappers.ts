@@ -27,10 +27,11 @@ function toNumber(value: string | number | null | undefined): number {
   return 0;
 }
 
-export function toProductCard(product: ApiProduct, currency: string): ProductCardModel {
-  const price = toNumber(product.price);
-  const compare = product.compare_price != null ? toNumber(product.compare_price) : undefined;
+export function toProductCard(product: ApiProduct, currency: string, multiplier = 1): ProductCardModel {
+  const price = toNumber(product.price) * multiplier;
+  const compare = product.compare_price != null ? toNumber(product.compare_price) * multiplier : undefined;
   const image = product.image_url ?? product.image ?? undefined;
+  const responsive = product.image_responsive ?? undefined;
   const hover = product.images && product.images.length > 1 ? product.images[1] : undefined;
   const tags = product.tags?.filter((t): t is string => typeof t === 'string' && t.trim().length > 0);
 
@@ -42,7 +43,12 @@ export function toProductCard(product: ApiProduct, currency: string): ProductCar
     price,
     currency,
     ...(compare && compare > price ? { compareAtPrice: compare } : {}),
-    ...(image ? { image: { src: image, alt: product.name } } : {}),
+    ...(image ? { image: {
+      src: responsive?.src ?? image,
+      alt: product.name,
+      ...(responsive?.srcset ? { srcSet: responsive.srcset } : {}),
+      ...(responsive?.sizes ? { sizes: responsive.sizes } : {}),
+    } } : {}),
     ...(hover ? { hoverImage: { src: hover, alt: '' } } : {}),
     ...(product.is_featured ? { badge: 'Featured' } : {}),
     ...(typeof product.rating === 'number' ? { rating: product.rating } : {}),
@@ -93,7 +99,15 @@ export function productImages(product: ApiProduct): ProductImage[] {
   if (product.images) for (const src of product.images) list.add(src);
   const primary = product.image_url ?? product.image;
   if (primary) list.add(primary);
-  return Array.from(list).map((src) => ({ src, alt: product.name }));
+  return Array.from(list).map((src) => {
+    const responsive = src === primary ? product.image_responsive : undefined;
+    return {
+      src: responsive?.src ?? src,
+      alt: product.name,
+      ...(responsive?.srcset ? { srcSet: responsive.srcset } : {}),
+      ...(responsive?.sizes ? { sizes: responsive.sizes } : {}),
+    };
+  });
 }
 
 function toVariant(variant: ApiVariant): ProductVariantModel {
@@ -104,12 +118,14 @@ function toVariant(variant: ApiVariant): ProductVariantModel {
   return { id: String(variant.id), label, available, ...(price !== undefined ? { price } : {}) };
 }
 
-export function toProductDetail(product: ApiProduct, currency: string): ProductDetailModel {
-  const base = toProductCard(product, currency);
+export function toProductDetail(product: ApiProduct, currency: string, multiplier = 1): ProductDetailModel {
+  const base = toProductCard(product, currency, multiplier);
   const images = productImages(product);
   // An empty variants array means the product simply has no variants — NOT "every variant is
   // unavailable". Treat only a non-empty list as variant-gated; otherwise the product is buyable.
-  const variants = product.variants && product.variants.length > 0 ? product.variants.map(toVariant) : undefined;
+  const variants = product.variants && product.variants.length > 0
+    ? product.variants.map((variant) => { const mapped = toVariant(variant); return mapped.price === undefined ? mapped : { ...mapped, price: mapped.price * multiplier }; })
+    : undefined;
   const anyAvailable = variants ? variants.some((v) => v.available) : true;
   // Security: product descriptions are merchant-authored HTML rendered into shoppers' browsers via
   // `dangerouslySetInnerHTML` by the themes. Sanitise centrally here (defence-in-depth) so every

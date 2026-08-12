@@ -30,7 +30,7 @@ function pkg(version = '1.0.0', over: Partial<Parameters<typeof buildPackage>[0]
       name: 'Test Theme',
       version,
       minEngineVersion: '1.0.0',
-      author: 'SellChase',
+      author: 'Sellchaze',
       archetype: 'Test',
       capabilities: ['rtl'],
       license: { type: 'free' },

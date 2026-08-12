@@ -36,8 +36,8 @@ ChartJS.register(
     Filler,
 );
 
-const BRAND = '#004BB4';
-const STATUS_COLORS = ['#004BB4', '#00C0A9', '#f59e0b', '#6366f1', '#ec4899', '#0ea5e9', '#64748b'];
+const BRAND = '#0D7382';
+const STATUS_COLORS = ['#0D7382', '#76F0D5', '#f59e0b', '#6366f1', '#ec4899', '#38bdf8', '#64748b'];
 
 /**
  * @param {object} props
@@ -56,8 +56,8 @@ export default function DashboardAnalytics({ stats, counts }) {
         [isSupplierMode, can],
     );
 
-    const ordersChart = Array.isArray(stats?.orders_chart) ? stats.orders_chart : [];
-    const byStatus = Array.isArray(stats?.orders_by_status) ? stats.orders_by_status : [];
+    const ordersChart = useMemo(() => Array.isArray(stats?.orders_chart) ? stats.orders_chart : [], [stats?.orders_chart]);
+    const byStatus = useMemo(() => Array.isArray(stats?.orders_by_status) ? stats.orders_by_status : [], [stats?.orders_by_status]);
     const recentRaw = Array.isArray(stats?.recent_orders) ? stats.recent_orders : [];
 
     const lineData = useMemo(() => {
@@ -75,7 +75,7 @@ export default function DashboardAnalytics({ stats, counts }) {
                     label: t('dashboard_chart_orders_7d'),
                     data: ordersChart.map((r) => r.orders),
                     borderColor: BRAND,
-                    backgroundColor: 'rgba(0, 75, 180, 0.12)',
+                    backgroundColor: 'rgba(13, 115, 130, 0.12)',
                     fill: true,
                     tension: 0.35,
                     pointRadius: 4,
@@ -124,7 +124,7 @@ export default function DashboardAnalytics({ stats, counts }) {
                     label: t('dashboard_chart_pipeline'),
                     data: values,
                     backgroundColor: labels.map((_, i) =>
-                        i % 2 === 0 ? 'rgba(0, 75, 180, 0.88)' : 'rgba(0, 192, 169, 0.88)',
+                        i % 2 === 0 ? 'rgba(13, 115, 130, 0.9)' : 'rgba(22, 156, 136, 0.82)',
                     ),
                     borderRadius: 8,
                     borderSkipped: false,
@@ -224,7 +224,7 @@ export default function DashboardAnalytics({ stats, counts }) {
 
             {showOrderCharts ? (
                 <div className="grid gap-6 lg:grid-cols-2">
-                    <div className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-card md:p-6">
+                    <div className="rounded-2xl border border-slate-200/70 bg-white p-5 shadow-[0_1px_2px_rgba(15,23,42,0.03)] md:p-6">
                         <h3 className="mb-4 flex items-center gap-2 text-sm font-semibold text-slate-800">
                             <HiOutlineArrowTrendingUp className="h-5 w-5 shrink-0 text-brand" aria-hidden />
                             {t('dashboard_chart_orders_7d')}
@@ -240,7 +240,7 @@ export default function DashboardAnalytics({ stats, counts }) {
                         </div>
                     </div>
 
-                    <div className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-card md:p-6">
+                    <div className="rounded-2xl border border-slate-200/70 bg-white p-5 shadow-[0_1px_2px_rgba(15,23,42,0.03)] md:p-6">
                         <h3 className="mb-4 flex items-center gap-2 text-sm font-semibold text-slate-800">
                             <HiOutlineChartPie className="h-5 w-5 shrink-0 text-accent-dark" aria-hidden />
                             {t('dashboard_chart_by_status')}
@@ -259,7 +259,7 @@ export default function DashboardAnalytics({ stats, counts }) {
             ) : null}
 
             {showPipelineBar ? (
-                <div className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-card md:p-6">
+                <div className="rounded-2xl border border-slate-200/70 bg-white p-5 shadow-[0_1px_2px_rgba(15,23,42,0.03)] md:p-6">
                     <h3 className="mb-4 flex items-center gap-2 text-sm font-semibold text-slate-800">
                         <HiOutlineQueueList className="h-5 w-5 shrink-0 text-brand-dark" aria-hidden />
                         {isSupplierMode ? t('dashboard_chart_supplier_pipeline') : t('dashboard_chart_pipeline')}
@@ -275,7 +275,7 @@ export default function DashboardAnalytics({ stats, counts }) {
             ) : null}
 
             {showRecentOrders ? (
-                <div className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-card md:p-6">
+                <div className="rounded-2xl border border-slate-200/70 bg-white p-5 shadow-[0_1px_2px_rgba(15,23,42,0.03)] md:p-6">
                     <h3 className="mb-4 text-sm font-semibold text-slate-800">{t('dashboard_recent_orders')}</h3>
                     <div className="overflow-x-auto rounded-xl ring-1 ring-slate-100">
                         <table className="min-w-full text-start text-sm">

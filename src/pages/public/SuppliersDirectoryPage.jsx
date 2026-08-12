@@ -38,7 +38,7 @@ export default function SuppliersDirectoryPage() {
 
     const description = t(
         'sup_dir_seo_desc',
-        'Browse verified factories and suppliers across Egypt by sector and specialty. Explore manufacturer profiles, product catalogs and contact details on Sellchase.',
+        'Browse verified factories and suppliers across Egypt by sector and specialty. Explore manufacturer profiles, product catalogs and contact details on Sellchaze.',
     );
 
     // Structured data (only once the sectors have loaded): an ItemList of the
@@ -48,10 +48,10 @@ export default function SuppliersDirectoryPage() {
               {
                   '@context': 'https://schema.org',
                   '@type': 'WebSite',
-                  name: 'Sellchase Factory & Supplier Directory',
+                  name: 'Sellchaze Factory & Supplier Directory',
                   url: `${ORIGIN}/suppliers`,
                   description,
-                  publisher: { '@type': 'Organization', name: 'Sellchase', url: ORIGIN, logo: `${ORIGIN}/logo.png` },
+                  publisher: { '@type': 'Organization', name: 'Sellchaze', url: ORIGIN, logo: `${ORIGIN}/logo.png` },
               },
               {
                   '@context': 'https://schema.org',
@@ -71,7 +71,7 @@ export default function SuppliersDirectoryPage() {
     return (
         <div className="mx-auto max-w-6xl px-5 py-10">
             <SEO
-                title={t('sup_dir_seo_title', 'Factory & Supplier Directory in Egypt | Sellchase')}
+                title={t('sup_dir_seo_title', 'Factory & Supplier Directory in Egypt | Sellchaze')}
                 description={description}
                 canonical={`${ORIGIN}/suppliers`}
                 jsonLd={jsonLd}

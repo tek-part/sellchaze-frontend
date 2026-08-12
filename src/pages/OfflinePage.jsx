@@ -1,4 +1,3 @@
-import { useNavigate } from 'react-router-dom';
 import AppStatusScreen from '../components/AppStatusScreen';
 
 function hasToken() {
@@ -6,7 +5,6 @@ function hasToken() {
 }
 
 export default function OfflinePage() {
-    const navigate = useNavigate();
     const authed = hasToken();
 
     return (

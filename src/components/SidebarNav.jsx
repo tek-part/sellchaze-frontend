@@ -119,7 +119,6 @@ export default function SidebarNav({ isAdmin = false, isSupplier = false, roles 
     const isSupplierOnly = isSupplier && !isAdmin;
     const canViewMonitoring = can('monitoring-live-view');
     const openOrders = usePathPrefix('/orders');
-    const openQuotations = usePathPrefix('/quotations');
     const openDeals = usePathPrefix('/deals');
     const openSettings = usePathPrefix('/settings');
     const openNotifications = usePathPrefix('/notifications');

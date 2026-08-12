@@ -21,7 +21,10 @@ export function StoreImage(props: StoreImageProps): ReactElement {
   if (!src || failed) {
     const letter = (monogram ?? (alt.trim().charAt(0) || '·')).toUpperCase();
     return (
-      <span className={cn('sf-img-fallback', className)} role="img" aria-label={alt}>
+      <span
+        className={cn('sf-img-fallback', className)}
+        {...(alt.trim() ? { role: 'img', 'aria-label': alt } : { 'aria-hidden': true })}
+      >
         <span aria-hidden>{letter}</span>
       </span>
     );

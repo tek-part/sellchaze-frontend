@@ -30,8 +30,8 @@ export function WishlistPage(): ReactElement {
   const wishQ = useAsync(() => (customer ? getWishlist() : Promise.resolve({ data: [] })), [customer?.id]);
 
   const products = useMemo(
-    () => (wishQ.data ? wishQ.data.data.map((p) => toProductCard(p, store.currency)) : []),
-    [wishQ.data, store.currency],
+    () => (wishQ.data ? wishQ.data.data.map((p) => toProductCard(p, store.currency, store.currencyMultipliers[store.currency] ?? 1)) : []),
+    [wishQ.data, store.currency, store.currencyMultipliers],
   );
 
   if (tpl) {

@@ -425,7 +425,7 @@ export default function PublicProfilePage() {
                     <SimilarSuppliers username={username} />
 
                     <div className="pb-10 text-center text-xs text-slate-400">
-                        <Link to="/" className="hover:text-brand">B2B-Sellchase</Link>
+                        <Link to="/" className="hover:text-brand">B2B-Sellchaze</Link>
                     </div>
                 </div>
             </div>

@@ -65,7 +65,7 @@ export default function InventoryPage() {
     }, [page, perPage, warehouseId, productId, lowStock]);
 
     useEffect(() => {
-        if (!can('products-list')) {
+        if (!permissions.includes('products-list')) {
             return;
         }
         api
@@ -79,7 +79,7 @@ export default function InventoryPage() {
     }, [warehouseId, productId, lowStock, perPage]);
 
     useEffect(() => {
-        if (!can('products-list')) {
+        if (!permissions.includes('products-list')) {
             return;
         }
         setLoading(true);
@@ -103,10 +103,10 @@ export default function InventoryPage() {
     }, [permissions, loadParams]);
 
     useEffect(() => {
-        if (!showAdd || !can('products-edit')) {
+        if (!showAdd || !permissions.includes('products-edit')) {
             return;
         }
-        if (!can('products-list')) {
+        if (!permissions.includes('products-list')) {
             return;
         }
         let cancelled = false;

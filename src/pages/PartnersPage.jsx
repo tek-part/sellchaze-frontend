@@ -87,7 +87,7 @@ export default function PartnersPage() {
         }
     };
 
-    const filterRows = (rows) => {
+    const filterRows = useCallback((rows) => {
         const q = search.trim().toLowerCase();
         if (!q) return rows;
         return rows.filter((r) =>
@@ -96,10 +96,10 @@ export default function PartnersPage() {
             (r.username || '').toLowerCase().includes(q) ||
             (r.company || '').toLowerCase().includes(q)
         );
-    };
+    }, [search]);
 
-    const filteredSuppliers = useMemo(() => filterRows(data.suppliers), [data.suppliers, search]);
-    const filteredMerchants = useMemo(() => filterRows(data.merchants), [data.merchants, search]);
+    const filteredSuppliers = useMemo(() => filterRows(data.suppliers), [data.suppliers, filterRows]);
+    const filteredMerchants = useMemo(() => filterRows(data.merchants), [data.merchants, filterRows]);
     const incoming = useMemo(() => data.pending_invitations.filter((i) => i.direction === 'incoming'), [data.pending_invitations]);
     const outgoing = useMemo(() => data.pending_invitations.filter((i) => i.direction !== 'incoming'), [data.pending_invitations]);
 

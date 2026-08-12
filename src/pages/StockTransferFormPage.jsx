@@ -35,7 +35,7 @@ export default function StockTransferFormPage() {
     const [submitting, setSubmitting] = useState(false);
 
     useEffect(() => {
-        if (!can('products-list')) {
+        if (!permissions.includes('products-list')) {
             return;
         }
         api
@@ -54,7 +54,7 @@ export default function StockTransferFormPage() {
     }, [permissions]);
 
     useEffect(() => {
-        if (!can('products-edit')) {
+        if (!permissions.includes('products-edit')) {
             return;
         }
         const tmr = setTimeout(() => {

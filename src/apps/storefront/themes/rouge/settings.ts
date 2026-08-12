@@ -42,7 +42,7 @@ export const rougeSettingsSchema: ThemeSettingsSchema = [
     label: 'Sale — hot petal',
     group: 'Appearance',
     help: 'Sale prices, discount %, urgency, “back in stock”. Reserved — never decorative.',
-    default: '#E4577E',
+    default: '#A62D50',
   },
   {
     id: 'glow_enabled',

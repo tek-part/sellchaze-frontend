@@ -421,7 +421,7 @@ export default function WavexChatsPage() {
                 gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.25);
                 osc.start(ctx.currentTime);
                 osc.stop(ctx.currentTime + 0.25);
-            } catch {}
+            } catch { return; }
         };
         notifAudioRef.current = { play: playNotif };
     }, []);
@@ -580,7 +580,7 @@ export default function WavexChatsPage() {
                 loadingChatsRef.current = false;
             }
         }
-    }, []);  // eslint-disable-line react-hooks/exhaustive-deps
+    }, []);
 
     loadChatsRef.current = loadChats;
 

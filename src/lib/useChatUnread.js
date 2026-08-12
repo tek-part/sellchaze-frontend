@@ -15,7 +15,7 @@ export function useChatUnread() {
         try {
             const { data } = await api.get('/chat/unread-count');
             setUnread(data.unread || 0);
-        } catch (e) { /* noop */ }
+        } catch { /* noop */ }
     }, []);
 
     useEffect(() => {
@@ -36,7 +36,7 @@ export function useChatUnread() {
                 if (echo && id) {
                     echo.private(`App.Models.User.${id}`).notification(() => { if (alive) refresh(); });
                 }
-            } catch (e) { /* noop */ }
+            } catch { /* noop */ }
         })();
 
         return () => {

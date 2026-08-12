@@ -3,11 +3,11 @@ import { useTranslation } from 'react-i18next';
 import { useEffect, useState } from 'react';
 import ReactCountryFlag from 'react-country-flag';
 
-const SUPPORT_EMAIL = 'sellcahase@wigpleasure.com';
+const SUPPORT_EMAIL = 'sellchaze@wigpleasure.com';
 
 function Logo({ className = 'h-8 w-8' }) {
     return (
-        <img src="/logo.png" alt="Sellchase" className={className + ' object-contain'} />
+        <img src="/logo.png" alt="Sellchaze" className={className + ' object-contain'} />
     );
 }
 
@@ -43,7 +43,7 @@ function FlagGB({ className = '' }) {
 }
 
 function LanguageSwitch({ compact = false }) {
-    const { i18n, t } = useTranslation();
+    const { i18n } = useTranslation();
     const current = i18n.resolvedLanguage || i18n.language || 'en';
     const toggle = () => {
         const next = current === 'ar' ? 'en' : 'ar';
@@ -123,7 +123,7 @@ export default function PublicLayout() {
             {/* Floating pill navbar */}
             <header className="sticky top-4 z-40 px-4 pt-2 md:top-6 md:pt-4">
                 <div className="mx-auto flex max-w-5xl items-center justify-between gap-3 rounded-full border border-slate-200/70 bg-white/90 px-3 py-2 shadow-[0_8px_30px_rgba(15,23,42,0.08)] backdrop-blur-md">
-                    <Link to="/" className="flex items-center pl-1" aria-label="Sellchase">
+                    <Link to="/" className="flex items-center pl-1" aria-label="Sellchaze">
                         <Logo className="h-14 w-auto md:h-16" />
                     </Link>
 
@@ -226,7 +226,7 @@ export default function PublicLayout() {
                     <div className="md:col-span-2">
                         <div className="flex items-center gap-2">
                             <Logo className="h-8 w-8" />
-                            <span className="text-lg font-bold text-slate-900">Sellchase</span>
+                            <span className="text-lg font-bold text-slate-900">Sellchaze</span>
                         </div>
                         <p className="mt-3 max-w-sm text-sm text-slate-500">{t('landing_tagline')}</p>
                         <a

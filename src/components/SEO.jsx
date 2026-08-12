@@ -15,6 +15,7 @@ import { useEffect } from 'react';
  * prerender — this component populates the head the prerenderer snapshots.
  */
 export default function SEO({ title, description, canonical, ogImage, jsonLd, noIndex = false }) {
+    const jsonLdText = jsonLd ? JSON.stringify(jsonLd) : null;
     useEffect(() => {
         const url = canonical || (typeof window !== 'undefined' ? window.location.href : undefined);
         const image = ogImage || (typeof window !== 'undefined' ? window.location.origin + '/logo.png' : '/logo.png');
@@ -70,17 +71,17 @@ export default function SEO({ title, description, canonical, ogImage, jsonLd, no
         upsert('meta[name="twitter:image"]', 'meta', { name: 'twitter:image', content: image });
 
         // JSON-LD structured data (always freshly created + removed for this instance).
-        if (jsonLd) {
+        if (jsonLdText) {
             const script = document.createElement('script');
             script.type = 'application/ld+json';
             script.setAttribute('data-seo-jsonld', '');
-            script.textContent = JSON.stringify(jsonLd);
+            script.textContent = jsonLdText;
             head.appendChild(script);
             cleanups.push(() => script.remove());
         }
 
         return () => { for (const fn of cleanups.reverse()) fn(); };
-    }, [title, description, canonical, ogImage, noIndex, JSON.stringify(jsonLd ?? null)]);
+    }, [title, description, canonical, ogImage, noIndex, jsonLdText]);
 
     return null;
 }

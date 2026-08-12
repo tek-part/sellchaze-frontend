@@ -1,4 +1,3 @@
-import { useNavigate } from 'react-router-dom';
 import AppStatusScreen from '../components/AppStatusScreen';
 
 function hasToken() {
@@ -9,7 +8,6 @@ function hasToken() {
  * @param {{ onRetry?: () => void }} [props] — when set (e.g. from error boundary), retry resets UI without full reload
  */
 export default function ServerErrorPage({ onRetry } = {}) {
-    const navigate = useNavigate();
     const authed = hasToken();
 
     return (

@@ -36,7 +36,7 @@ export default function StoresPage() {
     const [statusFilter, setStatusFilter] = useState('');
     const [confirmOne, setConfirmOne] = useState(null);
     const [deleting, setDeleting] = useState(false);
-    const [listNonce, setListNonce] = useState(0);
+    const [listNonce] = useState(0);
 
     const loadParams = useCallback(
         () => ({

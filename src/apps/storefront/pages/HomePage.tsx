@@ -35,7 +35,7 @@ export function HomePage(): ReactElement | null {
     const dev = previewOrDev();
     const b = bundle.data?.data;
     const cards = (arr: ReadonlyArray<ApiProduct> | undefined): ProductCardModel[] =>
-      arr ? arr.map((p) => toProductCard(p, currency)) : [];
+      arr ? arr.map((p) => toProductCard(p, currency, store.currencyMultipliers[currency] ?? 1)) : [];
     // Pick the active-locale slice of a { en, ar } content payload, falling back to the other locale.
     const pick = (c: ApiLocaleContent): Record<string, unknown> | null =>
       c ? (c[locale] ?? c[locale === 'ar' ? 'en' : 'ar'] ?? null) : null;
@@ -86,7 +86,7 @@ export function HomePage(): ReactElement | null {
         ...extras,
       },
     };
-  }, [bundle.data, bundle.loading, bundle.error, currency, store.name, manifest.id, locale]);
+  }, [bundle.data, bundle.loading, bundle.error, currency, store.currencyMultipliers, store.name, manifest.id, locale]);
 
   const site = typeof window !== 'undefined' ? window.location.origin : '';
 

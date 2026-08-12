@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Link, useParams, useSearchParams } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import useStoreScope from '../hooks/useStoreScope';
 import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
@@ -19,7 +19,7 @@ const REVIEW_STATUS_STYLE = {
 };
 
 export default function StoreReviewsPage() {
-    const { id, apiBase, uiBase } = useStoreScope();
+    const { id, apiBase } = useStoreScope();
     const { t } = useTranslation();
     const [searchParams, setSearchParams] = useSearchParams();
     const productId = searchParams.get('product') || '';
@@ -49,7 +49,7 @@ export default function StoreReviewsPage() {
             .then(({ data }) => { setRows(data.data ?? []); setMeta(data.meta ?? null); })
             .catch((e) => setErr(e.response?.data?.message || e.message))
             .finally(() => setLoading(false));
-    }, [id, loadParams]);
+    }, [apiBase, loadParams]);
 
     useEffect(() => { reload(); }, [reload]);
 

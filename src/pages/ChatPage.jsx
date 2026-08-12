@@ -55,7 +55,7 @@ export default function ChatPage() {
             const { data } = await api.get('/chat/conversations');
             setConvs(data.data || []);
             window.dispatchEvent(new CustomEvent('chat:unread-changed'));
-        } catch (e) { /* noop */ }
+        } catch { /* noop */ }
     }, []);
 
     useEffect(() => {
@@ -64,7 +64,7 @@ export default function ChatPage() {
             try {
                 const { data } = await api.get('/auth/me');
                 if (alive) setMe(data.data || data.user || data);
-            } catch (e) { /* noop */ }
+            } catch { /* noop */ }
             await loadConvs();
             if (alive) setLoading(false);
         })();
@@ -80,6 +80,17 @@ export default function ChatPage() {
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [me]);
+
+    // Deep-link from a procurement request to an existing company-scoped conversation.
+    useEffect(() => {
+        const conversationId = Number(searchParams.get('c'));
+        const conversation = convs.find((item) => item.id === conversationId);
+        if (conversation) {
+            openConv(conversation);
+            setSearchParams({}, { replace: true });
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [convs]);
 
     // subscribe to the open conversation
     useEffect(() => {
@@ -99,7 +110,7 @@ export default function ChatPage() {
             loadConvs();
         });
         return () => {
-            try { echo.leave(channel); } catch (err) { /* noop */ }
+            try { echo.leave(channel); } catch { /* noop */ }
         };
     }, [current, me, loadConvs]);
 
@@ -112,14 +123,14 @@ export default function ChatPage() {
             scrollDown();
             markRead(conv.id);
             loadConvs();
-        } catch (e) { /* noop */ }
+        } catch { /* noop */ }
     }
 
     async function markRead(id) {
         try {
             await api.post(`/chat/conversations/${id}/read`);
             window.dispatchEvent(new CustomEvent('chat:unread-changed'));
-        } catch (e) { /* noop */ }
+        } catch { /* noop */ }
     }
 
     async function send() {
@@ -131,7 +142,7 @@ export default function ChatPage() {
             setMessages((prev) => (prev.some((m) => m.id === data.id) ? prev : [...prev, data]));
             scrollDown();
             loadConvs();
-        } catch (e) { /* noop */ }
+        } catch { /* noop */ }
     }
 
     async function openNew() {
@@ -140,7 +151,7 @@ export default function ChatPage() {
         try {
             const { data } = await api.get('/public/directory', { params: { per_page: 48 } });
             setDir((data.data || []).filter((u) => u.user_id && u.user_id !== me?.id));
-        } catch (e) { setDir([]); }
+        } catch { setDir([]); }
         setDirLoading(false);
     }
 
@@ -150,11 +161,11 @@ export default function ChatPage() {
             const { data } = await api.post('/chat/conversations', { user_id: userId });
             await loadConvs();
             openConv({ id: data.id, other_user: data.other_user });
-        } catch (e) { /* noop */ }
+        } catch { /* noop */ }
     }
 
     const fmt = (iso) => {
-        try { return new Date(iso).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }); } catch (e) { return ''; }
+        try { return new Date(iso).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }); } catch { return ''; }
     };
     const dirFiltered = dir.filter((u) => !search || (u.name || '').toLowerCase().includes(search.toLowerCase()) || (u.company || '').toLowerCase().includes(search.toLowerCase()));
 
@@ -182,6 +193,7 @@ export default function ChatPage() {
                                     <Avatar name={o.name} src={o.avatar} />
                                     <div className="min-w-0 flex-1">
                                         <div className="truncate text-sm font-semibold text-slate-900">{o.name || 'User'}</div>
+                                        {c.context && <div className="truncate text-[11px] font-semibold text-brand">{t('chat_procurement', 'Procurement')} · {c.context.buyer_organization?.name} ↔ {c.context.supplier_organization?.name}</div>}
                                         <div className="truncate text-xs text-slate-400">{c.last_message?.body || ''}</div>
                                     </div>
                                     {c.unread > 0 && <span className="flex h-5 min-w-[20px] items-center justify-center rounded-full bg-brand px-1.5 text-[11px] font-bold text-white">{c.unread}</span>}
@@ -205,7 +217,7 @@ export default function ChatPage() {
                                 <Avatar name={current.other_user?.name} src={current.other_user?.avatar} size={40} />
                                 <div>
                                     <div className="text-base font-semibold text-slate-900">{current.other_user?.name || 'User'}</div>
-                                    <div className="flex items-center gap-1.5 text-xs text-emerald-600"><span className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-500" /> {t('chat_online', 'online')}</div>
+                                    {current.context ? <div className="text-xs font-semibold text-brand">{t('chat_procurement', 'Procurement')} · {current.context.buyer_organization?.name} ↔ {current.context.supplier_organization?.name}</div> : <div className="flex items-center gap-1.5 text-xs text-emerald-600"><span className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-500" /> {t('chat_online', 'online')}</div>}
                                 </div>
                             </div>
                             <div ref={msgsRef} className="flex min-h-0 flex-1 flex-col gap-2.5 overflow-y-auto bg-slate-50 p-5">

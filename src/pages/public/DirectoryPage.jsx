@@ -36,7 +36,7 @@ export default function DirectoryPage() {
         try {
             const { data } = await api.get('/public/directory', { params });
             setItems(data.data || []);
-        } catch (e) { setItems([]); }
+        } catch { setItems([]); }
         setLoading(false);
     }, [filter, q]);
 
@@ -55,7 +55,7 @@ export default function DirectoryPage() {
                     {t('dir_title', 'The B2B directory of trusted partners')}
                 </h1>
                 <p className="mx-auto mt-4 max-w-xl text-lg text-slate-500">
-                    {t('dir_subtitle', 'Discover suppliers and merchants on Sellchase. Open any profile to see their catalog, fields of work, and contacts.')}
+                    {t('dir_subtitle', 'Discover suppliers and merchants on Sellchaze. Open any profile to see their catalog, fields of work, and contacts.')}
                 </p>
             </div>
 

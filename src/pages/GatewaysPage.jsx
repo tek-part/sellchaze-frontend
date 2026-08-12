@@ -68,7 +68,7 @@ export default function GatewaysPage() {
     useEffect(() => setPage(1), [debouncedSearch, perPage]);
 
     useEffect(() => {
-        if (!can('gateways-list')) {
+        if (!(isAdmin || permissions.includes('gateways-list'))) {
             return;
         }
         setLoading(true);
@@ -81,7 +81,7 @@ export default function GatewaysPage() {
             })
             .catch((e) => setErr(e.response?.data?.message || e.message))
             .finally(() => setLoading(false));
-    }, [loadParams, isAdmin]); // permissions are effectively static after auth
+    }, [loadParams, isAdmin, permissions]);
     useEffect(() => {
         setSelected(new Set());
     }, [rows]);

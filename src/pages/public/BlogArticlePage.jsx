@@ -68,7 +68,7 @@ export default function BlogArticlePage() {
         description: article.meta_description || article.excerpt,
         image: article.featured_image_url,
         datePublished: article.published_at,
-        author: { '@type': 'Person', name: article.author?.name ?? 'Sellchase' },
+        author: { '@type': 'Person', name: article.author?.name ?? 'Sellchaze' },
     };
 
     return (

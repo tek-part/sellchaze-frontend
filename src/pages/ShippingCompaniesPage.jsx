@@ -46,7 +46,7 @@ export default function ShippingCompaniesPage() {
     useEffect(() => setPage(1), [debouncedSearch, perPage]);
 
     useEffect(() => {
-        if (!can('shipping-companies-list')) {
+        if (!(isAdmin || permissions.includes('shipping-companies-list'))) {
             return;
         }
         setLoading(true);
@@ -59,7 +59,7 @@ export default function ShippingCompaniesPage() {
             })
             .catch((e) => setErr(e.response?.data?.message || e.message))
             .finally(() => setLoading(false));
-    }, [loadParams, isAdmin]);
+    }, [loadParams, isAdmin, permissions]);
     useEffect(() => {
         setSelected(new Set());
     }, [rows]);

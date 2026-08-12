@@ -1,0 +1,16 @@
+{
+  "id": "/",
+  "name": "Sellchaze Store",
+  "short_name": "Sellchaze",
+  "description": "Fast independent commerce storefront powered by Sellchaze",
+  "start_url": "/?source=pwa",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#073f4b",
+  "lang": "ar",
+  "dir": "auto",
+  "icons": [
+    { "src": "/pwa/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}

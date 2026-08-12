@@ -5,7 +5,7 @@ import axios from 'axios';
 import SEO from '../../components/SEO';
 
 const API = import.meta.env.VITE_API_URL || '/api';
-const SUPPORT_EMAIL = 'sellcahase@wigpleasure.com';
+const SUPPORT_EMAIL = 'sellchaze@wigpleasure.com';
 
 export default function ContactPage() {
     const { t } = useTranslation();

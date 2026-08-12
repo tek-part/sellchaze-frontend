@@ -14,7 +14,7 @@ import { text } from './section-settings';
 
 export function ContactSection(props: SectionRenderProps): ReactElement {
   const { t } = useTranslation();
-  const email = text(props.settings, 'email') || 'client.care@selchase.example';
+  const email = text(props.settings, 'email') || 'client.care@sellchaze.example';
   const [form, setForm] = useState({ name: '', email: '', message: '' });
   const set = (key: keyof typeof form) => (e: { target: { value: string } }) => setForm((f) => ({ ...f, [key]: e.target.value }));
 

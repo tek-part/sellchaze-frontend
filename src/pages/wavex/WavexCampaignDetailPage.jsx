@@ -90,13 +90,14 @@ export default function WavexCampaignDetailPage() {
     }, [id]);
 
     useEffect(() => { setLoading(true); }, [id]);
-    useEffect(() => { if (!can('wavex-access') || !id) return; void fetch_(); }, [fetch_, id, permissions]);
+    useEffect(() => { if (!permissions.includes('wavex-access') || !id) return; void fetch_(); }, [fetch_, id, permissions]);
 
     const qp = campaign?.queue_progress;
-    useEffect(() => { if (!qp) return; setQSnap({ at: Date.now(), seconds: Math.max(0, Number(qp.seconds_until_next_job) || 0), iso: qp.next_job_available_at || null }); }, [qp?.seconds_until_next_job, qp?.next_job_available_at, qp?.pending_recipients]);
+    useEffect(() => { if (!qp) return; setQSnap({ at: Date.now(), seconds: Math.max(0, Number(qp.seconds_until_next_job) || 0), iso: qp.next_job_available_at || null }); }, [qp]);
     useEffect(() => { const i = setInterval(() => setTick((x) => x + 1), 1000); return () => clearInterval(i); }, []);
-    useEffect(() => { const onVis = () => { if (document.visibilityState === 'visible' && can('wavex-access') && id) void fetch_(); }; document.addEventListener('visibilitychange', onVis); return () => document.removeEventListener('visibilitychange', onVis); }, [fetch_, id, permissions]);
-    useEffect(() => { if (!campaign || (campaign.status !== 'running' && campaign.status !== 'paused')) return; void fetch_(); const ms = () => { const h = document.visibilityState === 'hidden'; return campaign.status === 'running' ? (h ? 3000 : 400) : (h ? 5000 : 3000); }; let tid; const run = () => { void fetch_(); tid = setTimeout(run, ms()); }; tid = setTimeout(run, ms()); const onV = () => { clearTimeout(tid); void fetch_(); tid = setTimeout(run, ms()); }; document.addEventListener('visibilitychange', onV); return () => { clearTimeout(tid); document.removeEventListener('visibilitychange', onV); }; }, [campaign?.status, fetch_]);
+    useEffect(() => { const onVis = () => { if (document.visibilityState === 'visible' && permissions.includes('wavex-access') && id) void fetch_(); }; document.addEventListener('visibilitychange', onVis); return () => document.removeEventListener('visibilitychange', onVis); }, [fetch_, id, permissions]);
+    const campaignStatus = campaign?.status;
+    useEffect(() => { if (campaignStatus !== 'running' && campaignStatus !== 'paused') return; void fetch_(); const ms = () => { const h = document.visibilityState === 'hidden'; return campaignStatus === 'running' ? (h ? 3000 : 400) : (h ? 5000 : 3000); }; let tid; const run = () => { void fetch_(); tid = setTimeout(run, ms()); }; tid = setTimeout(run, ms()); const onV = () => { clearTimeout(tid); void fetch_(); tid = setTimeout(run, ms()); }; document.addEventListener('visibilitychange', onV); return () => { clearTimeout(tid); document.removeEventListener('visibilitychange', onV); }; }, [campaignStatus, fetch_]);
 
     const action = async (path) => { setErr(''); try { const { data } = await api.post(`/wavex/campaigns/${id}${path}`); setCampaign(data?.data ?? data); } catch (e) { setErr(e.response?.data?.message || e.message); } };
     const start = () => action('/start');
@@ -141,6 +142,7 @@ export default function WavexCampaignDetailPage() {
     const delay = Number(campaign?.delay_seconds) || 500;
 
     const liveNext = useMemo(() => {
+        void tick;
         if (!isRunning || !qp) return null;
         if (qSnap.iso) { const ms = Date.parse(qSnap.iso); if (Number.isFinite(ms)) return Math.max(0, Math.ceil((ms - Date.now()) / 1000)); }
         return Math.max(0, qSnap.seconds - Math.floor((Date.now() - qSnap.at) / 1000));

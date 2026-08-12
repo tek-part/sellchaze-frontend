@@ -14,7 +14,7 @@ export const rougeManifest: ThemeManifest = {
     'rouge primary with gilded-rose flourishes, a high-contrast didone display serif over a warm ' +
     'humanist sans, pillowy 16–24px radii, soft rose-bloom elevation, a luminous focus glow, and ' +
     'generous couture spacing. Shade-first merchandising for cosmetics.',
-  author: 'SellChase',
+  author: 'Sellchaze',
   archetype: 'Luxury Beauty',
   tags: ['beauty', 'cosmetics', 'luxury', 'editorial', 'feminine', 'shade-variants'],
   schemaVersion: CURRENT_MANIFEST_SCHEMA_VERSION,

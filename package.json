@@ -1,26 +1,33 @@
 {
-  "name": "sellchase-ui",
+  "name": "sellchaze-ui",
   "private": true,
   "version": "1.0.0",
   "type": "module",
   "engines": {
-    "node": ">=20.11 <23",
+    "node": "^20.19.0 || >=22.12.0",
     "npm": ">=10"
   },
   "scripts": {
     "dev": "vite",
-    "api:install": "cd ../Sellchase-api && composer install",
-    "dev:stack": "concurrently -k -n laravel,vite -c blue,magenta \"cd ../Sellchase-api && php artisan serve --host=127.0.0.1 --port=8000\" \"vite\"",
-    "build": "vite build && node scripts/generate-sitemap.mjs",
+    "api:install": "cd ../sellchaze-backend && composer install",
+    "api:generate": "openapi-typescript ../sellchaze-backend/openapi/v2.yaml -o src/api/generated/v2.d.ts",
+    "api:check": "npm run api:generate && git diff --exit-code -- src/api/generated/v2.d.ts",
+    "dev:stack": "concurrently -k -n laravel,vite -c blue,magenta \"cd ../sellchaze-backend && php artisan serve --host=127.0.0.1 --port=8000\" \"vite\"",
+    "build": "vite build && node scripts/generate-sitemap.mjs && node scripts/check-bundle-budgets.mjs",
     "preview": "vite preview",
     "lint": "eslint .",
     "lint:strict": "eslint src/apps/storefront src/shared --max-warnings 0",
     "typecheck": "tsc -p tsconfig.storefront.json --noEmit",
     "typecheck:storefront": "tsc -p tsconfig.storefront.json --noEmit",
     "test": "vitest run",
+    "test:a11y": "playwright test tests/browser/storefront-accessibility.spec.ts --config=playwright.config.ts",
+    "test:perf": "playwright test tests/browser/storefront-performance.spec.ts --config=playwright.config.ts",
+    "test:visual": "playwright test tests/browser/storefront-visual-regression.spec.ts --config=playwright.config.ts",
+    "test:pwa": "playwright test tests/browser/storefront-pwa.spec.ts --config=playwright.config.ts",
+    "theme:dev": "node scripts/theme-dev.mjs",
     "pack:themes": "vite-node scripts/pack-themes.ts",
     "validate": "npm run lint && npm run lint:strict && npm run typecheck && npm run test",
-    "ci": "npm run validate && npm run build"
+    "ci": "npm run validate && npm run build && npm run test:a11y && npm run test:perf && npm run test:visual && npm run test:pwa"
   },
   "dependencies": {
     "@headlessui/react": "^2.2.9",
@@ -29,7 +36,7 @@
     "@tiptap/pm": "^3.22.1",
     "@tiptap/react": "^3.22.1",
     "@tiptap/starter-kit": "^3.22.1",
-    "axios": "^1.7.9",
+    "axios": "^1.19.0",
     "chart.js": "^4.5.1",
     "framer-motion": "^12.38.0",
     "i18next": "^23.16.0",
@@ -43,26 +50,33 @@
     "react-hot-toast": "^2.6.0",
     "react-i18next": "^15.1.0",
     "react-icons": "^5.3.0",
-    "react-quill-new": "^3.8.3",
-    "react-router-dom": "^6.28.0",
-    "xlsx": "^0.18.5"
+    "react-quill-new": "3.7.0",
+    "react-router-dom": "^7.18.2",
+    "write-excel-file": "^4.1.1"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.10.2",
     "@eslint/js": "^9.39.5",
     "@tailwindcss/postcss": "^4.3.2",
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
-    "@vitejs/plugin-react": "^4.3.4",
-    "concurrently": "^9.1.2",
+    "@vitejs/plugin-react": "^6.0.5",
+    "concurrently": "^10.0.4",
     "eslint": "^9.39.5",
+    "eslint-plugin-react": "^7.37.5",
     "eslint-plugin-react-hooks": "^5.2.0",
     "eslint-plugin-react-refresh": "^0.4.26",
     "globals": "^17.7.0",
+    "openapi-typescript": "^7.13.0",
+    "playwright": "^1.55.1",
     "postcss": "^8.4.49",
     "tailwindcss": "^4.3.2",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.64.0",
-    "vite": "^5.4.11",
-    "vitest": "^2.1.9"
+    "vite": "^8.2.1",
+    "vitest": "^3.2.7"
+  },
+  "overrides": {
+    "quill": "2.0.2"
   }
 }

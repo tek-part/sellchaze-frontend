@@ -60,7 +60,7 @@ export default function SpecialtyPage() {
     const description =
         specialtyMeta?.seo_description ||
         specialtyMeta?.intro ||
-        t('sup_dir_specialty_seo_fallback', 'Browse verified {{specialty}} suppliers in Egypt on Sellchase — view profiles, product catalogs and contact details.', { specialty: specialtyMeta?.name || specialty });
+        t('sup_dir_specialty_seo_fallback', 'Browse verified {{specialty}} suppliers in Egypt on Sellchaze — view profiles, product catalogs and contact details.', { specialty: specialtyMeta?.name || specialty });
 
     // BreadcrumbList: Home › Directory › {sector} › {specialty}. Built once the
     // specialty meta has loaded so URLs/names reflect real data.

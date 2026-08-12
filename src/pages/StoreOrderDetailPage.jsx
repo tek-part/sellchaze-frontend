@@ -18,7 +18,7 @@ const TRANSITIONS = {
 
 export default function StoreOrderDetailPage() {
     const { orderId } = useParams();
-    const { id, apiBase, uiBase } = useStoreScope();
+    const { apiBase, uiBase } = useStoreScope();
     const { t } = useTranslation();
 
     const [order, setOrder] = useState(null);
@@ -31,7 +31,7 @@ export default function StoreOrderDetailPage() {
         api.get(`${apiBase}/orders/${orderId}`)
             .then(({ data }) => setOrder(data.data))
             .catch((e) => setErr(e.response?.data?.message || e.message));
-    }, [id, orderId]);
+    }, [apiBase, orderId]);
 
     useEffect(() => { load(); }, [load]);
 

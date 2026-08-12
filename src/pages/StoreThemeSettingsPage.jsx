@@ -38,9 +38,20 @@ export default function StoreThemeSettingsPage() {
     const [schema, setSchema] = useState([]);
     const [values, setValues] = useState({});
     const [themeName, setThemeName] = useState('');
+    const [themeKey, setThemeKey] = useState('');
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
+    const [savedValues, setSavedValues] = useState({});
+    const [saveStatus, setSaveStatus] = useState('saved');
+    const [revisions, setRevisions] = useState([]);
     const [err, setErr] = useState('');
+
+    const loadRevisions = useCallback(async () => {
+        try {
+            const { data } = await api.get(`${apiBase}/themes/${themeId}/revisions`);
+            setRevisions(data.data || []);
+        } catch { setRevisions([]); }
+    }, [apiBase, themeId]);
 
     const load = useCallback(() => {
         setLoading(true);
@@ -49,7 +60,10 @@ export default function StoreThemeSettingsPage() {
                 const s = data.version?.settings_schema ?? [];
                 setSchema(s);
                 setThemeName(data.theme?.name ?? '');
-                setValues({ ...defaultsOf(s), ...(data.install?.settings ?? {}) });
+                setThemeKey(data.theme?.key ?? '');
+                const loaded = { ...defaultsOf(s), ...(data.install?.settings ?? {}) };
+                setValues(loaded);
+                setSavedValues(loaded);
             })
             .catch((e) => setErr(e.response?.data?.message || e.message))
             .finally(() => setLoading(false));
@@ -57,9 +71,15 @@ export default function StoreThemeSettingsPage() {
 
     useEffect(() => {
         load();
-    }, [load]);
+        loadRevisions();
+    }, [load, loadRevisions]);
 
     const fields = useMemo(() => fieldsOf(schema), [schema]);
+    const livePreviewUrl = useMemo(() => {
+        if (!themeKey) return '';
+        const encoded = btoa(encodeURIComponent(JSON.stringify(values)));
+        return `/?theme=${encodeURIComponent(themeKey)}&preview=1&settings=${encodeURIComponent(encoded)}`;
+    }, [themeKey, values]);
     const errors = useMemo(() => {
         const e = {};
         fields.forEach((f) => {
@@ -70,27 +90,53 @@ export default function StoreThemeSettingsPage() {
     }, [fields, values]);
     const hasErrors = Object.keys(errors).length > 0;
 
-    if (id && !can('stores-edit')) return <Navigate to="/stores" replace />;
-
     const setValue = (fid, v) => setValues((prev) => ({ ...prev, [fid]: v }));
 
-    const save = async () => {
-        if (hasErrors) return;
+    const persist = useCallback(async (snapshot, source, notify = false) => {
         setSaving(true);
+        setSaveStatus('saving');
         try {
             // POST is an explicit backend alias because some production
             // proxies do not preserve PUT before PHP receives it.
-            await api.post(`${apiBase}/themes/settings`, {
-                theme_id: Number(themeId),
-                settings: values,
-            });
-            toast.success(t('theme_settings_saved', 'Settings saved'));
+            await api.post(`${apiBase}/themes/settings`, { theme_id: Number(themeId), settings: snapshot, source });
+            setSavedValues(snapshot);
+            setSaveStatus('saved');
+            await loadRevisions();
+            if (notify) toast.success(t('theme_settings_saved', 'Settings saved'));
         } catch (e) {
+            setSaveStatus('error');
             const serverErrors = e.response?.data?.errors?.settings;
-            toast.error(Array.isArray(serverErrors) ? serverErrors.join(', ') : e.response?.data?.message || e.message);
+            if (notify) toast.error(Array.isArray(serverErrors) ? serverErrors.join(', ') : e.response?.data?.message || e.message);
         } finally {
             setSaving(false);
         }
+    }, [apiBase, loadRevisions, t, themeId]);
+
+    useEffect(() => {
+        if (loading || hasErrors || JSON.stringify(values) === JSON.stringify(savedValues)) return undefined;
+        setSaveStatus('pending');
+        const snapshot = values;
+        const timer = window.setTimeout(() => { persist(snapshot, 'autosave'); }, 900);
+        return () => window.clearTimeout(timer);
+    }, [hasErrors, loading, persist, savedValues, values]);
+
+    const save = async () => {
+        if (hasErrors) return;
+        await persist(values, 'manual', true);
+    };
+
+    const restoreRevision = async (revision) => {
+        try {
+            setSaving(true);
+            const { data } = await api.post(`${apiBase}/themes/${themeId}/revisions/${revision.id}/restore`);
+            const restored = data.data?.settings || {};
+            setValues(restored);
+            setSavedValues(restored);
+            setSaveStatus('saved');
+            await loadRevisions();
+            toast.success(t('theme_revision_restored', 'Revision restored'));
+        } catch (e) { toast.error(e.response?.data?.message || e.message); }
+        finally { setSaving(false); }
     };
 
     const resetDefaults = () => setValues(defaultsOf(schema));
@@ -128,6 +174,7 @@ export default function StoreThemeSettingsPage() {
         }
     };
 
+    if (id && !can('stores-edit')) return <Navigate to="/stores" replace />;
     if (loading) return <p className="p-6 text-sm text-slate-500">…</p>;
 
     return (
@@ -137,6 +184,11 @@ export default function StoreThemeSettingsPage() {
                 <p className="mt-1 text-sm text-slate-500">{themeName}</p>
             </div>
             {err && <p className="rounded-lg border border-red-100 bg-red-50 px-3 py-2 text-sm text-red-700">{err}</p>}
+
+            {livePreviewUrl && <section className="overflow-hidden rounded-2xl border border-slate-200/80 bg-slate-950 shadow-card">
+                <div className="flex items-center justify-between px-4 py-3 text-white"><div><p className="text-sm font-semibold">{t('theme_live_preview', 'Live preview')}</p><p className="text-xs text-slate-400">{t('theme_preview_unsaved', 'Updates instantly while autosave safely persists changes')}</p></div><a href={livePreviewUrl} target="_blank" rel="noreferrer" className="rounded-lg border border-white/20 px-3 py-1.5 text-xs font-semibold">{t('open', 'Open')}</a></div>
+                <div className="aspect-[16/8] bg-white"><iframe key={livePreviewUrl} title={t('theme_live_preview', 'Live preview')} src={livePreviewUrl} className="h-full w-full border-0" /></div>
+            </section>}
 
             <div className="space-y-6 rounded-2xl border border-slate-200/80 bg-white p-6 shadow-card">
                 {schema.map((group) => (
@@ -164,7 +216,15 @@ export default function StoreThemeSettingsPage() {
                     <button type="button" onClick={() => navigate(`${uiBase}/themes`)} className="rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-medium text-slate-700">
                         {t('cancel', 'Cancel')}
                     </button>
+                    <span className={`ms-auto self-center text-xs font-semibold ${saveStatus === 'error' ? 'text-red-600' : saveStatus === 'saved' ? 'text-emerald-600' : 'text-amber-600'}`}>
+                        {saveStatus === 'saving' ? t('theme_autosaving', 'Autosaving…') : saveStatus === 'pending' ? t('theme_unsaved', 'Unsaved changes') : saveStatus === 'error' ? t('theme_autosave_failed', 'Autosave failed') : t('theme_autosaved', 'All changes saved')}
+                    </span>
                 </div>
+
+                {revisions.length > 0 && <section className="border-t border-slate-100 pt-5">
+                    <h2 className="text-sm font-semibold text-slate-800">{t('theme_revision_history', 'Revision history')}</h2>
+                    <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">{revisions.slice(0, 9).map((revision) => <div key={revision.id} className="flex items-center justify-between gap-3 rounded-xl bg-slate-50 px-3 py-2"><div><p className="text-xs font-semibold text-slate-700">{revision.source}</p><p className="text-[11px] text-slate-400">{new Date(revision.created_at).toLocaleString()}</p></div><button type="button" disabled={saving} onClick={() => restoreRevision(revision)} className="rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-xs font-semibold text-brand disabled:opacity-50">{t('theme_restore', 'Restore')}</button></div>)}</div>
+                </section>}
             </div>
         </div>
     );

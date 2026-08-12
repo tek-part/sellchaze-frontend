@@ -45,7 +45,7 @@ export default function StockTransfersPage() {
     }, [perPage]);
 
     useEffect(() => {
-        if (!can('products-list')) {
+        if (!permissions.includes('products-list')) {
             return;
         }
         setLoading(true);

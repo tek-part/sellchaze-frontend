@@ -64,7 +64,7 @@ export default function CityPage() {
 
     const description = t(
         'sup_dir_city_seo_description',
-        'Browse verified {{sector}} factories and suppliers based in {{city}} on Sellchase — view company profiles, product catalogs and contact details, and reach them directly without intermediaries.',
+        'Browse verified {{sector}} factories and suppliers based in {{city}} on Sellchaze — view company profiles, product catalogs and contact details, and reach them directly without intermediaries.',
         { sector: sectorName, city: cityLabel },
     );
 

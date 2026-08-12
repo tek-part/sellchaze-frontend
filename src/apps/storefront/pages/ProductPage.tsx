@@ -33,7 +33,8 @@ export function ProductPage(): ReactElement | null {
 
   const { record } = useRecentlyViewed();
   const dev = previewOrDev();
-  let detail: ProductDetailModel | null = productQ.data ? toProductDetail(productQ.data.data, currency) : null;
+  const multiplier = store.currencyMultipliers[currency] ?? 1;
+  let detail: ProductDetailModel | null = productQ.data ? toProductDetail(productQ.data.data, currency, multiplier) : null;
   if (dev && !detail) detail = sampleProductDetail(slug, manifest.id, locale);
 
   // Record the view (client-side history) once the product resolves.
@@ -48,7 +49,7 @@ export function ProductPage(): ReactElement | null {
 
   const context = useMemo<StorefrontContext>(() => {
     const reviews: ReviewModel[] = reviewsQ.data ? reviewsQ.data.data.map(toReview) : [];
-    let related: ProductCardModel[] = relatedQ.data ? relatedQ.data.data.map((p) => toProductCard(p, currency)) : [];
+    let related: ProductCardModel[] = relatedQ.data ? relatedQ.data.data.map((p) => toProductCard(p, currency, multiplier)) : [];
     if (dev && !relatedQ.data) related = sampleNewest(manifest.id, locale).slice(0, 6);
 
     return {

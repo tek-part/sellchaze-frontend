@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { HiOutlineCheckCircle, HiOutlineArrowRight, HiXMark } from 'react-icons/hi2';
+import { HiOutlineCheckCircle, HiOutlineArrowRight, HiOutlineBolt, HiOutlineFlag, HiXMark } from 'react-icons/hi2';
 import api from '../api/client';
 
 const DISMISS_KEY = 'sellchase_onboarding_dismissed';
@@ -42,77 +42,98 @@ export default function OnboardingChecklist() {
         template: t('onb_template', 'Choose your site template'),
         invite: t('onb_invite', 'Invite your first client'),
     };
+    const activeStep = data.steps.find((step) => !step.done) ?? data.steps[data.steps.length - 1];
+    const activeLabel = labels[activeStep?.key] || activeStep?.key;
 
     return (
-        <section className="mb-6 overflow-hidden rounded-2xl bg-white shadow-xs ring-1 ring-slate-200">
-            <div className="flex items-start justify-between gap-3 border-b border-slate-100 p-5">
-                <div>
-                    <h2 className="text-lg font-bold text-slate-900">{t('onb_title', 'Finish setting up your account')}</h2>
-                    <p className="mt-0.5 text-sm text-slate-500">
-                        {t('onb_subtitle', 'A few quick steps to get your site live and discoverable.')}
-                    </p>
+        <section className="overflow-hidden rounded-2xl border border-slate-200/70 bg-white p-5 shadow-[0_1px_2px_rgba(15,23,42,0.03)] md:p-6">
+            <div className="flex items-start justify-between gap-3">
+                <div className="flex items-center gap-2">
+                    <HiOutlineBolt className="h-5 w-5 text-brand" aria-hidden />
+                    <h2 className="text-base font-bold text-[#0a2540]">{t('onb_success_path', 'Your success path')}</h2>
                 </div>
                 <button
                     type="button"
                     onClick={dismiss}
                     aria-label={t('dismiss', 'Dismiss')}
-                    className="rounded-lg p-1.5 text-slate-400 transition hover:bg-slate-100 hover:text-slate-600"
+                    className="rounded-full border border-blue-200 p-1.5 text-brand transition hover:bg-brand-light"
                 >
                     <HiXMark className="h-5 w-5" aria-hidden />
                 </button>
             </div>
 
-            <div className="px-5 pt-4">
-                <div className="flex items-center justify-between text-xs font-semibold text-slate-500">
-                    <span>{t('onb_progress', 'Progress')}</span>
-                    <span>
-                        {data.done_count}/{data.total}
-                    </span>
-                </div>
-                <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-slate-100">
-                    <div
-                        className="h-full rounded-full bg-brand transition-all duration-500"
-                        style={{ width: `${data.percent}%` }}
-                        role="progressbar"
-                        aria-valuenow={data.percent}
-                        aria-valuemin={0}
-                        aria-valuemax={100}
-                    />
-                </div>
-            </div>
-
-            <ul className="divide-y divide-slate-100 p-2">
-                {data.steps.map((step) => {
-                    const label = labels[step.key] || step.key;
-                    const showCount = step.key === 'products' && step.progress && !step.done;
-                    return (
-                        <li key={step.key} className="flex items-center gap-3 px-3 py-3">
-                            {step.done ? (
-                                <HiOutlineCheckCircle className="h-6 w-6 shrink-0 text-emerald-500" aria-hidden />
-                            ) : (
-                                <span className="h-5 w-5 shrink-0 rounded-full border-2 border-slate-200" aria-hidden />
-                            )}
-                            <span className={`flex-1 text-sm ${step.done ? 'text-slate-400 line-through' : 'font-medium text-slate-700'}`}>
-                                {label}
-                                {showCount ? (
-                                    <span className="ms-2 text-xs text-slate-400">
-                                        ({step.progress.current}/{step.progress.target})
-                                    </span>
-                                ) : null}
+            <div className="mt-6 grid gap-5 xl:grid-cols-[minmax(0,1.65fr)_minmax(18rem,0.75fr)]">
+                <div>
+                    <div className="flex items-center justify-between gap-3">
+                        <div className="flex items-center gap-2 text-sm font-bold text-[#0a2540]">
+                            <span className="grid h-8 w-8 place-items-center rounded-lg bg-[#5cc8b2] text-white">
+                                <HiOutlineFlag className="h-4.5 w-4.5" aria-hidden />
                             </span>
-                            {!step.done && step.href ? (
-                                <Link
-                                    to={step.href}
-                                    className="inline-flex items-center gap-1 rounded-lg bg-brand-light px-3 py-1.5 text-xs font-semibold text-brand-dark transition hover:bg-brand hover:text-white"
+                            {t('onb_title', 'Set up your business essentials')}
+                        </div>
+                        <span className="text-xs font-semibold text-slate-500">{data.done_count}/{data.total}</span>
+                    </div>
+
+                    <div className="mt-5 flex items-center">
+                        {data.steps.map((step, index) => (
+                            <div key={step.key} className={`flex items-center ${index < data.steps.length - 1 ? 'flex-1' : ''}`}>
+                                <span
+                                    className={`grid h-9 w-9 shrink-0 place-items-center rounded-full border-2 text-xs font-bold transition ${
+                                        step.done
+                                            ? 'border-brand bg-brand text-white'
+                                            : step.key === activeStep?.key
+                                              ? 'border-blue-400 bg-brand-light text-brand-dark'
+                                              : 'border-dashed border-slate-300 bg-white text-slate-400'
+                                    }`}
+                                    title={labels[step.key] || step.key}
                                 >
-                                    {t('onb_go', 'Go')}
-                                    <HiOutlineArrowRight className="h-3.5 w-3.5 rtl:rotate-180" aria-hidden />
+                                    {step.done ? <HiOutlineCheckCircle className="h-5 w-5" aria-hidden /> : index + 1}
+                                </span>
+                                {index < data.steps.length - 1 ? (
+                                    <span className={`mx-2 h-px flex-1 border-t ${step.done ? 'border-brand' : 'border-dashed border-slate-300'}`} aria-hidden />
+                                ) : null}
+                            </div>
+                        ))}
+                    </div>
+
+                    <div className="mt-5 rounded-2xl border border-slate-200 bg-white p-5">
+                        <div className="flex flex-wrap items-center justify-between gap-3">
+                            <div>
+                                <p className="text-xs font-medium text-brand">{t('onb_next_task', 'Complete this task to keep growing')}</p>
+                                <h3 className="mt-1 text-base font-bold text-[#0a2540]">{activeLabel}</h3>
+                                <p className="mt-1 text-sm text-slate-500">{t('onb_subtitle', 'A few quick steps to get your business live and discoverable.')}</p>
+                            </div>
+                            {activeStep?.href ? (
+                                <Link
+                                    to={activeStep.href}
+                                    className="inline-flex items-center gap-2 rounded-xl bg-brand px-5 py-3 text-sm font-bold text-white shadow-sm transition hover:bg-brand-dark"
+                                >
+                                    {t('onb_go', 'Start task')}
+                                    <HiOutlineArrowRight className="h-4 w-4 rtl:rotate-180" aria-hidden />
                                 </Link>
                             ) : null}
-                        </li>
-                    );
-                })}
-            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <aside className="relative overflow-hidden rounded-2xl border border-[#b7eef0] bg-linear-to-br from-white via-[#eefcfc] to-[#d8f8f4] p-5">
+                    <p className="text-3xl font-black tabular-nums text-[#0a2540]">{data.percent}%</p>
+                    <p className="mt-2 max-w-xs text-sm font-semibold leading-6 text-brand-dark">
+                        {t('onb_success_hint', 'Complete your setup to unlock stronger visibility and better business opportunities.')}
+                    </p>
+                    <div className="mt-6 h-2.5 w-full overflow-hidden rounded-full bg-white/80 ring-1 ring-[#b7eef0]">
+                        <div
+                            className="h-full rounded-full bg-accent transition-all duration-500"
+                            style={{ width: `${data.percent}%` }}
+                            role="progressbar"
+                            aria-valuenow={data.percent}
+                            aria-valuemin={0}
+                            aria-valuemax={100}
+                        />
+                    </div>
+                    <div className="pointer-events-none absolute -bottom-12 -end-8 h-36 w-36 rounded-full border-[18px] border-accent/15" aria-hidden />
+                </aside>
+            </div>
         </section>
     );
 }

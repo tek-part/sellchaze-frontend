@@ -19,7 +19,7 @@ function samplePackage(over: Partial<Parameters<typeof buildPackage>[0]> = {}) {
     name: 'Test Theme',
     version: '1.0.0',
     minEngineVersion: '1.0.0',
-    author: 'SellChase',
+    author: 'Sellchaze',
     archetype: 'Test',
     capabilities: ['rtl'],
     license: { type: 'free', sku: 'test' },

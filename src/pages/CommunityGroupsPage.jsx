@@ -1,0 +1,13 @@
+import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
+import { HiOutlineLockClosed, HiOutlineUserGroup } from 'react-icons/hi2';
+import api from '../api/client';
+import CommunityShell from '../features/community/components/CommunityShell';
+
+export default function CommunityGroupsPage() {
+    const [groups, setGroups] = useState([]); const [q, setQ] = useState(''); const [loading, setLoading] = useState(true);
+    useEffect(() => { const timer = setTimeout(() => { setLoading(true); api.get('/community/groups', { params: q ? { q } : {} }).then(({ data }) => setGroups(data.data || [])).finally(() => setLoading(false)); }, 250); return () => clearTimeout(timer); }, [q]);
+    const join = async (group) => { const { data } = await api.post(`/community/groups/${group.id}/join`); setGroups((all) => all.map((item) => item.id === group.id ? { ...item, joined: data.joined, members_count: item.members_count + (data.joined ? 1 : 0) } : item)); };
+    return <CommunityShell><div className="space-y-5"><header><p className="text-sm font-semibold text-blue-600">مجتمعات متخصصة</p><h1 className="text-2xl font-bold text-slate-900">مجموعات الأعمال</h1></header><input value={q} onChange={(e) => setQ(e.target.value)} placeholder="ابحث عن قطاع أو مجموعة..." className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-xs outline-none focus:border-blue-500" />{loading ? <div className="h-40 animate-pulse rounded-2xl bg-slate-100" /> : <div className="grid gap-4 sm:grid-cols-2">{groups.map((group) => <article key={group.id} className="overflow-hidden rounded-2xl bg-white shadow-xs ring-1 ring-slate-200"><div className="h-20 bg-gradient-to-br from-blue-600 to-indigo-500" /><div className="p-4"><div className="flex items-start justify-between gap-2"><Link to={`/community/groups/${group.id}`} className="font-bold text-slate-900 hover:text-blue-700">{group.name}</Link>{group.privacy === 'private' ? <HiOutlineLockClosed className="h-4 w-4 text-slate-400" /> : null}</div><p className="mt-2 line-clamp-2 min-h-10 text-sm text-slate-500">{group.description || 'مجتمع مهني لتبادل الخبرات والفرص التجارية.'}</p><div className="mt-4 flex items-center justify-between"><span className="inline-flex items-center gap-1 text-xs text-slate-500"><HiOutlineUserGroup className="h-4 w-4" />{group.members_count} عضو</span>{group.joined ? <span className="text-xs font-bold text-emerald-600">عضو</span> : <button onClick={() => join(group)} className="rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-bold text-white">انضمام</button>}</div></div></article>)}</div>}</div></CommunityShell>;
+}
+

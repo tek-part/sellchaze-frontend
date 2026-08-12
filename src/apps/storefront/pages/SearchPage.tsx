@@ -32,12 +32,12 @@ export function SearchPage(): ReactElement {
   const productsQ = useAsync(() => getProducts({ perPage: 60 }), []);
 
   const results = useMemo<ProductCardModel[]>(() => {
-    let products: ProductCardModel[] = productsQ.data ? productsQ.data.data.map((p) => toProductCard(p, currency)) : [];
+    let products: ProductCardModel[] = productsQ.data ? productsQ.data.data.map((p) => toProductCard(p, currency, store.currencyMultipliers[currency] ?? 1)) : [];
     if (previewOrDev() && !productsQ.data) products = sampleNewest(manifest.id, locale);
     if (!query) return products;
     const q = query.toLowerCase();
     return products.filter((p) => p.title.toLowerCase().includes(q) || (p.vendor ?? '').toLowerCase().includes(q));
-  }, [productsQ.data, currency, query, manifest.id, locale]);
+  }, [productsQ.data, currency, store.currencyMultipliers, query, manifest.id, locale]);
 
   const tpl = useTemplate('search');
   if (tpl) {

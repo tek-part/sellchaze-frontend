@@ -7,100 +7,107 @@ import RegisterPage from './pages/RegisterPage';
 import ForgotPasswordPage from './pages/ForgotPasswordPage';
 import ResetPasswordPage from './pages/ResetPasswordPage';
 import PendingApprovalPage from './pages/PendingApprovalPage';
-import Dashboard from './pages/Dashboard';
+const Dashboard = lazy(() => import('./pages/Dashboard'));
 // Route-level lazy loading: the community feed (pulls in the Quill rich-text
 // editor) and the pricing page load on demand instead of inflating the main bundle.
 const FeedPage = lazy(() => import('./pages/FeedPage'));
+const CommunityCreatePage = lazy(() => import('./pages/CommunityCreatePage'));
+const CommunityPostPage = lazy(() => import('./pages/CommunityPostPage'));
+const CommunityGroupsPage = lazy(() => import('./pages/CommunityGroupsPage'));
+const CommunityGroupPage = lazy(() => import('./pages/CommunityGroupPage'));
+const ReelsPage = lazy(() => import('./pages/ReelsPage'));
 const PricingPage = lazy(() => import('./pages/PricingPage'));
+const CompanyWorkspacePage = lazy(() => import('./pages/CompanyWorkspacePage'));
+const ProcurementWorkspacePage = lazy(() => import('./pages/ProcurementWorkspacePage'));
 const FinancingPage = lazy(() => import('./pages/FinancingPage'));
 const OpportunitiesPage = lazy(() => import('./pages/OpportunitiesPage'));
-import NotificationsPage from './pages/NotificationsPage';
-import OrdersPage from './pages/OrdersPage';
-import QuotationsPage from './pages/QuotationsPage';
-import DealsPage from './pages/DealsPage';
-import GatewaysPage from './pages/GatewaysPage';
-import GatewayDetailPage from './pages/GatewayDetailPage';
-import GatewayFormPage from './pages/GatewayFormPage';
-import SuppliersPage from './pages/SuppliersPage';
-import SupplierDetailPage from './pages/SupplierDetailPage';
-import SupplierFormPage from './pages/SupplierFormPage';
-import MerchantsPage from './pages/MerchantsPage';
-import MerchantDetailPage from './pages/MerchantDetailPage';
-import MerchantFormPage from './pages/MerchantFormPage';
-import AdminUsersPage from './pages/AdminUsersPage';
-import AdminUserDetailPage from './pages/AdminUserDetailPage';
-import AdminUserFormPage from './pages/AdminUserFormPage';
-import AdminActivityPage from './pages/AdminActivityPage';
-import AdminRolesPage from './pages/AdminRolesPage';
-import AdminRoleFormPage from './pages/AdminRoleFormPage';
-import ShippingCompaniesPage from './pages/ShippingCompaniesPage';
-import ShippingCompanyFormPage from './pages/ShippingCompanyFormPage';
-import DeliveriesPage from './pages/DeliveriesPage';
-import MonitoringLivePage from './pages/MonitoringLivePage';
-import MonitoringSessionsPage from './pages/MonitoringSessionsPage';
-import ProfilePage from './pages/ProfilePage';
-import SettingsPage from './pages/SettingsPage';
-import EmailSettingsPage from './pages/EmailSettingsPage';
-import GoogleSettingsPage from './pages/GoogleSettingsPage';
-import WigpleasureSyncSettingsPage from './pages/WigpleasureSyncSettingsPage';
-import TicketsPage from './pages/TicketsPage';
-import TicketDetailPage from './pages/TicketDetailPage';
-import ProductsPage from './pages/ProductsPage';
-import InventoryPage from './pages/InventoryPage';
-import StockTransfersPage from './pages/StockTransfersPage';
-import StockTransferFormPage from './pages/StockTransferFormPage';
-import CategoriesPage from './pages/CategoriesPage';
-import BundlesPage from './pages/BundlesPage';
-import AttributesPage from './pages/AttributesPage';
-import PartnersPage from './pages/PartnersPage';
-import EmployeesPage from './pages/EmployeesPage';
-import LedgerPage from './pages/LedgerPage';
-import ChatPage from './pages/ChatPage';
-import DirectoryPage from './pages/public/DirectoryPage';
+const NotificationsPage = lazy(() => import('./pages/NotificationsPage'));
+const OrdersPage = lazy(() => import('./pages/OrdersPage'));
+const QuotationsPage = lazy(() => import('./pages/QuotationsPage'));
+const DealsPage = lazy(() => import('./pages/DealsPage'));
+const GatewaysPage = lazy(() => import('./pages/GatewaysPage'));
+const GatewayDetailPage = lazy(() => import('./pages/GatewayDetailPage'));
+const GatewayFormPage = lazy(() => import('./pages/GatewayFormPage'));
+const SuppliersPage = lazy(() => import('./pages/SuppliersPage'));
+const SupplierDetailPage = lazy(() => import('./pages/SupplierDetailPage'));
+const SupplierFormPage = lazy(() => import('./pages/SupplierFormPage'));
+const MerchantsPage = lazy(() => import('./pages/MerchantsPage'));
+const MerchantDetailPage = lazy(() => import('./pages/MerchantDetailPage'));
+const MerchantFormPage = lazy(() => import('./pages/MerchantFormPage'));
+const AdminUsersPage = lazy(() => import('./pages/AdminUsersPage'));
+const AdminUserDetailPage = lazy(() => import('./pages/AdminUserDetailPage'));
+const AdminUserFormPage = lazy(() => import('./pages/AdminUserFormPage'));
+const AdminActivityPage = lazy(() => import('./pages/AdminActivityPage'));
+const AdminRolesPage = lazy(() => import('./pages/AdminRolesPage'));
+const AdminRoleFormPage = lazy(() => import('./pages/AdminRoleFormPage'));
+const ShippingCompaniesPage = lazy(() => import('./pages/ShippingCompaniesPage'));
+const ShippingCompanyFormPage = lazy(() => import('./pages/ShippingCompanyFormPage'));
+const DeliveriesPage = lazy(() => import('./pages/DeliveriesPage'));
+const MonitoringLivePage = lazy(() => import('./pages/MonitoringLivePage'));
+const MonitoringSessionsPage = lazy(() => import('./pages/MonitoringSessionsPage'));
+const ProfilePage = lazy(() => import('./pages/ProfilePage'));
+const SettingsPage = lazy(() => import('./pages/SettingsPage'));
+const EmailSettingsPage = lazy(() => import('./pages/EmailSettingsPage'));
+const GoogleSettingsPage = lazy(() => import('./pages/GoogleSettingsPage'));
+const WigpleasureSyncSettingsPage = lazy(() => import('./pages/WigpleasureSyncSettingsPage'));
+const TicketsPage = lazy(() => import('./pages/TicketsPage'));
+const TicketDetailPage = lazy(() => import('./pages/TicketDetailPage'));
+const ProductsPage = lazy(() => import('./pages/ProductsPage'));
+const InventoryPage = lazy(() => import('./pages/InventoryPage'));
+const StockTransfersPage = lazy(() => import('./pages/StockTransfersPage'));
+const StockTransferFormPage = lazy(() => import('./pages/StockTransferFormPage'));
+const CategoriesPage = lazy(() => import('./pages/CategoriesPage'));
+const BundlesPage = lazy(() => import('./pages/BundlesPage'));
+const AttributesPage = lazy(() => import('./pages/AttributesPage'));
+const PartnersPage = lazy(() => import('./pages/PartnersPage'));
+const EmployeesPage = lazy(() => import('./pages/EmployeesPage'));
+const LedgerPage = lazy(() => import('./pages/LedgerPage'));
+const ChatPage = lazy(() => import('./pages/ChatPage'));
+const DirectoryPage = lazy(() => import('./pages/public/DirectoryPage'));
 // Public supplier-directory pages are code-split so the marketing/landing entry
 // stays lean — they load on demand when a visitor opens /suppliers/*.
 const SuppliersDirectoryPage = lazy(() => import('./pages/public/SuppliersDirectoryPage'));
 const SectorPage = lazy(() => import('./pages/public/SectorPage'));
 const SpecialtyPage = lazy(() => import('./pages/public/SpecialtyPage'));
 const CityPage = lazy(() => import('./pages/public/CityPage'));
-import PublicProfilePage from './pages/public/PublicProfilePage';
+const PublicProfilePage = lazy(() => import('./pages/public/PublicProfilePage'));
 import PublicLayout from './layouts/PublicLayout';
 import LandingPage from './pages/public/LandingPage';
-import FeaturesPage from './pages/public/FeaturesPage';
-import AboutPage from './pages/public/AboutPage';
-import ContactPage from './pages/public/ContactPage';
-import TermsPage from './pages/public/TermsPage';
-import PrivacyPage from './pages/public/PrivacyPage';
-import BlogIndexPage from './pages/public/BlogIndexPage';
-import BlogArticlePage from './pages/public/BlogArticlePage';
+const FeaturesPage = lazy(() => import('./pages/public/FeaturesPage'));
+const AboutPage = lazy(() => import('./pages/public/AboutPage'));
+const ContactPage = lazy(() => import('./pages/public/ContactPage'));
+const TermsPage = lazy(() => import('./pages/public/TermsPage'));
+const PrivacyPage = lazy(() => import('./pages/public/PrivacyPage'));
+const BlogIndexPage = lazy(() => import('./pages/public/BlogIndexPage'));
+const BlogArticlePage = lazy(() => import('./pages/public/BlogArticlePage'));
 const AdminDashboardPage = lazy(() => import('./pages/AdminDashboardPage'));
 const SectorsSettingsPage = lazy(() => import('./pages/SectorsSettingsPage'));
-import AdminReportsUsersPage from './pages/AdminReportsUsersPage';
-import AdminReportsOrdersPage from './pages/AdminReportsOrdersPage';
-import AdminReportsRevenuePage from './pages/AdminReportsRevenuePage';
-import AdminReportsTicketsPage from './pages/AdminReportsTicketsPage';
-import AdminArticlesPage from './pages/AdminArticlesPage';
-import AdminArticleFormPage from './pages/AdminArticleFormPage';
-import VerificationRequestPage from './pages/VerificationRequestPage';
-import AdminVerificationsPage from './pages/AdminVerificationsPage';
-import BalancePage from './pages/BalancePage';
-import BundleDetailPage from './pages/BundleDetailPage';
-import OrderDetailPage from './pages/OrderDetailPage';
-import ProductDetailPage from './pages/ProductDetailPage';
-import CategoryDetailPage from './pages/CategoryDetailPage';
-import ProductFormPage from './pages/ProductFormPage';
-import CategoryFormPage from './pages/CategoryFormPage';
-import BundleFormPage from './pages/BundleFormPage';
-import StoresPage from './pages/StoresPage';
-import StoreFormPage from './pages/StoreFormPage';
-import StoreSettingsPage from './pages/StoreSettingsPage';
-import StoreThemesPage from './pages/StoreThemesPage';
-import StoreThemeSettingsPage from './pages/StoreThemeSettingsPage';
-import StorePagesPage from './pages/StorePagesPage';
-import StoreSetupPage from './pages/StoreSetupPage';
+const AdminReportsUsersPage = lazy(() => import('./pages/AdminReportsUsersPage'));
+const AdminReportsOrdersPage = lazy(() => import('./pages/AdminReportsOrdersPage'));
+const AdminReportsRevenuePage = lazy(() => import('./pages/AdminReportsRevenuePage'));
+const AdminReportsTicketsPage = lazy(() => import('./pages/AdminReportsTicketsPage'));
+const AdminArticlesPage = lazy(() => import('./pages/AdminArticlesPage'));
+const AdminArticleFormPage = lazy(() => import('./pages/AdminArticleFormPage'));
+const VerificationRequestPage = lazy(() => import('./pages/VerificationRequestPage'));
+const AdminVerificationsPage = lazy(() => import('./pages/AdminVerificationsPage'));
+const BalancePage = lazy(() => import('./pages/BalancePage'));
+const BundleDetailPage = lazy(() => import('./pages/BundleDetailPage'));
+const OrderDetailPage = lazy(() => import('./pages/OrderDetailPage'));
+const ProductDetailPage = lazy(() => import('./pages/ProductDetailPage'));
+const CategoryDetailPage = lazy(() => import('./pages/CategoryDetailPage'));
+const ProductFormPage = lazy(() => import('./pages/ProductFormPage'));
+const CategoryFormPage = lazy(() => import('./pages/CategoryFormPage'));
+const BundleFormPage = lazy(() => import('./pages/BundleFormPage'));
+const StoresPage = lazy(() => import('./pages/StoresPage'));
+const StoreFormPage = lazy(() => import('./pages/StoreFormPage'));
+const StoreSettingsPage = lazy(() => import('./pages/StoreSettingsPage'));
+const StoreThemesPage = lazy(() => import('./pages/StoreThemesPage'));
+const StoreThemeSettingsPage = lazy(() => import('./pages/StoreThemeSettingsPage'));
+const StorePagesPage = lazy(() => import('./pages/StorePagesPage'));
+const StoreSetupPage = lazy(() => import('./pages/StoreSetupPage'));
 const StorePageBuilderPage = lazy(() => import('./pages/StorePageBuilderPage'));
 const StoreContentPageEditor = lazy(() => import('./pages/StoreContentPageEditor'));
-import StoreMenusPage from './pages/StoreMenusPage';
+const StoreMenusPage = lazy(() => import('./pages/StoreMenusPage'));
 // Phase 6H: route-level lazy loading for the heavier commerce/analytics pages
 // (keeps chart.js and these screens out of the main bundle).
 const StoreCouponsPage = lazy(() => import('./pages/StoreCouponsPage'));
@@ -110,27 +117,27 @@ const StoreOrderDetailPage = lazy(() => import('./pages/StoreOrderDetailPage'));
 const StoreAnalyticsPage = lazy(() => import('./pages/StoreAnalyticsPage'));
 const StoreReviewsPage = lazy(() => import('./pages/StoreReviewsPage'));
 // StoreProduct*/StoreCategory* pages removed: catalog is unified onto /products & /categories.
-import WavexSettingsPage from './pages/wavex/WavexSettingsPage';
-import WavexConnectPage from './pages/wavex/WavexConnectPage';
-import WavexChatsPage from './pages/wavex/WavexChatsPage';
-import WavexTemplatesPage from './pages/wavex/WavexTemplatesPage';
+const WavexSettingsPage = lazy(() => import('./pages/wavex/WavexSettingsPage'));
+const WavexConnectPage = lazy(() => import('./pages/wavex/WavexConnectPage'));
+const WavexChatsPage = lazy(() => import('./pages/wavex/WavexChatsPage'));
+const WavexTemplatesPage = lazy(() => import('./pages/wavex/WavexTemplatesPage'));
 // Task 7: lazy-load the TipTap-editor pages so the editor bundle loads on demand.
 const WavexTemplateCreatePage = lazy(() => import('./pages/wavex/WavexTemplateCreatePage'));
-import WavexTemplateShowPage from './pages/wavex/WavexTemplateShowPage';
+const WavexTemplateShowPage = lazy(() => import('./pages/wavex/WavexTemplateShowPage'));
 const WavexTemplateEditPage = lazy(() => import('./pages/wavex/WavexTemplateEditPage'));
-import WavexGroupsPage from './pages/wavex/WavexGroupsPage';
-import WavexGroupCreatePage from './pages/wavex/WavexGroupCreatePage';
-import WavexGroupShowPage from './pages/wavex/WavexGroupShowPage';
-import WavexGroupEditPage from './pages/wavex/WavexGroupEditPage';
-import WavexCampaignsPage from './pages/wavex/WavexCampaignsPage';
+const WavexGroupsPage = lazy(() => import('./pages/wavex/WavexGroupsPage'));
+const WavexGroupCreatePage = lazy(() => import('./pages/wavex/WavexGroupCreatePage'));
+const WavexGroupShowPage = lazy(() => import('./pages/wavex/WavexGroupShowPage'));
+const WavexGroupEditPage = lazy(() => import('./pages/wavex/WavexGroupEditPage'));
+const WavexCampaignsPage = lazy(() => import('./pages/wavex/WavexCampaignsPage'));
 const WavexCampaignNewPage = lazy(() => import('./pages/wavex/WavexCampaignNewPage'));
-import WavexCampaignDetailPage from './pages/wavex/WavexCampaignDetailPage';
-import NotFoundPage from './pages/NotFoundPage';
-import ForbiddenPage from './pages/ForbiddenPage';
+const WavexCampaignDetailPage = lazy(() => import('./pages/wavex/WavexCampaignDetailPage'));
+const NotFoundPage = lazy(() => import('./pages/NotFoundPage'));
+const ForbiddenPage = lazy(() => import('./pages/ForbiddenPage'));
 import ServerErrorPage from './pages/ServerErrorPage';
-import ServiceUnavailablePage from './pages/ServiceUnavailablePage';
-import SessionExpiredPage from './pages/SessionExpiredPage';
-import OfflinePage from './pages/OfflinePage';
+const ServiceUnavailablePage = lazy(() => import('./pages/ServiceUnavailablePage'));
+const SessionExpiredPage = lazy(() => import('./pages/SessionExpiredPage'));
+const OfflinePage = lazy(() => import('./pages/OfflinePage'));
 
 function RequireAuth({ children }) {
     const token = localStorage.getItem('sellchase_access_token');
@@ -183,7 +190,17 @@ export default function App() {
             >
                 <Route path="/dashboard" element={<Dashboard />} />
                 <Route path="/feed" element={<FeedPage />} />
+                <Route path="/community/create" element={<CommunityCreatePage />} />
+                <Route path="/community/post/:id" element={<CommunityPostPage />} />
+                <Route path="/community/following" element={<FeedPage initialScope="following" title="من أتابعهم" />} />
+                <Route path="/community/saved" element={<FeedPage initialScope="saved" title="المنشورات المحفوظة" />} />
+                <Route path="/community/trending" element={<FeedPage initialScope="trending" title="الرائج في مجتمع الأعمال" />} />
+                <Route path="/community/groups" element={<CommunityGroupsPage />} />
+                <Route path="/community/groups/:id" element={<CommunityGroupPage />} />
+                <Route path="/reels" element={<ReelsPage />} />
                 <Route path="/pricing" element={<PricingPage />} />
+                <Route path="/company" element={<CompanyWorkspacePage />} />
+                <Route path="/procurement" element={<ProcurementWorkspacePage />} />
                 <Route path="/financing" element={<FinancingPage />} />
                 <Route path="/opportunities" element={<OpportunitiesPage />} />
                 <Route path="/admin/dashboard" element={<AdminDashboardPage />} />

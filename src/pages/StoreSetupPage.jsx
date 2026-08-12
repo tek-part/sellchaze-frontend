@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Navigate, useNavigate } from 'react-router-dom';
+import { Navigate, useNavigate, useSearchParams } from 'react-router-dom';
 import { useOutletContext } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
-import api from '../api/client';
+import api, { v2Request } from '../api/client';
 import useStoreScope from '../hooks/useStoreScope';
 
 const stepStateClass = {
@@ -16,8 +16,11 @@ export default function StoreSetupPage() {
     const { id, apiBase, uiBase } = useStoreScope();
     const { t } = useTranslation();
     const navigate = useNavigate();
+    const [searchParams] = useSearchParams();
+    const organizationId = searchParams.get('organization');
     const { permissions } = useOutletContext();
     const can = (p) => permissions.includes(p);
+    const canAccess = !id || can('stores-edit');
 
     const [store, setStore] = useState(null);
     const [themeRows, setThemeRows] = useState([]);
@@ -26,12 +29,11 @@ export default function StoreSetupPage() {
     const [loading, setLoading] = useState(true);
     const [loadingRefresh, setLoadingRefresh] = useState(false);
     const [error, setError] = useState('');
-
-    if (id && !can('stores-edit')) {
-        return <Navigate to="/stores" replace />;
-    }
+    const [readiness, setReadiness] = useState(null);
+    const [publishing, setPublishing] = useState(false);
 
     const load = useCallback(async () => {
+        if (!canAccess) return;
         try {
             const [storeRes, themesRes, domainsRes] = await Promise.all([
                 api.get(`${apiBase}`),
@@ -43,6 +45,10 @@ export default function StoreSetupPage() {
             setThemeRows(Array.isArray(themesRes.data?.data) ? themesRes.data.data : []);
             setActiveThemeId(themesRes.data?.active_theme_id ?? null);
             setDomains(Array.isArray(domainsRes.data?.data) ? domainsRes.data.data : []);
+            if (organizationId && id) {
+                const readyRes = await v2Request({ method: 'get', url: `/organizations/${organizationId}/stores/${id}/readiness` });
+                setReadiness(readyRes.data?.data ?? readyRes.data);
+            }
             setError('');
         } catch (e) {
             setError(e.response?.data?.message || e.message);
@@ -50,7 +56,7 @@ export default function StoreSetupPage() {
             setLoading(false);
             setLoadingRefresh(false);
         }
-    }, [apiBase]);
+    }, [apiBase, canAccess, id, organizationId]);
 
     useEffect(() => {
         setLoading(true);
@@ -89,9 +95,20 @@ export default function StoreSetupPage() {
 
     const doneCount = useMemo(
         () =>
-            [themeReady, hasAnyDomain, Boolean(storeHost)].filter((v) => Boolean(v)).length,
-        [hasAnyDomain, storeHost, themeReady],
+            [themeReady, hasAnyDomain, Boolean(readiness?.ready || store?.status === 'active')].filter((v) => Boolean(v)).length,
+        [hasAnyDomain, readiness?.ready, store?.status, themeReady],
     );
+
+    const publishStore = async () => {
+        if (!organizationId || !id) return;
+        setPublishing(true);
+        try {
+            await v2Request({ method: 'post', url: `/organizations/${organizationId}/stores/${id}/publish` });
+            toast.success(t('store_publish_success', 'Store published'));
+            await load();
+        } catch (e) { toast.error(e.response?.data?.message || e.message); }
+        finally { setPublishing(false); }
+    };
 
     const openStorefront = () => {
         if (!storeHost) {
@@ -101,6 +118,10 @@ export default function StoreSetupPage() {
 
         window.open(`https://${storeHost}`, '_blank', 'noopener');
     };
+
+    if (!canAccess) {
+        return <Navigate to="/stores" replace />;
+    }
 
     return (
         <div className="mx-auto max-w-5xl space-y-6">
@@ -157,7 +178,7 @@ export default function StoreSetupPage() {
                             <li className="rounded-xl border p-3">
                                 <p className="mb-1 text-xs uppercase tracking-wider text-slate-400">2) {t('store_setup_domain', 'Domain')}</p>
                                 <div className={`inline-flex rounded-full border px-2 py-1 text-xs font-medium ${hasAnyDomain ? stepStateClass.done : stepStateClass.active}`}>
-                                    {Boolean(primaryDomain)
+                                    {primaryDomain
                                         ? t('store_setup_done', 'Custom domain connected')
                                         : hasAnyDomain
                                             ? t('store_setup_ready', 'Subdomain assigned')
@@ -177,21 +198,26 @@ export default function StoreSetupPage() {
 
                             <li className="rounded-xl border p-3">
                                 <p className="mb-1 text-xs uppercase tracking-wider text-slate-400">3) {t('store_setup_publish', 'Publish')}</p>
-                                <div className={`inline-flex rounded-full border px-2 py-1 text-xs font-medium ${store?.id ? stepStateClass.done : stepStateClass.pending}`}>
-                                    {Boolean(storeHost)
-                                        ? t('store_setup_done', 'Store ready to publish')
-                                        : t('store_setup_wait_publish', 'Store not available')}
+                                <div className={`inline-flex rounded-full border px-2 py-1 text-xs font-medium ${store?.status === 'active' ? stepStateClass.done : readiness?.ready ? stepStateClass.active : stepStateClass.pending}`}>
+                                    {store?.status === 'active' ? t('store_published', 'Published') : readiness?.ready ? t('store_ready_to_publish', 'Ready to publish') : t('store_setup_wait_publish', 'Complete the missing requirements')}
                                 </div>
                                 <p className="mt-2 text-sm text-slate-600">
-                                    {storeHost ? t('store_setup_visit_hint', 'Open storefront in browser to verify') : t('store_setup_visit_hint_pending', 'Open storefront after domain is ready')}
+                                    {readiness?.checks ? Object.entries(readiness.checks).filter(([, value]) => !value).map(([key]) => key).join(' · ') || t('store_setup_visit_hint', 'All publishing checks passed') : t('store_setup_visit_hint_pending', 'Checking publishing requirements')}
                                 </p>
-                                <button
+                                {organizationId && store?.status !== 'active' ? <button
+                                    type="button"
+                                    onClick={publishStore}
+                                    disabled={!readiness?.ready || publishing}
+                                    className="mt-3 inline-flex rounded-lg bg-brand px-3 py-2 text-sm font-medium text-white hover:bg-brand-dark disabled:opacity-40"
+                                >
+                                    {publishing ? t('loading', 'Publishing…') : t('publish', 'Publish store')}
+                                </button> : <button
                                     type="button"
                                     onClick={openStorefront}
                                     className="mt-3 inline-flex rounded-lg bg-brand px-3 py-2 text-sm font-medium text-white hover:bg-brand-dark"
                                 >
                                     {t('store_visit', 'Open storefront')}
-                                </button>
+                                </button>}
                             </li>
                         </ol>
                     </div>

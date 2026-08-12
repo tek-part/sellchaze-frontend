@@ -18,7 +18,7 @@ export const luxuryBaseTokens = {
       surface: '#FFFFFF',
       surface2: '#F2EEE9',
       text: '#1A1714',
-      muted: '#8A8178',
+      muted: '#6B635C',
       border: '#E7E1D8',
       borderStrong: '#D6CDBF',
       sale: '#8C2F39',

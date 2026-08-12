@@ -22,8 +22,12 @@ import {
     HiOutlineClipboardDocumentList,
     HiOutlineChevronDown,
     HiOutlineCog6Tooth,
+    HiOutlineCube,
     HiOutlineGlobeAlt,
     HiOutlineBuildingStorefront,
+    HiOutlineHome,
+    HiOutlineMegaphone,
+    HiOutlinePresentationChartLine,
     HiOutlineSignal,
     HiOutlineUserCircle,
     HiOutlineArrowUturnLeft,
@@ -36,6 +40,7 @@ import { useChatUnread } from '../lib/useChatUnread';
 import { CHAT_ENABLED } from '../lib/features';
 import SidebarNav from './SidebarNav';
 import UserAvatar from './UserAvatar';
+import AdminSidebar from './admin/AdminSidebar';
 
 function unwrapUser(payload) {
     if (!payload) {
@@ -145,13 +150,16 @@ export default function AppLayout() {
 
     const isAdmin = Array.isArray(me.roles) && me.roles.includes('Admin');
     const isSupplier = Array.isArray(me.roles) && me.roles.includes('Supplier');
+    const hasBusinessRole = Array.isArray(me.roles)
+        && me.roles.some((role) => ['Merchant', 'Supplier', 'Customer', 'Employee'].includes(role));
+    const isAdminOnly = isAdmin && !hasBusinessRole;
     const permissions = Array.isArray(me?.permissions) ? me.permissions : [];
     const canWavex = permissions.includes('wavex-access');
     const canViewMonitoring = permissions.includes('monitoring-live-view');
     const canViewActivityLogs = permissions.includes('activity-logs-list');
     const currentLng = i18n.language?.startsWith('ar') ? 'ar' : 'en';
     const headerIconBtnClass =
-        'inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-slate-200/90 bg-white text-slate-600 shadow-xs transition-all duration-200 hover:-translate-y-0.5 hover:border-slate-300 hover:bg-slate-50 hover:text-brand focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand/30';
+        'inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-white/80 transition-all duration-200 hover:bg-white/10 hover:text-white focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-accent/60';
 
     function toggleLanguage() {
         const next = currentLng === 'en' ? 'ar' : 'en';
@@ -186,31 +194,10 @@ export default function AppLayout() {
     }
 
     return (
-        <div className="flex h-dvh max-h-dvh w-full flex-row items-stretch overflow-hidden bg-surface">
-            <aside className="hidden min-h-0 w-64 shrink-0 flex-col overflow-y-auto border-e border-slate-200/80 bg-linear-to-b from-slate-50 via-white to-brand-light/30 px-3 py-6 shadow-soft lg:flex">
-                <Link
-                    to="/dashboard"
-                    className="mb-6 flex justify-center px-2 outline-hidden focus-visible:ring-2 focus-visible:ring-brand rounded-lg"
-                >
-                    <img
-                        src="/logo.png"
-                        alt={t('app_name')}
-                        className="h-14 w-auto max-w-[min(100%,13.5rem)] object-contain md:h-16"
-                    />
-                </Link>
-                <SidebarNav isAdmin={isAdmin} isSupplier={isSupplier} roles={me.roles ?? []} permissions={permissions} />
-                <div className="mt-auto pt-6">
-                    <div className="flex items-center gap-2 rounded-xl bg-white/70 px-3 py-2 ring-1 ring-slate-200/60">
-                        <UserAvatar user={me} alt="" sizeClass="h-9 w-9" />
-                        <div className="min-w-0 flex-1">
-                            <p className="truncate text-xs font-semibold text-slate-800">{me.name}</p>
-                            <p className="truncate text-[11px] text-slate-500">{me.email}</p>
-                        </div>
-                    </div>
-                </div>
-            </aside>
-
-            <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-surface">
+        <div className="flex h-dvh max-h-dvh w-full flex-col overflow-hidden bg-surface">
+            <div className="flex min-h-0 min-w-0 flex-1 overflow-hidden bg-surface">
+                {isAdminOnly ? <AdminSidebar me={me} permissions={permissions} /> : null}
+                <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
                 {impersonationActive ? (
                     <div
                         className="flex shrink-0 flex-wrap items-center justify-between gap-2 border-b border-amber-200/80 bg-amber-100 px-3 py-2.5 text-sm text-amber-950 md:px-5"
@@ -230,21 +217,118 @@ export default function AppLayout() {
                         </button>
                     </div>
                 ) : null}
-                <header className="z-40 flex shrink-0 items-center justify-between gap-3 border-b border-slate-200/80 bg-white/90 px-3 py-3 shadow-card backdrop-blur-md md:px-5 lg:px-6">
-                    <div className="flex min-w-0 flex-1 items-center gap-2">
+                <header className={`z-40 flex h-[72px] shrink-0 items-center justify-between gap-3 px-3 md:px-5 lg:px-8 ${isAdminOnly ? 'border-b border-slate-200/80 bg-white text-slate-900 shadow-[0_1px_0_rgba(15,23,42,0.02)]' : 'bg-[#0a3d7c] text-white shadow-[0_1px_0_rgba(255,255,255,0.08)]'}`}>
+                    {isAdminOnly ? (
+                        <>
+                            <div className="flex min-w-0 items-center gap-3">
+                                <button
+                                    type="button"
+                                    onClick={() => setMobileNavOpen(true)}
+                                    className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-700 shadow-xs transition hover:border-blue-200 hover:bg-blue-50 hover:text-brand lg:hidden"
+                                    aria-label={t('nav_all', 'All')}
+                                >
+                                    <HiOutlineBars3 className="h-5 w-5" aria-hidden />
+                                </button>
+                                <div className="min-w-0">
+                                    <p className="truncate text-sm font-bold text-[#0a2540] md:text-base">
+                                        {t('admin_control_center', 'Platform control center')}
+                                    </p>
+                                    <p className="hidden text-xs text-slate-500 sm:block">
+                                        {t('admin_control_center_hint', 'Operations, users and marketplace health')}
+                                    </p>
+                                </div>
+                            </div>
+                            <div className="flex items-center gap-1.5">
+                                <Link
+                                    to="/"
+                                    className="hidden h-9 items-center gap-2 rounded-xl px-3 text-sm font-semibold text-slate-600 transition hover:bg-blue-50 hover:text-brand md:inline-flex"
+                                >
+                                    <HiOutlineGlobeAlt className="h-4.5 w-4.5" aria-hidden />
+                                    {t('nav_visit_website', 'Website')}
+                                </Link>
+                                <button
+                                    type="button"
+                                    onClick={toggleLanguage}
+                                    className="inline-flex h-9 min-w-9 items-center justify-center rounded-xl px-2 text-xs font-bold text-slate-600 transition hover:bg-blue-50 hover:text-brand"
+                                    aria-label={t('language')}
+                                >
+                                    {currentLng === 'en' ? 'ع' : 'EN'}
+                                </button>
+                                <NotificationsMenu isSupplier={false} />
+                                <Link
+                                    to="/settings/profile"
+                                    className="ms-1 flex items-center gap-2 rounded-xl border border-slate-200 bg-white p-1 pe-2 shadow-xs transition hover:border-blue-200 hover:bg-blue-50"
+                                    aria-label={t('nav_profile')}
+                                >
+                                    <UserAvatar user={me} alt="" sizeClass="h-8 w-8" />
+                                    <span className="hidden max-w-32 truncate text-xs font-semibold text-slate-700 xl:block">{me.name}</span>
+                                </Link>
+                                <button
+                                    type="button"
+                                    onClick={() => setLogoutOpen(true)}
+                                    className="inline-flex h-9 w-9 items-center justify-center rounded-xl text-slate-500 transition hover:bg-red-50 hover:text-red-600"
+                                    aria-label={t('logout')}
+                                    title={t('logout')}
+                                >
+                                    <HiOutlineArrowRightOnRectangle className="h-5 w-5" aria-hidden />
+                                </button>
+                            </div>
+                        </>
+                    ) : (
+                    <>
+                    <div className="flex min-w-0 flex-1 items-center gap-2 lg:gap-3">
+                        <Link
+                            to="/dashboard"
+                            className="me-1 flex shrink-0 items-center rounded-lg outline-hidden focus-visible:ring-2 focus-visible:ring-accent"
+                            aria-label={t('app_name')}
+                        >
+                            <span className="grid h-10 w-10 place-items-center overflow-hidden rounded-xl bg-white shadow-sm">
+                                <img src="/icon.png" alt="" className="h-8 w-8 object-contain" />
+                            </span>
+                            <span className="ms-2 hidden text-lg font-extrabold tracking-tight text-white xl:inline">Sellchaze</span>
+                        </Link>
                         <button
                             type="button"
                             onClick={() => setMobileNavOpen(true)}
-                            className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-700 shadow-xs hover:bg-slate-50 lg:hidden"
-                            aria-label="Open menu"
-                            title="Open menu"
+                            className="inline-flex h-10 items-center justify-center gap-2 rounded-xl px-2.5 text-sm font-semibold text-white transition hover:bg-white/10"
+                            aria-label={t('nav_all', 'All')}
+                            title={t('nav_all', 'All')}
                         >
-                            <HiOutlineBars3 className="h-6 w-6" aria-hidden />
+                            <HiOutlineBars3 className="h-5 w-5" aria-hidden />
+                            <span className="hidden sm:inline">{t('nav_all', 'All')}</span>
                         </button>
+                        <nav className="hidden min-w-0 items-center gap-1 lg:flex" aria-label={t('primary_navigation', 'Primary navigation')}>
+                            <Link to="/dashboard" className="flex items-center gap-2 rounded-xl bg-white px-3.5 py-2.5 text-sm font-semibold text-brand-dark shadow-sm">
+                                <HiOutlineHome className="h-5 w-5" aria-hidden />
+                                {t('nav_home', 'Home')}
+                            </Link>
+                            <Link to="/orders/in" className="flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-semibold text-white/90 transition hover:bg-white/10 hover:text-white">
+                                <HiOutlineClipboardDocumentList className="h-5 w-5" aria-hidden />
+                                {t('orders', 'Orders')}
+                            </Link>
+                            <Link to="/products" className="flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-semibold text-white/90 transition hover:bg-white/10 hover:text-white">
+                                <HiOutlineCube className="h-5 w-5" aria-hidden />
+                                {t('products', 'Products')}
+                            </Link>
+                            <Link to="/feed" className="hidden items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-semibold text-white/90 transition hover:bg-white/10 hover:text-white xl:flex">
+                                <HiOutlineMegaphone className="h-5 w-5" aria-hidden />
+                                {t('feed_title', 'Community')}
+                            </Link>
+                            <Link to="/store/onboarding" className="hidden items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-semibold text-white/90 transition hover:bg-white/10 hover:text-white 2xl:flex">
+                                <HiOutlineBuildingStorefront className="h-5 w-5" aria-hidden />
+                                {t('store_and_channels', 'Store & Channels')}
+                            </Link>
+                            {isAdmin ? (
+                                <Link to="/admin/reports/orders" className="hidden items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-semibold text-white/90 transition hover:bg-white/10 hover:text-white 2xl:flex">
+                                    <HiOutlinePresentationChartLine className="h-5 w-5" aria-hidden />
+                                    {t('reports', 'Reports')}
+                                </Link>
+                            ) : null}
+                        </nav>
                     </div>
                     {/* hide actions on mobile/tablet; show on desktop */}
                     <div className="ms-auto hidden flex-row items-center gap-3 lg:flex" dir="ltr">
-                        <div className="flex items-center gap-2 rounded-full border border-slate-200/80 bg-slate-50/70 px-2 py-1">
+                        <div className="flex items-center gap-1">
                             {canViewMonitoring ? (
                                 <Link
                                     to="/admin/monitoring/live"
@@ -307,13 +391,13 @@ export default function AppLayout() {
                             {CHAT_ENABLED && (
                                 <Link
                                     to="/chat"
-                                    className="relative inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white text-slate-600 shadow-xs ring-1 ring-slate-200/90 transition-all duration-200 hover:-translate-y-0.5 hover:border-slate-300 hover:bg-slate-50 hover:text-brand focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand/30"
+                                    className="relative inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-white/80 transition-all duration-200 hover:bg-white/10 hover:text-white focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-accent/60"
                                     title={t('nav_messages', 'Messages')}
                                     aria-label={t('nav_messages', 'Messages')}
                                 >
                                     <HiOutlineChatBubbleLeftRight className="h-5 w-5" aria-hidden />
                                     {chatUnread > 0 && (
-                                        <span className="absolute -right-1 -top-1 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-brand px-1 text-[11px] font-bold text-white ring-2 ring-white">
+                                        <span className="absolute -right-1 -top-1 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-accent px-1 text-[11px] font-bold text-[#0a2540] ring-2 ring-[#0a3d7c]">
                                             {chatUnread > 99 ? '99+' : chatUnread}
                                         </span>
                                     )}
@@ -335,16 +419,16 @@ export default function AppLayout() {
                             <MenuButton
                                 type="button"
                                 aria-label={t('user_menu_aria', { name: me.name })}
-                                className="flex max-w-[min(100vw-9rem,18rem)] items-center gap-2 rounded-full border-0 bg-transparent py-0.5 pe-1.5 ps-0.5 text-start shadow-none outline-hidden transition-colors hover:bg-slate-100/90 aria-expanded:bg-slate-100/90 focus-visible:ring-2 focus-visible:ring-brand/30 focus-visible:ring-offset-2 focus-visible:ring-offset-white/90 md:max-w-[16rem]"
+                                className="flex max-w-[min(100vw-9rem,18rem)] items-center gap-2 rounded-xl border-0 bg-transparent py-1 pe-2 ps-1 text-start shadow-none outline-hidden transition-colors hover:bg-white/10 aria-expanded:bg-white/10 focus-visible:ring-2 focus-visible:ring-accent/60 md:max-w-[16rem]"
                             >
                                 {({ open }) => (
                                     <>
                                         <UserAvatar user={me} alt="" sizeClass="h-8 w-8 md:h-9 md:w-9" />
-                                        <span className="hidden max-w-44 truncate text-sm font-medium text-slate-800 md:inline">
+                                        <span className="hidden max-w-44 truncate text-sm font-semibold text-white md:inline">
                                             {me.name}
                                         </span>
                                         <HiOutlineChevronDown
-                                            className={`h-3.5 w-3.5 shrink-0 text-slate-400 transition duration-200 ${open ? '-rotate-180' : ''}`}
+                                            className={`h-3.5 w-3.5 shrink-0 text-white/60 transition duration-200 ${open ? '-rotate-180' : ''}`}
                                             aria-hidden
                                         />
                                     </>
@@ -524,15 +608,17 @@ export default function AppLayout() {
                             </MenuItems>
                         </Menu>
                     </div>
+                    </>
+                    )}
                 </header>
 
                 <motion.main
                     initial={{ opacity: 0, y: 8 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.35 }}
-                    className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden bg-surface p-3 md:p-4 lg:p-6"
+                    className={`min-h-0 flex-1 overflow-y-auto overflow-x-hidden p-3 md:p-5 lg:p-7 ${isAdminOnly ? 'bg-[#f5f8fc]' : 'bg-surface'}`}
                 >
-                    <div key={location.pathname} className="sc-page">
+                    <div key={location.pathname} className="sc-page mx-auto w-full max-w-[1440px]">
                         <Outlet
                             context={{
                                 me,
@@ -543,6 +629,7 @@ export default function AppLayout() {
                         />
                     </div>
                 </motion.main>
+                </div>
             </div>
 
             <Dialog open={logoutOpen} onClose={() => setLogoutOpen(false)} className="relative z-50">
@@ -579,7 +666,7 @@ export default function AppLayout() {
                 </div>
             </Dialog>
 
-            <Dialog open={mobileNavOpen} onClose={() => setMobileNavOpen(false)} className="relative z-60 lg:hidden">
+            <Dialog open={mobileNavOpen} onClose={() => setMobileNavOpen(false)} className="relative z-60">
                 <DialogBackdrop
                     transition
                     className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs transition duration-200 data-closed:opacity-0"

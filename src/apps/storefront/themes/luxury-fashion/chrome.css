@@ -171,7 +171,7 @@
 }
 .sf-lang__btn + .sf-lang__btn { border-inline-start: 1px solid var(--border); }
 .sf-lang__btn:hover { color: var(--text); }
-.sf-lang__btn[aria-pressed='true'] { color: var(--text); font-weight: 600; }
+.sf-lang__btn[aria-pressed='true'] { color: var(--on-primary); font-weight: 600; }
 .sf-lang__btn:focus-visible { outline: 1px solid var(--accent); outline-offset: 3px; }
 /* Arabic is not uppercase-able and must not be tracked. */
 .sf-lang__btn[lang='ar'] { font-family: var(--font-arabic); text-transform: none; letter-spacing: normal; }

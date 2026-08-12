@@ -15,7 +15,7 @@ import type { DesignTokens } from '../../theme-engine/types';
 export const hearthBaseTokens = {
   color: {
     light: {
-      primary: '#B5573A', // Terracotta — the generous brand action colour
+      primary: '#A4472F', // Deep terracotta — AA-safe for actions and small text
       onPrimary: '#FCF6EC', // cream on terracotta
       accent: '#6E7B54', // Sage — natural / eco / secondary
       accentInk: '#566043', // AA-safe sage for text on the warm canvas
@@ -23,7 +23,7 @@ export const hearthBaseTokens = {
       surface: '#FBF7F0', // Cream — cards / raised panels
       surface2: '#EFE7D9', // Linen — inputs, secondary fills, hover wash
       text: '#33291E', // Walnut — warm brown-black ink
-      muted: '#8A7B67', // Taupe — meta, captions, placeholder
+      muted: '#6E604F', // Deep taupe — AA-safe meta, captions, and placeholders
       border: '#DDD1BE', // Sand-line — hairlines, dividers
       borderStrong: '#C9B99F', // emphasised divider / input focus base
       sale: '#9C3B2E', // Rust — markdown / sale price

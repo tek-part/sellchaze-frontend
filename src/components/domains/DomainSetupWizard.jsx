@@ -159,7 +159,6 @@ export default function DomainSetupWizard({ onClose, onCompleted, apiBase = '/my
                 }
             }
         },
-        // eslint-disable-next-line react-hooks/exhaustive-deps
         [domain, refresh],
     );
 

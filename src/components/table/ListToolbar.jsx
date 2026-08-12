@@ -6,7 +6,6 @@ import SearchableSelect from '../ui/SearchableSelect';
 export default function ListToolbar({
     searchValue,
     onSearchChange,
-    onExportCurrent,
     onExportAll,
     exportDisabled,
     perPage,
@@ -14,8 +13,6 @@ export default function ListToolbar({
     perPageOptions = [10, 15, 25, 50, 100],
     advanced,
     afterSearch,
-    onCreate,
-    createLabel,
     selectedCount = 0,
     onBulkDelete,
     bulkDeleteDisabled,

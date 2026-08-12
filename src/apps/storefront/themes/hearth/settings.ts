@@ -26,7 +26,7 @@ export const hearthSettingsSchema: ThemeSettingsSchema = [
     label: 'Primary — terracotta',
     group: 'Appearance',
     help: 'The generous brand action colour (buttons, active nav, links). Overrides the light accent.',
-    default: '#B5573A',
+    default: '#A4472F',
   },
   {
     id: 'accent_color',

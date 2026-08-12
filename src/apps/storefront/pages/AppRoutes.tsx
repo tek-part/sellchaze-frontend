@@ -41,7 +41,7 @@ function PageFallback(): ReactElement {
   return (
     <Section>
       <Container>
-        <div style={{ display: 'grid', placeItems: 'center', minHeight: '40vh' }}>
+        <div style={{ display: 'grid', placeItems: 'center', minHeight: '100vh' }}>
           <Spinner label={t('common.loading')} />
         </div>
       </Container>

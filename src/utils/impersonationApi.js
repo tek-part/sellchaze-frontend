@@ -6,7 +6,7 @@ import { beginImpersonation } from './impersonation';
  * @param {number} userId
  * @param {(key: string, opts?: object) => string} t
  */
-export async function impersonateUserId(userId, t) {
+export async function impersonateUserId(userId, _t) {
     try {
         const { data } = await api.post('/admin/impersonate', { user_id: userId });
         beginImpersonation(data);

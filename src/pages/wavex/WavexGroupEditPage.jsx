@@ -78,7 +78,7 @@ export default function WavexGroupEditPage() {
     }, [id]);
 
     useEffect(() => {
-        if (!can('wavex-access')) return;
+        if (!permissions.includes('wavex-access')) return;
         void loadGroup();
         void loadMembers();
     }, [loadGroup, loadMembers, permissions]);

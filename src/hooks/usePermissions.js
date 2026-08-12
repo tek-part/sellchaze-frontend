@@ -6,7 +6,7 @@ import { useOutletContext } from 'react-router-dom';
  */
 export function usePermissions() {
     const ctx = useOutletContext() ?? {};
-    const permissions = Array.isArray(ctx.permissions) ? ctx.permissions : [];
+    const permissions = useMemo(() => Array.isArray(ctx.permissions) ? ctx.permissions : [], [ctx.permissions]);
     const can = useMemo(() => (name) => permissions.includes(name), [permissions]);
 
     return {

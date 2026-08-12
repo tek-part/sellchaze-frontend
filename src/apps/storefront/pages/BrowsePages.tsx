@@ -74,7 +74,7 @@ function useCategoryContext(title: string, description: string): {
         },
       },
     }),
-    [categories, categoriesQ.loading, categoriesQ.error, dev, store.name, store.currency, title, description],
+    [categories, categoriesQ.loading, categoriesQ.error, dev, store.name, store.currency, title, description, t],
   );
 
   return { context, loading: categoriesQ.loading, error: categoriesQ.error, count: categories.length };
@@ -186,7 +186,7 @@ export function BrandsPage(): ReactElement {
 
   const brands = useMemo<BrandEntry[]>(() => {
     const source = productsQ.data
-      ? productsQ.data.data.map((p) => toProductCard(p, store.currency))
+      ? productsQ.data.data.map((p) => toProductCard(p, store.currency, store.currencyMultipliers[store.currency] ?? 1))
       : dev
         ? sampleNewest(manifest.id, locale)
         : [];
@@ -198,7 +198,7 @@ export function BrandsPage(): ReactElement {
     return [...tally.entries()]
       .map(([name, count]) => ({ name, count }))
       .sort((a, b) => a.name.localeCompare(b.name));
-  }, [productsQ.data, store.currency, dev, manifest.id, locale]);
+  }, [productsQ.data, store.currency, store.currencyMultipliers, dev, manifest.id, locale]);
 
   return (
     <Section>

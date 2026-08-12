@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useOutletContext } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -15,7 +15,7 @@ export default function CurrencySettingsPage() {
     const [newRate, setNewRate] = useState('');
     const [draftRates, setDraftRates] = useState({});
 
-    const load = () => {
+    const load = useCallback(() => {
         if (!isAdmin) {
             return;
         }
@@ -34,11 +34,11 @@ export default function CurrencySettingsPage() {
             })
             .catch((e) => setErr(e.response?.data?.message || e.message))
             .finally(() => setLoading(false));
-    };
+    }, [isAdmin]);
 
     useEffect(() => {
         load();
-    }, [isAdmin]);
+    }, [load]);
 
     if (!isAdmin) {
         return <Navigate to="/dashboard" replace />;

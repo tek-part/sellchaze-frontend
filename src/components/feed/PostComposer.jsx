@@ -4,12 +4,13 @@ import { Link } from 'react-router-dom';
 import ReactQuill from 'react-quill-new';
 import 'react-quill-new/dist/quill.snow.css';
 import { HiOutlinePaperClip, HiOutlineXMark, HiOutlineSparkles } from 'react-icons/hi2';
-import api from '../../api/client';
+import api, { v2Request } from '../../api/client';
 import { langParam } from '../../api/lang';
 import SearchableSelect from '../ui/SearchableSelect';
 import { useDebounced } from '../../hooks/useDebounced';
 import { POST_TYPES } from './helpers';
 import UpgradeModal from './UpgradeModal';
+import MediaUploader from '../../features/community/components/MediaUploader';
 
 // Compact rich-text toolbar (bold/italic/lists/link) — mirrors StoreContentPageEditor.
 const QUILL_MODULES = {
@@ -21,11 +22,11 @@ const QUILL_MODULES = {
  * optionally attaches one of the user's own products, and POSTs /posts. On success
  * it calls onCreated(newPostCard) so the page can prepend it.
  */
-export default function PostComposer({ onCreated }) {
+export default function PostComposer({ onCreated, initialFormat = 'post', initialType, groupId = null, fullPage = false }) {
     const { t, i18n } = useTranslation();
     const { lang } = langParam(i18n);
 
-    const [type, setType] = useState(POST_TYPES[0]);
+    const [type, setType] = useState(initialType && POST_TYPES.includes(initialType) ? initialType : POST_TYPES[0]);
     const [body, setBody] = useState('');
     const [showProduct, setShowProduct] = useState(false);
     const [productId, setProductId] = useState('');
@@ -34,6 +35,16 @@ export default function PostComposer({ onCreated }) {
     const debouncedSearch = useDebounced(productSearch, 400);
     const [submitting, setSubmitting] = useState(false);
     const [err, setErr] = useState('');
+    const [organizations, setOrganizations] = useState([]);
+    const [actingOrganizationId, setActingOrganizationId] = useState('');
+    const [format, setFormat] = useState(initialFormat);
+    const [mediaAssets, setMediaAssets] = useState([]);
+    const [audience, setAudience] = useState('public');
+    const [locationName, setLocationName] = useState('');
+    const [commentsEnabled, setCommentsEnabled] = useState(true);
+    const [ctaType, setCtaType] = useState('');
+    const [ctaLabel, setCtaLabel] = useState('');
+    const [ctaUrl, setCtaUrl] = useState('');
 
     // Subscription quota shown as a badge near Publish, and the 402 upgrade modal.
     const [quota, setQuota] = useState(null);
@@ -57,6 +68,12 @@ export default function PostComposer({ onCreated }) {
             alive = false;
         };
     }, [lang]);
+
+    useEffect(() => {
+        v2Request({ method: 'get', url: '/organizations' })
+            .then(({ data }) => setOrganizations(data.data ?? []))
+            .catch(() => setOrganizations([]));
+    }, []);
 
     // Load the current user's products for the picker (debounced by its search box).
     useEffect(() => {
@@ -83,6 +100,10 @@ export default function PostComposer({ onCreated }) {
         setProductId('');
         setShowProduct(false);
         setProductSearch('');
+        setActingOrganizationId('');
+        setMediaAssets([]);
+        setLocationName('');
+        setCtaType(''); setCtaLabel(''); setCtaUrl('');
     };
 
     const submit = async (e) => {
@@ -91,8 +112,17 @@ export default function PostComposer({ onCreated }) {
         setErr('');
         setSubmitting(true);
         try {
-            const payload = { type, body };
+            const payload = { type, body, format, audience, comments_enabled: commentsEnabled };
             if (showProduct && productId) payload.product_id = Number(productId);
+            if (actingOrganizationId) payload.acting_organization_id = Number(actingOrganizationId);
+            if (mediaAssets.length) payload.media_asset_ids = mediaAssets.map((asset) => asset.id);
+            if (groupId) payload.community_group_id = Number(groupId);
+            if (locationName.trim()) payload.location_name = locationName.trim();
+            if (ctaType) {
+                payload.cta_type = ctaType;
+                if (ctaLabel.trim()) payload.cta_label = ctaLabel.trim();
+                if (ctaUrl.trim()) payload.cta_url = ctaUrl.trim();
+            }
             const { data } = await api.post('/posts', payload);
             onCreated?.(data.data);
             reset();
@@ -157,11 +187,13 @@ export default function PostComposer({ onCreated }) {
     };
 
     return (
-        <form onSubmit={submit} className="rounded-2xl bg-white p-5 shadow-xs ring-1 ring-slate-200">
+        <form onSubmit={submit} className={`rounded-2xl bg-white shadow-xs ring-1 ring-slate-200 ${fullPage ? 'p-6 md:p-8' : 'p-5'}`}>
             <style>{`.feed-quill .ql-toolbar{border-top-left-radius:.75rem;border-top-right-radius:.75rem;border-color:rgb(226 232 240);background:rgb(248 250 252)}.feed-quill .ql-container{border-bottom-left-radius:.75rem;border-bottom-right-radius:.75rem;border-color:rgb(226 232 240);font-family:inherit}.feed-quill .ql-editor{min-height:110px;font-size:.9rem}`}</style>
 
             {/* Post-type segmented control */}
             <div className="mb-3 flex flex-wrap gap-1.5">
+                <button type="button" onClick={() => setFormat('post')} className={`rounded-full px-3 py-1.5 text-[12px] font-semibold ${format === 'post' ? 'bg-blue-600 text-white' : 'bg-blue-50 text-blue-700'}`}>منشور</button>
+                <button type="button" onClick={() => setFormat('reel')} className={`rounded-full px-3 py-1.5 text-[12px] font-semibold ${format === 'reel' ? 'bg-blue-600 text-white' : 'bg-blue-50 text-blue-700'}`}>Reel</button>
                 {POST_TYPES.map((tp) => (
                     <button
                         key={tp}
@@ -176,6 +208,8 @@ export default function PostComposer({ onCreated }) {
                 ))}
             </div>
 
+            {organizations.length ? <label className="mb-3 block text-xs font-semibold text-slate-500">{t('feed_acting_as', 'Publish as')}<select value={actingOrganizationId} onChange={(e) => setActingOrganizationId(e.target.value)} className="ms-2 rounded-lg border border-slate-200 px-2 py-1.5 text-xs"><option value="">{t('feed_as_person', 'My personal profile')}</option>{organizations.map((organization) => <option key={organization.id} value={organization.id}>{organization.name}</option>)}</select></label> : null}
+
             <div className="feed-quill">
                 <ReactQuill
                     theme="snow"
@@ -184,6 +218,17 @@ export default function PostComposer({ onCreated }) {
                     modules={QUILL_MODULES}
                     placeholder={t('feed_composer_placeholder', 'Share something with the community…')}
                 />
+            </div>
+
+            <div className="mt-4"><MediaUploader value={mediaAssets} onChange={setMediaAssets} organizationId={actingOrganizationId} reelOnly={format === 'reel'} /></div>
+
+            <div className="mt-4 grid gap-3 md:grid-cols-2">
+                <label className="text-xs font-semibold text-slate-600">الجمهور<select value={audience} onChange={(e) => setAudience(e.target.value)} className="mt-1 block w-full rounded-xl border border-slate-200 px-3 py-2 text-sm"><option value="public">الجميع</option><option value="followers">المتابعون</option><option value="sector">نفس القطاع</option></select></label>
+                <label className="text-xs font-semibold text-slate-600">الموقع<input value={locationName} onChange={(e) => setLocationName(e.target.value)} className="mt-1 block w-full rounded-xl border border-slate-200 px-3 py-2 text-sm" placeholder="القاهرة، مصر" /></label>
+                <label className="text-xs font-semibold text-slate-600">زر الإجراء<select value={ctaType} onChange={(e) => setCtaType(e.target.value)} className="mt-1 block w-full rounded-xl border border-slate-200 px-3 py-2 text-sm"><option value="">بدون</option><option value="request_quote">طلب عرض سعر</option><option value="view_product">عرض المنتج</option><option value="contact">تواصل الآن</option><option value="register">تسجيل</option><option value="apply">تقديم</option></select></label>
+                {ctaType ? <label className="text-xs font-semibold text-slate-600">رابط الإجراء<input type="url" value={ctaUrl} onChange={(e) => setCtaUrl(e.target.value)} className="mt-1 block w-full rounded-xl border border-slate-200 px-3 py-2 text-sm" placeholder="https://" /></label> : null}
+                {ctaType ? <label className="text-xs font-semibold text-slate-600 md:col-span-2">نص الزر<input value={ctaLabel} onChange={(e) => setCtaLabel(e.target.value)} className="mt-1 block w-full rounded-xl border border-slate-200 px-3 py-2 text-sm" placeholder="اطلب عرض سعر" /></label> : null}
+                <label className="flex items-center gap-2 text-xs font-semibold text-slate-600 md:col-span-2"><input type="checkbox" checked={commentsEnabled} onChange={(e) => setCommentsEnabled(e.target.checked)} className="h-4 w-4 rounded border-slate-300 text-brand" />السماح بالتعليقات</label>
             </div>
 
             {/* Optional collapsible product attachment */}
@@ -232,7 +277,7 @@ export default function PostComposer({ onCreated }) {
                     {renderQuota()}
                     <button
                         type="submit"
-                        disabled={submitting || isEmptyBody(body)}
+                        disabled={submitting || (isEmptyBody(body) && mediaAssets.length === 0) || (format === 'reel' && !mediaAssets.some((asset) => asset.kind === 'video'))}
                         className="inline-flex items-center gap-1.5 rounded-xl bg-brand px-5 py-2 text-sm font-semibold text-white shadow-xs transition hover:bg-brand-dark disabled:opacity-50"
                     >
                         {submitting ? t('feed_publishing', 'Publishing…') : t('feed_publish', 'Publish')}
