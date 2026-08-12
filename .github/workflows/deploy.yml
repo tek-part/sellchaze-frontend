@@ -24,15 +24,26 @@ jobs:
           script: |
             set -e
 
-            cd /home/sellchaze/repos/frontend
+            APP_DIR=/home/sellchaze/repos/frontend
+            WEB_ROOT=/home/sellchaze/public_html
 
-            git fetch origin
+            mkdir -p /home/sellchaze/repos
+            if [ ! -d "$APP_DIR/.git" ]; then
+              git clone https://github.com/tek-part/sellchaze-frontend.git "$APP_DIR"
+            fi
+
+            cd "$APP_DIR"
+            git fetch origin main
             git reset --hard origin/main
 
             /bin/npm install
 
             /bin/npm run build
 
-            rm -rf /home/sellchaze/public_html/*
+            # Keep the Laravel API subdomain and cPanel's CGI directory intact.
+            find "$WEB_ROOT" -mindepth 1 -maxdepth 1 \
+              ! -name 'api.sellchaze.com' \
+              ! -name 'cgi-bin' \
+              -exec rm -rf -- {} +
 
-            cp -a dist/. /home/sellchaze/public_html/
+            cp -a dist/. "$WEB_ROOT/"
