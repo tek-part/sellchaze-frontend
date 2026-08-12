@@ -140,17 +140,14 @@ export default function CommunityShell({ children, rightRail = true }) {
                     </div>
 
                     <nav aria-label={t('community_brand_title')} className="space-y-0.5">
-                        {NAV_ITEMS.map((item) => (
-                            <SidebarLink key={item.to} {...item} />
-                        ))}
-
-                        {/* My profile — an Instagram-style row with the real avatar. */}
+                        {/* My profile leads the rail — the member's own name and
+                            photo, before any destination. */}
                         {myUsername ? (
                             <NavLink
                                 to={`/community/u/${myUsername}`}
                                 className={({ isActive }) =>
-                                    `sc-press flex items-center gap-4 rounded-xl px-3 py-3 text-[15px] transition hover:bg-slate-100/80 ${
-                                        isActive ? 'font-bold text-slate-900' : 'font-medium text-slate-700'
+                                    `sc-press mb-1 flex items-center gap-3 rounded-xl px-3 py-2.5 transition hover:bg-slate-100/80 ${
+                                        isActive ? 'font-bold' : 'font-medium'
                                     }`
                                 }
                             >
@@ -160,18 +157,25 @@ export default function CommunityShell({ children, rightRail = true }) {
                                             <img
                                                 src={myPhoto}
                                                 alt=""
-                                                className={`h-6 w-6 shrink-0 rounded-full object-cover ${isActive ? 'ring-2 ring-slate-900' : 'ring-1 ring-slate-200'}`}
+                                                className={`h-9 w-9 shrink-0 rounded-full object-cover ${isActive ? 'ring-2 ring-slate-900' : 'ring-1 ring-slate-200'}`}
                                             />
                                         ) : (
-                                            <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-brand-dark to-brand text-[10px] font-bold text-white">
+                                            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-brand-dark to-brand text-xs font-bold text-white">
                                                 {initials(myName)}
                                             </span>
                                         )}
-                                        <span className="truncate">{t('community_nav_profile', 'Profile')}</span>
+                                        <span className="min-w-0">
+                                            <span className="block truncate text-[15px] text-slate-900">{myName}</span>
+                                            <span className="block truncate text-xs font-medium text-slate-500">{t('community_nav_profile', 'Profile')}</span>
+                                        </span>
                                     </>
                                 )}
                             </NavLink>
                         ) : null}
+
+                        {NAV_ITEMS.map((item) => (
+                            <SidebarLink key={item.to} {...item} />
+                        ))}
                     </nav>
 
                     <NavLink

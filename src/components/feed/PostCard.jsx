@@ -95,7 +95,12 @@ export default function PostCard({ post, onDeleted, index = 0 }) {
             if (entry.isIntersecting && entry.intersectionRatio >= 0.5) {
                 startedAt = Date.now(); trackFeedEvent(post.id, 'impression');
                 setTimeout(() => { if (!viewed && startedAt) { viewed = true; trackFeedEvent(post.id, 'view_2s'); } }, 2000);
-            } else if (startedAt) { trackFeedEvent(post.id, 'dwell', { value_ms: Date.now() - startedAt }); startedAt = 0; }
+            } else {
+                // A video must not keep talking off-screen: the moment the card
+                // scrolls (mostly) out of view, everything playing inside stops.
+                node.querySelectorAll('video').forEach((video) => { if (!video.paused) video.pause(); });
+                if (startedAt) { trackFeedEvent(post.id, 'dwell', { value_ms: Date.now() - startedAt }); startedAt = 0; }
+            }
         }, { threshold: [0.5] });
         observer.observe(node);
         return () => { observer.disconnect(); if (startedAt) trackFeedEvent(post.id, 'dwell', { value_ms: Date.now() - startedAt }); };
@@ -384,7 +389,7 @@ export default function PostCard({ post, onDeleted, index = 0 }) {
                                     controls
                                     preload="metadata"
                                     playsInline
-                                    className={`max-h-[560px] w-full bg-black object-contain ${lead}`}
+                                    className={`max-h-[420px] w-full bg-black object-contain ${lead}`}
                                 />
                             );
                         }
@@ -402,6 +407,8 @@ export default function PostCard({ post, onDeleted, index = 0 }) {
                                 </a>
                             );
                         }
+                        // Single image: natural ratio capped in height. In a
+                        // grid: uniform 4:3 tiles so the gallery stays compact.
                         return (
                             <img
                                 key={item.id}
@@ -409,7 +416,7 @@ export default function PostCard({ post, onDeleted, index = 0 }) {
                                 alt={item.alt_text || ''}
                                 loading="lazy"
                                 decoding="async"
-                                className={`max-h-[560px] w-full object-cover ${lead}`}
+                                className={`w-full object-cover ${media.length === 1 ? 'max-h-[420px]' : `aspect-[4/3] ${lead ? 'max-h-[300px]' : ''}`} ${lead}`}
                             />
                         );
                     })}
