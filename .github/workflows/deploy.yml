@@ -45,7 +45,7 @@ jobs:
             WEB_ROOT=/home/sellchaze/public_html
 
             case "$DEPLOY_SHA" in
-              (*[!0-9a-f]*|'') echo "Invalid deployment SHA" >&2; exit 1 ;;
+              ''|*[!0-9a-f]*) echo "Invalid deployment SHA" >&2; exit 1 ;;
             esac
 
             mkdir -p /home/sellchaze/repos
