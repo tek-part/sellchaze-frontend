@@ -36,8 +36,8 @@ export function loadTheme({ registry, id, fallbackId }: LoadThemeOptions): Promi
   const promise = Promise.resolve(loader())
     .then((module) => {
       invariant(
-        module.manifest.id === resolvedId,
-        `theme "${resolvedId}" loaded a module whose manifest id is "${module.manifest.id}"`,
+        module.manifest.id === registry.manifestId(resolvedId),
+        `theme "${resolvedId}" loaded a module whose manifest id is "${module.manifest.id}" instead of "${registry.manifestId(resolvedId)}"`,
       );
       // Auto-migrate the manifest to the current internal shape before anything consumes it,
       // so older themes keep working after engine upgrades.
@@ -48,6 +48,10 @@ export function loadTheme({ registry, id, fallbackId }: LoadThemeOptions): Promi
       // Never cache a failed load: a transient chunk/network error would otherwise poison the cache
       // permanently, so the theme could never recover. Evict so the next call retries from scratch.
       if (cache.get(resolvedId) === promise) cache.delete(resolvedId);
+      if (resolvedId !== fallbackId) {
+        console.error(`Theme "${resolvedId}" failed to load; falling back to "${fallbackId}".`, error);
+        return loadTheme({ registry, id: fallbackId, fallbackId });
+      }
       throw error;
     });
 

@@ -44,6 +44,7 @@ export class ApiError extends Error {
   constructor(
     readonly status: number,
     message: string,
+    readonly payload?: unknown,
   ) {
     super(message);
     this.name = 'ApiError';
@@ -65,13 +66,15 @@ export async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> 
 
   if (!response.ok) {
     let message = response.statusText || `Request failed (${response.status})`;
+    let errorPayload: unknown;
     try {
       const payload = (await response.json()) as { message?: string };
+      errorPayload = payload;
       if (payload?.message) message = payload.message;
     } catch {
       /* non-JSON error body */
     }
-    throw new ApiError(response.status, message);
+    throw new ApiError(response.status, message, errorPayload);
   }
 
   if (response.status === 204) return undefined as T;
@@ -109,13 +112,15 @@ export async function apiRootFetch<T>(path: string, init?: RequestInit): Promise
   });
   if (!response.ok) {
     let message = response.statusText || `Request failed (${response.status})`;
+    let errorPayload: unknown;
     try {
       const payload = (await response.json()) as { message?: string };
+      errorPayload = payload;
       if (payload?.message) message = payload.message;
     } catch {
       /* non-JSON */
     }
-    throw new ApiError(response.status, message);
+    throw new ApiError(response.status, message, errorPayload);
   }
   if (response.status === 204) return undefined as T;
 

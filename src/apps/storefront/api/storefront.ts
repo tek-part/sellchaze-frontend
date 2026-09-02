@@ -23,6 +23,8 @@ export interface ApiStorefrontBootstrap {
   theme?: {
     key: string;
     version: string;
+    bundle_url?: string | null;
+    bundle_integrity?: string | null;
     settings: Record<string, string | number | boolean>;
     custom_css?: string | null;
   } | null;
@@ -121,7 +123,11 @@ export function getProductReviews(slug: string): Promise<ApiPaginated<ApiReview>
  * checkout; the server-cart endpoints (/cart/*) are intentionally not wrapped here. */
 export const applyCoupon = (code: string): Promise<{ data: unknown }> => apiSend('/checkout/coupon/apply', 'POST', { code });
 export const removeCoupon = (): Promise<{ data: unknown }> => apiSend('/checkout/coupon', 'DELETE');
+export interface StorefrontPaymentMethod { slug: string; name: string; test_mode: boolean }
+export const getPaymentMethods = (): Promise<{ data: ReadonlyArray<StorefrontPaymentMethod> }> => apiGet('/payment-methods');
 export const submitCheckout = (body: unknown): Promise<{ data: unknown }> => apiSend('/checkout', 'POST', body);
+export const retryCheckoutPayment = (token: string): Promise<{ data: unknown; payment?: { redirect_url?: string | null } }> =>
+  apiSend('/checkout/payment/retry', 'POST', { token });
 
 /* ---- auth / account ----
  * login/register return a bearer `token` the client must persist (see client.ts setAuthToken) —

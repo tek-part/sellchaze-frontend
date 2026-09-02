@@ -33,6 +33,26 @@ function fmtDate(iso) {
     return d.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
 }
 
+function resolveThemeImageUrl(rawImage) {
+    if (typeof rawImage !== 'string' || rawImage.trim() === '') {
+        return null;
+    }
+
+    const normalized = rawImage.trim();
+    if (/^https?:\/\//i.test(normalized) || normalized.startsWith('data:')) {
+        return normalized;
+    }
+    if (normalized.startsWith('//')) {
+        return `${window.location.protocol}${normalized}`;
+    }
+
+    if (!normalized.startsWith('/')) {
+        return `${window.location.origin}/${normalized}`;
+    }
+
+    return `${window.location.origin}${normalized}`;
+}
+
 /* ------------------------------------------------------------------ small UI atoms */
 
 function Badge({ tone = 'slate', icon: Icon, children }) {
@@ -55,22 +75,36 @@ function Badge({ tone = 'slate', icon: Icon, children }) {
 /* ------------------------------------------------------------------ theme screenshot */
 
 function ThemeShot({ theme }) {
+    const [imageFailed, setImageFailed] = useState(false);
+    const hasPreview = typeof theme?.preview_image === 'string' && theme.preview_image.trim() !== '' && !imageFailed;
+    const imageSrc = hasPreview ? resolveThemeImageUrl(theme.preview_image) : null;
+
     return (
         <div
             className="relative flex aspect-[16/10] items-center justify-center overflow-hidden bg-gradient-to-br"
             style={{ backgroundImage: `linear-gradient(135deg, ${theme.accent || '#0f172a'}, ${theme.accentAlt || theme.accent || '#334155'})` }}
         >
-            <div className="text-center text-white" aria-hidden>
-                <HiOutlineSwatch className="mx-auto h-10 w-10 text-white/85" />
-                <span className="mt-2 block text-sm font-semibold text-white/90">{theme.name}</span>
-            </div>
+            {imageSrc ? (
+                <img
+                    src={imageSrc}
+                    alt={theme.name}
+                    className="h-full w-full object-cover"
+                    loading="lazy"
+                    onError={() => setImageFailed(true)}
+                />
+            ) : (
+                <div className="text-center text-white" aria-hidden>
+                    <HiOutlineSwatch className="mx-auto h-10 w-10 text-white/85" />
+                    <span className="mt-2 block text-sm font-semibold text-white/90">{theme.name}</span>
+                </div>
+            )}
         </div>
     );
 }
 
 /* ------------------------------------------------------------------ card */
 
-function ThemeCard({ theme, isActive, canManage, busy, onPreview, onActivate, onCustomize, onDetails, onUpdate }) {
+function ThemeCard({ theme, isActive, canManage, busy, onPreview, onActivate, onPurchase, onCustomize, onDetails, onUpdate }) {
     const { t } = useTranslation();
     return (
         <article className="group flex flex-col overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-card transition hover:shadow-lg">
@@ -83,7 +117,7 @@ function ThemeCard({ theme, isActive, canManage, busy, onPreview, onActivate, on
                     </div>
                     <div className="flex flex-wrap gap-1">
                         {theme.is_featured ? <Badge tone="featured" icon={HiOutlineSparkles}>{t('theme_featured', 'Featured')}</Badge> : null}
-                        <Badge tone={theme.premium ? 'premium' : 'free'}>{theme.premium ? t('theme_premium', 'Premium') : t('theme_free', 'Free')}</Badge>
+                        <Badge tone={theme.premium ? 'premium' : 'free'}>{theme.premium ? `${theme.price} ${theme.currency}` : t('theme_free', 'Free')}</Badge>
                     </div>
                 </div>
             </div>
@@ -116,9 +150,16 @@ function ThemeCard({ theme, isActive, canManage, busy, onPreview, onActivate, on
                     ) : null}
 
                     {!theme.installed && canManage ? (
-                        <button type="button" disabled={busy} onClick={() => onActivate(theme)} className="inline-flex items-center gap-1.5 rounded-lg bg-brand px-3 py-1.5 text-sm font-semibold text-white transition hover:brightness-95 disabled:opacity-50">
+                        <button
+                            type="button"
+                            disabled={busy}
+                            onClick={() => theme.licensed ? onActivate(theme) : onPurchase(theme)}
+                            className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-semibold text-white transition hover:brightness-95 disabled:opacity-50 ${theme.licensed ? 'bg-brand' : 'bg-slate-900'}`}
+                        >
                             {busy ? <HiOutlineArrowPath className="h-4 w-4 animate-spin" /> : null}
-                            {t('theme_install_activate', 'Install & activate')}
+                            {theme.licensed
+                                ? t('theme_install_activate', 'Install & activate')
+                                : `${t('theme_buy_now', 'Buy theme')} · ${theme.price} ${theme.currency}`}
                         </button>
                     ) : null}
 
@@ -223,6 +264,10 @@ function DetailsDrawer({ theme, engineVersion, onClose }) {
                         <DetailRow label={t('theme_version', 'Version')}>{theme.latest_version ? `v${theme.latest_version}` : '—'}</DetailRow>
                         <DetailRow label={t('theme_author', 'Author')}>{theme.author || '—'}</DetailRow>
                         <DetailRow label={t('theme_license', 'License')}>{theme.premium ? t('theme_premium', 'Premium') : t('theme_free', 'Free')}</DetailRow>
+                        {theme.premium ? <DetailRow label={t('theme_price', 'Price')}>{theme.price} {theme.currency}</DetailRow> : null}
+                        <DetailRow label={t('theme_license_status', 'License status')}>
+                            {theme.licensed ? t('theme_licensed', 'Licensed for this store') : t('theme_not_licensed', 'Purchase required')}
+                        </DetailRow>
                         <DetailRow label={t('theme_signature', 'Signature')}>
                             <span className="inline-flex items-center gap-1 text-emerald-600"><HiOutlineCheckBadge className="h-4 w-4" />{t('theme_platform_verified', 'Platform-verified (first-party)')}</span>
                         </DetailRow>
@@ -326,6 +371,74 @@ function ThemesManager() {
         void load();
     }, [load]);
 
+    useEffect(() => {
+        const currentUrl = new URL(window.location.href);
+        const result = currentUrl.searchParams.get('theme_purchase');
+        const session = currentUrl.searchParams.get('session_id');
+        if (!result) return undefined;
+
+        const clearResult = () => {
+            currentUrl.searchParams.delete('theme_purchase');
+            currentUrl.searchParams.delete('session_id');
+            window.history.replaceState({}, '', `${currentUrl.pathname}${currentUrl.search}${currentUrl.hash}`);
+        };
+
+        if (result === 'cancelled') {
+            toast(t('theme_purchase_cancelled', 'Theme purchase was cancelled.'));
+            clearResult();
+            return undefined;
+        }
+
+        if (result !== 'success' || !session) {
+            clearResult();
+            return undefined;
+        }
+
+        let cancelled = false;
+        let timer;
+        let attempt = 0;
+        const terminal = new Set(['failed', 'expired', 'refunded', 'revoked']);
+
+        const poll = async () => {
+            attempt += 1;
+            try {
+                const { data } = await api.get(`${apiBase}/theme-purchases/${encodeURIComponent(session)}`);
+                if (cancelled) return;
+                if (data?.licensed) {
+                    toast.success(t('theme_purchase_complete', 'Payment confirmed. Your theme license is active.'));
+                    clearResult();
+                    await load();
+                    return;
+                }
+                if (terminal.has(data?.purchase?.status)) {
+                    toast.error(t('theme_purchase_failed', 'The theme payment was not completed.'));
+                    clearResult();
+                    return;
+                }
+            } catch (error) {
+                if (cancelled) return;
+                if (error.response?.status !== 404 || attempt >= 6) {
+                    toast.error(error.response?.data?.message || t('theme_purchase_pending', 'Payment is still being confirmed. Refresh shortly.'));
+                    clearResult();
+                    return;
+                }
+            }
+
+            if (attempt >= 6) {
+                toast(t('theme_purchase_pending', 'Payment is still being confirmed. Refresh shortly.'));
+                clearResult();
+                return;
+            }
+            timer = window.setTimeout(poll, 1500 * attempt);
+        };
+
+        void poll();
+        return () => {
+            cancelled = true;
+            if (timer) window.clearTimeout(timer);
+        };
+    }, [apiBase, load, t]);
+
     const themes = useMemo(() => {
         return rows.map((entry, index) => {
             const [accent, accentAlt] = THEME_ACCENTS[index % THEME_ACCENTS.length];
@@ -335,19 +448,25 @@ function ThemesManager() {
                 name: entry.name,
                 description: entry.description || t('theme_no_description', 'Storefront theme'),
                 author: entry.author,
+                preview_image: entry.preview_image,
                 latest_version: entry.latest_version,
+                category: entry.category,
                 minEngineVersion: '1.0.0',
                 accent,
                 accentAlt,
                 capabilities: [],
                 tags: [],
                 changelog: [],
-                premium: false,
-                is_featured: index === 0,
+                premium: Number(entry.price || 0) > 0,
+                price: entry.price,
+                currency: entry.currency || 'USD',
+                license_type: entry.license_type || 'free',
+                licensed: Boolean(entry.licensed),
+                is_featured: Boolean(entry.is_featured),
                 installed: Boolean(entry.installed),
-                installedVersion: entry.installed ? entry.latest_version : null,
+                installedVersion: entry.installed_version || null,
                 isActive: Number(activeThemeId) === Number(entry.id),
-                updateAvailable: entry.status === 'outdated',
+                updateAvailable: Boolean(entry.update_available),
                 _sortDate: String(entry.id).padStart(12, '0'),
             };
         });
@@ -358,7 +477,10 @@ function ThemesManager() {
         try {
             return await action();
         } catch (error) {
-            const message = error.response?.data?.message || error.message;
+            const fieldError = error.response?.data?.errors
+                ? Object.values(error.response.data.errors)?.[0]?.[0]
+                : null;
+            const message = fieldError || error.response?.data?.message || error.message;
             toast.error(message);
             throw error;
         } finally {
@@ -382,13 +504,27 @@ function ThemesManager() {
         const previewWindow = window.open('about:blank', '_blank');
         if (previewWindow) previewWindow.opener = null;
         void run(theme, async () => {
-            await installIfNeeded(theme);
             const { data } = await api.post(`${apiBase}/themes/preview`, { theme_id: theme.id });
             if (!data?.preview_url) throw new Error(t('theme_preview_failed', 'Preview URL was not returned.'));
             if (previewWindow) previewWindow.location.href = data.preview_url;
             else window.open(data.preview_url, '_blank', 'noopener');
             await load();
         }).catch(() => previewWindow?.close());
+    };
+
+    const doPurchase = (theme) => {
+        void run(theme, async () => {
+            const { data } = await api.post(`${apiBase}/themes/${theme.id}/purchase`);
+            if (data?.licensed) {
+                toast.success(t('theme_license_ready', 'Theme license is ready.'));
+                await load();
+                return;
+            }
+            if (!data?.checkout_url) {
+                throw new Error(t('theme_checkout_missing', 'Checkout URL was not returned.'));
+            }
+            window.location.assign(data.checkout_url);
+        });
     };
 
     const doActivate = async (theme) => {
@@ -502,6 +638,7 @@ function ThemesManager() {
                             busy={pending.has(th.id)}
                             onPreview={doPreview}
                             onActivate={setConfirmTheme}
+                            onPurchase={doPurchase}
                             onCustomize={doCustomize}
                             onDetails={setDetailTheme}
                             onUpdate={doUpdate}

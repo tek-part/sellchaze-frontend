@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 750">
+  <rect width="1200" height="750" fill="#e2e8f0" />
+  <rect x="0" y="0" width="1200" height="90" fill="#334155" />
+  <text x="90" y="58" fill="#f8fafc" font-size="36" font-family="Arial" font-weight="700">ATLAS</text>
+  <rect x="80" y="130" width="1040" height="560" rx="18" fill="#ffffff" />
+  <rect x="120" y="170" width="240" height="26" fill="#0f172a" />
+  <rect x="120" y="210" width="300" height="12" fill="#64748b" />
+  <rect x="120" y="240" width="960" height="100" rx="12" fill="#f8fafc" />
+  <rect x="145" y="270" width="180" height="12" fill="#475569" />
+  <rect x="145" y="292" width="260" height="12" fill="#64748b" />
+  <rect x="145" y="314" width="190" height="12" fill="#64748b" />
+  <rect x="120" y="370" width="300" height="50" fill="#2563eb" />
+  <rect x="680" y="370" width="380" height="180" rx="14" fill="#020617" fill-opacity="0.08" />
+  <rect x="700" y="400" width="100" height="14" fill="#1e293b" />
+  <rect x="700" y="426" width="150" height="12" fill="#64748b" />
+  <rect x="700" y="448" width="150" height="12" fill="#64748b" />
+  <rect x="680" y="490" width="150" height="44" fill="#f59e0b" />
+  <text x="600" y="700" text-anchor="middle" fill="#334155" font-size="40" font-family="Arial" font-weight="700">Atlas Theme</text>
+</svg>

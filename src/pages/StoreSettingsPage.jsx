@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Navigate, useNavigate } from 'react-router-dom';
+import { Link, Navigate, useNavigate } from 'react-router-dom';
 import useStoreScope from '../hooks/useStoreScope';
 import { useOutletContext } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -15,7 +15,7 @@ const CURRENCIES = ['USD', 'SAR', 'AED', 'EGP', 'KWD', 'QAR', 'BHD', 'OMR', 'EUR
  * so we POST with method spoofing (_method=PUT) to the update route.
  */
 export default function StoreSettingsPage() {
-    const { id, apiBase } = useStoreScope();
+    const { id, apiBase, uiBase } = useStoreScope();
     const { t } = useTranslation();
     const navigate = useNavigate();
     const { permissions } = useOutletContext();
@@ -135,6 +135,30 @@ export default function StoreSettingsPage() {
                 <p className="rounded-lg border border-red-100 bg-red-50 px-3 py-2 text-sm text-red-700">{err}</p>
             )}
             <div className="grid gap-5 lg:grid-cols-3">
+            <aside className="space-y-4 rounded-2xl border border-slate-200/80 bg-white p-5 shadow-card lg:col-span-1">
+                <h2 className="text-lg font-semibold text-slate-900">{t('store_shortcuts', 'Store shortcuts')}</h2>
+                <p className="text-sm text-slate-500">{t('store_shortcuts_hint', 'Manage store areas directly from the dashboard.')}</p>
+                <div className="space-y-2">
+                    <Link
+                        to={`${uiBase}/themes`}
+                        className="block rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
+                    >
+                        {t('go_to_store_themes', 'Themes')}
+                    </Link>
+                    <Link
+                        to={`${uiBase}/pages`}
+                        className="block rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
+                    >
+                        {t('go_to_store_pages', 'Store pages')}
+                    </Link>
+                    <Link
+                        to={`${uiBase}/payments`}
+                        className="block rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
+                    >
+                        {t('store_payment_settings', 'Payment settings')}
+                    </Link>
+                </div>
+            </aside>
             <form
                 onSubmit={submit}
                 className="space-y-5 rounded-2xl border border-slate-200/80 bg-white p-6 shadow-card lg:col-span-2"

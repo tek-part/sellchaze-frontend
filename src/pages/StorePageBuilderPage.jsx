@@ -5,9 +5,10 @@ import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
 import api from '../api/client';
 import SearchableSelect from '../components/ui/SearchableSelect';
+import StoreMediaPicker from '../components/store/StoreMediaPicker';
 import { commit, createHistory, isPreviewMessage, redo, reorder, undo, VIEWPORT_WIDTH } from '../apps/storefront/platform/studio/editor-domain';
 
-function SectionSettings({ schema, value, onChange, viewport }) {
+function SectionSettings({ schema, value, onChange, viewport, apiBase }) {
     const fields = schema?.settings ?? [];
     if (!fields.length) return <p className="text-xs text-slate-400">No settings.</p>;
     const set = (field, nextValue) => {
@@ -35,6 +36,8 @@ function SectionSettings({ schema, value, onChange, viewport }) {
                             </SearchableSelect>
                         ) : f.type === 'number' || f.type === 'range' ? (
                             <input type="number" min={f.min} max={f.max} step={f.step} value={v ?? ''} onChange={(e) => set(f, e.target.value === '' ? '' : Number(e.target.value))} className={cls} />
+                        ) : f.type === 'image' ? (
+                            <StoreMediaPicker apiBase={apiBase} value={v ?? ''} onChange={(next) => set(f, next)} />
                         ) : f.type === 'color' ? (
                             <input type="color" value={v || '#000000'} onChange={(e) => set(f, e.target.value)} />
                         ) : (
@@ -70,13 +73,16 @@ export default function StorePageBuilderPage() {
     const hydrated = useRef(false);
     const previewFrame = useRef(null);
     const [previewVersion, setPreviewVersion] = useState(0);
+    const [dirty, setDirty] = useState(false);
+    const [publishing, setPublishing] = useState(false);
 
     const load = useCallback(() => {
         Promise.all([
             api.get(`${apiBase}/pages/${pageId}`),
             api.get(`${apiBase}/pages/schema`),
             api.get(`${apiBase}/pages/${pageId}/revisions`),
-        ]).then(([pg, sc, rv]) => {
+            api.post(`${apiBase}/pages/${pageId}/preview`),
+        ]).then(([pg, sc, rv, pv]) => {
             setPage(pg.data.data);
             const loaded = (pg.data.data.sections ?? []).map((s) => ({
                 id: String(s.id ?? crypto.randomUUID()), type: s.type, settings: s.settings ?? {},
@@ -86,13 +92,15 @@ export default function StorePageBuilderPage() {
             setLocale(pg.data.data.locale === 'en' ? 'en' : 'ar');
             setSchema(sc.data.sections_schema ?? {});
             setRevisions(rv.data.data ?? []);
+            setPreviewUrl(pv.data.preview_url || '');
+            setDirty(!!pg.data.data.has_unpublished_changes);
         }).catch((e) => setErr(e.response?.data?.message || e.message));
     }, [apiBase, pageId]);
 
     useEffect(() => { load(); }, [load]);
 
     const types = useMemo(() => Object.keys(schema), [schema]);
-    const changeSections = (recipe) => setHistory((current) => commit(current, recipe(current.present)));
+    const changeSections = (recipe) => { setDirty(true); setHistory((current) => commit(current, recipe(current.present))); };
     const move = (i, dir) => changeSections((prev) => reorder(prev, i, i + dir));
     const duplicate = (i) => changeSections((prev) => { const n = [...prev]; n.splice(i + 1, 0, { ...structuredClone(prev[i]), id: crypto.randomUUID() }); return n; });
     const remove = (i) => changeSections((prev) => prev.filter((_, j) => j !== i));
@@ -103,15 +111,28 @@ export default function StorePageBuilderPage() {
     const saveSections = () => run(async () => {
         await api.put(`${apiBase}/pages/${pageId}/sections`, { sections: sections.map(({ id: _id, ...section }) => section) });
         toast.success(t('page_sections_saved', 'Layout saved'));
-        load();
+        setPreviewVersion((value) => value + 1);
     });
     const savePage = () => run(async () => {
         await api.put(`${apiBase}/pages/${pageId}`, { title: page.title, slug: page.slug, template: page.template, seo: page.seo || {} });
         toast.success(t('page_saved', 'Saved'));
     });
+    const publishPage = async () => {
+        setPublishing(true);
+        try {
+            await api.put(`${apiBase}/pages/${pageId}/sections`, { sections: sections.map(({ id: _id, ...section }) => section) });
+            await api.put(`${apiBase}/pages/${pageId}`, { title: page.title, slug: page.slug, template: page.template, seo: page.seo || {} });
+            const { data } = await api.post(`${apiBase}/pages/${pageId}/publish`);
+            setPage((current) => ({ ...current, ...data.data }));
+            setDirty(false);
+            setPreviewVersion((value) => value + 1);
+            toast.success(t('page_published', 'Page published'));
+        } catch (e) { toast.error(e.response?.data?.message || e.message); }
+        finally { setPublishing(false); }
+    };
     const restore = (rid) => run(async () => { await api.post(`${apiBase}/pages/${pageId}/revisions/${rid}/restore`); toast.success(t('page_restored', 'Restored')); load(); });
     const preview = async () => {
-        try { const { data } = await api.post(`${apiBase}/pages/${pageId}/preview`); setPreviewUrl(data.preview_url); }
+        try { await api.put(`${apiBase}/pages/${pageId}/sections`, { sections: sections.map(({ id: _id, ...section }) => section) }); const { data } = await api.post(`${apiBase}/pages/${pageId}/preview`); setPreviewUrl(data.preview_url); setPreviewVersion((value) => value + 1); }
         catch (e) { toast.error(e.response?.data?.message || e.message); }
     };
     async function run(fn) { setSaving(true); try { await fn(); } catch (e) { toast.error(e.response?.data?.message || e.message); } finally { setSaving(false); } }
@@ -126,18 +147,19 @@ export default function StorePageBuilderPage() {
     }, [apiBase, pageId, sections, page]);
 
     const sendPreviewState = useCallback(() => {
-        previewFrame.current?.contentWindow?.postMessage({ channel: 'sellchaze-theme-studio', version: 1, type: 'hydrate', payload: { sections, locale, path: `/pages/${page?.slug || ''}` } }, window.location.origin);
-    }, [locale, page?.slug, sections]);
+        if (!previewUrl) return;
+        previewFrame.current?.contentWindow?.postMessage({ channel: 'sellchaze-theme-studio', version: 1, type: 'hydrate', payload: { sections, locale, path: `/pages/${page?.slug || ''}` } }, new URL(previewUrl).origin);
+    }, [locale, page?.slug, previewUrl, sections]);
 
     useEffect(() => {
         const receive = (event) => {
-            if (event.origin !== window.location.origin || event.source !== previewFrame.current?.contentWindow || !isPreviewMessage(event.data)) return;
+            if (!previewUrl || event.origin !== new URL(previewUrl).origin || event.source !== previewFrame.current?.contentWindow || !isPreviewMessage(event.data)) return;
             if (event.data.type === 'ready') sendPreviewState();
             if (event.data.type === 'section-selected') setSelected(event.data.payload.id);
         };
         window.addEventListener('message', receive);
         return () => window.removeEventListener('message', receive);
-    }, [sendPreviewState]);
+    }, [previewUrl, sendPreviewState]);
 
     useEffect(() => { sendPreviewState(); }, [sendPreviewState]);
 
@@ -154,10 +176,12 @@ export default function StorePageBuilderPage() {
                     <button type="button" onClick={() => setHistory(undo(history))} disabled={!history.past.length} className="rounded-xl border border-slate-200 px-3 py-2 text-sm disabled:opacity-40">Undo</button>
                     <button type="button" onClick={() => setHistory(redo(history))} disabled={!history.future.length} className="rounded-xl border border-slate-200 px-3 py-2 text-sm disabled:opacity-40">Redo</button>
                     <button type="button" onClick={preview} className="rounded-xl border border-slate-200 px-3 py-2 text-sm">{t('theme_preview', 'Preview')}</button>
+                    <button type="button" onClick={publishPage} disabled={publishing || saving || !dirty} className="rounded-xl bg-emerald-600 px-4 py-2 text-sm font-semibold text-white disabled:opacity-40">{publishing ? t('theme_publishing', 'Publishing…') : t('theme_publish', 'Publish')}</button>
                     <button type="button" onClick={() => navigate(`${uiBase}/pages`)} className="rounded-xl border border-slate-200 px-3 py-2 text-sm">{t('cancel', 'Back')}</button>
                 </div>
             </div>
             {err && <p className="rounded-lg border border-red-100 bg-red-50 px-3 py-2 text-sm text-red-700">{err}</p>}
+            <div className={`rounded-xl border px-4 py-2 text-sm ${dirty ? 'border-amber-200 bg-amber-50 text-amber-800' : 'border-emerald-200 bg-emerald-50 text-emerald-800'}`}>{dirty ? t('page_unpublished_changes', 'Draft changes are not visible to visitors until you publish.') : t('page_published_synced', 'The published page matches this draft.')}</div>
 
             <div className="grid gap-5 lg:grid-cols-3">
                 {/* Sections (builder) */}
@@ -174,7 +198,7 @@ export default function StorePageBuilderPage() {
                                     <button type="button" onClick={() => remove(i)} className="rounded-sm border px-2 py-1 text-red-600">×</button>
                                 </div>
                             </div>
-                            {!s.reusable_section_id && <SectionSettings schema={schema[s.type]} value={s.settings} onChange={(v) => editSettings(i, v)} viewport={viewport} />}
+                            {!s.reusable_section_id && <SectionSettings schema={schema[s.type]} value={s.settings} onChange={(v) => editSettings(i, v)} viewport={viewport} apiBase={apiBase} />}
                         </div>
                     ))}
                     {sections.length === 0 && <p className="text-sm text-slate-500">{t('page_no_sections', 'No sections yet — add one from the right.')}</p>}
@@ -196,13 +220,13 @@ export default function StorePageBuilderPage() {
 
                     <div className="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-card space-y-2">
                         <h3 className="text-sm font-semibold">{t('page_settings', 'Page settings')}</h3>
-                        <input value={page.title} onChange={(e) => setPage({ ...page, title: e.target.value })} placeholder="Title" className={field} />
-                        <input value={page.slug} onChange={(e) => setPage({ ...page, slug: e.target.value })} placeholder="slug" className={field} />
-                        <SearchableSelect value={page.template} onChange={(e) => setPage({ ...page, template: e.target.value })} className="w-full">
+                        <input value={page.title} onChange={(e) => { setDirty(true); setPage({ ...page, title: e.target.value }); }} placeholder="Title" className={field} />
+                        <input value={page.slug} onChange={(e) => { setDirty(true); setPage({ ...page, slug: e.target.value }); }} placeholder="slug" className={field} />
+                        <SearchableSelect value={page.template} onChange={(e) => { setDirty(true); setPage({ ...page, template: e.target.value }); }} className="w-full">
                             <option value="page">page</option><option value="landing">landing</option>
                         </SearchableSelect>
-                        <input value={page.seo?.title ?? ''} onChange={(e) => setPage({ ...page, seo: { ...(page.seo || {}), title: e.target.value } })} placeholder="SEO title" className={field} />
-                        <textarea rows={2} value={page.seo?.description ?? ''} onChange={(e) => setPage({ ...page, seo: { ...(page.seo || {}), description: e.target.value } })} placeholder="SEO description" className={field} />
+                        <input value={page.seo?.title ?? ''} onChange={(e) => { setDirty(true); setPage({ ...page, seo: { ...(page.seo || {}), title: e.target.value } }); }} placeholder="SEO title" className={field} />
+                        <textarea rows={2} value={page.seo?.description ?? ''} onChange={(e) => { setDirty(true); setPage({ ...page, seo: { ...(page.seo || {}), description: e.target.value } }); }} placeholder="SEO description" className={field} />
                         <button type="button" disabled={saving} onClick={savePage} className="w-full rounded-lg bg-slate-800 px-3 py-2 text-sm font-semibold text-white disabled:opacity-50">
                             {t('page_save_settings', 'Save settings')}
                         </button>

@@ -163,8 +163,9 @@ export default function SidebarNav({ isAdmin = false, isSupplier = false, roles 
     const canStorePages = isStoreOwner || can('store.pages.manage');
     const canStoreMenus = isStoreOwner || can('store.menus.manage');
     const canStoreSettings = isStoreOwner || can('store.settings.manage');
+    const canStorePayments = isStoreOwner || can('store.settings.manage');
     const openStore = usePathPrefix('/store');
-    const storeMyGroup = canStoreSettings || canStoreThemes || canStorePages || canStoreMenus;
+    const storeMyGroup = canStoreSettings || canStorePayments || canStoreThemes || canStorePages || canStoreMenus;
     const storeCatalogGroup = canStoreProducts || canStoreCategories;
     const storeSalesGroup = canStoreOrders || canStoreCoupons;
     const hasStoreAccess = canStoreView || storeMyGroup || storeCatalogGroup
@@ -225,6 +226,10 @@ export default function SidebarNav({ isAdmin = false, isSupplier = false, roles 
                     <NavLink to="/admin/articles" className={navLinkClass}>
                         <HiOutlineNewspaper className="h-5 w-5 shrink-0 opacity-95" aria-hidden />
                         {t('nav_admin_articles', 'Articles')}
+                    </NavLink>
+                    <NavLink to="/admin/themes" className={navLinkClass}>
+                        <HiOutlineSparkles className="h-5 w-5 shrink-0 opacity-95" aria-hidden />
+                        {t('theme_marketplace_admin', 'Theme marketplace')}
                     </NavLink>
                 </div>
 
@@ -499,6 +504,12 @@ export default function SidebarNav({ isAdmin = false, isSupplier = false, roles 
                                 <NavLink to="/store/settings" className={subNavLinkClass}>
                                     <HiOutlineCog6Tooth className="h-4 w-4 shrink-0 opacity-90" aria-hidden />
                                     {t('nav_store_settings')}
+                                </NavLink>
+                            ) : null}
+                            {canStorePayments ? (
+                                <NavLink to="/store/payments" className={subNavLinkClass}>
+                                    <HiOutlineCreditCard className="h-4 w-4 shrink-0 opacity-90" aria-hidden />
+                                    {t('nav_store_payments', 'Payment gateways')}
                                 </NavLink>
                             ) : null}
                             {canStoreThemes ? (

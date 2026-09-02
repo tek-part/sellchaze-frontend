@@ -4,7 +4,7 @@
  * the order-success page. Empty cart redirects to the bag.
  */
 import { useState, type FormEvent, type ReactElement } from 'react';
-import { Navigate, useNavigate, useSearchParams } from 'react-router-dom';
+import { Navigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
   Button,
@@ -14,22 +14,21 @@ import {
 } from '../themes/luxury-fashion/components';
 import { useCart } from '../state/cart';
 import { useStore } from '../state/store-context';
-import { applyCoupon, submitCheckout } from '../api/storefront';
+import { applyCoupon } from '../api/storefront';
 import { formatMoney } from '../utils/format';
 import { ThemeRenderer, useTemplate } from '../theme-engine';
 import { flowContext } from './flow-context';
+import { useCheckoutPaymentFlow } from './useCheckoutPaymentFlow';
 
 export function CheckoutPage(): ReactElement {
   const { t } = useTranslation();
   const cart = useCart();
   const { store } = useStore();
-  const navigate = useNavigate();
   const [form, setForm] = useState({ email: '', name: '', line1: '', city: '', postal_code: '', country: '' });
   const [coupon, setCoupon] = useState('');
   const [couponMsg, setCouponMsg] = useState<string>();
   const [discount, setDiscount] = useState(0);
-  const [error, setError] = useState<string>();
-  const [busy, setBusy] = useState(false);
+  const checkout = useCheckoutPaymentFlow();
   const set = (key: keyof typeof form) => (e: { target: { value: string } }) => setForm((f) => ({ ...f, [key]: e.target.value }));
   const tpl = useTemplate('checkout');
 
@@ -54,24 +53,12 @@ export function CheckoutPage(): ReactElement {
 
   const placeOrder = async (e: FormEvent): Promise<void> => {
     e.preventDefault();
-    setBusy(true);
-    setError(undefined);
-    try {
-      const res = (await submitCheckout({
-        customer_name: form.name,
-        customer_email: form.email,
-        shipping_address: { name: form.name, line1: form.line1, city: form.city, postal_code: form.postal_code, country: form.country },
-        items: cart.lines.map((l) => ({ product_id: Number(l.productId), variant_id: l.variantId ? Number(l.variantId) : undefined, quantity: l.quantity })),
-        ...(coupon ? { coupon_code: coupon } : {}),
-      })) as { data?: { number?: string } };
-      cart.clear();
-      const number = res?.data?.number;
-      navigate(number ? `/order/success?number=${encodeURIComponent(number)}` : '/order/success');
-    } catch (err) {
-      setError(err instanceof Error ? err.message : t('checkout.orderFailed'));
-    } finally {
-      setBusy(false);
-    }
+    await checkout.submit({
+      customer_name: form.name,
+      customer_email: form.email,
+      shipping_address: { name: form.name, line1: form.line1, city: form.city, postal_code: form.postal_code, country: form.country },
+      ...(coupon ? { coupon_code: coupon } : {}),
+    });
   };
 
   return (
@@ -88,10 +75,34 @@ export function CheckoutPage(): ReactElement {
             <Input label={t('account.city')} value={form.city} onChange={set('city')} required autoComplete="address-level2" />
             <Input label={t('account.postalCode')} value={form.postal_code} onChange={set('postal_code')} required autoComplete="postal-code" />
             <Input label={t('account.country')} value={form.country} onChange={set('country')} required autoComplete="country-name" />
-            {error ? <p className="sf-field__error" role="alert">{error}</p> : null}
-            <Button type="submit" block loading={busy}>
-              {t('checkout.placeOrder')} · {formatMoney(total, currency)}
+            <fieldset className="sf-account__panel" style={{ padding: '1rem' }}>
+              <legend>{t('checkout.payment')}</legend>
+              {checkout.paymentMethods.map((method) => (
+                <label key={method.slug} className="sf-card-row" style={{ cursor: 'pointer' }}>
+                  <input
+                    type="radio"
+                    name="payment_method"
+                    value={method.slug}
+                    checked={checkout.paymentMethod === method.slug}
+                    onChange={() => checkout.setPaymentMethod(method.slug)}
+                    required
+                  />
+                  <span>{method.name}{method.test_mode ? ' (Test)' : ''}</span>
+                </label>
+              ))}
+              {checkout.paymentMethods.length === 0 ? <p className="sf-field__error">No payment method is currently available.</p> : null}
+            </fieldset>
+            {checkout.error ? <p className="sf-field__error" role="alert">{checkout.error}</p> : null}
+            <Button type="submit" block loading={checkout.busy} disabled={!checkout.paymentMethod}>
+              {checkout.paymentRetry
+                ? t('checkout.retryPayment', 'Retry payment')
+                : `${t('checkout.placeOrder')} · ${formatMoney(total, currency)}`}
             </Button>
+            {checkout.paymentRetry ? (
+              <Button type="button" variant="secondary" block onClick={checkout.cancelRetry}>
+                {t('checkout.startNewOrder', 'Start a new order instead')}
+              </Button>
+            ) : null}
           </form>
 
           <aside className="sf-cart-summary">

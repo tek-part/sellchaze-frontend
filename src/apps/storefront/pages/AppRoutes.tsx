@@ -15,6 +15,8 @@ const SearchPage = lazy(() => import('./SearchPage').then((m) => ({ default: m.S
 const CartPage = lazy(() => import('./CartPage').then((m) => ({ default: m.CartPage })));
 const CheckoutPage = lazy(() => import('./CheckoutPage').then((m) => ({ default: m.CheckoutPage })));
 const OrderSuccessPage = lazy(() => import('./CheckoutPage').then((m) => ({ default: m.OrderSuccessPage })));
+const HyperPayPage = lazy(() => import('./HyperPayPage').then((m) => ({ default: m.HyperPayPage })));
+const FawryPayPage = lazy(() => import('./FawryPayPage').then((m) => ({ default: m.FawryPayPage })));
 const WishlistPage = lazy(() => import('./WishlistPage').then((m) => ({ default: m.WishlistPage })));
 const NotFoundPage = lazy(() => import('./NotFoundPage').then((m) => ({ default: m.NotFoundPage })));
 const LoginPage = lazy(() => import('./AuthPages').then((m) => ({ default: m.LoginPage })));
@@ -68,6 +70,8 @@ export function AppRoutes(): ReactElement {
         <Route path="/cart" element={<CartPage />} />
         <Route path="/checkout" element={<CheckoutPage />} />
         <Route path="/order/success" element={<OrderSuccessPage />} />
+        <Route path="/payment/hyperpay" element={<HyperPayPage />} />
+        <Route path="/payment/fawry" element={<FawryPayPage />} />
         <Route path="/wishlist" element={<WishlistPage />} />
 
         <Route path="/login" element={<LoginPage />} />

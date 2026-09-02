@@ -111,6 +111,9 @@ async function bootstrap(): Promise<void> {
     <I18nextProvider i18n={storefrontI18n()}>
     <StorefrontThemeRoot
       {...(themeId ? { themeId } : {})}
+      {...(initialData?.theme?.bundle_url ? { bundleUrl: initialData.theme.bundle_url } : {})}
+      {...(initialData?.theme?.bundle_integrity ? { bundleIntegrity: initialData.theme.bundle_integrity } : {})}
+      {...(initialData?.theme?.version ? { bundleVersion: initialData.theme.version } : {})}
       {...(schemeOverride ? { colorScheme: schemeOverride } : {})}
       {...(effectiveSettings ? { settings: effectiveSettings } : {})}
     >

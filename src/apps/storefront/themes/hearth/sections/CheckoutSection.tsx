@@ -16,6 +16,7 @@ import { Input } from '../components/Input';
 import { Select } from '../components/Field';
 import { Price } from '../components/Price';
 import { Section } from '../components/Section';
+import { useCheckoutPaymentFlow } from '../../../pages/useCheckoutPaymentFlow';
 
 const DELIVERY_METHODS = [
   { value: 'standard', labelKey: 'checkout.methodStandard' },
@@ -27,9 +28,10 @@ export function CheckoutSection(props: SectionRenderProps): ReactElement {
   const { t } = useTranslation();
   const cart = useCart();
   const currency = cart.totals.currency || props.context.store.currency || 'USD';
-  const [email, setEmail] = useState('');
+  const [form, setForm] = useState({ email: '', firstName: '', lastName: '', address: '', city: '', postcode: '', country: 'US' });
   const [method, setMethod] = useState<string>('standard');
-  const [busy, setBusy] = useState(false);
+  const checkout = useCheckoutPaymentFlow();
+  const set = (key: keyof typeof form) => (event: { target: { value: string } }) => setForm((current) => ({ ...current, [key]: event.target.value }));
 
   const countries = [
     { value: 'US', label: t('checkout.countryUS') },
@@ -52,12 +54,12 @@ export function CheckoutSection(props: SectionRenderProps): ReactElement {
 
   const onSubmit = (e: FormEvent<HTMLFormElement>): void => {
     e.preventDefault();
-    if (!email.trim()) return;
-    setBusy(true);
-    // Provider-hosted payment happens off-theme; on success the app records the order. Here we
-    // complete the demo flow by clearing the bag and routing to the confirmation page.
-    cart.clear();
-    if (typeof window !== 'undefined') window.location.assign('/order-success');
+    if (!form.email.trim()) return;
+    void checkout.submit({
+      customer_name: `${form.firstName} ${form.lastName}`.trim(),
+      customer_email: form.email,
+      shipping_address: { name: `${form.firstName} ${form.lastName}`.trim(), line1: form.address, city: form.city, postal_code: form.postcode, country: form.country, delivery_method: method },
+    });
   };
 
   return (
@@ -74,23 +76,23 @@ export function CheckoutSection(props: SectionRenderProps): ReactElement {
                 name="email"
                 autoComplete="email"
                 required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                value={form.email}
+                onChange={set('email')}
               />
             </fieldset>
 
             <fieldset className="hh-checkout__step">
               <legend className="hh-checkout__legend">{t('checkout.deliveryAddress')}</legend>
               <div className="hh-checkout__grid">
-                <Input label={t('checkout.firstName')} name="given-name" autoComplete="given-name" required />
-                <Input label={t('checkout.lastName')} name="family-name" autoComplete="family-name" required />
+                <Input label={t('checkout.firstName')} name="given-name" autoComplete="given-name" required value={form.firstName} onChange={set('firstName')} />
+                <Input label={t('checkout.lastName')} name="family-name" autoComplete="family-name" required value={form.lastName} onChange={set('lastName')} />
               </div>
-              <Input label={t('checkout.address')} name="address" autoComplete="street-address" required />
+              <Input label={t('checkout.address')} name="address" autoComplete="street-address" required value={form.address} onChange={set('address')} />
               <div className="hh-checkout__grid">
-                <Input label={t('account.city')} name="city" autoComplete="address-level2" required />
-                <Input label={t('account.postalCode')} name="postcode" autoComplete="postal-code" required />
+                <Input label={t('account.city')} name="city" autoComplete="address-level2" required value={form.city} onChange={set('city')} />
+                <Input label={t('account.postalCode')} name="postcode" autoComplete="postal-code" required value={form.postcode} onChange={set('postcode')} />
               </div>
-              <Select label={t('account.country')} options={countries} defaultValue="US" />
+              <Select label={t('account.country')} options={countries} value={form.country} onChange={set('country')} />
             </fieldset>
 
             <fieldset className="hh-checkout__step">
@@ -116,6 +118,8 @@ export function CheckoutSection(props: SectionRenderProps): ReactElement {
               <p className="hh-checkout__payment-note">
                 {t('checkout.paymentNote')}
               </p>
+              <div className="hh-checkout__methods">{checkout.paymentMethods.map((payment) => <label key={payment.slug} className="hh-checkout__method"><input type="radio" name="payment_method" value={payment.slug} checked={checkout.paymentMethod === payment.slug} onChange={() => checkout.setPaymentMethod(payment.slug)} /><span>{payment.name}{payment.test_mode ? ' (Test)' : ''}</span></label>)}</div>
+              {checkout.error ? <p className="hh-field__error" role="alert">{checkout.error}</p> : null}
             </fieldset>
           </div>
 
@@ -136,9 +140,10 @@ export function CheckoutSection(props: SectionRenderProps): ReactElement {
               <Price value={cart.totals.subtotal} currency={currency} />
             </div>
             <p className="hh-cart__note">{t('checkout.deliveryTaxNext')}</p>
-            <Button type="submit" block loading={busy}>
-              {t('checkout.continueToPayment')}
+            <Button type="submit" block loading={checkout.busy} disabled={!checkout.paymentMethod}>
+              {checkout.paymentRetry ? t('checkout.retryPayment', 'Retry payment') : t('checkout.continueToPayment')}
             </Button>
+            {checkout.paymentRetry ? <Button type="button" variant="secondary" block onClick={checkout.cancelRetry}>{t('checkout.startNewOrder', 'Start a new order instead')}</Button> : null}
           </aside>
         </form>
       </Container>

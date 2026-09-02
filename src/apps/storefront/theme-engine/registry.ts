@@ -11,16 +11,18 @@ import type { ThemeLoader } from './types';
 export interface RegisteredTheme {
   readonly id: string;
   readonly load: ThemeLoader;
+  readonly manifestId: string;
 }
 
 export class ThemeRegistry {
-  private readonly themes = new Map<string, ThemeLoader>();
+  private readonly themes = new Map<string, { load: ThemeLoader; manifestId: string }>();
 
   /** Register a theme by id. Idempotent overwrite is disallowed to catch accidental clashes. */
-  register(id: string, loader: ThemeLoader): this {
+  register(id: string, loader: ThemeLoader, manifestId: string = id): this {
     invariant(id.length > 0, 'theme id must be a non-empty string');
+    invariant(manifestId.length > 0, 'theme manifest id must be a non-empty string');
     invariant(!this.themes.has(id), `theme "${id}" is already registered`);
-    this.themes.set(id, loader);
+    this.themes.set(id, { load: loader, manifestId });
     return this;
   }
 
@@ -30,7 +32,12 @@ export class ThemeRegistry {
 
   /** Get a theme's loader, or `undefined` when the id is unknown. */
   get(id: string): ThemeLoader | undefined {
-    return this.themes.get(id);
+    return this.themes.get(id)?.load;
+  }
+
+  /** Expected manifest id can differ for a versioned runtime alias. */
+  manifestId(id: string): string | undefined {
+    return this.themes.get(id)?.manifestId;
   }
 
   /** Every registered theme id, in registration order. */
@@ -39,7 +46,7 @@ export class ThemeRegistry {
   }
 
   entries(): ReadonlyArray<RegisteredTheme> {
-    return Array.from(this.themes.entries()).map(([id, load]) => ({ id, load }));
+    return Array.from(this.themes.entries()).map(([id, entry]) => ({ id, ...entry }));
   }
 }
 

@@ -91,6 +91,7 @@ const AdminReportsOrdersPage = lazy(() => import('./pages/AdminReportsOrdersPage
 const AdminReportsRevenuePage = lazy(() => import('./pages/AdminReportsRevenuePage'));
 const AdminReportsTicketsPage = lazy(() => import('./pages/AdminReportsTicketsPage'));
 const AdminArticlesPage = lazy(() => import('./pages/AdminArticlesPage'));
+const AdminThemeMarketplacePage = lazy(() => import('./pages/AdminThemeMarketplacePage'));
 const AdminArticleFormPage = lazy(() => import('./pages/AdminArticleFormPage'));
 const VerificationRequestPage = lazy(() => import('./pages/VerificationRequestPage'));
 const AdminVerificationsPage = lazy(() => import('./pages/AdminVerificationsPage'));
@@ -106,6 +107,7 @@ const StoresPage = lazy(() => import('./pages/StoresPage'));
 const StoreFormPage = lazy(() => import('./pages/StoreFormPage'));
 const StoreSettingsPage = lazy(() => import('./pages/StoreSettingsPage'));
 const StoreThemesPage = lazy(() => import('./pages/StoreThemesPage'));
+const StorePaymentsPage = lazy(() => import('./pages/StorePaymentsPage'));
 const StoreThemeSettingsPage = lazy(() => import('./pages/StoreThemeSettingsPage'));
 const StorePagesPage = lazy(() => import('./pages/StorePagesPage'));
 const StoreSetupPage = lazy(() => import('./pages/StoreSetupPage'));
@@ -222,6 +224,7 @@ export default function App() {
                 <Route path="/admin/articles/new" element={<AdminArticleFormPage />} />
                 <Route path="/admin/articles/:id/edit" element={<AdminArticleFormPage />} />
                 <Route path="/admin/articles" element={<AdminArticlesPage />} />
+                <Route path="/admin/themes" element={<AdminThemeMarketplacePage />} />
                 <Route path="/notifications" element={<NotificationsPage />} />
                 <Route path="/orders/in" element={<OrdersPage direction="in" />} />
                 <Route path="/orders/out" element={<OrdersPage direction="out" />} />
@@ -293,6 +296,7 @@ export default function App() {
                 <Route path="/store/settings" element={<StoreSettingsPage />} />
                 <Route path="/store/onboarding" element={<StoreSetupPage />} />
                 <Route path="/store/themes/:themeId/settings" element={<StoreThemeSettingsPage />} />
+                <Route path="/store/payments" element={<StorePaymentsPage />} />
                 <Route path="/store/themes" element={<StoreThemesPage />} />
                 <Route path="/store/pages/:pageId/builder" element={<StorePageBuilderPage />} />
                 <Route path="/store/content/:key" element={<StoreContentPageEditor />} />
@@ -314,6 +318,7 @@ export default function App() {
                 <Route path="/stores/:id/settings" element={<StoreSettingsPage />} />
                 <Route path="/stores/:id/onboarding" element={<StoreSetupPage />} />
                 <Route path="/stores/:id/themes/:themeId/settings" element={<StoreThemeSettingsPage />} />
+                <Route path="/stores/:id/payments" element={<StorePaymentsPage />} />
                 <Route path="/stores/:id/themes" element={<StoreThemesPage />} />
                 <Route path="/stores/:id/pages/:pageId/builder" element={<StorePageBuilderPage />} />
                 <Route path="/stores/:id/content/:key" element={<StoreContentPageEditor />} />
