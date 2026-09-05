@@ -1,10 +1,13 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Navigate, useMatch, useNavigate, useParams } from 'react-router-dom';
 import { useOutletContext } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
 import { HiOutlinePhoto, HiOutlineArrowUpTray, HiOutlineXMark } from 'react-icons/hi2';
 import api from '../api/client';
+import useStoreLocales from '../hooks/useStoreLocales';
+import LocaleTabs, { localeLabel } from '../components/store/LocaleTabs';
+import { completeness } from '../lib/localized';
 
 export default function CategoryFormPage() {
     const { id } = useParams();
@@ -14,8 +17,14 @@ export default function CategoryFormPage() {
     const isNew = !!useMatch('/categories/new');
     const can = (p) => permissions.includes(p);
 
-    const [nameEn, setNameEn] = useState('');
-    const [nameAr, setNameAr] = useState('');
+    // Per-language copies `{ ar: { name, description }, en: {…} }`. The store's default language is
+    // the base (`name`) and is required; the legacy `name_en` / `name_ar` columns are still sent so
+    // older consumers keep working (the backend mirrors them with `translations`).
+    // This page sits outside /store/*, so the hook fetches `/my-store` itself (no StoreLayout).
+    const { locales, defaultLocale } = useStoreLocales({ apiBase: '/my-store' });
+    const [editLocale, setEditLocale] = useState(defaultLocale);
+    useEffect(() => { setEditLocale((cur) => (locales.includes(cur) ? cur : defaultLocale)); }, [locales, defaultLocale]);
+    const [translations, setTranslations] = useState({});
     const [loading, setLoading] = useState(false);
     const [err, setErr] = useState('');
 
@@ -34,17 +43,32 @@ export default function CategoryFormPage() {
         api.get(`/categories/${id}`)
             .then(({ data }) => {
                 const d = data.data ?? {};
-                setNameEn(d.name_en ?? d.name ?? '');
-                setNameAr(d.name_ar ?? d.name ?? '');
+                const fromApi = d.translations && typeof d.translations === 'object' && !Array.isArray(d.translations) ? d.translations : null;
+                if (fromApi && Object.keys(fromApi).length > 0) {
+                    setTranslations(fromApi);
+                } else {
+                    // Legacy row without `translations`: rebuild from the bilingual name columns.
+                    setTranslations({
+                        en: { name: d.name_en ?? d.name ?? '' },
+                        ar: { name: d.name_ar ?? d.name ?? '' },
+                    });
+                }
                 setExistingImageUrl(d.image_url || '');
             })
             .catch((e) => setErr(e.response?.data?.message || e.message));
     }, [id, isNew, permissions]);
 
+    const progress = useMemo(() => completeness(translations, locales, ['name']), [translations, locales]);
+
     const requiredPerm = isNew ? 'categories-create' : 'categories-edit';
     if (!can(requiredPerm)) {
         return <Navigate to="/categories" replace />;
     }
+
+    const current = translations[editLocale] ?? {};
+    const setField = (field, value) => setTranslations((p) => ({ ...p, [editLocale]: { ...(p[editLocale] ?? {}), [field]: value } }));
+    const nameOf = (locale) => String(translations[locale]?.name ?? '').trim();
+    const isBaseLocale = editLocale === defaultLocale;
 
     const handleFile = (file) => {
         if (!file) return;
@@ -81,12 +105,30 @@ export default function CategoryFormPage() {
 
     async function submit(e) {
         e.preventDefault();
+        const baseName = nameOf(defaultLocale);
+        if (!baseName) {
+            setEditLocale(defaultLocale);
+            setErr(t('required') || 'Required');
+            return;
+        }
         setLoading(true);
         setErr('');
         try {
             const fd = new FormData();
-            fd.append('name_en', nameEn.trim());
-            fd.append('name_ar', nameAr.trim());
+            fd.append('name', baseName);
+            // Legacy bilingual columns: fall back to the base name so neither is ever blank.
+            fd.append('name_en', nameOf('en') || baseName);
+            fd.append('name_ar', nameOf('ar') || baseName);
+            const payload = {};
+            Object.keys(translations).forEach((l) => {
+                const copy = translations[l] ?? {};
+                payload[l] = {
+                    name: String(copy.name ?? '').trim(),
+                    ...(copy.description !== undefined ? { description: String(copy.description ?? '') } : {}),
+                };
+            });
+            payload[defaultLocale] = { ...(payload[defaultLocale] ?? {}), name: baseName };
+            fd.append('translations', JSON.stringify(payload));
             if (imageFile) fd.append('image', imageFile);
             if (!isNew && removeImage && !imageFile) fd.append('remove_image', '1');
 
@@ -108,6 +150,8 @@ export default function CategoryFormPage() {
         }
     }
 
+    const inputClass = 'w-full rounded-xl border border-slate-200 px-3 py-2 text-sm';
+
     return (
         <div className="mx-auto max-w-lg space-y-5">
             <div className="border-s-4 border-brand ps-4">
@@ -119,23 +163,43 @@ export default function CategoryFormPage() {
                 <p className="rounded-lg border border-red-100 bg-red-50 px-3 py-2 text-sm text-red-700">{err}</p>
             )}
             <form onSubmit={submit} className="space-y-4 rounded-2xl border border-slate-200/80 bg-white p-6 shadow-card">
+                <div className="space-y-1.5">
+                    <LocaleTabs
+                        locales={locales}
+                        value={editLocale}
+                        onChange={setEditLocale}
+                        defaultLocale={defaultLocale}
+                        completeness={progress}
+                    />
+                    <p className="text-xs text-slate-400">
+                        {t('locale_base_required_hint', { locale: localeLabel(defaultLocale, t), defaultValue: 'The default language ({{locale}}) is required; other languages fall back to it when empty.' })}
+                    </p>
+                </div>
+
                 <div>
-                    <label className="mb-1 block text-sm font-medium text-slate-700">{t('category_name_en')}</label>
+                    <label className="mb-1 block text-sm font-medium text-slate-700">
+                        {t('col_name', 'Name')} ({localeLabel(editLocale, t)}) {isBaseLocale ? <span className="text-red-500">*</span> : null}
+                    </label>
                     <input
-                        required
-                        value={nameEn}
-                        onChange={(e) => setNameEn(e.target.value)}
-                        className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm"
+                        required={isBaseLocale}
+                        value={current.name ?? ''}
+                        onChange={(e) => setField('name', e.target.value)}
+                        dir={editLocale === 'ar' ? 'rtl' : 'ltr'}
+                        lang={editLocale}
+                        className={inputClass}
                     />
                 </div>
                 <div>
-                    <label className="mb-1 block text-sm font-medium text-slate-700">{t('category_name_ar')}</label>
-                    <input
-                        required
-                        value={nameAr}
-                        onChange={(e) => setNameAr(e.target.value)}
-                        className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm"
-                        dir="rtl"
+                    <label className="mb-1 block text-sm font-medium text-slate-700">
+                        {t('col_description', 'Description')} ({localeLabel(editLocale, t)})
+                    </label>
+                    <textarea
+                        rows={3}
+                        value={current.description ?? ''}
+                        onChange={(e) => setField('description', e.target.value)}
+                        dir={editLocale === 'ar' ? 'rtl' : 'ltr'}
+                        lang={editLocale}
+                        className={inputClass}
                     />
                 </div>
 

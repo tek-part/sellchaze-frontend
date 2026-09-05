@@ -27,9 +27,10 @@ export function ProductPage(): ReactElement | null {
   const { store } = useStore();
   const currency = store.currency;
   const template = useTemplate('product');
-  const productQ = useAsync(() => getProduct(slug), [slug]);
-  const reviewsQ = useAsync(() => getProductReviews(slug), [slug]);
-  const relatedQ = useAsync(() => getProducts({ perPage: 8 }), [slug]);
+  // Keyed on the locale as well: the API returns translated names/descriptions per `?lang=`.
+  const productQ = useAsync(() => getProduct(slug), [slug, locale]);
+  const reviewsQ = useAsync(() => getProductReviews(slug), [slug, locale]);
+  const relatedQ = useAsync(() => getProducts({ perPage: 8 }), [slug, locale]);
 
   const { record } = useRecentlyViewed();
   const dev = previewOrDev();

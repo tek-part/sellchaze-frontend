@@ -12,6 +12,8 @@ import type {
   ApiPaginated,
   ApiProduct,
   ApiReview,
+  ApiStorefrontLocale,
+  ApiStorefrontNavigation,
   ApiStoreSummary,
 } from './types';
 
@@ -20,6 +22,10 @@ import type {
 export interface ApiStorefrontBootstrap {
   store: ApiStoreSummary;
   seo?: unknown;
+  /** Resolved request language + the store's supported set. */
+  locale?: ApiStorefrontLocale | null;
+  /** Merchant-managed header/footer menus; empty arrays when the store has none yet. */
+  navigation?: ApiStorefrontNavigation | null;
   theme?: {
     key: string;
     version: string;
@@ -27,6 +33,8 @@ export interface ApiStorefrontBootstrap {
     bundle_integrity?: string | null;
     settings: Record<string, string | number | boolean>;
     custom_css?: string | null;
+    /** Raw (un-flattened) settings: translatable fields keep their `{locale: string}` maps. */
+    settings_i18n?: Record<string, unknown> | null;
   } | null;
 }
 
@@ -69,6 +77,41 @@ export interface ApiHomeBundle {
 
 export function getHome(): Promise<{ data: ApiHomeBundle }> {
   return apiGet('/home');
+}
+
+/* ---- published layouts + custom pages (contract §4) ---- */
+
+/** One placed section as the public layout API serves it (settings are raw editor values). */
+export interface ApiLayoutSection {
+  id: string;
+  type: string;
+  settings: Record<string, unknown>;
+}
+
+export interface ApiLayout {
+  template: string;
+  /** 'store' = the merchant's published composition; 'theme' = the theme manifest default. */
+  source: 'store' | 'theme';
+  page_id: number | null;
+  sections: ReadonlyArray<ApiLayoutSection>;
+}
+
+/** GET /storefront/layout?template=home — the published section composition for a template. */
+export function getLayout(template: string): Promise<{ data: ApiLayout }> {
+  return apiGet(`/layout?template=${encodeURIComponent(template)}`);
+}
+
+export interface ApiBuilderPage {
+  title: string | Record<string, string | null | undefined>;
+  slug: string;
+  template: string;
+  seo?: { title?: string | null; description?: string | null; image?: string | null } | null;
+  sections: ReadonlyArray<ApiLayoutSection>;
+}
+
+/** GET /storefront/pages/{slug} — a published custom (page|landing) page; 404 when unpublished. */
+export function getPage(slug: string): Promise<{ data: ApiBuilderPage }> {
+  return apiGet(`/pages/${encodeURIComponent(slug)}`);
 }
 
 /* ---- merchandising surfaces ---- */

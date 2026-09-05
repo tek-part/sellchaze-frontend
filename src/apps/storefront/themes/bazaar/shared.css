@@ -1,0 +1,47 @@
+/*
+ * Bazaar — SHARED-PAGE SKIN. The transactional/static routes (cart, checkout, account, auth,
+ * search, wishlist, blog, policies, 404) render the default `.sf-*` component library; Bazaar
+ * re-skins that surface in its own language (amber primary, compact radii, filled buttons, dense
+ * spacing). Loaded only when Bazaar is active (code-split with the theme chunk). Every value is a
+ * token so the merchant's colour/radius settings apply here too.
+ */
+.sf-container { max-width: var(--container); padding-inline: var(--gutter); }
+.sf-section { padding-block: var(--section-y); }
+.sf-section--tight { padding-block: var(--sp-7); }
+.sf-page-head__title, .sf-section-head__title, .sf-heading { font-family: var(--heading); font-weight: 800; letter-spacing: -0.01em; }
+[dir='rtl'] .sf-page-head__title, [dir='rtl'] .sf-section-head__title, [dir='rtl'] .sf-heading { letter-spacing: 0; }
+.sf-eyebrow { color: var(--accent-ink); letter-spacing: var(--tracking-eyebrow); }
+
+/* Buttons: filled amber, compact radius, sentence case. */
+.sf-btn { height: 44px; padding-inline: var(--sp-5); border-radius: var(--radius); text-transform: none; letter-spacing: 0; font-weight: 700; font-size: var(--fs-sm); }
+.sf-btn--sm { height: 36px; }
+.sf-btn--lg { height: 50px; font-size: var(--fs-base); }
+.sf-btn--primary { background: var(--primary); color: var(--on-primary); border-color: var(--primary); }
+.sf-btn--primary:hover:not(:disabled) { filter: brightness(1.06); box-shadow: var(--shadow); }
+.sf-btn--primary .sf-btn__label::after { display: none; }
+.sf-btn--secondary { background: transparent; color: var(--text); border-color: var(--border-strong); }
+.sf-btn--secondary:hover:not(:disabled) { border-color: var(--primary); color: var(--primary); }
+.sf-btn--ghost { color: var(--primary); }
+.sf-icon-btn { border-radius: var(--radius); }
+.sf-icon-btn:hover:not(:disabled) { background: var(--surface-2); color: var(--primary); }
+.sf-link { color: var(--primary); }
+
+/* Fields */
+.sf-control, .sf-input, .sf-textarea, .sf-select { border-radius: var(--radius); border-color: var(--border-strong); background: var(--surface); }
+.sf-control:focus, .sf-input:focus, .sf-textarea:focus, .sf-select:focus { border-color: var(--primary); box-shadow: var(--shadow-focus); }
+.sf-field__label { text-transform: none; letter-spacing: 0; font-weight: 600; color: var(--text); }
+
+/* Cards / surfaces */
+.sf-product-card, .sf-card, .sf-cat-card, .sf-review-card, .sf-blog-card, .sf-editorial-card { border-radius: var(--radius); overflow: hidden; }
+.sf-product-card__img, .sf-cat-card__img { border-radius: var(--radius); }
+.sf-badge { border-radius: var(--radius-sm); background: var(--primary); color: var(--on-primary); text-transform: none; letter-spacing: 0; }
+.sf-price--sale .sf-price__now, .sf-price--sale { color: var(--sale); }
+.sf-tabs__tab[aria-selected='true'] { color: var(--primary); border-color: var(--primary); }
+.sf-overlay__panel { border-radius: var(--radius-lg); }
+.sf-overlay--drawer-end .sf-overlay__panel, .sf-overlay--drawer-start .sf-overlay__panel { border-radius: 0; }
+.sf-overlay__title { font-family: var(--heading); font-weight: 800; }
+.sf-empty, .sf-error, .sf-state { border-radius: var(--radius); }
+.sf-pagination__page[aria-current='page'] { background: var(--primary); color: var(--on-primary); border-radius: var(--radius); }
+.sf-stepper__step--active { color: var(--primary); }
+.sf-cart-page__line, .sf-order-card, .sf-address-card { border-radius: var(--radius); }
+.sf-pdp__title { font-family: var(--heading); font-weight: 800; }

@@ -105,7 +105,17 @@ export default function StoreOrdersPage() {
                             ) : null}
                             {rows.map((row) => (
                                 <tr key={row.id} onClick={() => navigate(`${uiBase}/orders/${row.id}`)} className="cursor-pointer border-t border-slate-100 transition-colors hover:bg-slate-50/60">
-                                    <td className="px-4 py-3 font-mono font-medium text-brand">{row.order_number}</td>
+                                    <td className="px-4 py-3 font-mono font-medium text-brand">
+                                        {row.order_number}
+                                        {row.b2b_order?.code ? (
+                                            <span
+                                                className="ms-2 inline-flex whitespace-nowrap rounded-full border border-emerald-100 bg-emerald-50 px-2 py-0.5 font-sans text-[10px] font-semibold text-emerald-700"
+                                                title={`${t('store_order_sent_to_supplier', 'Sent to supplier')} · ${row.b2b_order.code}`}
+                                            >
+                                                {t('store_order_sent_to_supplier', 'Sent to supplier')}
+                                            </span>
+                                        ) : null}
+                                    </td>
                                     <td className="px-4 py-3 text-slate-700">
                                         <div className="min-w-0">
                                             <p className="truncate font-medium text-slate-900">{row.customer?.name || '—'}</p>

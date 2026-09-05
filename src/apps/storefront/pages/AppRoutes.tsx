@@ -33,7 +33,7 @@ const ContactPage = lazy(() => import('./CompanyPages').then((m) => ({ default: 
 const FaqPage = lazy(() => import('./StaticPages').then((m) => ({ default: m.FaqPage })));
 const BlogPage = lazy(() => import('./BlogPages').then((m) => ({ default: m.BlogPage })));
 const BlogDetailPage = lazy(() => import('./BlogPages').then((m) => ({ default: m.BlogDetailPage })));
-const PolicyPage = lazy(() => import('./StaticPages').then((m) => ({ default: m.PolicyPage })));
+const BuilderPage = lazy(() => import('./BuilderPage').then((m) => ({ default: m.BuilderPage })));
 const CategoriesPage = lazy(() => import('./BrowsePages').then((m) => ({ default: m.CategoriesPage })));
 const CollectionsPage = lazy(() => import('./BrowsePages').then((m) => ({ default: m.CollectionsPage })));
 const BrandsPage = lazy(() => import('./BrowsePages').then((m) => ({ default: m.BrandsPage })));
@@ -91,7 +91,8 @@ export function AppRoutes(): ReactElement {
         <Route path="/faq" element={<FaqPage />} />
         <Route path="/blog" element={<BlogPage />} />
         <Route path="/blog/:slug" element={<BlogDetailPage />} />
-        <Route path="/pages/:slug" element={<PolicyPage />} />
+        {/* Published custom pages (sections from the layout API); falls back to the policy pages. */}
+        <Route path="/pages/:slug" element={<BuilderPage />} />
 
         <Route path="*" element={<NotFoundPage />} />
       </Routes>

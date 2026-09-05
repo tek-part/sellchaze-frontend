@@ -79,6 +79,7 @@ export const ar: TranslationShape = {
     company: 'الشركة',
     shopColumn: 'تسوّق',
     accountColumn: 'الحساب',
+    links: 'روابط',
   },
 
   shop: {

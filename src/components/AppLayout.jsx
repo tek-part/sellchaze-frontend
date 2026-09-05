@@ -62,7 +62,9 @@ export default function AppLayout() {
     const navigate = useNavigate();
     const location = useLocation();
     const [me, setMe] = useState(null);
-    const [storeHost, setStoreHost] = useState(null);
+    // Public URL of the owner's storefront (custom domain > primary domain > tenant
+    // subdomain). null = no store yet, so the header hides the "View store" button.
+    const [storeUrl, setStoreUrl] = useState(null);
     const [logoutOpen, setLogoutOpen] = useState(false);
     const [mobileNavOpen, setMobileNavOpen] = useState(false);
     const [impersonationActive, setImpersonationActive] = useState(() => isImpersonating());
@@ -105,20 +107,26 @@ export default function AppLayout() {
     }, [navigate]);
 
     // Owners (Merchant/Supplier, non-admin) own exactly one store — resolve its
-    // public storefront host so the header can offer a direct "View store" link.
+    // public storefront URL so the header can offer a direct "View store" link.
+    // Owners without a published store (404, draft, or no URL yet) get no button at all.
     useEffect(() => {
         const roles = Array.isArray(me?.roles) ? me.roles : [];
         const owner = !roles.includes('Admin') && (roles.includes('Merchant') || roles.includes('Supplier'));
         if (!owner) {
-            setStoreHost(null);
+            setStoreUrl(null);
             return undefined;
         }
         let cancelled = false;
         api.get('/my-store')
             .then(({ data }) => {
-                if (!cancelled) setStoreHost(data?.data?.storefront_url ?? (data?.data?.subdomain_host ? `https://${data.data.subdomain_host}` : null));
+                if (cancelled) return;
+                const store = data?.data;
+                // Only a published store is reachable on its public host; a draft
+                // store answers "No store for this host", so offer no link for it.
+                const url = store?.status === 'active' ? (store?.public_url || store?.storefront_url) : null;
+                setStoreUrl(url || null);
             })
-            .catch(() => { /* no store / not provisioned yet */ });
+            .catch(() => { if (!cancelled) setStoreUrl(null); });
         return () => { cancelled = true; };
     }, [me]);
 
@@ -181,7 +189,7 @@ export default function AppLayout() {
         },
         {
             key: 'store',
-            to: '/store/onboarding',
+            to: '/store/overview',
             label: t('store_and_channels', 'Store & Channels'),
             Icon: HiOutlineBuildingStorefront,
             active: here('/store'),
@@ -387,9 +395,9 @@ export default function AppLayout() {
                                 </Link>
                             ) : null}
 
-                            {storeHost ? (
+                            {storeUrl ? (
                                 <a
-                                    href="/?preview=1"
+                                    href={storeUrl}
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     className={headerIconBtnClass}
@@ -701,27 +709,40 @@ export default function AppLayout() {
                 <div className="fixed inset-0 flex">
                     <DialogPanel
                         transition
-                        className="h-full w-[min(86vw,22rem)] overflow-y-auto border-e border-slate-200/80 bg-linear-to-b from-slate-50 via-white to-brand-light/30 px-3 py-4 shadow-soft transition duration-200 data-closed:-translate-x-full"
+                        className="relative flex h-full w-[min(86vw,22rem)] flex-col overflow-hidden rounded-e-3xl bg-white shadow-2xl shadow-brand-dark/20 transition duration-300 ease-out data-closed:-translate-x-full lg:w-[70vw]"
                     >
-                        <div className="mb-4 flex items-center justify-between">
-                            <img src="/logo.png" alt={t('app_name')} className="h-10 w-auto object-contain" />
+                        {/* Soft brand glow in the top corner — decoration only. */}
+                        <div
+                            className="pointer-events-none absolute -top-40 -end-40 h-96 w-96 rounded-full bg-accent/15 blur-3xl"
+                            aria-hidden
+                        />
+                        <div className="relative flex shrink-0 items-center justify-between gap-3 px-5 pt-5 pb-2 lg:px-8">
+                            <div className="flex min-w-0 items-center gap-3">
+                                <img src="/logo.png" alt={t('app_name')} className="h-9 w-auto object-contain" />
+                                <span className="hidden truncate text-base font-semibold text-brand-dark sm:inline">
+                                    {t('nav_all', 'All')}
+                                </span>
+                            </div>
                             <button
                                 type="button"
                                 onClick={() => setMobileNavOpen(false)}
-                                className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-700"
+                                className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-slate-500 transition hover:rotate-90 hover:bg-brand-light hover:text-brand-dark"
                                 aria-label={t('close')}
                                 title={t('close')}
                             >
                                 <HiOutlineXMark className="h-5 w-5" aria-hidden />
                             </button>
                         </div>
-                        <SidebarNav
-                            isAdmin={isAdmin}
-                            isSupplier={isSupplier}
-                            roles={me.roles ?? []}
-                            permissions={permissions}
-                            onNavigate={() => setMobileNavOpen(false)}
-                        />
+                        <div className="relative min-h-0 flex-1 overflow-y-auto px-3 py-4 [scrollbar-width:thin] lg:px-8 lg:py-6">
+                            <SidebarNav
+                                variant="mega"
+                                isAdmin={isAdmin}
+                                isSupplier={isSupplier}
+                                roles={me.roles ?? []}
+                                permissions={permissions}
+                                onNavigate={() => setMobileNavOpen(false)}
+                            />
+                        </div>
                     </DialogPanel>
                 </div>
             </Dialog>

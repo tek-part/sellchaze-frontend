@@ -6,6 +6,7 @@
 import { useEffect, useMemo, useState, type ReactElement } from 'react';
 import {
   ENGINE_VERSION,
+  defaultSettings,
   type ColorScheme,
   type ColorSchemePreference,
   type Direction,
@@ -25,8 +26,10 @@ type Draft = Record<string, ThemeSettingValue>;
 
 function initialDraft(module: ThemeModule, saved: Readonly<Record<string, ThemeSettingValue>>): Draft {
   const out: Draft = {};
+  // Defaults are resolved through the engine so translatable `{ ar, en }` defaults become strings.
+  const defaults = defaultSettings(module.manifest.settingsSchema);
   for (const field of module.manifest.settingsSchema) {
-    out[field.id] = field.id in saved ? saved[field.id]! : field.default;
+    out[field.id] = field.id in saved ? saved[field.id]! : defaults[field.id]!;
   }
   return out;
 }
@@ -165,7 +168,7 @@ export function EditorPanel(props: { selectedId: string | null }): ReactElement 
               <fieldset key={group} className="ts-fieldset">
                 <legend className="ts-fieldset__legend">{group}</legend>
                 {fields.map((field) => (
-                  <SettingField key={field.id} field={field} value={draft[field.id] ?? field.default} onChange={(v) => setField(field.id, v)} />
+                  <SettingField key={field.id} field={field} value={draft[field.id] ?? module.defaultSettings[field.id]!} onChange={(v) => setField(field.id, v)} />
                 ))}
               </fieldset>
             ))

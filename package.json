@@ -26,6 +26,7 @@
     "test:pwa": "playwright test tests/browser/storefront-pwa.spec.ts --config=playwright.config.ts",
     "theme:dev": "node scripts/theme-dev.mjs",
     "pack:themes": "vite-node scripts/pack-themes.ts",
+    "themes:manifests": "vite-node scripts/export-theme-manifests.ts",
     "validate": "npm run lint && npm run lint:strict && npm run typecheck && npm run test",
     "ci": "npm run validate && npm run build && npm run test:a11y && npm run test:perf && npm run test:visual && npm run test:pwa"
   },

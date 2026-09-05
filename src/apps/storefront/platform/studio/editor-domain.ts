@@ -45,9 +45,34 @@ export function reorder(sections: EditableSection[], from: number, to: number): 
   return next;
 }
 
+/**
+ * Editor → preview `hydrate` payload (contract §5). `settings` is the optional theme-settings draft
+ * (values may be `{ ar, en }` maps for translatable fields); `path` is '/' for home or
+ * '/pages/<slug>' for a custom page.
+ */
+export interface HydratePayload {
+  sections: EditableSection[];
+  locale: StudioLocale;
+  path: string;
+  settings?: Record<string, unknown>;
+}
+
 export type StudioToPreviewMessage =
-  | { channel: 'sellchaze-theme-studio'; version: 1; type: 'hydrate'; payload: { sections: EditableSection[]; locale: StudioLocale; path: string } }
+  | { channel: 'sellchaze-theme-studio'; version: 1; type: 'hydrate'; payload: HydratePayload }
   | { channel: 'sellchaze-theme-studio'; version: 1; type: 'select-section'; payload: { id: string | null } };
+
+/** Runtime guard for editor → preview messages (the preview validates before acting). */
+export function isStudioMessage(value: unknown): value is StudioToPreviewMessage {
+  if (!value || typeof value !== 'object') return false;
+  const item = value as Record<string, unknown>;
+  if (item.channel !== 'sellchaze-theme-studio' || item.version !== 1) return false;
+  const payload = item.payload;
+  if (!payload || typeof payload !== 'object') return false;
+  const p = payload as Record<string, unknown>;
+  if (item.type === 'hydrate') return Array.isArray(p.sections);
+  if (item.type === 'select-section') return p.id === null || typeof p.id === 'string';
+  return false;
+}
 
 export type PreviewToStudioMessage =
   | { channel: 'sellchaze-theme-preview'; version: 1; type: 'ready' }

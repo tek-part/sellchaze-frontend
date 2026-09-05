@@ -32,7 +32,9 @@ function SectionSettings({ schema, value, onChange, viewport, apiBase }) {
                             <textarea rows={2} value={v ?? ''} onChange={(e) => set(f, e.target.value)} className={cls} />
                         ) : f.type === 'select' ? (
                             <SearchableSelect value={v ?? ''} onChange={(e) => set(f, e.target.value)} className="w-full">
-                                {(f.options || []).map((o) => <option key={o} value={o}>{o}</option>)}
+                                {(f.options || []).map((o) => (o && typeof o === 'object'
+                                    ? <option key={String(o.value)} value={String(o.value ?? '')}>{String(o.label ?? o.value ?? '')}</option>
+                                    : <option key={String(o)} value={String(o)}>{String(o)}</option>))}
                             </SearchableSelect>
                         ) : f.type === 'number' || f.type === 'range' ? (
                             <input type="number" min={f.min} max={f.max} step={f.step} value={v ?? ''} onChange={(e) => set(f, e.target.value === '' ? '' : Number(e.target.value))} className={cls} />
@@ -255,7 +257,7 @@ export default function StorePageBuilderPage() {
                 </div>
                 {previewUrl ? (
                     <div className="mx-auto overflow-hidden rounded-xl bg-white shadow-lg transition-[width]" style={{ width: `min(100%, ${VIEWPORT_WIDTH[viewport]}px)` }}>
-                        <iframe key={previewVersion} ref={previewFrame} onLoad={sendPreviewState} title="Live page preview" src={`${previewUrl}${previewUrl.includes('?') ? '&' : '?'}locale=${locale}`} className="h-[720px] w-full border-0" sandbox="allow-forms allow-same-origin allow-scripts" />
+                        <iframe key={previewVersion} ref={previewFrame} onLoad={sendPreviewState} title="Live page preview" src={`${previewUrl}${previewUrl.includes('?') ? '&' : '?'}lang=${locale}`} className="h-[720px] w-full border-0" sandbox="allow-forms allow-same-origin allow-scripts" />
                     </div>
                 ) : <button type="button" onClick={preview} className="mx-auto block rounded-xl bg-white px-5 py-3 text-sm font-semibold">Load live canvas</button>}
             </section>

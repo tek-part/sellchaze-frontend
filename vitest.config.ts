@@ -5,7 +5,7 @@ import { defineConfig } from 'vitest/config';
 export default defineConfig({
   test: {
     environment: 'node',
-    include: ['src/apps/storefront/**/*.test.ts', 'src/shared/**/*.test.ts', 'src/features/**/*.test.ts'],
+    include: ['src/apps/storefront/**/*.test.ts', 'src/shared/**/*.test.ts', 'src/features/**/*.test.ts', 'src/lib/**/*.test.{js,ts}'],
     css: false,
   },
 });

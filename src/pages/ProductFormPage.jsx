@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Navigate, useMatch, useNavigate, useOutletContext, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
@@ -16,6 +16,9 @@ import {
 } from 'react-icons/hi2';
 import api from '../api/client';
 import SearchableSelect from '../components/ui/SearchableSelect';
+import useStoreLocales from '../hooks/useStoreLocales';
+import LocaleTabs from '../components/store/LocaleTabs';
+import { completeness } from '../lib/localized';
 
 function unwrap(p) { return p?.data ?? p; }
 
@@ -28,6 +31,13 @@ export default function ProductFormPage() {
     const can = (p) => permissions.includes(p);
     const fileInputRef = useRef(null);
 
+    // Base columns (`name`, `description`) hold the store's DEFAULT-language copy; other languages
+    // live in `translations` and are sent as one JSON field (`{"en":{"name","description"},…}`).
+    // This page sits outside /store/*, so the hook fetches `/my-store` itself (no StoreLayout).
+    const { locales, defaultLocale } = useStoreLocales({ apiBase: '/my-store' });
+    const [editLocale, setEditLocale] = useState(defaultLocale);
+    useEffect(() => { setEditLocale((cur) => (locales.includes(cur) ? cur : defaultLocale)); }, [locales, defaultLocale]);
+    const [translations, setTranslations] = useState({});
     const [name, setName] = useState('');
     const [description, setDescription] = useState('');
     const [categoryId, setCategoryId] = useState('');
@@ -84,6 +94,7 @@ export default function ProductFormPage() {
                 const p = unwrap(data);
                 setName(p.name ?? '');
                 setDescription(p.description ?? '');
+                setTranslations(p.translations && typeof p.translations === 'object' && !Array.isArray(p.translations) ? p.translations : {});
                 setCategoryId(String(p.category_id ?? ''));
                 setAttributeIds((p.attribute_ids ?? (p.attributes ?? []).map((a) => a.id)).map(Number));
                 setExistingImageUrl(p.image_url || p.image_thumb_url || '');
@@ -92,6 +103,24 @@ export default function ProductFormPage() {
             .catch((e) => setTopErr(e.response?.data?.message || e.message))
             .finally(() => setInitLoading(false));
     }, [id, isNew, permissions]);
+
+    // The default language is edited through the base fields; every other tab edits `translations`.
+    const isBaseLocale = editLocale === defaultLocale;
+    const activeTr = translations[editLocale] ?? {};
+    const curName = isBaseLocale ? name : (activeTr.name ?? '');
+    const curDescription = isBaseLocale ? description : (activeTr.description ?? '');
+    const setTr = (field, value) => setTranslations((p) => ({ ...p, [editLocale]: { ...(p[editLocale] ?? {}), [field]: value } }));
+    const setCurName = (v) => (isBaseLocale ? setName(v) : setTr('name', v));
+    const setCurDescription = (v) => (isBaseLocale ? setDescription(v) : setTr('description', v));
+    // Full per-locale map for the API: the base copy always wins for the default language.
+    const buildTranslations = () => ({
+        ...translations,
+        [defaultLocale]: { ...(translations[defaultLocale] ?? {}), name: name.trim(), description: description || '' },
+    });
+    const translationProgress = useMemo(
+        () => completeness({ ...translations, [defaultLocale]: { ...(translations[defaultLocale] ?? {}), name, description } }, locales, ['name', 'description']),
+        [translations, defaultLocale, name, description, locales],
+    );
 
     const requiredPerm = isNew ? 'products-create' : 'products-edit';
     if (!can(requiredPerm)) {
@@ -169,6 +198,7 @@ export default function ProductFormPage() {
         setTopErr('');
         if (!name.trim()) {
             setErrors({ name: t('required') || 'Required' });
+            setEditLocale(defaultLocale); // the required name is the default-language one
             return;
         }
         if (!categoryId) {
@@ -180,6 +210,7 @@ export default function ProductFormPage() {
             const fd = new FormData();
             fd.append('name', name.trim());
             fd.append('description', description || '');
+            fd.append('translations', JSON.stringify(buildTranslations()));
             fd.append('category_id', String(Number(categoryId)));
             attributeIds.forEach((aid) => fd.append('attribute_ids[]', String(aid)));
             if (imageFile) fd.append('image', imageFile);
@@ -350,34 +381,50 @@ export default function ProductFormPage() {
                         </div>
 
                         <div className="space-y-4">
+                            {locales.length > 1 ? (
+                                <div className="space-y-1.5">
+                                    <LocaleTabs
+                                        locales={locales}
+                                        value={editLocale}
+                                        onChange={setEditLocale}
+                                        defaultLocale={defaultLocale}
+                                        completeness={translationProgress}
+                                    />
+                                    <p className="text-xs text-slate-400">{t('product_translations_hint', 'Switch the language to enter the translated name and description.')}</p>
+                                </div>
+                            ) : null}
                             <div>
                                 <label className="mb-1.5 flex items-center justify-between text-sm font-medium text-slate-700">
-                                    <span>{t('col_name')} <span className="text-red-500">*</span></span>
-                                    <span className="text-xs text-slate-400">{name.length}/255</span>
+                                    <span>{t('col_name')} {isBaseLocale ? <span className="text-red-500">*</span> : null}</span>
+                                    <span className="text-xs text-slate-400">{curName.length}/255</span>
                                 </label>
                                 <input
-                                    required
+                                    required={isBaseLocale}
                                     maxLength={255}
-                                    value={name}
-                                    onChange={(e) => setName(e.target.value)}
+                                    value={curName}
+                                    onChange={(e) => setCurName(e.target.value)}
+                                    dir={editLocale === 'ar' ? 'rtl' : 'ltr'}
+                                    lang={editLocale}
                                     placeholder={t('product_name_placeholder') || 'e.g. Premium cotton t-shirt'}
                                     className={`w-full rounded-xl border bg-white px-3.5 py-2.5 text-sm outline-hidden transition focus:ring-2 ${
-                                        errors.name
+                                        errors.name && isBaseLocale
                                             ? 'border-red-300 focus:border-red-400 focus:ring-red-100'
                                             : 'border-slate-200 focus:border-brand focus:ring-brand/20'
                                     }`}
                                 />
-                                {errors.name ? <p className="mt-1 text-xs text-red-600">{errors.name}</p> : null}
+                                {errors.name && isBaseLocale ? <p className="mt-1 text-xs text-red-600">{errors.name}</p> : null}
                             </div>
 
                             <div>
                                 <label className="mb-1.5 flex items-center justify-between text-sm font-medium text-slate-700">
                                     <span>{t('col_description')}</span>
-                                    <span className="text-xs text-slate-400">{descriptionLen} {t('chars') || 'chars'}</span>
+                                    <span className="text-xs text-slate-400">{isBaseLocale ? descriptionLen : curDescription.length} {t('chars') || 'chars'}</span>
                                 </label>
                                 <textarea
-                                    value={description}
-                                    onChange={(e) => setDescription(e.target.value)}
+                                    value={curDescription}
+                                    onChange={(e) => setCurDescription(e.target.value)}
+                                    dir={editLocale === 'ar' ? 'rtl' : 'ltr'}
+                                    lang={editLocale}
                                     rows={6}
                                     placeholder={t('product_description_placeholder') || 'Describe materials, size, use-case, shipping notes…'}
                                     className="w-full resize-y rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm outline-hidden transition focus:border-brand focus:ring-2 focus:ring-brand/20"

@@ -32,10 +32,11 @@ export function CategoryPage(): ReactElement | null {
   const currency = store.currency;
   const template = useTemplate('category');
   const curated = isCuratedSlug(slug) ? curatedView(slug) : null;
-  const category = useAsync(() => (curated ? Promise.resolve(null) : getCategory(slug)), [slug]);
+  // Keyed on the locale as well: the API returns translated names per `?lang=`.
+  const category = useAsync(() => (curated ? Promise.resolve(null) : getCategory(slug)), [slug, locale]);
   const productsQ = useAsync(
     () => getProducts(curated ? { perPage: 60 } : { category: slug, perPage: 60 }),
-    [slug],
+    [slug, locale],
   );
 
   const dev = previewOrDev();

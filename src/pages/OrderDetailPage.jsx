@@ -28,6 +28,7 @@ import {
 } from 'react-icons/hi2';
 import api from '../api/client';
 import ConfirmDialog from '../components/ConfirmDialog';
+import OrderSourceBadge from '../components/orders/OrderSourceBadge';
 import SearchableSelect from '../components/ui/SearchableSelect';
 
 function unwrap(o) {
@@ -113,6 +114,14 @@ function pickLocalized(source, lang, fallback = '—') {
 }
 
 /** @param {Record<string, unknown> | null | undefined} source */
+/** "12.50 EGP" style; tolerates numeric strings from the API. */
+function formatStorefrontMoney(value, currency) {
+    const n = Number(value);
+    const amount = Number.isFinite(n) ? n.toFixed(2) : String(value ?? '');
+    const cur = currency ? String(currency).trim().toUpperCase() : '';
+    return cur ? `${amount} ${cur}` : amount;
+}
+
 function pickProductImageUrls(source) {
     if (!source || typeof source !== 'object') {
         return { thumb: null, large: null };
@@ -489,6 +498,12 @@ export default function OrderDetailPage() {
         () => (Array.isArray(row?.wigpleasure_products) ? row.wigpleasure_products : []),
         [row],
     );
+    /** Snapshot of the storefront cart for bridged (`source=storefront`) orders. */
+    const storefrontItems = useMemo(
+        () => (Array.isArray(row?.storefront_items) ? row.storefront_items : []),
+        [row],
+    );
+    const isStorefrontOrder = Boolean(row && (row.source === 'storefront' || row.store_order_id));
     const quotations = useMemo(() => (Array.isArray(row?.quotations) ? row.quotations : []), [row]);
     const deliveries = useMemo(() => (Array.isArray(row?.deliveries) ? row.deliveries : []), [row]);
     const isWarehouseShipping = row?.shipping_type === 'warehouse';
@@ -674,6 +689,28 @@ export default function OrderDetailPage() {
                 };
             });
         }
+        if (storefrontItems.length > 0) {
+            return storefrontItems.map((it, idx) => {
+                const subtitleParts = [];
+                if (it?.product_id != null) {
+                    subtitleParts.push(`${t('order_col_product_id')}: ${it.product_id}`);
+                }
+                if (it?.unit_price != null && it.unit_price !== '') {
+                    subtitleParts.push(
+                        `${t('order_col_unit_price')}: ${formatStorefrontMoney(it.unit_price, row.currency)}`,
+                    );
+                }
+                return {
+                    key: `sf-${idx}-${it?.product_id ?? idx}`,
+                    title: String(it?.name ?? '').trim() || t('order_none'),
+                    subtitle: subtitleParts.length ? subtitleParts.join(' · ') : null,
+                    qty: it?.quantity ?? t('order_none'),
+                    storefrontUrl: null,
+                    imageThumbUrl: null,
+                    imagePreviewUrl: null,
+                };
+            });
+        }
         if (row.product && typeof row.product === 'object') {
             const p = row.product;
             const { thumb, large } = pickProductImageUrls(p);
@@ -691,7 +728,7 @@ export default function OrderDetailPage() {
             ];
         }
         return [];
-    }, [row, wigpleasure, locale, t]);
+    }, [row, wigpleasure, storefrontItems, locale, t]);
 
     const shippingAddressRows = useMemo(
         () => structuredShippingRows(row?.shipping_address_json, t),
@@ -1057,14 +1094,19 @@ export default function OrderDetailPage() {
                                 <HiOutlineCalendarDays className="h-4 w-4 shrink-0 text-slate-400" aria-hidden />
                                 {row?.created_at ? formatWhen(row.created_at, locale) : t('loading')}
                             </p>
-                            {row?.status != null ? (
-                                <p className="mt-3">
-                                    <span
-                                        className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold capitalize ${statusBadgeClass(row.status)}`}
-                                    >
-                                        <span className="h-1.5 w-1.5 rounded-full bg-current opacity-80" aria-hidden />
-                                        {localizedStatusLabel(row.status, t)}
-                                    </span>
+                            {row?.status != null || row?.source ? (
+                                <p className="mt-3 flex flex-wrap items-center gap-2">
+                                    {row?.status != null ? (
+                                        <span
+                                            className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold capitalize ${statusBadgeClass(row.status)}`}
+                                        >
+                                            <span className="h-1.5 w-1.5 rounded-full bg-current opacity-80" aria-hidden />
+                                            {localizedStatusLabel(row.status, t)}
+                                        </span>
+                                    ) : null}
+                                    {row?.source ? (
+                                        <OrderSourceBadge source={row.source} className="px-3 py-1 font-semibold" />
+                                    ) : null}
                                 </p>
                             ) : null}
                         </div>
@@ -1133,6 +1175,86 @@ export default function OrderDetailPage() {
 
             {row ? (
                 <div className="space-y-8">
+                    {isStorefrontOrder ? (
+                        <SectionCard
+                            icon={HiOutlineBuildingStorefront}
+                            title={t('order_storefront_section')}
+                            delay={0}
+                        >
+                            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                                <div className="text-sm text-slate-600">
+                                    <span className="font-medium text-slate-500">{t('order_storefront_number')}: </span>
+                                    <span className="font-mono font-semibold text-slate-900">
+                                        {row.store_order_number || row.ref_number || t('order_none')}
+                                    </span>
+                                    <p className="mt-1 text-xs text-slate-500">{t('order_storefront_items_hint')}</p>
+                                </div>
+                                {row.store_order_id != null &&
+                                myUserId != null &&
+                                row.user?.id != null &&
+                                Number(row.user.id) === myUserId ? (
+                                    <Link
+                                        to={`/store/orders/${encodeURIComponent(row.store_order_id)}`}
+                                        className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white shadow-xs hover:bg-slate-800"
+                                    >
+                                        <HiOutlineArrowTopRightOnSquare className="h-4 w-4 rtl:-scale-x-100" aria-hidden />
+                                        {t('order_storefront_open')}
+                                    </Link>
+                                ) : null}
+                            </div>
+                            {storefrontItems.length > 0 ? (
+                                <div className="mt-4 overflow-x-auto rounded-xl ring-1 ring-slate-100">
+                                    <table className="min-w-full divide-y divide-slate-100 text-sm">
+                                        <thead className="bg-slate-50/90">
+                                            <tr>
+                                                <th className="px-4 py-2.5 text-start text-xs font-semibold uppercase tracking-wide text-slate-600">
+                                                    {t('order_item')}
+                                                </th>
+                                                <th className="px-4 py-2.5 text-end text-xs font-semibold uppercase tracking-wide text-slate-600">
+                                                    {t('order_col_quantity')}
+                                                </th>
+                                                <th className="px-4 py-2.5 text-end text-xs font-semibold uppercase tracking-wide text-slate-600">
+                                                    {t('order_col_unit_price')}
+                                                </th>
+                                                <th className="px-4 py-2.5 text-end text-xs font-semibold uppercase tracking-wide text-slate-600">
+                                                    {t('order_col_line_total')}
+                                                </th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-slate-50 bg-white">
+                                            {storefrontItems.map((it, idx) => (
+                                                <tr key={`sf-card-${idx}-${it?.product_id ?? idx}`}>
+                                                    <td className="px-4 py-3">
+                                                        <p className="font-medium text-slate-900">
+                                                            {String(it?.name ?? '').trim() || t('order_none')}
+                                                        </p>
+                                                        {it?.product_id != null ? (
+                                                            <p className="mt-0.5 text-xs text-slate-500">
+                                                                {t('order_col_product_id')}: {it.product_id}
+                                                            </p>
+                                                        ) : null}
+                                                    </td>
+                                                    <td className="px-4 py-3 text-end tabular-nums text-slate-800">
+                                                        {it?.quantity ?? t('order_none')}
+                                                    </td>
+                                                    <td className="px-4 py-3 text-end tabular-nums text-slate-800">
+                                                        {it?.unit_price != null && it.unit_price !== ''
+                                                            ? formatStorefrontMoney(it.unit_price, row.currency)
+                                                            : t('order_none')}
+                                                    </td>
+                                                    <td className="px-4 py-3 text-end font-semibold tabular-nums text-slate-900">
+                                                        {it?.line_total != null && it.line_total !== ''
+                                                            ? formatStorefrontMoney(it.line_total, row.currency)
+                                                            : t('order_none')}
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            ) : null}
+                        </SectionCard>
+                    ) : null}
                     {row.wigpleasure_order_id && !isSupplier ? (
                         <SectionCard
                             icon={HiOutlineBuildingStorefront}

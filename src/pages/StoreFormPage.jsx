@@ -67,7 +67,7 @@ export default function StoreFormPage() {
                 toast.success(t('table_create'));
                 const newStoreId = data?.data?.id;
                 if (newStoreId) {
-                    navigate(`/stores/${newStoreId}/onboarding`);
+                    navigate(`/stores/${newStoreId}/overview`);
                     return;
                 }
             } else {

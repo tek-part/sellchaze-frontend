@@ -29,7 +29,8 @@ export function SearchPage(): ReactElement {
   const query = (params.get('q') ?? '').trim();
   const { store } = useStore();
   const currency = store.currency;
-  const productsQ = useAsync(() => getProducts({ perPage: 60 }), []);
+  // Re-fetched per locale so the searchable titles are the translated ones.
+  const productsQ = useAsync(() => getProducts({ perPage: 60 }), [locale]);
 
   const results = useMemo<ProductCardModel[]>(() => {
     let products: ProductCardModel[] = productsQ.data ? productsQ.data.data.map((p) => toProductCard(p, currency, store.currencyMultipliers[currency] ?? 1)) : [];

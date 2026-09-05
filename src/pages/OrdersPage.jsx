@@ -1,9 +1,12 @@
 import { useCallback, useEffect, useState } from 'react';
-import { useNavigate, useOutletContext } from 'react-router-dom';
+import { useNavigate, useOutletContext, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
 import { HiOutlinePlus, HiOutlineUserPlus, HiXMark } from 'react-icons/hi2';
 import CreateOrderDialog from '../components/orders/CreateOrderDialog';
+import OrderSourceBadge, { ORDER_SOURCES } from '../components/orders/OrderSourceBadge';
+import OrderSourceTabs from '../components/orders/OrderSourceTabs';
+import SearchableSelect from '../components/ui/SearchableSelect';
 import api from '../api/client';
 import { useDebounced } from '../hooks/useDebounced';
 import ListToolbar from '../components/table/ListToolbar';
@@ -13,6 +16,18 @@ import ConfirmDialog from '../components/ConfirmDialog';
 import TableIconActions from '../components/table/TableIconActions';
 import { exportRowsToExcel } from '../utils/exportExcel';
 import { fetchAllPages } from '../utils/fetchAllPages';
+
+/** B2B order statuses (mirrors `order_status_*` i18n keys) for the status filter. */
+const ORDER_STATUSES = [
+    'pending',
+    'accepted',
+    'awaiting_shipping',
+    'shipped',
+    'deal',
+    'completed',
+    'rejected',
+    'cancelled',
+];
 
 function wigpleasureStoreStatusLabel(t, value) {
     if (value == null || value === '') {
@@ -78,6 +93,27 @@ export default function OrdersPage({ direction }) {
     const [status, setStatus] = useState('');
     const [dateFrom, setDateFrom] = useState('');
     const [dateTo, setDateTo] = useState('');
+    /** `?source=` lives in the URL so tabs survive reloads and are shareable. */
+    const [searchParams, setSearchParams] = useSearchParams();
+    const rawSource = searchParams.get('source') ?? '';
+    const source = ORDER_SOURCES.includes(rawSource) ? rawSource : '';
+    const setSource = useCallback(
+        (next) => {
+            setSearchParams(
+                (prev) => {
+                    const params = new URLSearchParams(prev);
+                    if (next && ORDER_SOURCES.includes(next)) {
+                        params.set('source', next);
+                    } else {
+                        params.delete('source');
+                    }
+                    return params;
+                },
+                { replace: true },
+            );
+        },
+        [setSearchParams],
+    );
     const [selected, setSelected] = useState(() => new Set());
     const [confirmBulk, setConfirmBulk] = useState(false);
     const [deleting, setDeleting] = useState(false);
@@ -107,6 +143,7 @@ export default function OrdersPage({ direction }) {
             per_page: perPage,
             ...(debouncedSearch.trim() ? { search: debouncedSearch.trim() } : {}),
             ...(status ? { status } : {}),
+            ...(source ? { source } : {}),
             ...(dateFrom ? { date_from: dateFrom } : {}),
             ...(dateTo ? { date_to: dateTo } : {}),
         };
@@ -114,11 +151,11 @@ export default function OrdersPage({ direction }) {
             params.direction = direction;
         }
         return params;
-    }, [page, perPage, debouncedSearch, status, dateFrom, dateTo, direction]);
+    }, [page, perPage, debouncedSearch, status, source, dateFrom, dateTo, direction]);
 
     useEffect(() => {
         setPage(1);
-    }, [debouncedSearch, status, dateFrom, dateTo, perPage, direction]);
+    }, [debouncedSearch, status, source, dateFrom, dateTo, perPage, direction]);
 
     useEffect(() => {
         const onVis = () => {
@@ -188,6 +225,7 @@ export default function OrdersPage({ direction }) {
 
     const exportColumns = [
         { key: 'code', header: t('col_code') },
+        { key: 'source', header: t('col_source') },
         { key: 'status', header: t('col_status') },
         { key: 'product_name', header: t('col_product') },
         { key: 'created_at', header: t('col_created') },
@@ -195,6 +233,7 @@ export default function OrdersPage({ direction }) {
 
     const toExportRow = (r) => ({
         code: r.code,
+        source: r.source ?? '',
         status: r.status,
         product_name: pickLocalizedProductName(r.product, i18n.language, ''),
         created_at: r.created_at ? new Date(r.created_at).toISOString() : '',
@@ -266,9 +305,10 @@ export default function OrdersPage({ direction }) {
         }
     };
 
+    // code, source, status, product, created, actions
     const colCount =
         (canBulkDelete ? 1 : 0) +
-        5 +
+        6 +
         (showWigpleasureStoreColumn ? 1 : 0) +
         (showSentToColumn ? 1 : 0) +
         (canAssignSupplier ? 1 : 0);
@@ -299,6 +339,7 @@ export default function OrdersPage({ direction }) {
             {err && (
                 <p className="rounded-lg border border-red-100 bg-red-50 px-3 py-2 text-sm text-red-700">{err}</p>
             )}
+            <OrderSourceTabs value={source} onChange={setSource} className="w-fit" />
             <div className="overflow-hidden rounded-2xl border border-slate-200/80 shadow-card">
                 <ListToolbar
                     searchValue={searchInput}
@@ -326,15 +367,37 @@ export default function OrdersPage({ direction }) {
                         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
                             <div>
                                 <label className="mb-1 block text-[11px] font-semibold uppercase text-slate-500">
+                                    {t('filter_source')}
+                                </label>
+                                <SearchableSelect
+                                    value={source}
+                                    onChange={(e) => setSource(e.target.value)}
+                                    className="w-full"
+                                >
+                                    <option value="">{t('order_source_all')}</option>
+                                    {ORDER_SOURCES.map((s) => (
+                                        <option key={s} value={s}>
+                                            {t(`order_source_${s}`)}
+                                        </option>
+                                    ))}
+                                </SearchableSelect>
+                            </div>
+                            <div>
+                                <label className="mb-1 block text-[11px] font-semibold uppercase text-slate-500">
                                     {t('filter_status')}
                                 </label>
-                                <input
-                                    type="text"
+                                <SearchableSelect
                                     value={status}
                                     onChange={(e) => setStatus(e.target.value)}
-                                    placeholder={t('filter_all')}
-                                    className="w-full rounded-lg border border-slate-200 px-2 py-1.5 text-sm"
-                                />
+                                    className="w-full"
+                                >
+                                    <option value="">{t('filter_all')}</option>
+                                    {ORDER_STATUSES.map((s) => (
+                                        <option key={s} value={s}>
+                                            {t(`order_status_${s}`)}
+                                        </option>
+                                    ))}
+                                </SearchableSelect>
                             </div>
                             <div>
                                 <label className="mb-1 block text-[11px] font-semibold uppercase text-slate-500">
@@ -377,6 +440,7 @@ export default function OrdersPage({ direction }) {
                                     </th>
                                 ) : null}
                                 <th className="px-4 py-3.5">{t('col_code')}</th>
+                                <th className="px-4 py-3.5">{t('col_source')}</th>
                                 {showWigpleasureStoreColumn ? (
                                     <th className="px-4 py-3.5">{t('col_wigpleasure_store_status')}</th>
                                 ) : null}
@@ -425,6 +489,9 @@ export default function OrdersPage({ direction }) {
                                                 {t('badge_late')}
                                             </span>
                                         ) : null}
+                                    </td>
+                                    <td className="px-4 py-3">
+                                        <OrderSourceBadge source={row.source} />
                                     </td>
                                     {showWigpleasureStoreColumn ? (
                                         <td className="px-4 py-3 text-slate-700">

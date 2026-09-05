@@ -87,6 +87,113 @@ export const THEME_CATALOG: ThemeCatalog = [
     featured: true,
     load: () => import('../../themes/rouge').then((m) => m.rougeTheme),
   },
+  {
+    id: 'naseem',
+    name: 'Naseem — نسيم',
+    version: '1.0.0',
+    archetype: 'General Store',
+    description:
+      'Clean, modern general-store theme — light and airy with a blue primary, Arabic-first ' +
+      'typography, sticky search header, category circles, product tabs, flash deals and a ' +
+      'newsletter band. Built on the shared section library: every block is editable in the customizer.',
+    author: 'Sellchaze',
+    tags: ['general', 'clean', 'modern', 'arabic', 'light', 'salla-style'],
+    accent: '#1D4ED8',
+    accentAlt: '#F59E0B',
+    previewImage: '/media/theme-previews/naseem.jpg',
+    minEngineVersion: '1.0.0',
+    capabilities: ['rtl', 'dark-mode', 'search-overlay', 'cart-drawer', 'wishlist', 'quick-add', 'newsletter', 'countdown'],
+    license: { type: 'free', sku: 'theme-naseem' },
+    changelog: [{ version: '1.0.0', date: '2026-09-05', notes: ['Initial release — first theme on the shared section library.'] }],
+    featured: true,
+    load: () => import('../../themes/naseem').then((m) => m.naseemTheme),
+  },
+  {
+    id: 'bazaar',
+    name: 'Bazaar — بازار',
+    version: '1.0.0',
+    archetype: 'Marketplace',
+    description:
+      'Salla-style multi-category marketplace — warm amber primary on white with deep-charcoal text, a ' +
+      'two-row header with a big category search and an "All categories" mega-menu, compact rounded ' +
+      'cards, promo badges, flash deals with countdown, product tabs and dense grids. Built on the shared ' +
+      'section library: every block is editable in the customizer.',
+    author: 'Sellchaze',
+    tags: ['marketplace', 'multi-category', 'salla-style', 'arabic', 'dense', 'orange', 'deals'],
+    accent: '#F97316',
+    accentAlt: '#1F2937',
+    previewImage: '/media/theme-previews/bazaar.jpg',
+    minEngineVersion: '1.0.0',
+    capabilities: ['rtl', 'dark-mode', 'mega-menu', 'search-overlay', 'cart-drawer', 'wishlist', 'quick-add', 'newsletter', 'countdown', 'blog', 'reviews'],
+    license: { type: 'free', sku: 'theme-bazaar' },
+    changelog: [{ version: '1.0.0', date: '2026-09-05', notes: ['Initial release — marketplace theme on the shared section library.'] }],
+    featured: true,
+    load: () => import('../../themes/bazaar').then((m) => m.bazaarTheme),
+  },
+  {
+    id: 'sahra',
+    name: 'Sahra — صحراء',
+    version: '1.0.0',
+    archetype: 'Luxury Gifts',
+    description:
+      'Luxury theme for perfumes, jewellery, abayas and gifts — warm sand or deep charcoal canvas, ' +
+      'gold accents, serif headings (Playfair Display / Amiri), thin gold rules, centred minimal header, ' +
+      'cinematic full-bleed hero, editorial image-with-text and hover-swap product cards. Built on the ' +
+      'shared section library: every block is editable in the customizer.',
+    author: 'Sellchaze',
+    tags: ['luxury', 'perfume', 'jewellery', 'abaya', 'gifts', 'gold', 'dark', 'editorial', 'arabic', 'salla-style'],
+    accent: '#1C1A17',
+    accentAlt: '#C9A24D',
+    previewImage: '/media/theme-previews/sahra.jpg',
+    minEngineVersion: '1.0.0',
+    capabilities: ['rtl', 'dark-mode', 'search-overlay', 'cart-drawer', 'wishlist', 'quick-add', 'newsletter', 'reviews'],
+    license: { type: 'free', sku: 'theme-sahra' },
+    changelog: [{ version: '1.0.0', date: '2026-09-05', notes: ['Initial release — luxury theme on the shared section library.'] }],
+    featured: true,
+    load: () => import('../../themes/sahra').then((m) => m.sahraTheme),
+  },
+  {
+    id: 'fresh',
+    name: 'Fresh — فريش',
+    version: '1.0.0',
+    archetype: 'Grocery & Food',
+    description:
+      'Friendly grocery & fresh-market theme — green primary with a lime accent on a cream canvas, ' +
+      'pill shapes, a delivery-time promise in the header, big quick-add buttons with quantity ' +
+      'steppers on cards, category circles, weekly deals with a countdown and a sticky bottom tab bar ' +
+      'on phones. Built on the shared section library: every block is editable in the customizer.',
+    author: 'Sellchaze',
+    tags: ['grocery', 'food', 'organic', 'market', 'fresh', 'green', 'arabic', 'salla-style'],
+    accent: '#16A34A',
+    accentAlt: '#84CC16',
+    previewImage: '/media/theme-previews/fresh.jpg',
+    minEngineVersion: '1.0.0',
+    capabilities: ['rtl', 'dark-mode', 'search-overlay', 'cart-drawer', 'wishlist', 'quick-add', 'newsletter', 'countdown', 'blog'],
+    license: { type: 'free', sku: 'theme-fresh' },
+    changelog: [{ version: '1.0.0', date: '2026-09-05', notes: ['Initial release — grocery / fresh-market theme on the shared section library.'] }],
+    load: () => import('../../themes/fresh').then((m) => m.freshTheme),
+  },
+  {
+    id: 'techno',
+    name: 'Techno — تكنو',
+    version: '1.0.0',
+    archetype: 'Electronics',
+    description:
+      'Electronics & gadgets theme — navy header and footer, electric-blue primary with cyan accents ' +
+      'on a light-grey page, sharp technical typography, spec chips and price/discount emphasis on ' +
+      'cards, a compare tray, category mega-menu, support hotline, trust bar, flash deals with a ' +
+      'countdown and a brand wall. Built on the shared section library: every block is editable in the customizer.',
+    author: 'Sellchaze',
+    tags: ['electronics', 'tech', 'gadgets', 'navy', 'blue', 'spec-led', 'arabic', 'salla-style'],
+    accent: '#2563EB',
+    accentAlt: '#06B6D4',
+    previewImage: '/media/theme-previews/techno.jpg',
+    minEngineVersion: '1.0.0',
+    capabilities: ['rtl', 'dark-mode', 'mega-menu', 'search-overlay', 'cart-drawer', 'wishlist', 'compare', 'quick-add', 'newsletter', 'countdown'],
+    license: { type: 'free', sku: 'theme-techno' },
+    changelog: [{ version: '1.0.0', date: '2026-09-05', notes: ['Initial release — electronics / gadgets theme on the shared section library.'] }],
+    load: () => import('../../themes/techno').then((m) => m.technoTheme),
+  },
 ];
 
 /** All catalog entries. */

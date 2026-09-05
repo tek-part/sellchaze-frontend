@@ -386,16 +386,16 @@ describe('updates', () => {
 
 /* -------------------------------------------------------------- catalog + bridge */
 describe('catalog + registry bridge', () => {
-  it('the real catalog has four unique, valid themes', () => {
-    expect(THEME_CATALOG).toHaveLength(4);
+  it('the real catalog lists the original four themes plus the library-built ones, all unique', () => {
+    expect(THEME_CATALOG.length).toBeGreaterThanOrEqual(4);
     const ids = THEME_CATALOG.map((e) => e.id);
-    expect(new Set(ids).size).toBe(4);
-    expect(ids).toEqual(expect.arrayContaining(['luxury-fashion', 'voltage', 'hearth', 'rouge']));
+    expect(new Set(ids).size).toBe(ids.length);
+    expect(ids).toEqual(expect.arrayContaining(['luxury-fashion', 'voltage', 'hearth', 'rouge', 'naseem']));
   });
   it('registers every catalogued theme into a fresh registry', () => {
     const registry = new ThemeRegistry();
     const added = registerCatalog(THEME_CATALOG, registry);
-    expect(added).toHaveLength(4);
+    expect(added).toHaveLength(THEME_CATALOG.length);
     for (const entry of THEME_CATALOG) expect(registry.has(entry.id)).toBe(true);
     // idempotent — re-registering adds nothing.
     expect(registerCatalog(THEME_CATALOG, registry)).toHaveLength(0);

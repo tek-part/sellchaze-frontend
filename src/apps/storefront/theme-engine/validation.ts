@@ -77,6 +77,13 @@ function validateSettings(module: ThemeModule): ValidationIssue[] {
       if (field.min !== undefined && field.default < field.min) issues.push(warn('settings.default', `"${field.id}" default < min`, path));
       if (field.max !== undefined && field.default > field.max) issues.push(warn('settings.default', `"${field.id}" default > max`, path));
     }
+    if (field.type === 'list') {
+      if (field.item.length === 0) issues.push(err('settings.list', `list "${field.id}" has no item fields`, path));
+      if (!Array.isArray(field.default)) issues.push(err('settings.default', `list "${field.id}" default must be an array`, path));
+      if (field.max !== undefined && Array.isArray(field.default) && field.default.length > field.max) {
+        issues.push(warn('settings.default', `list "${field.id}" default exceeds max`, path));
+      }
+    }
   }
   return issues;
 }

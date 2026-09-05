@@ -52,8 +52,13 @@ export interface SectionInstance {
   readonly type: string;
   /** Stable instance id (for keys, analytics, anchors). */
   readonly id?: string;
-  /** Per-instance setting overrides for this section. */
-  readonly settings?: ThemeSettings;
+  /**
+   * Per-instance setting overrides for this section. RAW authoring/API values: scalars, `{ ar, en }`
+   * locale maps for translatable text, and arrays of flat objects for `list` fields. Section
+   * components resolve them against their schema (`resolveSettings`) — the engine passes them
+   * through untouched.
+   */
+  readonly settings?: Readonly<Record<string, unknown>>;
 }
 
 /** A page/template = an ordered list of section instances. */

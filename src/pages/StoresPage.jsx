@@ -256,7 +256,7 @@ export default function StoresPage() {
                                             )}
                                             <TableIconActions
                                                 viewTo={
-                                                    can('stores-edit') ? `/stores/${row.id}/settings` : undefined
+                                                    can('stores-edit') ? `/stores/${row.id}/overview` : undefined
                                                 }
                                                 editTo={can('stores-edit') ? `/stores/${row.id}/edit` : undefined}
                                                 onDelete={

@@ -47,7 +47,8 @@ function useCategoryContext(title: string, description: string): {
   const { store } = useStore();
   const manifest = useThemeManifest();
   const { locale } = useLocale();
-  const categoriesQ = useAsync(() => getCategories(), []);
+  // Re-fetched per locale: category names come back translated by the API (`?lang=`).
+  const categoriesQ = useAsync(() => getCategories(), [locale]);
   const dev = previewOrDev();
 
   const categories = useMemo(() => {
@@ -181,7 +182,7 @@ export function BrandsPage(): ReactElement {
   const { store } = useStore();
   const manifest = useThemeManifest();
   const { locale } = useLocale();
-  const productsQ = useAsync(() => getProducts({ perPage: 60 }), []);
+  const productsQ = useAsync(() => getProducts({ perPage: 60 }), [locale]);
   const dev = previewOrDev();
 
   const brands = useMemo<BrandEntry[]>(() => {

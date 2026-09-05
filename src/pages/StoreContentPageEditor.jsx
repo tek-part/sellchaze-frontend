@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
@@ -17,6 +17,15 @@ import ReactQuill from 'react-quill-new';
 import 'react-quill-new/dist/quill.snow.css';
 import api from '../api/client';
 import useStoreScope from '../hooks/useStoreScope';
+import useStoreLocales from '../hooks/useStoreLocales';
+import LocaleTabs, { localeLabel } from '../components/store/LocaleTabs';
+import { confirmDialog } from '../components/ui/confirmDialog';
+import { completeness } from '../lib/localized';
+
+// Fields whose value differs per language. The schema may say so explicitly (`translatable`);
+// otherwise every free-text type counts and media/date/toggle fields do not.
+const TRANSLATABLE_TYPES = ['text', 'textarea', 'richtext', 'lines', 'repeater'];
+const isTranslatable = (f) => f.translatable === true || (f.translatable !== false && TRANSLATABLE_TYPES.includes(f.type));
 
 // Rich-text toolbar for `richtext` fields (e.g. a blog post's body). No inline image upload — posts
 // carry a separate featured-image field, and base64 images would bloat the stored content.
@@ -232,10 +241,17 @@ export default function StoreContentPageEditor() {
     const navigate = useNavigate();
     const { apiBase, uiBase } = useStoreScope();
 
+    const { locales, defaultLocale } = useStoreLocales();
     const [page, setPage] = useState(null);
-    // Bilingual payload: one full copy of the fields per locale.
-    const [data, setData] = useState({ en: {}, ar: {} });
-    const [locale, setLocale] = useState('ar');
+    // Multilingual payload: one full copy of the fields per store language (`{ en: {…}, ar: {…} }`).
+    const [data, setData] = useState({});
+    const [locale, setLocale] = useState(defaultLocale);
+    // Start on the store's default language once it is known, unless the merchant already chose a tab.
+    const pickedRef = useRef(false);
+    useEffect(() => {
+        setLocale((cur) => (pickedRef.current && locales.includes(cur) ? cur : defaultLocale));
+    }, [locales, defaultLocale]);
+    const pickLocale = (l) => { pickedRef.current = true; setLocale(l); };
     const [isPublished, setIsPublished] = useState(true);
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
@@ -252,7 +268,11 @@ export default function StoreContentPageEditor() {
                 }
                 const d = found.data && !Array.isArray(found.data) ? found.data : {};
                 setPage(found);
-                setData({ en: d.en ?? {}, ar: d.ar ?? {} });
+                // Keep every locale copy the API returned (even ones the store no longer lists) so a
+                // save never silently drops a translation; missing locales are created on first edit.
+                const copies = {};
+                Object.keys(d).forEach((l) => { copies[l] = d[l] && typeof d[l] === 'object' && !Array.isArray(d[l]) ? d[l] : {}; });
+                setData(copies);
                 setIsPublished(found.is_published ?? true);
             })
             .catch((e) => setErr(e.response?.data?.message || e.message))
@@ -284,6 +304,25 @@ export default function StoreContentPageEditor() {
     };
 
     const fields = useMemo(() => page?.fields ?? [], [page]);
+    const translatableKeys = useMemo(() => fields.filter(isTranslatable).map((f) => f.key), [fields]);
+    const progress = useMemo(() => completeness(data, locales, translatableKeys), [data, locales, translatableKeys]);
+    const current = progress[locale];
+
+    // Seed one language from another: a full copy (media and dates included, since the payload is
+    // one copy per locale), so it asks first — it overwrites whatever the target already has.
+    const copyFrom = async (from, to) => {
+        const ok = await confirmDialog({
+            title: t('copy_from_locale_confirm_title', 'Copy content?'),
+            text: t('copy_from_locale_confirm_text', { from: localeLabel(from, t), to: localeLabel(to, t), defaultValue: 'This replaces the {{to}} content with a copy of the {{from}} content.' }),
+            confirmText: t('copy_from_locale', { locale: localeLabel(from, t), defaultValue: 'Copy from {{locale}}' }),
+            danger: false,
+            icon: 'question',
+        });
+        if (!ok) return;
+        setData((d) => ({ ...d, [to]: JSON.parse(JSON.stringify(d[from] ?? {})) }));
+        toast.success(t('copy_from_locale_done', 'Copied'));
+    };
+
     const scalarFields = fields.filter((f) => f.type !== 'repeater');
     const repeaterFields = fields.filter((f) => f.type === 'repeater');
 
@@ -314,18 +353,21 @@ export default function StoreContentPageEditor() {
                 </div>
             </div>
 
-            {/* Language tabs — edit the English and Arabic copies of every field. */}
-            <div className="inline-flex rounded-xl border border-slate-200 bg-white p-1 shadow-xs">
-                {[{ id: 'ar', label: 'العربية' }, { id: 'en', label: 'English' }].map((l) => (
-                    <button
-                        key={l.id}
-                        type="button"
-                        onClick={() => setLocale(l.id)}
-                        className={`rounded-lg px-4 py-1.5 text-sm font-semibold transition ${locale === l.id ? 'bg-brand text-white shadow-xs' : 'text-slate-600 hover:bg-slate-50'}`}
-                    >
-                        {l.label}
-                    </button>
-                ))}
+            {/* Language tabs — one full copy of every field per store language, with progress + copy-from. */}
+            <div className="flex flex-wrap items-center gap-3">
+                <LocaleTabs
+                    locales={locales}
+                    value={locale}
+                    onChange={pickLocale}
+                    defaultLocale={defaultLocale}
+                    completeness={progress}
+                    onCopyFrom={copyFrom}
+                />
+                {current && current.total > 0 ? (
+                    <span className={`text-xs font-medium ${current.ratio >= 1 ? 'text-emerald-600' : current.filled > 0 ? 'text-amber-600' : 'text-slate-400'}`}>
+                        {t('translation_progress', { filled: current.filled, total: current.total, defaultValue: '{{filled}}/{{total}} translated' })}
+                    </span>
+                ) : null}
             </div>
 
             {/* Scalar fields grouped into cards by `group` (default 'main'). */}

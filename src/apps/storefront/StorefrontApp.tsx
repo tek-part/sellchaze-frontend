@@ -15,11 +15,15 @@ import { useDirection, useLayout, useThemeManifest, type StorefrontContext } fro
 import { useStore } from './state/store-context';
 import { useAsync } from './api/useAsync';
 import { getCategories } from './api/storefront';
+import type { ApiNavItem } from './api/types';
+import { pickLocalized } from './i18n/localized';
 import type { FooterGroup, NavItem } from './types/navigation';
 import { AppRoutes } from './pages/AppRoutes';
 import { AppErrorBoundary } from './AppErrorBoundary';
 import { NavigationInterceptor } from './pages/NavigationInterceptor';
 import { RouteAnnouncer } from './pages/RouteAnnouncer';
+import { CustomizeBridge } from './customize/CustomizeBridge';
+import { isCustomizeMode } from './customize/customizer-state';
 
 type PreviewData = typeof import('./dev/sampleData');
 
@@ -102,6 +106,50 @@ function buildFooter(categories: ReadonlyArray<NavItem>, t: (key: string) => str
   return groups;
 }
 
+/**
+ * Merchant-managed menus (dashboard → Menus) arrive on the bootstrap payload as typed items
+ * (`{ label, label_i18n, type, target, children }`). Map each to a route this app serves: a
+ * category → its collection page, a product → its PDP, an internal path as-is, a raw URL untouched.
+ */
+function navUrl(item: ApiNavItem): string {
+  if (item.url) return item.url;
+  const target = (item.target ?? '').trim();
+  switch (item.type) {
+    case 'category':
+      return target ? `/collections/${target}` : '/categories';
+    case 'product':
+      return target ? `/products/${target}` : '/shop';
+    case 'internal':
+      if (!target) return '/';
+      return target.startsWith('/') ? target : `/${target}`;
+    default:
+      return target || '/';
+  }
+}
+
+function toNavItems(items: ReadonlyArray<ApiNavItem>, locale: string, fallback: string): NavItem[] {
+  return items.map((item) => {
+    const label = pickLocalized(item.label_i18n ?? item.label, locale, fallback) || item.label || '';
+    const children = item.children?.length ? toNavItems(item.children, locale, fallback) : null;
+    return { label, url: navUrl(item), ...(children ? { children } : {}) };
+  });
+}
+
+/**
+ * A footer menu is flat or one level deep: an item with children becomes a titled column; loose
+ * top-level links are gathered into one "Links" column so nothing the merchant added is dropped.
+ */
+function footerFromMenu(items: ReadonlyArray<ApiNavItem>, locale: string, fallback: string, t: (key: string) => string): FooterGroup[] {
+  const groups: FooterGroup[] = [];
+  const loose: { label: string; url: string }[] = [];
+  for (const item of toNavItems(items, locale, fallback)) {
+    if (item.children?.length) groups.push({ title: item.label, links: item.children.map(({ label, url }) => ({ label, url })) });
+    else loose.push({ label: item.label, url: item.url });
+  }
+  if (loose.length > 0) groups.unshift({ title: t('footer.links'), links: loose });
+  return groups;
+}
+
 export function StorefrontApp(): ReactElement {
   const manifest = useThemeManifest();
   const { t } = useTranslation();
@@ -110,8 +158,9 @@ export function StorefrontApp(): ReactElement {
   const { locale } = useLocale();
   const direction = useDirection();
   const Layout = useLayout('default');
-  const { store, setCurrency } = useStore();
-  const categoriesQ = useAsync(() => getCategories(), []);
+  const { store, navigation, setCurrency } = useStore();
+  // Re-fetched per locale: category names in the chrome come back translated by the API (`?lang=`).
+  const categoriesQ = useAsync(() => getCategories(), [locale]);
   const [previewData, setPreviewData] = useState<PreviewData | null>(null);
 
   useEffect(() => {
@@ -136,15 +185,21 @@ export function StorefrontApp(): ReactElement {
     const categoryNav: NavItem[] = categoriesQ.data
       ? categoriesQ.data.data.map((c) => ({ label: c.name, url: `/collections/${c.slug}` }))
       : [];
-    const header: NavItem[] = dev && previewData && categoryNav.length === 0
-      ? previewData.sampleNav(manifest.id, t, locale)
-      : buildHeaderNav(categoryNav, t);
+    // A merchant-managed menu wins when it has items; otherwise fall back to the generated chrome
+    // (categories + the routes AppRoutes registers) so a store without menus still navigates.
+    const menuHeader = navigation.header.length > 0 ? toNavItems(navigation.header, locale, store.defaultLocale) : null;
+    const header: NavItem[] = menuHeader
+      ?? (dev && previewData && categoryNav.length === 0
+        ? previewData.sampleNav(manifest.id, t, locale)
+        : buildHeaderNav(categoryNav, t));
     // Production previously rendered an EMPTY footer (`[]`), so every live storefront shipped a
     // footer with no links. Build real groups from the store's own categories plus the routes that
     // actually exist in AppRoutes — never links to routes we do not serve.
-    const footer: FooterGroup[] = dev && previewData && categoryNav.length === 0
-      ? previewData.sampleFooter(manifest.id, t, locale)
-      : buildFooter(categoryNav, t);
+    const menuFooter = navigation.footer.length > 0 ? footerFromMenu(navigation.footer, locale, store.defaultLocale, t) : null;
+    const footer: FooterGroup[] = menuFooter
+      ?? (dev && previewData && categoryNav.length === 0
+        ? previewData.sampleFooter(manifest.id, t, locale)
+        : buildFooter(categoryNav, t));
     const announcements = dev && previewData ? previewData.sampleAnnouncements(manifest.id, locale) : [];
 
     return {
@@ -167,7 +222,7 @@ export function StorefrontApp(): ReactElement {
         ...(dev && previewData ? { social: previewData.sampleSocial() } : {}),
       },
     };
-  }, [categoriesQ.data, store.name, store.currency, store.description, manifest.id, t, locale, previewData]);
+  }, [categoriesQ.data, navigation, store.name, store.currency, store.description, store.defaultLocale, manifest.id, t, locale, previewData]);
 
   return (
     <div className="sf-root" data-theme-id={manifest.id}>
@@ -181,6 +236,7 @@ export function StorefrontApp(): ReactElement {
       ) : null}
       <NavigationInterceptor />
       <RouteAnnouncer />
+      {isCustomizeMode() ? <CustomizeBridge /> : null}
       <a
         href="#sf-main"
         className="sr-only focus:not-sr-only focus:absolute focus:start-4 focus:top-4 focus:z-50 focus:bg-ink focus:px-4 focus:py-2 focus:text-on-ink"

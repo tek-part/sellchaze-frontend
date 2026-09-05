@@ -77,6 +77,7 @@ export const en = {
     company: 'Company',
     shopColumn: 'Shop',
     accountColumn: 'Account',
+    links: 'Links',
   },
 
   shop: {

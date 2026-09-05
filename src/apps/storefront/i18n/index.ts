@@ -14,6 +14,7 @@
  */
 import { createInstance, type i18n as I18n } from 'i18next';
 import { initReactI18next } from 'react-i18next';
+import { setApiLocale } from '../api/client';
 import type { Direction } from '../theme-engine/types';
 import { en } from './en';
 import { ar } from './ar';
@@ -85,9 +86,12 @@ let instance: I18n | undefined;
 export function storefrontI18n(): I18n {
   if (instance) return instance;
   const i18n = createInstance();
+  const initial = detectLocale();
+  // Seed the API client before the first render so even the bootstrap-time requests carry `lang`.
+  setApiLocale(initial);
   void i18n.use(initReactI18next).init({
     resources: { en: { translation: en }, ar: { translation: ar } },
-    lng: detectLocale(),
+    lng: initial,
     fallbackLng: DEFAULT_LOCALE,
     // Keys are hand-written and namespaced with `.`, and copy contains no interpolation-unsafe
     // markup, so React's own escaping is sufficient.

@@ -32,7 +32,7 @@ export {
 /* engine core */
 export { ThemeRegistry, themeRegistry } from './registry';
 export { loadTheme, clearThemeCache } from './loader';
-export { defaultSettings, resolveSettings } from './settings';
+export { defaultSettings, resolveSettings, flattenLocalizedSettings } from './settings';
 export { flattenTokens, applyTokensToElement } from './applyTokens';
 export { ENGINE_VERSION, checkThemeCompatibility, type CompatibilityResult } from './compatibility';
 export { parseSemVer, compareSemVer, satisfiesMinimum, type SemVer } from './semver';
@@ -108,9 +108,21 @@ export type {
   SpaceStep,
   ThemeSettingType,
   ThemeSettingValue,
+  ThemeSettingScalar,
+  ThemeSettingListItem,
+  ThemeSettingCssProperty,
   ThemeSettingField,
+  ThemeListField,
+  ThemeListItemField,
+  ThemeReferenceField,
+  ThemeSelectField,
+  ThemeRangeField,
+  ThemeToggleField,
+  ThemeStringField,
   ThemeSettingsSchema,
   ThemeSettings,
+  ThemeSectionSchema,
+  ThemeSectionCategory,
   ThemeManifest,
   ThemeModule,
   ThemeLoader,

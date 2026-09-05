@@ -2,6 +2,7 @@ import { lazy, Suspense } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import AppErrorBoundary from './components/AppErrorBoundary';
 import AppLayout from './components/AppLayout';
+import StoreRedirect from './components/store/StoreRedirect';
 import Login from './pages/Login';
 import RegisterPage from './pages/RegisterPage';
 import ForgotPasswordPage from './pages/ForgotPasswordPage';
@@ -105,12 +106,19 @@ const CategoryFormPage = lazy(() => import('./pages/CategoryFormPage'));
 const BundleFormPage = lazy(() => import('./pages/BundleFormPage'));
 const StoresPage = lazy(() => import('./pages/StoresPage'));
 const StoreFormPage = lazy(() => import('./pages/StoreFormPage'));
-const StoreSettingsPage = lazy(() => import('./pages/StoreSettingsPage'));
+const StoreLayout = lazy(() => import('./components/store/StoreLayout'));
+const StoreOverviewPage = lazy(() => import('./pages/StoreOverviewPage'));
 const StoreThemesPage = lazy(() => import('./pages/StoreThemesPage'));
+const StoreCustomizePage = lazy(() => import('./pages/StoreCustomizePage'));
 const StorePaymentsPage = lazy(() => import('./pages/StorePaymentsPage'));
 const StoreThemeSettingsPage = lazy(() => import('./pages/StoreThemeSettingsPage'));
 const StorePagesPage = lazy(() => import('./pages/StorePagesPage'));
-const StoreSetupPage = lazy(() => import('./pages/StoreSetupPage'));
+const StoreMediaPage = lazy(() => import('./pages/StoreMediaPage'));
+const StoreGeneralSettingsPage = lazy(() => import('./pages/store/settings/StoreGeneralSettingsPage'));
+const StoreLocalizationSettingsPage = lazy(() => import('./pages/store/settings/StoreLocalizationSettingsPage'));
+const StoreShippingTaxSettingsPage = lazy(() => import('./pages/store/settings/StoreShippingTaxSettingsPage'));
+const StoreDomainsPage = lazy(() => import('./pages/store/settings/StoreDomainsPage'));
+const StorePublishPage = lazy(() => import('./pages/store/settings/StorePublishPage'));
 const StorePageBuilderPage = lazy(() => import('./pages/StorePageBuilderPage'));
 const StoreContentPageEditor = lazy(() => import('./pages/StoreContentPageEditor'));
 const StoreMenusPage = lazy(() => import('./pages/StoreMenusPage'));
@@ -158,6 +166,48 @@ function RootRoute() {
     // marketing site (the public header shows a "Dashboard" button to return).
     return <LandingPage />;
 }
+
+
+function joinPath(base, path) {
+    return path ? `${base}/${path}` : base;
+}
+
+/**
+ * Store admin pages, relative to the store base (`/store` or `/stores/:id`).
+ * Legacy paths redirect inside the same scope; the catalog stays unified on
+ * /products and /categories (see ProductScope).
+ */
+const STORE_ROUTES = [
+    { path: '', element: <StoreRedirect to="overview" /> },
+    { path: 'onboarding', element: <StoreRedirect to="overview" /> },
+    { path: 'settings', element: <StoreRedirect to="settings/general" /> },
+    { path: 'payments', element: <StoreRedirect to="settings/payments" /> },
+    { path: 'overview', element: <StoreOverviewPage /> },
+    { path: 'orders', element: <StoreOrdersPage /> },
+    { path: 'orders/:orderId', element: <StoreOrderDetailPage /> },
+    { path: 'coupons', element: <StoreCouponsPage /> },
+    { path: 'coupons/new', element: <StoreCouponFormPage /> },
+    { path: 'coupons/:couponId/edit', element: <StoreCouponFormPage /> },
+    { path: 'reviews', element: <StoreReviewsPage /> },
+    { path: 'analytics', element: <StoreAnalyticsPage /> },
+    { path: 'themes', element: <StoreThemesPage mode="installed" /> },
+    { path: 'themes/marketplace', element: <StoreThemesPage mode="marketplace" /> },
+    { path: 'themes/:themeId/settings', element: <StoreThemeSettingsPage /> },
+    { path: 'customize', element: <StoreCustomizePage /> },
+    { path: 'pages', element: <StorePagesPage /> },
+    { path: 'pages/:pageId/builder', element: <StorePageBuilderPage /> },
+    { path: 'content/:key', element: <StoreContentPageEditor /> },
+    { path: 'menus', element: <StoreMenusPage /> },
+    { path: 'media', element: <StoreMediaPage /> },
+    { path: 'settings/general', element: <StoreGeneralSettingsPage /> },
+    { path: 'settings/localization', element: <StoreLocalizationSettingsPage /> },
+    { path: 'settings/payments', element: <StorePaymentsPage /> },
+    { path: 'settings/shipping', element: <StoreShippingTaxSettingsPage /> },
+    { path: 'settings/domains', element: <StoreDomainsPage /> },
+    { path: 'settings/publish', element: <StorePublishPage /> },
+    { path: 'products/*', element: <Navigate to="/products" replace /> },
+    { path: 'categories/*', element: <Navigate to="/categories" replace /> },
+];
 
 export default function App() {
     return (
@@ -289,51 +339,20 @@ export default function App() {
                 <Route path="/bundles/:id/edit" element={<BundleFormPage />} />
                 <Route path="/bundles/:id" element={<BundleDetailPage />} />
                 <Route path="/bundles" element={<BundlesPage />} />
-                {/* Owner (Merchant/Supplier) single-store context — no store id in the URL.
-                    Same components as the admin /stores/:id/* routes; useStoreScope resolves
-                    the owner's store via /my-store. Admin multi-store console stays below. */}
-                <Route path="/store" element={<Navigate to="/store/orders" replace />} />
-                <Route path="/store/settings" element={<StoreSettingsPage />} />
-                <Route path="/store/onboarding" element={<StoreSetupPage />} />
-                <Route path="/store/themes/:themeId/settings" element={<StoreThemeSettingsPage />} />
-                <Route path="/store/payments" element={<StorePaymentsPage />} />
-                <Route path="/store/themes" element={<StoreThemesPage />} />
-                <Route path="/store/pages/:pageId/builder" element={<StorePageBuilderPage />} />
-                <Route path="/store/content/:key" element={<StoreContentPageEditor />} />
-                <Route path="/store/pages" element={<StorePagesPage />} />
-                <Route path="/store/menus" element={<StoreMenusPage />} />
-                <Route path="/store/coupons/new" element={<StoreCouponFormPage />} />
-                <Route path="/store/coupons/:couponId/edit" element={<StoreCouponFormPage />} />
-                <Route path="/store/coupons" element={<StoreCouponsPage />} />
-                <Route path="/store/orders/:orderId" element={<StoreOrderDetailPage />} />
-                <Route path="/store/orders" element={<StoreOrdersPage />} />
-                <Route path="/store/analytics" element={<StoreAnalyticsPage />} />
-                <Route path="/store/reviews" element={<StoreReviewsPage />} />
-                {/* Catalog unified: the old per-store catalog pages now redirect to the
-                    single owner catalog (/products, /categories). See ProductScope. */}
-                <Route path="/store/products/*" element={<Navigate to="/products" replace />} />
-                <Route path="/store/categories/*" element={<Navigate to="/categories" replace />} />
+                {/* Store admin — one route table rendered twice under a shared StoreLayout
+                    (sidebar + store context): owners at /store/* (no id; useStoreScope resolves
+                    the store via /my-store) and admins at /stores/:id/*. Absolute paths keep
+                    /stores, /stores/new and /stores/:id/edit outside the layout. */}
+                <Route element={<StoreLayout />}>
+                    {STORE_ROUTES.map((route) => (
+                        <Route key={`store:${route.path}`} path={joinPath('/store', route.path)} element={route.element} />
+                    ))}
+                    {STORE_ROUTES.map((route) => (
+                        <Route key={`stores:${route.path}`} path={joinPath('/stores/:id', route.path)} element={route.element} />
+                    ))}
+                </Route>
                 <Route path="/stores/new" element={<StoreFormPage />} />
                 <Route path="/stores/:id/edit" element={<StoreFormPage />} />
-                <Route path="/stores/:id/settings" element={<StoreSettingsPage />} />
-                <Route path="/stores/:id/onboarding" element={<StoreSetupPage />} />
-                <Route path="/stores/:id/themes/:themeId/settings" element={<StoreThemeSettingsPage />} />
-                <Route path="/stores/:id/payments" element={<StorePaymentsPage />} />
-                <Route path="/stores/:id/themes" element={<StoreThemesPage />} />
-                <Route path="/stores/:id/pages/:pageId/builder" element={<StorePageBuilderPage />} />
-                <Route path="/stores/:id/content/:key" element={<StoreContentPageEditor />} />
-                <Route path="/stores/:id/pages" element={<StorePagesPage />} />
-                <Route path="/stores/:id/menus" element={<StoreMenusPage />} />
-                <Route path="/stores/:id/coupons/new" element={<StoreCouponFormPage />} />
-                <Route path="/stores/:id/coupons/:couponId/edit" element={<StoreCouponFormPage />} />
-                <Route path="/stores/:id/coupons" element={<StoreCouponsPage />} />
-                <Route path="/stores/:id/orders/:orderId" element={<StoreOrderDetailPage />} />
-                <Route path="/stores/:id/orders" element={<StoreOrdersPage />} />
-                <Route path="/stores/:id/analytics" element={<StoreAnalyticsPage />} />
-                <Route path="/stores/:id/reviews" element={<StoreReviewsPage />} />
-                {/* Catalog unified — admin per-store catalog pages redirect to the shared catalog. */}
-                <Route path="/stores/:id/products/*" element={<Navigate to="/products" replace />} />
-                <Route path="/stores/:id/categories/*" element={<Navigate to="/categories" replace />} />
                 <Route path="/stores" element={<StoresPage />} />
                 <Route path="/attributes/groups" element={<AttributesPage />} />
                 <Route path="/attributes" element={<AttributesPage />} />

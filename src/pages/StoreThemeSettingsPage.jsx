@@ -1,30 +1,58 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Navigate, useNavigate, useParams, useOutletContext } from 'react-router-dom';
 import useStoreScope from '../hooks/useStoreScope';
+import useStoreLocales from '../hooks/useStoreLocales';
 import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
 import api from '../api/client';
 import SearchableSelect from '../components/ui/SearchableSelect';
+
+// Theme manifests declare select options either as bare strings (legacy) or as `{ value, label }`.
+function normalizeOptions(options) {
+    return (options || []).map((o) => (o && typeof o === 'object' ? { value: String(o.value ?? ''), label: String(o.label ?? o.value ?? '') } : { value: String(o), label: String(o) }));
+}
 import StoreMediaPicker from '../components/store/StoreMediaPicker';
+import LocaleTabs, { localeLabel } from '../components/store/LocaleTabs';
+import { completeness, isLocalized, setLocalized, toLocalized } from '../lib/localized';
 
 /** Flatten settings_schema groups -> field list. */
 function fieldsOf(schema) {
     return (schema || []).flatMap((g) => (g.fields || []).map((f) => ({ ...f, group: g.label })));
 }
 
-function defaultsOf(schema) {
+/** Text fields flagged `translatable: true` in settings_schema hold `{ ar: '…', en: '…' }` values. */
+const isTranslatable = (f) => f.translatable === true && ['text', 'textarea', 'richtext', 'url'].includes(f.type);
+
+function defaultsOf(schema, locales, defaultLocale) {
     const out = {};
     fieldsOf(schema).forEach((f) => {
-        out[f.id] = f.default ?? (f.type === 'toggle' ? false : '');
+        const d = f.default ?? (f.type === 'toggle' ? false : '');
+        out[f.id] = isTranslatable(f) ? toLocalized(d, locales, defaultLocale) : d;
     });
     return out;
 }
 
-/** Client-side live validation (mirrors the server ThemeSettingsValidator). */
+/** Coerce loaded/restored settings so every translatable field is a `{ locale: string }` object (legacy strings land on the default locale). */
+function normalizeValues(values, fields, locales, defaultLocale) {
+    const out = { ...values };
+    fields.forEach((f) => {
+        if (isTranslatable(f)) out[f.id] = toLocalized(values[f.id], locales, defaultLocale);
+    });
+    return out;
+}
+
+/** Client-side live validation (mirrors the server ThemeSettingsValidator). Localized objects validate per language. */
 function validate(field, value) {
+    if (isLocalized(value)) {
+        for (const text of Object.values(value)) {
+            const msg = validate(field, text ?? '');
+            if (msg) return msg;
+        }
+        return null;
+    }
     if (field.type === 'url' && value && !/^https?:\/\/.+/.test(value)) return 'Must be a valid URL';
     if ((field.type === 'number' || field.type === 'range') && value !== '' && Number.isNaN(Number(value))) return 'Must be a number';
-    if (field.type === 'select' && field.options && value && !field.options.includes(value)) return 'Invalid option';
+    if (field.type === 'select' && field.options && value && !normalizeOptions(field.options).some((o) => o.value === String(value))) return 'Invalid option';
     return null;
 }
 
@@ -35,6 +63,16 @@ export default function StoreThemeSettingsPage() {
     const navigate = useNavigate();
     const { permissions } = useOutletContext();
     const can = (p) => permissions.includes(p);
+    const { locales, defaultLocale } = useStoreLocales();
+    // `load` is memoised on apiBase/themeId only; read the latest languages through a ref so a
+    // late-arriving locale list never re-fetches the theme.
+    const localesRef = useRef({ locales, defaultLocale });
+    localesRef.current = { locales, defaultLocale };
+    const localesKey = `${locales.join(',')}|${defaultLocale}`;
+    // Page-level language tab + optional per-field override (reset whenever the page tab changes).
+    const [editLocale, setEditLocale] = useState(defaultLocale);
+    const [fieldLocale, setFieldLocale] = useState({});
+    useEffect(() => { setEditLocale((cur) => (locales.includes(cur) ? cur : defaultLocale)); }, [locales, defaultLocale]);
 
     const [schema, setSchema] = useState([]);
     const [values, setValues] = useState({});
@@ -68,11 +106,19 @@ export default function StoreThemeSettingsPage() {
                 setSchema(s);
                 setThemeName(data.theme?.name ?? '');
                 setThemeKey(data.theme?.key ?? '');
-                const loaded = { ...defaultsOf(s), ...(data.install?.draft_settings ?? data.install?.settings ?? {}) };
+                const { locales: ls, defaultLocale: dl } = localesRef.current;
+                const loaded = normalizeValues(
+                    { ...defaultsOf(s, ls, dl), ...(data.install?.draft_settings ?? data.install?.settings ?? {}) },
+                    fieldsOf(s), ls, dl,
+                );
                 setValues(loaded);
                 setSavedValues(loaded);
                 setHasUnpublishedChanges(!!data.install?.has_unpublished_changes);
                 setPublishedAt(data.install?.published_at ?? null);
+                // In development the tenant host is not routable, so preview through the Vite
+                // storefront shim (`/?preview=1`, proxied to the store named by VITE_STOREFRONT_HOST).
+                // Production asks the API for a signed preview URL on the store's public host.
+                if (import.meta.env.DEV) return { data: { preview_url: `${window.location.origin}/` } };
                 return api.post(`${apiBase}/themes/preview`, { theme_id: Number(themeId) });
             })
             .then(({ data }) => {
@@ -81,7 +127,7 @@ export default function StoreThemeSettingsPage() {
             })
             .catch((e) => setErr(e.response?.data?.message || e.message))
             .finally(() => setLoading(false));
-    }, [apiBase, themeId]);
+    }, [apiBase, themeId, t]);
 
     useEffect(() => {
         load();
@@ -89,6 +135,33 @@ export default function StoreThemeSettingsPage() {
     }, [load, loadRevisions]);
 
     const fields = useMemo(() => fieldsOf(schema), [schema]);
+    const translatableFields = useMemo(() => fields.filter(isTranslatable), [fields]);
+
+    // If the store's languages change after load (or arrive late), re-shape both snapshots the same
+    // way so the autosave diff does not fire on a pure normalisation.
+    useEffect(() => {
+        if (loading || translatableFields.length === 0) return;
+        setValues((prev) => normalizeValues(prev, translatableFields, locales, defaultLocale));
+        setSavedValues((prev) => normalizeValues(prev, translatableFields, locales, defaultLocale));
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [localesKey, loading, translatableFields]);
+
+    const progress = useMemo(
+        () => completeness(Object.fromEntries(translatableFields.map((f) => [f.id, values[f.id]])), locales),
+        [translatableFields, values, locales],
+    );
+
+    // Seed a language from another: fills only the EMPTY translatable fields of the target, so it
+    // is safe to run without a confirmation and never clobbers existing copy.
+    const copyFrom = (from, to) => setValues((prev) => {
+        const next = { ...prev };
+        translatableFields.forEach((f) => {
+            const lv = toLocalized(prev[f.id], locales, defaultLocale);
+            if (!String(lv[to] ?? '').trim()) next[f.id] = setLocalized(lv, to, lv[from] ?? '', locales, defaultLocale);
+        });
+        return next;
+    });
+
     const livePreviewUrl = useMemo(() => {
         if (!themeKey || !previewBaseUrl) return '';
         const encoded = btoa(encodeURIComponent(JSON.stringify(values)));
@@ -96,8 +169,10 @@ export default function StoreThemeSettingsPage() {
         url.searchParams.set('theme', themeKey);
         url.searchParams.set('preview', '1');
         url.searchParams.set('settings', encoded);
+        // The storefront resolves localized settings + copy for this language (see storefront main.tsx).
+        url.searchParams.set('lang', editLocale);
         return url.toString();
-    }, [previewBaseUrl, themeKey, values]);
+    }, [previewBaseUrl, themeKey, values, editLocale]);
     const errors = useMemo(() => {
         const e = {};
         fields.forEach((f) => {
@@ -164,7 +239,7 @@ export default function StoreThemeSettingsPage() {
         try {
             setSaving(true);
             const { data } = await api.post(`${apiBase}/themes/${themeId}/revisions/${revision.id}/restore`);
-            const restored = data.data?.settings || {};
+            const restored = normalizeValues(data.data?.settings || {}, fields, locales, defaultLocale);
             setValues(restored);
             setSavedValues(restored);
             setSaveStatus('saved');
@@ -175,12 +250,40 @@ export default function StoreThemeSettingsPage() {
         finally { setSaving(false); }
     };
 
-    const resetDefaults = () => setValues(defaultsOf(schema));
+    const resetDefaults = () => setValues(defaultsOf(schema, locales, defaultLocale));
 
     const inputClass = 'w-full rounded-xl border border-slate-200 px-3 py-2 text-sm';
 
     const renderField = (f) => {
         const v = values[f.id];
+        if (isTranslatable(f)) {
+            // Per-field language switcher: defaults to the page-level tab, can be overridden per field.
+            const loc = fieldLocale[f.id] ?? editLocale;
+            const lv = toLocalized(v, locales, defaultLocale);
+            const common = {
+                value: lv[loc] ?? '',
+                onChange: (e) => setValue(f.id, setLocalized(lv, loc, e.target.value, locales, defaultLocale)),
+                dir: loc === 'ar' ? 'rtl' : 'ltr',
+                lang: loc,
+                className: inputClass,
+            };
+            return (
+                <div className="space-y-1.5">
+                    <LocaleTabs
+                        size="sm"
+                        locales={locales}
+                        value={loc}
+                        onChange={(l) => setFieldLocale((p) => ({ ...p, [f.id]: l }))}
+                        completeness={completeness({ [f.id]: lv }, locales)}
+                    />
+                    {f.type === 'textarea' || f.type === 'richtext'
+                        ? <textarea rows={3} {...common} />
+                        : f.type === 'url'
+                            ? <input type="url" placeholder="https://…" {...common} />
+                            : <input type="text" {...common} />}
+                </div>
+            );
+        }
         switch (f.type) {
             case 'toggle':
                 return <input type="checkbox" checked={!!v} onChange={(e) => setValue(f.id, e.target.checked)} />;
@@ -189,7 +292,7 @@ export default function StoreThemeSettingsPage() {
             case 'select':
                 return (
                     <SearchableSelect value={v ?? ''} onChange={(e) => setValue(f.id, e.target.value)} className="w-full">
-                        {(f.options || []).map((o) => <option key={o} value={o}>{o}</option>)}
+                        {normalizeOptions(f.options).map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
                     </SearchableSelect>
                 );
             case 'color':
@@ -225,6 +328,22 @@ export default function StoreThemeSettingsPage() {
 
             <div className="grid items-start gap-5 lg:grid-cols-[390px_minmax(0,1fr)]">
             <div className="space-y-6 rounded-2xl border border-slate-200/80 bg-white p-5 shadow-card lg:max-h-[calc(100vh-150px)] lg:overflow-y-auto">
+                {translatableFields.length > 0 ? (
+                    <div className="space-y-2 border-b border-slate-100 pb-4">
+                        <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">{t('locale_tabs_label', 'Content language')}</p>
+                        <LocaleTabs
+                            locales={locales}
+                            value={editLocale}
+                            onChange={(l) => { setEditLocale(l); setFieldLocale({}); }}
+                            defaultLocale={defaultLocale}
+                            completeness={progress}
+                            onCopyFrom={copyFrom}
+                        />
+                        <p className="text-xs text-slate-400">
+                            {t('locale_base_required_hint', { locale: localeLabel(defaultLocale, t), defaultValue: 'The default language ({{locale}}) is required; other languages fall back to it when empty.' })}
+                        </p>
+                    </div>
+                ) : null}
                 {schema.map((group) => (
                     <fieldset key={group.id} className="space-y-4">
                         <legend className="text-sm font-semibold uppercase tracking-wide text-slate-500">{group.label}</legend>

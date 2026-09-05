@@ -12,6 +12,7 @@
 import { useCallback, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '../theme-engine';
+import { getApiLocale, setApiLocale } from '../api/client';
 import { DEFAULT_LOCALE, LOCALE_META, directionFor, isLocale, persistLocale, type Locale } from './index';
 
 export interface LocaleState {
@@ -30,6 +31,12 @@ export function useLocale(): LocaleState {
   const current: Locale = isLocale(i18n.language) ? i18n.language : DEFAULT_LOCALE;
   const dir = directionFor(current);
 
+  // Keep the API client's language in step with the active locale. Done synchronously (it is a
+  // module-level value, not React state) because page data hooks key their fetch effects on
+  // `locale` and child effects run BEFORE this hook's own effects — an effect here would let the
+  // first request after a switch go out in the previous language.
+  if (getApiLocale() !== current) setApiLocale(current);
+
   // Keep the engine's direction and the document language aligned with the active locale. Running
   // on every locale change (rather than only in the setter) also covers the initial mount, where
   // the language came from storage or the URL rather than a click.
@@ -43,6 +50,7 @@ export function useLocale(): LocaleState {
   const setLocale = useCallback(
     (next: Locale): void => {
       if (next === current) return;
+      setApiLocale(next);
       void i18n.changeLanguage(next);
       persistLocale(next);
     },

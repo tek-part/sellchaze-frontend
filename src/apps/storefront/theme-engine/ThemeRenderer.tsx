@@ -7,6 +7,7 @@
  * theme-agnostic.
  */
 import { useEffect, useLayoutEffect, type ReactElement } from 'react';
+import { cn } from '../../../shared/utils/cn';
 import { useTheme } from './context';
 import { useEngine } from './engine-context';
 import type { LifecycleManager } from './lifecycle';
@@ -27,11 +28,20 @@ interface RenderedSectionProps {
   readonly index: number;
   readonly context: StorefrontContext;
   readonly lifecycle: LifecycleManager;
+  readonly sectionId: string;
+  readonly selected: boolean;
 }
 
+/**
+ * Every section renders inside one plain block wrapper carrying `data-section-id` /
+ * `data-section-type` (contract §1) so the live customizer can outline, select and scroll to it
+ * without the section markup knowing. It is a real box (not `display: contents`) because outlines
+ * need one; it carries no padding/margin so existing theme layouts are unchanged.
+ */
 function RenderedSection(props: RenderedSectionProps): ReactElement {
-  const { Component, instance, index, context, lifecycle } = props;
-  const settings = instance.settings ?? EMPTY_SETTINGS;
+  const { Component, instance, index, context, lifecycle, sectionId, selected } = props;
+  // Raw values are resolved by the section against its own schema; the engine passes them through.
+  const settings = (instance.settings ?? EMPTY_SETTINGS) as ThemeSettings;
 
   useLayoutEffect(() => {
     lifecycle.beforeSection({ context, instance, index });
@@ -42,19 +52,27 @@ function RenderedSection(props: RenderedSectionProps): ReactElement {
   }, [lifecycle, context, instance, index]);
 
   return (
-    <SectionErrorBoundary sectionType={instance.type}>
-      <Component instance={instance} settings={settings} context={context} />
-    </SectionErrorBoundary>
+    <div
+      className={cn('sf-section-frame', selected && 'is-customizer-selected')}
+      data-section-id={sectionId}
+      data-section-type={instance.type}
+    >
+      <SectionErrorBoundary sectionType={instance.type}>
+        <Component instance={instance} settings={settings} context={context} />
+      </SectionErrorBoundary>
+    </div>
   );
 }
 
 export interface ThemeRendererProps {
   readonly page: PageDefinition;
   readonly context: StorefrontContext;
+  /** Live customizer: the section instance currently selected in the editor (adds `is-customizer-selected`). */
+  readonly selectedSectionId?: string | null;
 }
 
 export function ThemeRenderer(props: ThemeRendererProps): ReactElement {
-  const { page, context } = props;
+  const { page, context, selectedSectionId = null } = props;
   const { registries, lifecycle: themeLifecycle } = useTheme();
   const { plugins } = useEngine();
   const lifecycle = plugins.lifecycle;
@@ -89,6 +107,8 @@ export function ThemeRenderer(props: ThemeRendererProps): ReactElement {
             index={index}
             context={context}
             lifecycle={lifecycle}
+            sectionId={key}
+            selected={selectedSectionId !== null && selectedSectionId === key}
           />
         );
       })}

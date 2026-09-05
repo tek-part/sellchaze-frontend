@@ -1,33 +1,56 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Navigate, useNavigate, useOutletContext } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
 import api from '../api/client';
 import useStoreScope from '../hooks/useStoreScope';
+import useStoreLocales from '../hooks/useStoreLocales';
 import SearchableSelect from '../components/ui/SearchableSelect';
+import LocaleTabs, { localeLabel } from '../components/store/LocaleTabs';
+import { completeness, pickLocalized, setLocalized, toLocalized } from '../lib/localized';
 
 const TYPES = ['url', 'internal', 'category', 'product'];
 
-function MenuEditor({ apiBase, handle }) {
+function MenuEditor({ apiBase, handle, locales, defaultLocale }) {
     const { t } = useTranslation();
     const [name, setName] = useState(handle === 'header' ? 'Header menu' : 'Footer menu');
+    // Item labels are localized objects `{ ar, en }` (the API returns `label` + `label_i18n`; a
+    // legacy string label lands on the store's default locale).
     const [items, setItems] = useState([]);
     const [saving, setSaving] = useState(false);
+    const [locale, setLocale] = useState(defaultLocale);
+
+    useEffect(() => { setLocale((cur) => (locales.includes(cur) ? cur : defaultLocale)); }, [locales, defaultLocale]);
 
     const load = useCallback(() => {
         api.get(`${apiBase}/menus/${handle}`)
             .then(({ data }) => {
                 setName(data.menu?.name ?? name);
-                setItems((data.items ?? []).map((it) => ({ label: it.label, type: it.type, target: it.target ?? '' })));
+                setItems((data.items ?? []).map((it) => ({
+                    label: toLocalized(it.label_i18n ?? it.label, locales, defaultLocale),
+                    type: it.type,
+                    target: it.target ?? '',
+                })));
             })
             .catch(() => { /* not created yet */ });
-    }, [apiBase, handle]); // eslint-disable-line
+    }, [apiBase, handle, locales, defaultLocale]); // eslint-disable-line
 
     useEffect(() => { load(); }, [load]);
 
-    const addItem = () => setItems((p) => [...p, { label: 'New link', type: 'url', target: '/' }]);
+    const addItem = () => setItems((p) => [...p, { label: toLocalized('New link', locales, defaultLocale), type: 'url', target: '/' }]);
     const setItem = (i, k, v) => setItems((p) => p.map((it, j) => (j === i ? { ...it, [k]: v } : it)));
+    const setLabel = (i, v) => setItems((p) => p.map((it, j) => (j === i ? { ...it, label: setLocalized(it.label, locale, v, locales, defaultLocale) } : it)));
     const removeItem = (i) => setItems((p) => p.filter((_, j) => j !== i));
+
+    const progress = useMemo(
+        () => completeness(Object.fromEntries(items.map((it, i) => [`item_${i}`, it.label])), locales),
+        [items, locales],
+    );
+
+    const copyFrom = (from, to) => setItems((p) => p.map((it) => ({
+        ...it,
+        label: setLocalized(it.label, to, pickLocalized(it.label, from), locales, defaultLocale),
+    })));
 
     const save = async () => {
         setSaving(true);
@@ -43,14 +66,33 @@ function MenuEditor({ apiBase, handle }) {
 
     return (
         <div className="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-card">
-            <div className="mb-3 flex items-center justify-between">
+            <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
                 <input value={name} onChange={(e) => setName(e.target.value)} className={`${cls} font-semibold`} />
                 <span className="text-xs uppercase text-slate-400">{handle}</span>
             </div>
+            {items.length > 0 ? (
+                <LocaleTabs
+                    className="mb-3"
+                    size="sm"
+                    locales={locales}
+                    value={locale}
+                    onChange={setLocale}
+                    defaultLocale={defaultLocale}
+                    completeness={progress}
+                    onCopyFrom={copyFrom}
+                />
+            ) : null}
             <div className="space-y-2">
                 {items.map((it, i) => (
                     <div key={i} className="flex flex-wrap items-center gap-2">
-                        <input value={it.label} onChange={(e) => setItem(i, 'label', e.target.value)} placeholder="Label" className={`${cls} flex-1 min-w-32`} />
+                        <input
+                            value={it.label?.[locale] ?? ''}
+                            onChange={(e) => setLabel(i, e.target.value)}
+                            placeholder={t('menu_label_locale', { locale: localeLabel(locale, t), defaultValue: 'Label ({{locale}})' })}
+                            dir={locale === 'ar' ? 'rtl' : 'ltr'}
+                            lang={locale}
+                            className={`${cls} flex-1 min-w-32`}
+                        />
                         <SearchableSelect value={it.type} onChange={(e) => setItem(i, 'type', e.target.value)} className="w-full sm:w-56">
                             {TYPES.map((tp) => <option key={tp} value={tp}>{tp}</option>)}
                         </SearchableSelect>
@@ -72,6 +114,7 @@ export default function StoreMenusPage() {
     const { t } = useTranslation();
     const navigate = useNavigate();
     const { permissions } = useOutletContext();
+    const { locales, defaultLocale, loading: localesLoading } = useStoreLocales();
     // Owners (no id) manage their own store; admins need stores-edit.
     if (id && !permissions.includes('stores-edit')) return <Navigate to="/stores" replace />;
 
@@ -81,8 +124,12 @@ export default function StoreMenusPage() {
                 <h1 className="text-2xl font-semibold tracking-tight text-slate-900">{t('menus_title', 'Menus')}</h1>
                 <p className="mt-1 text-sm text-slate-500">{t('menus_subtitle', 'Header & footer navigation.')}</p>
             </div>
-            <MenuEditor apiBase={apiBase} handle="header" />
-            <MenuEditor apiBase={apiBase} handle="footer" />
+            {localesLoading ? <p className="text-sm text-slate-400">{t('loading', 'Loading…')}</p> : (
+                <>
+                    <MenuEditor apiBase={apiBase} handle="header" locales={locales} defaultLocale={defaultLocale} />
+                    <MenuEditor apiBase={apiBase} handle="footer" locales={locales} defaultLocale={defaultLocale} />
+                </>
+            )}
             <button type="button" onClick={() => navigate(`${uiBase}/pages`)} className="text-sm text-slate-500 hover:underline">← {t('pages_title', 'Pages')}</button>
         </div>
     );

@@ -147,19 +147,44 @@ export interface DesignTokens {
 
 /* ---------------------------------------------------------------- settings (schema) */
 
-/** The closed set of setting field types the engine understands (mirrors the manifest contract). */
+/**
+ * The closed set of setting field types the engine understands (mirrors the manifest contract,
+ * docs/THEME_SECTIONS_CONTRACT.md §1). `list` is a repeater of flat objects; `product`/`category`/
+ * `collection` hold the referenced id/slug as a string.
+ */
 export type ThemeSettingType =
   | 'text' | 'textarea' | 'color' | 'richtext'
   | 'select' | 'image' | 'url'
-  | 'toggle' | 'number' | 'range';
+  | 'toggle' | 'number' | 'range'
+  | 'list' | 'product' | 'category' | 'collection';
 
-export type ThemeSettingValue = string | number | boolean;
+/** A single resolved scalar setting value. */
+export type ThemeSettingScalar = string | number | boolean;
+/** A translatable default/raw text: one string per locale (`{ ar: '…', en: '…' }`). */
+export type ThemeLocalizedText = Readonly<Record<string, string>>;
+/** What a schema DEFAULT may be for a scalar field: a scalar, or a locale map for translatable text. */
+export type ThemeSettingDefaultScalar = ThemeSettingScalar | ThemeLocalizedText;
+/** One resolved item of a `list` field — a flat object keyed by the item field ids. */
+export type ThemeSettingListItem = Readonly<Record<string, ThemeSettingScalar>>;
+/** A resolved setting value: a scalar or (for `list` fields) an array of flat items. */
+export type ThemeSettingValue = ThemeSettingScalar | ReadonlyArray<ThemeSettingListItem>;
+
+/** CSS properties a responsive `range` may drive (contract §1 `css_property`). */
+export type ThemeSettingCssProperty = 'padding-block' | 'padding-inline' | 'margin-block' | 'gap' | 'font-size';
 
 export interface ThemeSettingFieldBase {
   readonly id: string;
   readonly label: string;
   readonly group?: string;
+  /** @deprecated alias of `hint` kept for the existing themes. */
   readonly help?: string;
+  /** Short helper copy shown under the control in the editor. */
+  readonly hint?: string;
+  /** text/textarea/richtext: the stored value may be a string or a `{ ar, en }` locale map. */
+  readonly translatable?: boolean;
+  /** range with `css_property`: the editor offers a per-viewport override. */
+  readonly responsive?: boolean;
+  readonly css_property?: ThemeSettingCssProperty;
 }
 
 export interface ThemeSelectField extends ThemeSettingFieldBase {
@@ -180,17 +205,55 @@ export interface ThemeToggleField extends ThemeSettingFieldBase {
 }
 export interface ThemeStringField extends ThemeSettingFieldBase {
   readonly type: 'text' | 'textarea' | 'color' | 'richtext' | 'image' | 'url';
+  /** A plain string, or — for `translatable` text — a `{ ar, en }` map resolved per locale. */
+  readonly default: string | ThemeLocalizedText;
+}
+/** A reference to a catalogue entity — the value is its id/slug (empty string = none). */
+export interface ThemeReferenceField extends ThemeSettingFieldBase {
+  readonly type: 'product' | 'category' | 'collection';
   readonly default: string;
 }
 
-export type ThemeSettingField =
+/** Fields allowed inside a `list` item (no nested lists). */
+export type ThemeListItemField =
   | ThemeSelectField
   | ThemeRangeField
   | ThemeToggleField
-  | ThemeStringField;
+  | ThemeStringField
+  | ThemeReferenceField;
+
+/** A repeater: an array of flat objects, each validated against `item`. `max` caps the item count. */
+export interface ThemeListField extends ThemeSettingFieldBase {
+  readonly type: 'list';
+  readonly item: ReadonlyArray<ThemeListItemField>;
+  readonly max?: number;
+  readonly default: ReadonlyArray<Readonly<Record<string, ThemeSettingDefaultScalar>>>;
+}
+
+export type ThemeSettingField = ThemeListItemField | ThemeListField;
 
 export type ThemeSettingsSchema = ReadonlyArray<ThemeSettingField>;
 export type ThemeSettings = Readonly<Record<string, ThemeSettingValue>>;
+
+/* -------------------------------------------------------------- section schema */
+
+/**
+ * Editor-facing description of one section type (contract §1 `SectionSchema`). The section library
+ * (`sections-lib`) authors these; a theme may ship overrides on `ThemeModule.sectionSchemas`. The
+ * engine only carries the shape so the manifest export can read it without importing the library.
+ */
+export type ThemeSectionCategory = 'hero' | 'products' | 'categories' | 'content' | 'marketing' | 'social' | 'layout';
+
+export interface ThemeSectionSchema {
+  readonly type: string;
+  readonly label: string;
+  readonly description?: string;
+  readonly category: ThemeSectionCategory;
+  /** react-icons/hi2 name, e.g. 'HiOutlinePhoto'. */
+  readonly icon?: string;
+  readonly settings: ThemeSettingsSchema;
+  readonly presets?: ReadonlyArray<{ readonly label: string; readonly settings: Readonly<Record<string, unknown>> }>;
+}
 
 /* --------------------------------------------------------------------- manifest */
 
@@ -203,6 +266,8 @@ export interface ThemeManifest {
   readonly author: string;
   /** Style archetype (e.g. "Luxury Fashion") — presentation metadata only. */
   readonly archetype: string;
+  /** Marketplace category key (e.g. "general", "fashion"). Falls back to the archetype on export. */
+  readonly category?: string;
   readonly tags: ReadonlyArray<string>;
   readonly previewImage?: string;
   /**
@@ -247,6 +312,11 @@ export interface ThemeModule {
   readonly widgets?: WidgetMap;
   /** Default page compositions per template (home/product/category/…). */
   readonly templates?: TemplateMap;
+  /**
+   * Editor schemas for the section types this theme renders (contract §1/§2). Themes built on the
+   * section library get these from `sections-lib`; the manifest export reads them from here.
+   */
+  readonly sectionSchemas?: ReadonlyArray<ThemeSectionSchema>;
   /** Optional theme-level lifecycle observers. */
   readonly lifecycle?: ThemeLifecycle;
 }

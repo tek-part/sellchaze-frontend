@@ -1,0 +1,50 @@
+/*
+ * Sahra — SHARED-PAGE SKIN. The transactional/static routes (cart, checkout, account, auth, search,
+ * wishlist, blog, policies, 404) render the default `.sf-*` component library; Sahra re-skins that
+ * surface in its own language (serif headings, letter-spaced caps, hairline gold rules, sharp
+ * corners). Loaded only when Sahra is active. Every value is a token so merchant settings apply.
+ */
+.sf-container { max-width: var(--container); padding-inline: var(--gutter); }
+.sf-section { padding-block: var(--section-y); }
+.sf-section--tight { padding-block: var(--sp-9); }
+.sf-page-head__title, .sf-section-head__title, .sf-heading, .sf-pdp__title, .sf-overlay__title { font-family: var(--heading); font-weight: 500; letter-spacing: 0; }
+.sf-eyebrow { color: var(--accent-ink); letter-spacing: var(--tracking-eyebrow); text-transform: uppercase; font-weight: 500; }
+[dir='rtl'] .sf-eyebrow { letter-spacing: 0; text-transform: none; }
+
+/* Buttons: rectangular, letter-spaced caps, ink fill → gold on hover. */
+.sf-btn { height: 48px; padding-inline: var(--sp-7); border-radius: var(--radius); text-transform: uppercase; letter-spacing: var(--tracking-caps); font-weight: 600; font-size: var(--fs-xs); }
+[dir='rtl'] .sf-btn { letter-spacing: 0; text-transform: none; font-size: var(--fs-sm); }
+.sf-btn--sm { height: 38px; }
+.sf-btn--lg { height: 54px; }
+.sf-btn--primary { background: var(--primary); color: var(--on-primary); border-color: var(--primary); }
+.sf-btn--primary:hover:not(:disabled) { background: var(--accent); border-color: var(--accent); color: var(--on-primary); filter: none; box-shadow: none; }
+.sf-btn--primary .sf-btn__label::after { display: none; }
+.sf-btn--secondary { background: transparent; color: var(--text); border-color: var(--text); }
+.sf-btn--secondary:hover:not(:disabled) { background: var(--text); color: var(--bg); border-color: var(--text); }
+.sf-btn--ghost { color: var(--text); }
+.sf-btn--ghost:hover:not(:disabled) { color: var(--accent-ink); }
+.sf-icon-btn { border-radius: var(--radius-pill); }
+.sf-icon-btn:hover:not(:disabled) { color: var(--accent-ink); background: transparent; }
+.sf-link { color: var(--text); text-decoration: underline; text-decoration-color: var(--accent); text-underline-offset: 4px; }
+.sf-link:hover { color: var(--accent-ink); }
+
+/* Fields: underline-only inputs on a quiet canvas. */
+.sf-control, .sf-input, .sf-textarea, .sf-select { border-radius: var(--radius); border-color: var(--border-strong); background: var(--surface); color: var(--text); }
+.sf-control:focus, .sf-input:focus, .sf-textarea:focus, .sf-select:focus { border-color: var(--accent); box-shadow: var(--shadow-focus); }
+.sf-field__label { text-transform: uppercase; letter-spacing: var(--tracking-caps); font-weight: 600; font-size: var(--fs-xs); color: var(--muted); }
+[dir='rtl'] .sf-field__label { letter-spacing: 0; text-transform: none; font-size: var(--fs-sm); }
+
+/* Cards / surfaces */
+.sf-product-card, .sf-card, .sf-cat-card, .sf-review-card, .sf-blog-card, .sf-editorial-card, .sf-order-card, .sf-address-card, .sf-cart-page__line { border-radius: var(--radius); }
+.sf-product-card__img, .sf-cat-card__img { border-radius: var(--radius); }
+.sf-product-card__title, .sf-blog-card__title { font-family: var(--heading); font-weight: 500; }
+.sf-badge { border-radius: 0; background: var(--bg); color: var(--text); text-transform: uppercase; letter-spacing: var(--tracking-caps); font-size: 10px; }
+[dir='rtl'] .sf-badge { letter-spacing: 0; text-transform: none; font-size: var(--fs-xs); }
+.sf-price--sale .sf-price__now, .sf-price--sale { color: var(--sale); }
+.sf-tabs__tab[aria-selected='true'] { color: var(--text); border-color: var(--accent); }
+.sf-overlay__panel { border-radius: var(--radius); background: var(--bg); color: var(--text); }
+.sf-overlay--drawer-end .sf-overlay__panel, .sf-overlay--drawer-start .sf-overlay__panel { border-radius: 0; }
+.sf-empty, .sf-error, .sf-state { border-radius: var(--radius); }
+.sf-pagination__page[aria-current='page'] { background: var(--text); color: var(--bg); border-radius: var(--radius); }
+.sf-stepper__step--active { color: var(--accent-ink); }
+.sf-divider, .sf-hr { border-color: var(--border); }

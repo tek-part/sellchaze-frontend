@@ -1,9 +1,11 @@
 import { Disclosure, DisclosureButton, DisclosurePanel } from '@headlessui/react';
+import { createContext, useContext } from 'react';
 import { motion } from 'framer-motion';
 import { NavLink, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useChatUnread } from '../lib/useChatUnread';
 import { CHAT_ENABLED } from '../lib/features';
+import { storeAccess } from '../lib/storeAccess';
 import { FaGoogle, FaWhatsapp } from 'react-icons/fa';
 import {
     HiOutlineArrowDownTray,
@@ -47,7 +49,7 @@ function usePathPrefix(prefix) {
     return pathname === prefix || pathname.startsWith(`${prefix}/`);
 }
 
-function navLinkClass({ isActive }) {
+function listNavLinkClass({ isActive }) {
     return [
         'flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200',
         isActive
@@ -56,7 +58,7 @@ function navLinkClass({ isActive }) {
     ].join(' ');
 }
 
-function subNavLinkClass({ isActive }) {
+function listSubNavLinkClass({ isActive }) {
     return [
         'flex items-center gap-2 rounded-lg border-s-4 px-3 py-2 text-sm transition-all duration-200',
         isActive
@@ -65,23 +67,67 @@ function subNavLinkClass({ isActive }) {
     ].join(' ');
 }
 
+// Mega drawer links: open, borderless rows that glide sideways on hover.
+function megaNavLinkClass({ isActive }) {
+    return [
+        'flex items-center gap-3 rounded-xl px-3 py-2.5 text-[15px] font-medium transition-all duration-200',
+        isActive
+            ? 'bg-linear-to-r from-brand to-accent-dark text-white shadow-md shadow-brand/25'
+            : 'text-slate-700 hover:translate-x-1 hover:bg-brand-light/70 hover:text-brand-dark rtl:hover:-translate-x-1',
+    ].join(' ');
+}
+
+function megaSubNavLinkClass({ isActive }) {
+    return [
+        'flex items-center gap-2 rounded-lg px-3 py-2 text-sm transition-all duration-200',
+        isActive
+            ? 'bg-brand-light font-semibold text-brand-dark'
+            : 'text-slate-500 hover:translate-x-1 hover:bg-slate-50 hover:text-brand-dark rtl:hover:-translate-x-1',
+    ].join(' ');
+}
+
+/**
+ * 'list' — the classic vertical sidebar (admin aside, narrow mobile drawer).
+ * 'mega' — the wide "All" drawer: sections become cards laid out 3-up on desktop.
+ */
+const NavVariantContext = createContext('list');
+
+// No boxes: sections are open columns of links separated by whitespace only.
+const MEGA_SECTION_CLASS = 'flex flex-col gap-0.5';
+
 function SectionLabel({ children }) {
+    const mega = useContext(NavVariantContext) === 'mega';
+    if (mega) {
+        return (
+            <div className="mb-2 px-3">
+                <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-brand">{children}</p>
+                <span
+                    className="mt-2 block h-px w-full bg-linear-to-r from-brand/40 via-brand/10 to-transparent rtl:bg-linear-to-l"
+                    aria-hidden
+                />
+            </div>
+        );
+    }
     return (
         <p className="mb-2 px-1 text-[10px] font-bold uppercase tracking-widest text-slate-400">{children}</p>
     );
 }
 
 function NavGroup({ title, icon: Icon, defaultOpen, groupActive, children }) {
+    const mega = useContext(NavVariantContext) === 'mega';
     return (
         <Disclosure defaultOpen={defaultOpen}>
             {({ open }) => (
                 <div className="flex flex-col overflow-hidden rounded-xl">
                     <DisclosureButton
                         className={[
-                            'flex w-full items-center justify-between gap-2 rounded-xl px-3 py-2.5 text-start text-sm font-medium transition-colors',
+                            'flex w-full items-center justify-between gap-2 rounded-xl px-3 py-2.5 text-start font-medium transition-all duration-200',
+                            mega ? 'text-[15px]' : 'text-sm',
                             groupActive
                                 ? 'bg-brand-light/90 text-brand-dark'
-                                : 'text-slate-700 hover:bg-white/70',
+                                : mega
+                                    ? 'text-slate-700 hover:translate-x-1 hover:bg-brand-light/70 hover:text-brand-dark rtl:hover:-translate-x-1'
+                                    : 'text-slate-700 hover:bg-white/70',
                         ].join(' ')}
                     >
                         <span className="flex min-w-0 items-center gap-2">
@@ -99,7 +145,9 @@ function NavGroup({ title, icon: Icon, defaultOpen, groupActive, children }) {
                             <HiOutlineChevronDown className="h-4 w-4" />
                         </motion.span>
                     </DisclosureButton>
-                    <DisclosurePanel className="space-y-0.5 px-0 py-1.5">
+                    <DisclosurePanel
+                        className={mega ? 'ms-5 space-y-0.5 border-s-2 border-brand/15 ps-2 py-1.5' : 'space-y-0.5 px-0 py-1.5'}
+                    >
                         {children}
                     </DisclosurePanel>
                 </div>
@@ -108,8 +156,26 @@ function NavGroup({ title, icon: Icon, defaultOpen, groupActive, children }) {
     );
 }
 
-export default function SidebarNav({ isAdmin = false, isSupplier = false, roles = [], permissions = [], onNavigate }) {
+export default function SidebarNav({ variant = 'list', ...props }) {
+    return (
+        <NavVariantContext.Provider value={variant}>
+            <SidebarNavInner {...props} variant={variant} />
+        </NavVariantContext.Provider>
+    );
+}
+
+function SidebarNavInner({ isAdmin = false, isSupplier = false, roles = [], permissions = [], onNavigate, variant = 'list' }) {
     const { t } = useTranslation();
+    const mega = variant === 'mega';
+    // Link styles follow the variant; the JSX below references these local names.
+    const navLinkClass = mega ? megaNavLinkClass : listNavLinkClass;
+    const subNavLinkClass = mega ? megaSubNavLinkClass : listSubNavLinkClass;
+    // Section wrapper: divider-separated blocks in the list sidebar, open columns in the mega drawer.
+    const sec = (listClass) => (mega ? MEGA_SECTION_CLASS : listClass);
+    // Mega drawer: CSS columns flow sections of uneven height, 3-up on desktop.
+    const navClass = mega
+        ? 'columns-1 gap-10 md:columns-2 lg:columns-3 [&>div]:mb-9 [&>div]:break-inside-avoid'
+        : 'flex flex-col';
     const chatUnread = useChatUnread();
     const location = useLocation();
     const adminUsersPendingView =
@@ -147,29 +213,23 @@ export default function SidebarNav({ isAdmin = false, isSupplier = false, roles 
     const hasBusinessRole = Array.isArray(roles)
         && roles.some((r) => ['Merchant', 'Supplier', 'Customer', 'Employee'].includes(r));
     const isAdminOnly = isAdmin && !isSupplier && !hasBusinessRole;
-    // Type-based store access. A Merchant/Supplier OWNS exactly one store and
-    // sees its full dashboard by virtue of their account type — no per-feature
-    // permission needed. Granular store.* permissions still apply to their
-    // employees and to admin-internal users (who are not owners themselves).
-    const isStoreOwner = Array.isArray(roles) && roles.some((r) => ['Merchant', 'Supplier'].includes(r));
-    const canStoreView = isStoreOwner || can('store.view');
-    const canStoreProducts = isStoreOwner || can('store.products.manage');
-    const canStoreCategories = isStoreOwner || can('store.categories.manage');
-    const canStoreOrders = isStoreOwner || can('store.orders.manage');
-    const canStoreCoupons = isStoreOwner || can('store.coupons.manage');
-    const canStoreReviews = isStoreOwner || can('store.reviews.manage');
-    const canStoreAnalytics = isStoreOwner || can('store.analytics.view');
-    const canStoreThemes = isStoreOwner || can('store.themes.manage');
-    const canStorePages = isStoreOwner || can('store.pages.manage');
-    const canStoreMenus = isStoreOwner || can('store.menus.manage');
-    const canStoreSettings = isStoreOwner || can('store.settings.manage');
-    const canStorePayments = isStoreOwner || can('store.settings.manage');
+    // Type-based store access (owners see everything; employees/admin-internal
+    // users need store.* grants) — shared with StoreLayout via lib/storeAccess.
+    const {
+        canStoreOrders,
+        canStoreCoupons,
+        canStoreReviews,
+        canStoreAnalytics,
+        canStoreThemes,
+        canStorePages,
+        canStoreMenus,
+        canStoreSettings,
+        canStorePayments,
+        storeMyGroup,
+        storeSalesGroup,
+        hasStoreAccess,
+    } = storeAccess(roles, permissions);
     const openStore = usePathPrefix('/store');
-    const storeMyGroup = canStoreSettings || canStorePayments || canStoreThemes || canStorePages || canStoreMenus;
-    const storeCatalogGroup = canStoreProducts || canStoreCategories;
-    const storeSalesGroup = canStoreOrders || canStoreCoupons;
-    const hasStoreAccess = canStoreView || storeMyGroup || storeCatalogGroup
-        || storeSalesGroup || canStoreReviews || canStoreAnalytics;
     const openReports = usePathPrefix('/admin/reports');
     const openAdminSettings = usePathPrefix('/settings');
 
@@ -179,7 +239,7 @@ export default function SidebarNav({ isAdmin = false, isSupplier = false, roles 
                 initial={{ opacity: 0, x: -12 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.35, ease: 'easeOut' }}
-                className="flex flex-col"
+                className={navClass}
                 aria-label="Main"
                 onClick={(event) => {
                     if (event.target instanceof Element && event.target.closest('a')) {
@@ -187,7 +247,7 @@ export default function SidebarNav({ isAdmin = false, isSupplier = false, roles 
                     }
                 }}
             >
-                <div className="flex flex-col gap-1">
+                <div className={sec('flex flex-col gap-1')}>
                     <SectionLabel>{t('nav_sidebar_section_overview')}</SectionLabel>
                     <NavLink to="/admin/dashboard" className={navLinkClass}>
                         <HiOutlineHome className="h-5 w-5 shrink-0 opacity-95" aria-hidden />
@@ -195,7 +255,7 @@ export default function SidebarNav({ isAdmin = false, isSupplier = false, roles 
                     </NavLink>
                 </div>
 
-                <div className="mt-5 flex flex-col gap-1.5 border-t border-slate-200/80 pt-5">
+                <div className={sec('mt-5 flex flex-col gap-1.5 border-t border-slate-200/80 pt-5')}>
                     <SectionLabel>{t('nav_admin_section_users_access', 'Users & Access')}</SectionLabel>
                     <NavLink
                         to="/admin/users"
@@ -221,7 +281,7 @@ export default function SidebarNav({ isAdmin = false, isSupplier = false, roles 
                     </NavLink>
                 </div>
 
-                <div className="mt-5 flex flex-col gap-1.5 border-t border-slate-200/80 pt-5">
+                <div className={sec('mt-5 flex flex-col gap-1.5 border-t border-slate-200/80 pt-5')}>
                     <SectionLabel>{t('nav_admin_section_content', 'Content')}</SectionLabel>
                     <NavLink to="/admin/articles" className={navLinkClass}>
                         <HiOutlineNewspaper className="h-5 w-5 shrink-0 opacity-95" aria-hidden />
@@ -233,7 +293,7 @@ export default function SidebarNav({ isAdmin = false, isSupplier = false, roles 
                     </NavLink>
                 </div>
 
-                <div className="mt-5 flex flex-col gap-1.5 border-t border-slate-200/80 pt-5">
+                <div className={sec('mt-5 flex flex-col gap-1.5 border-t border-slate-200/80 pt-5')}>
                     <SectionLabel>{t('nav_sidebar_section_people', 'People')}</SectionLabel>
                     <NavLink to="/community" className={navLinkClass}>
                         <HiOutlineNewspaper className="h-5 w-5 shrink-0 opacity-95" aria-hidden />
@@ -272,7 +332,7 @@ export default function SidebarNav({ isAdmin = false, isSupplier = false, roles 
                     )}
                 </div>
 
-                <div className="mt-5 flex flex-col gap-2 border-t border-slate-200/80 pt-5">
+                <div className={sec('mt-5 flex flex-col gap-2 border-t border-slate-200/80 pt-5')}>
                     <SectionLabel>{t('nav_sidebar_section_wavex')}</SectionLabel>
                     <NavGroup
                         title={t('nav_group_wavex')}
@@ -307,7 +367,7 @@ export default function SidebarNav({ isAdmin = false, isSupplier = false, roles 
                     </NavGroup>
                 </div>
 
-                <div className="mt-5 flex flex-col gap-2 border-t border-slate-200/80 pt-5">
+                <div className={sec('mt-5 flex flex-col gap-2 border-t border-slate-200/80 pt-5')}>
                     <SectionLabel>{t('nav_admin_section_reports', 'Reports & Analytics')}</SectionLabel>
                     <NavGroup
                         title={t('nav_admin_reports', 'Reports')}
@@ -334,7 +394,7 @@ export default function SidebarNav({ isAdmin = false, isSupplier = false, roles 
                     </NavGroup>
                 </div>
 
-                <div className="mt-5 flex flex-col gap-1.5 border-t border-slate-200/80 pt-5">
+                <div className={sec('mt-5 flex flex-col gap-1.5 border-t border-slate-200/80 pt-5')}>
                     <SectionLabel>{t('nav_admin_section_system', 'System')}</SectionLabel>
                     <NavLink to="/admin/monitoring/live" className={navLinkClass}>
                         <HiOutlineChartBar className="h-5 w-5 shrink-0 opacity-95" aria-hidden />
@@ -350,7 +410,7 @@ export default function SidebarNav({ isAdmin = false, isSupplier = false, roles 
                     </NavLink>
                 </div>
 
-                <div className="mt-5 flex flex-col gap-2 border-t border-slate-200/80 pt-5">
+                <div className={sec('mt-5 flex flex-col gap-2 border-t border-slate-200/80 pt-5')}>
                     <SectionLabel>{t('nav_sidebar_section_settings')}</SectionLabel>
                     <NavGroup
                         title={t('settings')}
@@ -393,7 +453,7 @@ export default function SidebarNav({ isAdmin = false, isSupplier = false, roles 
             initial={{ opacity: 0, x: -12 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.35, ease: 'easeOut' }}
-            className="flex flex-col"
+            className={navClass}
             aria-label="Main"
             onClick={(event) => {
                 if (event.target instanceof Element && event.target.closest('a')) {
@@ -401,7 +461,7 @@ export default function SidebarNav({ isAdmin = false, isSupplier = false, roles 
                 }
             }}
         >
-            <div className="flex flex-col gap-1">
+            <div className={sec('flex flex-col gap-1')}>
                 <SectionLabel>{t('nav_sidebar_section_overview')}</SectionLabel>
                 <NavLink to="/dashboard" className={navLinkClass}>
                     <HiOutlineHome className="h-5 w-5 shrink-0 opacity-95" aria-hidden />
@@ -410,7 +470,7 @@ export default function SidebarNav({ isAdmin = false, isSupplier = false, roles 
             </div>
 
             {(hasStoreAccess || canViewCatalogSection) ? (
-                <div className="mt-5 flex flex-col gap-1.5 border-t border-slate-200/80 pt-5">
+                <div className={sec('mt-5 flex flex-col gap-1.5 border-t border-slate-200/80 pt-5')}>
                     <SectionLabel>{t('nav_store_section')}</SectionLabel>
 
                     {/* Catalog — the unified per-owner catalog that also powers the
@@ -500,14 +560,18 @@ export default function SidebarNav({ isAdmin = false, isSupplier = false, roles 
                             defaultOpen={openStore}
                             groupActive={openStore}
                         >
+                            <NavLink to="/store/overview" className={subNavLinkClass}>
+                                <HiOutlineSquares2X2 className="h-4 w-4 shrink-0 opacity-90" aria-hidden />
+                                {t('store_nav_overview', 'Overview')}
+                            </NavLink>
                             {canStoreSettings ? (
-                                <NavLink to="/store/settings" className={subNavLinkClass}>
+                                <NavLink to="/store/settings/general" className={subNavLinkClass}>
                                     <HiOutlineCog6Tooth className="h-4 w-4 shrink-0 opacity-90" aria-hidden />
                                     {t('nav_store_settings')}
                                 </NavLink>
                             ) : null}
                             {canStorePayments ? (
-                                <NavLink to="/store/payments" className={subNavLinkClass}>
+                                <NavLink to="/store/settings/payments" className={subNavLinkClass}>
                                     <HiOutlineCreditCard className="h-4 w-4 shrink-0 opacity-90" aria-hidden />
                                     {t('nav_store_payments', 'Payment gateways')}
                                 </NavLink>
@@ -557,7 +621,7 @@ export default function SidebarNav({ isAdmin = false, isSupplier = false, roles 
             ) : null}
 
             {canViewPipelineSection ? (
-                <div className="mt-5 flex flex-col gap-2 border-t border-slate-200/80 pt-5">
+                <div className={sec('mt-5 flex flex-col gap-2 border-t border-slate-200/80 pt-5')}>
                     <SectionLabel>{t('nav_sidebar_section_pipeline')}</SectionLabel>
                     {canViewOrdersGroup ? (
                         <NavGroup title={t('nav_group_orders')} icon={HiOutlineShoppingBag} defaultOpen={openOrders} groupActive={openOrders}>
@@ -616,7 +680,7 @@ export default function SidebarNav({ isAdmin = false, isSupplier = false, roles 
                 </div>
             ) : null}
 
-            <div className="mt-5 flex flex-col gap-1.5 border-t border-slate-200/80 pt-5">
+            <div className={sec('mt-5 flex flex-col gap-1.5 border-t border-slate-200/80 pt-5')}>
                 <SectionLabel>{t('nav_sidebar_section_people')}</SectionLabel>
                 <NavLink to="/community" className={navLinkClass}>
                     <HiOutlineNewspaper className="h-5 w-5 shrink-0 opacity-95" aria-hidden />
@@ -655,7 +719,7 @@ export default function SidebarNav({ isAdmin = false, isSupplier = false, roles 
             </div>
 
             {can('deliveries-list') || can('shipping-companies-list') ? (
-                <div className="mt-5 flex flex-col gap-2 border-t border-slate-200/80 pt-5">
+                <div className={sec('mt-5 flex flex-col gap-2 border-t border-slate-200/80 pt-5')}>
                     <SectionLabel>{t('nav_sidebar_section_shipping')}</SectionLabel>
                     <NavGroup
                         title={t('nav_group_shipping')}
@@ -680,7 +744,7 @@ export default function SidebarNav({ isAdmin = false, isSupplier = false, roles 
             ) : null}
 
             {can('tickets-list') ? (
-                <div className="mt-5 flex flex-col gap-1.5 border-t border-slate-200/80 pt-5">
+                <div className={sec('mt-5 flex flex-col gap-1.5 border-t border-slate-200/80 pt-5')}>
                     <SectionLabel>{t('nav_sidebar_section_support')}</SectionLabel>
                     <NavLink to="/tickets" className={navLinkClass}>
                         <HiOutlineTicket className="h-5 w-5 shrink-0 opacity-95" aria-hidden />
@@ -690,7 +754,7 @@ export default function SidebarNav({ isAdmin = false, isSupplier = false, roles 
             ) : null}
 
             {can('wavex-access') ? (
-                <div className="mt-5 flex flex-col gap-2 border-t border-slate-200/80 pt-5">
+                <div className={sec('mt-5 flex flex-col gap-2 border-t border-slate-200/80 pt-5')}>
                     <SectionLabel>{t('nav_sidebar_section_wavex')}</SectionLabel>
                     <NavGroup
                         title={t('nav_group_wavex')}
@@ -727,7 +791,7 @@ export default function SidebarNav({ isAdmin = false, isSupplier = false, roles 
             ) : null}
 
             {canViewMoreSection ? (
-                <div className="mt-5 flex flex-col gap-1.5 border-t border-slate-200/80 pt-5">
+                <div className={sec('mt-5 flex flex-col gap-1.5 border-t border-slate-200/80 pt-5')}>
                     <SectionLabel>{t('nav_sidebar_section_more')}</SectionLabel>
                     {can('gateways-list') ? (
                         <NavLink to="/gateways" className={navLinkClass}>
@@ -764,7 +828,7 @@ export default function SidebarNav({ isAdmin = false, isSupplier = false, roles 
             ) : null}
 
             {canViewAdminSection ? (
-                <div className="mt-5 flex flex-col gap-1.5 border-t border-slate-200/80 pt-5">
+                <div className={sec('mt-5 flex flex-col gap-1.5 border-t border-slate-200/80 pt-5')}>
                     <SectionLabel>{t('nav_sidebar_section_admin')}</SectionLabel>
                     {can('users-list') ? (
                         <NavLink
@@ -819,7 +883,7 @@ export default function SidebarNav({ isAdmin = false, isSupplier = false, roles 
                 </div>
             ) : null}
 
-            <div className="mt-5 flex flex-col gap-2 border-t border-slate-200/80 pt-5">
+            <div className={sec('mt-5 flex flex-col gap-2 border-t border-slate-200/80 pt-5')}>
                 <SectionLabel>{t('nav_sidebar_section_settings')}</SectionLabel>
                 <NavGroup
                     title={t('settings')}

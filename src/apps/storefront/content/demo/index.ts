@@ -26,6 +26,12 @@ const BY_THEME: Readonly<Record<string, DemoCatalog>> = {
   rouge: ROUGE_CATALOG,
   hearth: HEARTH_CATALOG,
   voltage: VOLTAGE_CATALOG,
+  // Library-based themes reuse the closest existing catalogue until they get their own.
+  naseem: HEARTH_CATALOG,
+  bazaar: HEARTH_CATALOG,
+  fresh: HEARTH_CATALOG,
+  sahra: LUXURY_CATALOG,
+  techno: VOLTAGE_CATALOG,
 };
 
 /**
@@ -37,6 +43,11 @@ const AR_OVERLAY: Readonly<Record<string, CatalogOverlay>> = {
   rouge: ROUGE_AR,
   hearth: HEARTH_AR,
   voltage: VOLTAGE_AR,
+  naseem: HEARTH_AR,
+  bazaar: HEARTH_AR,
+  fresh: HEARTH_AR,
+  sahra: LUXURY_AR,
+  techno: VOLTAGE_AR,
 };
 
 /**

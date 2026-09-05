@@ -42,6 +42,11 @@ export interface ThemeProviderProps {
   fallbackId: string;
   /** Merchant setting overrides (validated/coerced against the theme schema). */
   settings?: Partial<Record<string, ThemeSettingValue>>;
+  /**
+   * Active content language ('ar' | 'en' | …). Translatable settings whose value/default is a
+   * `{ ar, en }` map resolve to this language; omitted → first non-empty entry.
+   */
+  locale?: string;
   initialColorScheme?: ColorSchemePreference;
   initialDirection?: Direction;
   /**
@@ -66,6 +71,7 @@ export function ThemeProvider(props: ThemeProviderProps): ReactElement | null {
     registry = defaultRegistry,
     fallbackId,
     settings: settingOverrides,
+    locale,
     initialColorScheme = 'auto',
     initialDirection = 'ltr',
     target,
@@ -117,8 +123,8 @@ export function ThemeProvider(props: ThemeProviderProps): ReactElement | null {
     return resolveSettings(module.manifest.settingsSchema, {
       ...settingOverrides,
       ...localSettings,
-    });
-  }, [module, settingOverrides, localSettings]);
+    }, locale);
+  }, [module, settingOverrides, localSettings, locale]);
 
   const tokens = useMemo(
     () => (module ? module.createTokens(settings) : null),

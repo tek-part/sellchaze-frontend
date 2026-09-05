@@ -40,6 +40,33 @@ function authHeader(): Record<string, string> {
   return authToken ? { Authorization: `Bearer ${authToken}` } : {};
 }
 
+/**
+ * Active storefront language. Sent on EVERY storefront request as `?lang=` plus `Accept-Language`
+ * so the API's `storefront.locale` middleware resolves product names, categories, navigation labels
+ * and theme copy in the language the visitor is reading. Owned by `i18n/useLocale` (and seeded at
+ * i18n init) — a module-level value rather than React state so a request fired in the same tick as
+ * a language switch already carries the new language.
+ */
+let apiLocale: string | null = null;
+
+export function setApiLocale(locale: string | null): void {
+  apiLocale = locale && locale.trim() !== '' ? locale : null;
+}
+
+export function getApiLocale(): string | null {
+  return apiLocale;
+}
+
+function localeHeader(): Record<string, string> {
+  return apiLocale ? { 'Accept-Language': apiLocale } : {};
+}
+
+/** Append `lang=` to a storefront path (keeps any existing query string). */
+function withLang(path: string): string {
+  if (!apiLocale || /[?&]lang=/.test(path)) return path;
+  return `${path}${path.includes('?') ? '&' : '?'}lang=${encodeURIComponent(apiLocale)}`;
+}
+
 export class ApiError extends Error {
   constructor(
     readonly status: number,
@@ -53,13 +80,14 @@ export class ApiError extends Error {
 
 export async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
   const hasBody = init?.body !== undefined && init.body !== null;
-  const response = await fetch(`${API_BASE}/storefront${path}`, {
+  const response = await fetch(`${API_BASE}/storefront${withLang(path)}`, {
     credentials: 'include',
     ...init,
     headers: {
       Accept: 'application/json',
       ...(hasBody ? { 'Content-Type': 'application/json' } : {}),
       ...authHeader(),
+      ...localeHeader(),
       ...(init?.headers ?? {}),
     },
   });
@@ -107,6 +135,7 @@ export async function apiRootFetch<T>(path: string, init?: RequestInit): Promise
       Accept: 'application/json',
       ...(hasBody ? { 'Content-Type': 'application/json' } : {}),
       ...authHeader(),
+      ...localeHeader(),
       ...(init?.headers ?? {}),
     },
   });

@@ -6,6 +6,7 @@
  * never knows which theme is active. Swapping the merchant's theme is a prop change.
  */
 import { useEffect, useState, type ReactElement, type ReactNode } from 'react';
+import { useTranslation } from 'react-i18next';
 import { StorefrontEngineProvider, ThemeProvider } from './theme-engine';
 import type {
   ColorSchemePreference,
@@ -48,6 +49,11 @@ export function StorefrontThemeRoot(props: StorefrontThemeRootProps): ReactEleme
     children,
   } = props;
 
+  // Translatable theme settings (`{ ar, en }` maps) resolve to the active language and re-resolve on
+  // a language switch without remounting the theme.
+  const { i18n } = useTranslation();
+  const locale = i18n.language || undefined;
+
   // Register theme packages once, before the provider resolves the active theme.
   const [ready, setReady] = useState(false);
   const [runtimeThemeId, setRuntimeThemeId] = useState(themeId);
@@ -74,6 +80,7 @@ export function StorefrontThemeRoot(props: StorefrontThemeRootProps): ReactEleme
         themeId={runtimeThemeId}
         fallbackId={storefrontConfig.fallbackThemeId}
         {...(settings ? { settings } : {})}
+        {...(locale ? { locale } : {})}
         {...(colorScheme ? { initialColorScheme: colorScheme } : {})}
         {...(direction ? { initialDirection: direction } : {})}
       >

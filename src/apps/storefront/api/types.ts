@@ -110,6 +110,33 @@ export interface ApiStoreSummary {
   description?: string | null;
 }
 
+/** Resolved request language (StorefrontController@index → `locale`). `fallback` is the store default. */
+export interface ApiStorefrontLocale {
+  current: string;
+  fallback: string;
+  supported: ReadonlyArray<string>;
+  dir: 'ltr' | 'rtl';
+}
+
+/**
+ * One entry of a store menu (StorefrontController@index → `navigation.header` / `.footer`).
+ * `label` is already picked for the request language; `label_i18n` carries every language so a
+ * client-side switch re-labels without a round trip.
+ */
+export interface ApiNavItem {
+  label: string;
+  label_i18n?: Readonly<Record<string, string | null | undefined>> | null;
+  type?: 'url' | 'internal' | 'category' | 'product' | string;
+  target?: string | null;
+  url?: string | null;
+  children?: ReadonlyArray<ApiNavItem> | null;
+}
+
+export interface ApiStorefrontNavigation {
+  header: ReadonlyArray<ApiNavItem>;
+  footer: ReadonlyArray<ApiNavItem>;
+}
+
 export interface ApiPaginationMeta {
   current_page: number;
   last_page: number;

@@ -1,0 +1,25 @@
+/*
+ * Customize-mode skin (`body.sf-customizing`, set by CustomizeBridge). Hover outlines every section
+ * frame, the selected one gets a solid outline + label, and session-dismiss controls (announcement
+ * close, cookie banners) are hidden so the merchant always sees the full page.
+ */
+body.sf-customizing [data-section-id] { position: relative; cursor: pointer; transition: outline-color 120ms ease; outline: 2px dashed transparent; outline-offset: -2px; }
+body.sf-customizing [data-section-id]:hover { outline-color: color-mix(in srgb, var(--primary, #1d4ed8) 60%, transparent); }
+body.sf-customizing [data-section-id].is-customizer-selected { outline: 2px solid var(--primary, #1d4ed8); outline-offset: -2px; z-index: 1; }
+body.sf-customizing [data-section-id].is-customizer-selected::before {
+  content: attr(data-section-type);
+  position: absolute;
+  top: 0;
+  inset-inline-start: 0;
+  z-index: 3;
+  padding: 2px 8px;
+  font: 600 11px/1.6 system-ui, sans-serif;
+  letter-spacing: 0.02em;
+  color: var(--on-primary, #fff);
+  background: var(--primary, #1d4ed8);
+  border-end-end-radius: 6px;
+  pointer-events: none;
+}
+body.sf-customizing .sf-announcement__close,
+body.sf-customizing [data-customizer-hide],
+body.sf-customizing .nsm-announcement__close { display: none !important; }
