@@ -3,7 +3,7 @@
  * animated presence) with Fresh's grocery placeholder and a direct submit to /search.
  */
 import { useState, type ReactElement } from 'react';
-import { SearchOverlay as SharedSearchOverlay } from '../../luxury-fashion/components/SearchOverlay';
+import { SearchOverlay as SharedSearchOverlay } from '../../../foundation/components/SearchOverlay';
 import { useLocale } from '../../../i18n/useLocale';
 import { frText } from './text';
 

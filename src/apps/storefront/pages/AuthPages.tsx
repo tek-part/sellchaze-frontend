@@ -6,15 +6,15 @@
 import { useState, type FormEvent, type ReactElement } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Button, Container, Section } from '../themes/luxury-fashion/components';
-import { Input } from '../themes/luxury-fashion/components';
+import { Button, Container, Section } from '../foundation/components';
+import { Input } from '../foundation/components';
 import { useAuth } from '../state/auth-context';
 import { forgotPassword, resetPassword } from '../api/storefront';
 import { ThemeRenderer, useTemplate } from '../theme-engine';
 import { useStore } from '../state/store-context';
 import { flowContext } from './flow-context';
 
-/** Render the active theme's auth template when it provides one; otherwise the luxury fallback. */
+/** Render the active theme's auth template when it provides one; otherwise the foundation fallback. */
 function useAuthTemplate(name: 'login' | 'register' | 'forgot-password' | 'reset-password'): ReactElement | null {
   const tpl = useTemplate(name);
   const { store } = useStore();

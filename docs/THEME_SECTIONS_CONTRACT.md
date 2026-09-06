@@ -104,11 +104,13 @@ Folder `src/apps/storefront/themes/<id>/` with: `manifest.ts`, `settings.ts` (fi
 `theme.css` (skin: only `var(--token)` values; class prefix unique per theme), `templates.ts`
 (home/product/category + the shared extra templates from `sections-lib/templates.ts`).
 Sections come from the library: `sections: createSectionMap()` (optionally overriding a few types with
-theme-specific components). Manifest: `previewImage: '/media/theme-previews/<id>.svg'`,
+theme-specific components). Manifest: `previewImage: '/media/theme-previews/<id>.jpg'`,
 `schemaVersion: 2`, `supports.colorSchemes`, `capabilities`, `minEngineVersion: '1.0.0'`.
 Register in `src/apps/storefront/platform/catalog/catalog.ts` and add the alias-free key to the backend by
 running `npm run themes:manifests` (writes `../sellchaze-backend/resources/themes/storefront/<id>.json`)
 then `php artisan themes:register` in the backend.
 
-Shared/legacy pages (auth, account, static, 404) keep importing luxury-fashion primitives; each new theme
-ships `shared.css` overrides for `.sf-*` classes it needs to reskin, like `themes/rouge/shared.css`.
+Shared pages (auth, account, cart, checkout, wishlist, static, 404) import the foundation primitives
+(`src/apps/storefront/foundation/components`, skinned app-level by `foundation/base.css` + `pages.css`);
+each theme ships `shared.css` overrides for the `.sf-*` classes it needs to reskin, like
+`themes/naseem/shared.css`.

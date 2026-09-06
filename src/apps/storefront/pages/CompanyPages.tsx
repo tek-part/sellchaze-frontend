@@ -12,7 +12,7 @@
 import { useMemo, useState, type FormEvent, type ReactElement } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Button, ButtonLink, Container, Input, Section, StoreImage, Textarea } from '../themes/luxury-fashion/components';
+import { Button, ButtonLink, Container, Input, Section, StoreImage, Textarea } from '../foundation/components';
 import { Seo } from '../seo/Seo';
 import { breadcrumbSchema, faqSchema } from '../seo/schema';
 import { useStore } from '../state/store-context';

@@ -20,7 +20,7 @@ export const technoBaseTokens = {
       muted: '#5B6478',
       border: '#DDE2EA',
       borderStrong: '#C3CAD6',
-      sale: '#EF4444',
+      sale: '#DC2626',
       success: '#16A34A',
       danger: '#DC2626',
       warning: '#F59E0B',

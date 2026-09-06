@@ -8,6 +8,7 @@ on:
 
 permissions:
   contents: read
+  actions: read
 
 concurrency:
   group: frontend-production
@@ -19,53 +20,76 @@ jobs:
       github.event.workflow_run.conclusion == 'success' &&
       github.event.workflow_run.event == 'push'
     runs-on: ubuntu-latest
-    timeout-minutes: 35
+    timeout-minutes: 30
     environment: production
     env:
       DEPLOY_SHA: ${{ github.event.workflow_run.head_sha }}
 
     steps:
-      - name: Deploy Frontend to Production
-        uses: appleboy/ssh-action@v1.2.0
+      # The site is built once, in the Quality run, and shipped as-is. Building on the shared
+      # cPanel host (npm ci + Vite) exhausted its CPU/IO limits and throttled the live site.
+      - name: Download the built site from the Quality run
+        uses: actions/download-artifact@v4
+        with:
+          name: dist-${{ github.event.workflow_run.head_sha }}
+          path: dist
+          run-id: ${{ github.event.workflow_run.id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Verify build
+        run: |
+          test -f dist/index.html
+          test -f dist/storefront.html
+          du -sh dist
+
+      - name: Upload release to the server
+        uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USERNAME }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           fingerprint: ${{ secrets.SSH_HOST_FINGERPRINT }}
           port: 22
-          command_timeout: 30m
+          timeout: 120s
+          command_timeout: 20m
+          source: "dist/*"
+          strip_components: 1
+          target: /home/sellchaze/releases/${{ github.event.workflow_run.head_sha }}
+
+      - name: Activate release
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          fingerprint: ${{ secrets.SSH_HOST_FINGERPRINT }}
+          port: 22
+          command_timeout: 10m
           script_stop: true
           envs: DEPLOY_SHA
-
           script: |
             set -e
 
-            APP_DIR=/home/sellchaze/repos/frontend
+            RELEASE="/home/sellchaze/releases/$DEPLOY_SHA"
             WEB_ROOT=/home/sellchaze/public_html
 
             printf '%s\n' "$DEPLOY_SHA" | grep -Eq '^[0-9a-f]{40}$'
+            test -f "$RELEASE/index.html"
+            test -f "$RELEASE/storefront.html"
 
-            mkdir -p /home/sellchaze/repos
-            if [ ! -d "$APP_DIR/.git" ]; then
-              git clone https://github.com/tek-part/sellchaze-frontend.git "$APP_DIR"
+            # Keep the Laravel API subdomain, cPanel's CGI directory and ACME challenges intact.
+            if command -v rsync >/dev/null 2>&1; then
+              rsync -a --delete \
+                --exclude 'api.sellchaze.com' --exclude 'cgi-bin' --exclude '.well-known' \
+                "$RELEASE/" "$WEB_ROOT/"
+            else
+              find "$WEB_ROOT" -mindepth 1 -maxdepth 1 \
+                ! -name 'api.sellchaze.com' ! -name 'cgi-bin' ! -name '.well-known' \
+                -exec rm -rf -- {} +
+              cp -R "$RELEASE/." "$WEB_ROOT/"
             fi
 
-            cd "$APP_DIR"
-            git fetch --prune origin main
-            git cat-file -e "${DEPLOY_SHA}^{commit}"
-            git reset --hard "$DEPLOY_SHA"
+            # Keep the three most recent releases for a quick rollback.
+            ls -1dt /home/sellchaze/releases/*/ 2>/dev/null | tail -n +4 | xargs -r rm -rf --
 
-            /bin/npm ci
-
-            /bin/npm run build
-
-            # Keep the Laravel API subdomain and cPanel's CGI directory intact.
-            find "$WEB_ROOT" -mindepth 1 -maxdepth 1 \
-              ! -name 'api.sellchaze.com' \
-              ! -name 'cgi-bin' \
-              -exec rm -rf -- {} +
-
-            # cPanel owns the web-root directory metadata; copy file contents
-            # without attempting to preserve the root directory timestamps.
-            cp -R dist/. "$WEB_ROOT/"
+            echo "Deployed $DEPLOY_SHA"

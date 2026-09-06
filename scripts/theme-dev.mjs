@@ -7,7 +7,7 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const themesRoot = path.join(root, 'src', 'apps', 'storefront', 'themes');
 const requested = process.argv.find((argument) => argument.startsWith('--theme='))?.split('=')[1]
   || process.argv[2]
-  || 'luxury-fashion';
+  || 'naseem';
 const themes = (await readdir(themesRoot, { withFileTypes: true }))
   .filter((entry) => entry.isDirectory())
   .map((entry) => entry.name);

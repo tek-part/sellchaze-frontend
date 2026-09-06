@@ -218,7 +218,6 @@ export const en = {
     typeQuery: 'Type a query to search the catalog.',
     noMatchesFor: 'No matches for “{{query}}”',
     searchRooms: 'Search our rooms',
-    hearthHint: 'Try a different term, or browse by room to find your piece.',
     piecesCount: '{{count}} pieces',
     tryDifferent: 'Try a different search.',
     placeholderPieces: 'Search for pieces, categories…',
@@ -242,8 +241,6 @@ export const en = {
     subscribe: 'Subscribe',
     subscribing: 'Signing up…',
     eyebrow: '// Signal',
-    voltageTitle: 'Get the drop first',
-    voltageText: 'New builds, restocks and field notes — no noise.',
     confirmInbox: 'Thank you — please check your inbox to confirm.',
   },
 
@@ -285,10 +282,6 @@ export const en = {
     articleNotFoundHint: 'That article may have moved, or the link may be out of date.',
     backToJournal: 'Back to the journal',
     moreArticles: 'More articles',
-    voltageEyebrow: '// Field journal',
-    voltageTitle: 'The log',
-    voltageEmpty: 'No entries yet',
-    voltageEmptyHint: 'Build notes, teardowns and spec deep-dives are on the way.',
   },
 
   auth: {
@@ -566,20 +559,6 @@ export const en = {
     unavailableBody: 'We couldn’t load this piece just now. Please try again.',
     tryAgain: 'Try again',
     loadingProduct: 'Loading product',
-    hearthDetailsFallback: 'Considered materials and honest construction, made to live with for years.',
-    hearthMaterials:
-      'Made from solid, responsibly sourced timber and natural textiles. Wipe with a soft, dry cloth; keep out of direct heat and sunlight to let the finish age gracefully.',
-    hearthDelivery:
-      'Small items ship by courier within a few days. Larger furniture is delivered by our two-person team to your room of choice — you’ll pick a date at checkout.',
-    hearthReassure1: 'Free delivery over $150 · two-person delivery on large items',
-    hearthReassure2: '30-day returns · 5-year frame warranty',
-    hearthReassure3: 'Order a swatch to feel the material first',
-    rougeDescriptionFallback: 'A weightless, skin-loving formula in a spectrum of wearable shades.',
-    rougeHowTo:
-      'Sweep across bare or primed skin and build to your desired finish. Layer for depth; blend with a brush or fingertips for a second-skin veil.',
-    rougeIngredients:
-      'Clean, vegan, and dermatologist-tested — formulated without 1,800+ questionable ingredients. Full INCI list on pack.',
-    rougeShipping: 'Complimentary shipping on orders over $50. Returns accepted within 30 days on gently used products.',
     luxuryShipping: 'Complimentary shipping on orders over $200. Returns accepted within 14 days on unworn pieces.',
   },
 
@@ -587,12 +566,7 @@ export const en = {
     title: 'This page has slipped away',
     body: 'The page you’re looking for can’t be found — it may have moved.',
     returnHome: 'Return home',
-    hearthTitle: 'We can’t find that room',
-    hearthBody: 'The page you’re after may have moved. Let’s get you back to something beautiful.',
     backHome: 'Back home',
-    voltageEyebrow: '// Signal lost',
-    voltageTitle: 'This page is off the grid',
-    voltageBody: 'The route you requested returned no match — it may have moved or powered down.',
   },
 
   flash: {
@@ -608,12 +582,6 @@ export const en = {
     followUs: 'Follow us',
     follow: 'Follow',
     viewOnInstagram: 'View on Instagram',
-  },
-
-  hearth: {
-    browseRooms: 'Browse rooms',
-    gridEmptyTitle: 'Nothing here just yet',
-    gridEmptyBody: 'New pieces are on their way — browse another room in the meantime.',
   },
 
   misc: {

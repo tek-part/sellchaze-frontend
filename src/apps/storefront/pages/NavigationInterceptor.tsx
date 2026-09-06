@@ -5,7 +5,7 @@
  * pass through untouched. Scrolls to top on navigation.
  *
  * Session params (`theme`, `preview`, `scheme`, `settings`) are carried across every navigation.
- * Without that, clicking from `/about?theme=rouge&preview=1` to `/blog` would drop them: the page
+ * Without that, clicking from `/about?theme=sahra&preview=1` to `/blog` would drop them: the page
  * would look right because the app is already running, but a refresh or a shared link would land on
  * a URL the dev server no longer recognises as a storefront request — and in production would lose
  * the theme override. A link that only works until you reload is worse than one that never worked,

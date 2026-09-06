@@ -11,7 +11,7 @@ import {
   Container,
   Input,
   Section,
-} from '../themes/luxury-fashion/components';
+} from '../foundation/components';
 import { useCart } from '../state/cart';
 import { useStore } from '../state/store-context';
 import { applyCoupon } from '../api/storefront';

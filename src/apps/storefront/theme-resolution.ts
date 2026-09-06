@@ -11,10 +11,21 @@
  *   3. the configured fallback.
  */
 
-/** Theme keys the API may still emit for stores activated before a rename. */
+/**
+ * Theme keys the API may still emit for stores activated before a rename or before the legacy
+ * themes (luxury-fashion, voltage, hearth, rouge) were retired. Each maps to the closest of the five
+ * library-based themes so an old store keeps rendering instead of failing closed to the default.
+ */
 export const LEGACY_THEME_ALIASES: Readonly<Record<string, string>> = Object.freeze({
-  default: 'luxury-fashion',
-  aurora: 'rouge',
+  default: 'naseem',
+  aurora: 'naseem',
+  modern: 'naseem',
+  atlas: 'bazaar',
+  verde: 'fresh',
+  'luxury-fashion': 'sahra',
+  rouge: 'sahra',
+  hearth: 'naseem',
+  voltage: 'techno',
 });
 
 export function applyLegacyThemeAlias(key: string): string {

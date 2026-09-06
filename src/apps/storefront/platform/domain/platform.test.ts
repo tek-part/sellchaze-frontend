@@ -5,7 +5,7 @@
  */
 import { describe, expect, it } from 'vitest';
 import { ThemeRegistry, type DesignTokens, type ThemeManifest, type ThemeModule } from '../../theme-engine';
-import { rougeBaseTokens } from '../../themes/rouge/tokens';
+import { naseemBaseTokens } from '../../themes/naseem/tokens';
 import { THEME_CATALOG } from '../catalog/catalog';
 import type { CatalogEntry } from '../catalog/types';
 import {
@@ -70,7 +70,7 @@ function makeManifest(over: Partial<ThemeManifest> = {}): ThemeManifest {
 
 function makeModule(manifestOver: Partial<ThemeManifest> = {}): ThemeModule {
   const manifest = makeManifest(manifestOver);
-  const tokens = rougeBaseTokens as DesignTokens;
+  const tokens = naseemBaseTokens as DesignTokens;
   return { manifest, tokens, defaultSettings: {}, createTokens: () => tokens };
 }
 
@@ -386,11 +386,11 @@ describe('updates', () => {
 
 /* -------------------------------------------------------------- catalog + bridge */
 describe('catalog + registry bridge', () => {
-  it('the real catalog lists the original four themes plus the library-built ones, all unique', () => {
-    expect(THEME_CATALOG.length).toBeGreaterThanOrEqual(4);
+  it('the real catalog lists exactly the five library-built themes, all unique', () => {
+    expect(THEME_CATALOG).toHaveLength(5);
     const ids = THEME_CATALOG.map((e) => e.id);
     expect(new Set(ids).size).toBe(ids.length);
-    expect(ids).toEqual(expect.arrayContaining(['luxury-fashion', 'voltage', 'hearth', 'rouge', 'naseem']));
+    expect(ids).toEqual(['naseem', 'bazaar', 'sahra', 'fresh', 'techno']);
   });
   it('registers every catalogued theme into a fresh registry', () => {
     const registry = new ThemeRegistry();

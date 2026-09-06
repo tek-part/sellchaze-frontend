@@ -9,7 +9,7 @@ export const ARABIC_STACK = "'Cairo','Tajawal','IBM Plex Sans Arabic','Noto Sans
 export const freshBaseTokens = {
   color: {
     light: {
-      primary: '#16A34A',
+      primary: '#15803D',
       onPrimary: '#FFFFFF',
       accent: '#84CC16',
       accentInk: '#4D7C0F',
@@ -20,7 +20,7 @@ export const freshBaseTokens = {
       muted: '#617061',
       border: '#E5EBDB',
       borderStrong: '#CBD8BE',
-      sale: '#EF4444',
+      sale: '#DC2626',
       success: '#16A34A',
       danger: '#DC2626',
       warning: '#F59E0B',

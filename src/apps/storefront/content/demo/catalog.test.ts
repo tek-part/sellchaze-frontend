@@ -1,26 +1,35 @@
 /**
  * Demo catalogues are shipped data that drives every preview, so their invariants are pinned here.
- * The important one is distinctness: the whole point of this module is that four themes stopped
- * sharing one fashion catalogue, and a copy-paste regression would silently undo that.
+ * The important one is distinctness: the four catalogues cover four verticals, and a copy-paste
+ * regression that made two of them share goods would silently undo that.
  */
 import { describe, expect, it } from 'vitest';
 import { catalogFor, HEARTH_CATALOG, LUXURY_CATALOG, ROUGE_CATALOG, VOLTAGE_CATALOG } from './index';
 
 const ALL = [
-  ['luxury-fashion', LUXURY_CATALOG],
+  ['luxury', LUXURY_CATALOG],
   ['rouge', ROUGE_CATALOG],
   ['hearth', HEARTH_CATALOG],
   ['voltage', VOLTAGE_CATALOG],
 ] as const;
 
+const THEME_TO_CATALOG = [
+  ['naseem', HEARTH_CATALOG],
+  ['bazaar', HEARTH_CATALOG],
+  ['fresh', HEARTH_CATALOG],
+  ['sahra', LUXURY_CATALOG],
+  ['techno', VOLTAGE_CATALOG],
+] as const;
+
 describe('catalogFor', () => {
-  it('resolves each theme to its own catalogue', () => {
-    for (const [id, expected] of ALL) expect(catalogFor(id)).toBe(expected);
+  it('resolves each theme to the catalogue of its vertical', () => {
+    for (const [id, expected] of THEME_TO_CATALOG) expect(catalogFor(id)).toBe(expected);
   });
 
-  it('falls back for an unknown or missing theme rather than throwing', () => {
-    expect(catalogFor('does-not-exist')).toBe(LUXURY_CATALOG);
-    expect(catalogFor(undefined)).toBe(LUXURY_CATALOG);
+  it("falls back to the default theme's catalogue for an unknown or missing theme rather than throwing", () => {
+    expect(catalogFor('does-not-exist')).toBe(HEARTH_CATALOG);
+    expect(catalogFor(undefined)).toBe(HEARTH_CATALOG);
+    expect(catalogFor('luxury-fashion')).toBe(HEARTH_CATALOG);
   });
 });
 

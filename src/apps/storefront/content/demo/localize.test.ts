@@ -9,7 +9,7 @@
 import { describe, expect, it } from 'vitest';
 import { catalogFor } from './index';
 
-const THEMES = ['luxury-fashion', 'rouge', 'hearth', 'voltage'] as const;
+const THEMES = ['naseem', 'bazaar', 'sahra', 'fresh', 'techno'] as const;
 const ARABIC = /[؀-ۿ]/;
 
 describe.each(THEMES)('%s catalogue localisation', (theme) => {
@@ -83,11 +83,11 @@ describe('memoisation', () => {
   it('returns a stable reference per theme+locale', () => {
     // Downstream selectors (facets, sorting, filtering) memoise on this array identity; rebuilding
     // it every call would defeat them.
-    expect(catalogFor('rouge', 'ar')).toBe(catalogFor('rouge', 'ar'));
-    expect(catalogFor('rouge', 'ar')).not.toBe(catalogFor('hearth', 'ar'));
+    expect(catalogFor('sahra', 'ar')).toBe(catalogFor('sahra', 'ar'));
+    expect(catalogFor('sahra', 'ar')).not.toBe(catalogFor('naseem', 'ar'));
   });
 
   it('falls back to English for an unknown locale rather than throwing', () => {
-    expect(catalogFor('rouge', 'fr')).toBe(catalogFor('rouge', 'en'));
+    expect(catalogFor('sahra', 'fr')).toBe(catalogFor('sahra', 'en'));
   });
 });

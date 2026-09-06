@@ -16,7 +16,7 @@ export const naseemBaseTokens = {
       surface: '#FFFFFF',
       surface2: '#F4F6FA',
       text: '#0F172A',
-      muted: '#64748B',
+      muted: '#5B6577',
       border: '#E5E9F0',
       borderStrong: '#CBD3DF',
       sale: '#DC2626',

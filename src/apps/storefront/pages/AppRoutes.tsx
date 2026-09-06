@@ -6,7 +6,7 @@
 import { lazy, Suspense, type ReactElement } from 'react';
 import { Route, Routes } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Container, Section, Spinner } from '../themes/luxury-fashion/components';
+import { Container, Section, Spinner } from '../foundation/components';
 
 const HomePage = lazy(() => import('./HomePage').then((m) => ({ default: m.HomePage })));
 const CategoryPage = lazy(() => import('./CategoryPage').then((m) => ({ default: m.CategoryPage })));

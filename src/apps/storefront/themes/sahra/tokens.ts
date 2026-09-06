@@ -16,7 +16,7 @@ export const sahraBaseTokens = {
       primary: '#1C1A17',
       onPrimary: '#FBF8F3',
       accent: GOLD,
-      accentInk: '#8A6A22',
+      accentInk: '#7A5D1E',
       bg: '#FBF8F3',
       surface: '#FFFFFF',
       surface2: '#F3EDE2',

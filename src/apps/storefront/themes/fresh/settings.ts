@@ -18,11 +18,11 @@ export const FRESH_FONTS = [
 
 export const freshSettingsSchema: ThemeSettingsSchema = [
   /* ---- Colors ---- */
-  { id: 'primary_color', type: 'color', label: 'Primary', group: 'Colors', default: '#16A34A', hint: 'Buttons, links, quick-add, active states.' },
+  { id: 'primary_color', type: 'color', label: 'Primary', group: 'Colors', default: '#15803D', hint: 'Buttons, links, quick-add, active states.' },
   { id: 'accent_color', type: 'color', label: 'Accent', group: 'Colors', default: '#84CC16', hint: 'Lime highlights, eyebrows, deal badges.' },
   { id: 'background_color', type: 'color', label: 'Background', group: 'Colors', default: '#FFFBF2', hint: 'Cream page canvas; cards stay white.' },
   { id: 'text_color', type: 'color', label: 'Text', group: 'Colors', default: '#1B2A1E' },
-  { id: 'sale_color', type: 'color', label: 'Sale / discount', group: 'Colors', default: '#EF4444' },
+  { id: 'sale_color', type: 'color', label: 'Sale / discount', group: 'Colors', default: '#DC2626' },
 
   /* ---- Typography ---- */
   { id: 'heading_font', type: 'select', label: 'Heading font', group: 'Typography', options: FRESH_FONTS, default: 'Cairo' },

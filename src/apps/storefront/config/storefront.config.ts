@@ -13,6 +13,6 @@ export interface StorefrontConfig {
 }
 
 export const storefrontConfig: StorefrontConfig = {
-  defaultThemeId: 'luxury-fashion',
-  fallbackThemeId: 'luxury-fashion',
+  defaultThemeId: 'naseem',
+  fallbackThemeId: 'naseem',
 };

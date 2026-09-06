@@ -13,7 +13,7 @@ import {
   Input,
   Section,
   Textarea,
-} from '../themes/luxury-fashion/components';
+} from '../foundation/components';
 import { Seo } from '../seo/Seo';
 import { useStoreContent } from '../content/useStoreContent';
 import { fillTokens, getPolicy } from '../content/policies';
@@ -59,7 +59,7 @@ function withFaqOverride(page: PageDefinition, override: FaqOverride | null): Pa
   };
 }
 
-/** Render the active theme's static template when it provides one; otherwise null (luxury fallback). */
+/** Render the active theme's static template when it provides one; otherwise null (foundation fallback). */
 function useStaticTemplate(name: 'blog' | 'about' | 'contact' | 'faq'): ReactElement | null {
   const tpl = useTemplate(name);
   const { store } = useStore();

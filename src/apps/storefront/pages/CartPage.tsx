@@ -10,7 +10,7 @@ import {
   EmptyState,
   HorizontalProductCard,
   Section,
-} from '../themes/luxury-fashion/components';
+} from '../foundation/components';
 import type { ProductCardModel } from '../types/catalog';
 import type { CartLine } from '../types/cart';
 import { useCart } from '../state/cart';

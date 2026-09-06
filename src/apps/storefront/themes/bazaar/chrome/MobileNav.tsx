@@ -5,7 +5,7 @@
  */
 import type { ReactElement } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Drawer } from '../../luxury-fashion/components/Drawer';
+import { Drawer } from '../../../foundation/components/Drawer';
 import type { NavItem } from '../../../types/navigation';
 import type { CategoryCardModel } from '../../../types/catalog';
 import { LanguageSwitcher } from '../../../shared-ui';

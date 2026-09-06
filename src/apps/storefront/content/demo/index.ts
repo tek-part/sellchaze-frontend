@@ -1,9 +1,10 @@
 /**
  * Demo catalogue selection.
  *
- * Resolves the catalogue for the active theme so each preview shows its own vertical: Voltage
- * previews electronics, Rouge beauty, Hearth home, Luxury fashion. Previously all four shared one
- * fashion catalogue of eight products, so three themes demonstrated the wrong goods.
+ * Resolves the catalogue for the active theme so each preview shows its own vertical. The four
+ * catalogues (fashion, beauty, home, electronics) are shipped data; each of the five library-based
+ * themes is keyed to the closest one: Sahra (luxury gifts) previews the fashion catalogue, Techno
+ * electronics, and Naseem / Bazaar / Fresh the home catalogue until they get their own.
  *
  * DEV-only by construction — every caller is behind `import.meta.env.DEV`, which Vite replaces with
  * `false` in production, so Rollup eliminates this module and the catalogues it imports.
@@ -15,18 +16,15 @@ import { VOLTAGE_CATALOG } from './voltage';
 import type { DemoCatalog } from './types';
 import { applyOverlay, type CatalogOverlay } from './localize';
 import { LUXURY_AR } from './luxury.ar';
-import { ROUGE_AR } from './rouge.ar';
 import { HEARTH_AR } from './hearth.ar';
 import { VOLTAGE_AR } from './voltage.ar';
 
 export type { DemoCatalog, DemoBrand, DemoFaq, DemoTestimonial } from './types';
 
+/** Theme whose catalogue is used when the id is missing or unknown (the storefront default). */
+const DEFAULT_THEME = 'naseem';
+
 const BY_THEME: Readonly<Record<string, DemoCatalog>> = {
-  'luxury-fashion': LUXURY_CATALOG,
-  rouge: ROUGE_CATALOG,
-  hearth: HEARTH_CATALOG,
-  voltage: VOLTAGE_CATALOG,
-  // Library-based themes reuse the closest existing catalogue until they get their own.
   naseem: HEARTH_CATALOG,
   bazaar: HEARTH_CATALOG,
   fresh: HEARTH_CATALOG,
@@ -39,10 +37,6 @@ const BY_THEME: Readonly<Record<string, DemoCatalog>> = {
  * images, ratings and ids stay canonical, so a fact corrected once is correct in both languages.
  */
 const AR_OVERLAY: Readonly<Record<string, CatalogOverlay>> = {
-  'luxury-fashion': LUXURY_AR,
-  rouge: ROUGE_AR,
-  hearth: HEARTH_AR,
-  voltage: VOLTAGE_AR,
   naseem: HEARTH_AR,
   bazaar: HEARTH_AR,
   fresh: HEARTH_AR,
@@ -60,14 +54,15 @@ const AR_OVERLAY: Readonly<Record<string, CatalogOverlay>> = {
 const CACHE = new Map<string, DemoCatalog>();
 
 export function catalogFor(themeId: string | undefined, locale = 'en'): DemoCatalog {
-  const base = (themeId && BY_THEME[themeId]) || LUXURY_CATALOG;
+  const id = themeId && BY_THEME[themeId] ? themeId : DEFAULT_THEME;
+  const base = BY_THEME[id] ?? HEARTH_CATALOG;
   if (locale !== 'ar') return base;
 
-  const key = `${themeId ?? 'luxury-fashion'}:${locale}`;
+  const key = `${id}:${locale}`;
   const cached = CACHE.get(key);
   if (cached) return cached;
 
-  const localized = applyOverlay(base, AR_OVERLAY[themeId ?? 'luxury-fashion']);
+  const localized = applyOverlay(base, AR_OVERLAY[id]);
   CACHE.set(key, localized);
   return localized;
 }

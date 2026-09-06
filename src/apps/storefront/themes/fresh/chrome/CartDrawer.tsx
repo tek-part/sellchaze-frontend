@@ -4,7 +4,7 @@
  */
 import type { ReactElement } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Drawer } from '../../luxury-fashion/components/Drawer';
+import { Drawer } from '../../../foundation/components/Drawer';
 import { formatMoney } from '../../../utils/format';
 import { useCart } from '../../../state/cart';
 import { useLocale } from '../../../i18n/useLocale';

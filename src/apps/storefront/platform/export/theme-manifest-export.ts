@@ -184,7 +184,7 @@ export function buildBackendManifest(module: ThemeModule, entry?: CatalogEntry):
     is_marketplace: true,
     is_featured: Boolean(entry?.featured),
     min_platform_version: m.minEngineVersion,
-    preview_image: m.previewImage ?? entry?.previewImage ?? `/media/theme-previews/${m.id}.svg`,
+    preview_image: m.previewImage ?? entry?.previewImage ?? `/media/theme-previews/${m.id}.jpg`,
     supported_features: [...m.capabilities],
     bundle_url: `builtin:${m.id}@${m.version}`,
     changelog,

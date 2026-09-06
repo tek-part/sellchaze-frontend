@@ -6,7 +6,7 @@ import { previewOrDev } from '../preview';
 import { useEffect, useMemo, type ReactElement } from 'react';
 import { useParams } from 'react-router-dom';
 import { ThemeRenderer, useTemplate, type StorefrontContext, useThemeManifest } from '../theme-engine';
-import { Button, Container, ErrorState, Section, Spinner } from '../themes/luxury-fashion/components';
+import { Button, Container, ErrorState, Section, Spinner } from '../foundation/components';
 import { useStore } from '../state/store-context';
 import { useAsync } from '../api/useAsync';
 import { getProduct, getProductReviews, getProducts } from '../api/storefront';

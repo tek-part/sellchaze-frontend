@@ -91,7 +91,7 @@ describe('buildBackendManifest', () => {
       is_marketplace: true,
       is_featured: true,
       min_platform_version: '1.0.0',
-      preview_image: '/media/theme-previews/demo.svg',
+      preview_image: '/media/theme-previews/demo.jpg',
       supported_features: ['rtl', 'wishlist'],
       changelog: '1.2.3 (2026-09-05): First.',
     });

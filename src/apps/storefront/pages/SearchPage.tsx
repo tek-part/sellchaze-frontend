@@ -7,7 +7,7 @@ import { previewOrDev } from '../preview';
 import { useMemo, type CSSProperties, type ReactElement } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Container, EmptyState, ProductCard, Section } from '../themes/luxury-fashion/components';
+import { Container, EmptyState, ProductCard, Section } from '../foundation/components';
 import { useLocale } from '../i18n/useLocale';
 import { Seo } from '../seo/Seo';
 import { useStore } from '../state/store-context';

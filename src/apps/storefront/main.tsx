@@ -30,16 +30,15 @@ import './styles/index.css';
 // reads a token, so each theme's own tokens do the visual differentiation.
 import './styles/editorial.css';
 import './styles/company.css';
-// Shared component skin (buttons, form fields incl. the floating-label mechanics, cards, layout
-// helpers). The shared route pages (Auth / Account / Static / NotFound / errors) render luxury's
-// `.sf-*` components regardless of the active theme — they hard-import them in JS — but that skin
-// used to load ONLY when luxury was the active theme, leaving those pages unstyled under
-// hearth/voltage and half-styled under rouge (no floating-label rules). Loading it app-level makes
-// the CSS match that JS reality: every value reads a `var(--token)` on <html>, so each theme's own
-// tokens still do the visual differentiation, and a theme that wants a different look (rouge) simply
-// overrides in its own `shared.css`, which loads afterwards and wins on source order.
-import './themes/luxury-fashion/theme.css';
-import './themes/luxury-fashion/pages.css';
+// Foundation skin (buttons, form fields incl. the floating-label mechanics, cards, layout helpers,
+// page flows). The shared route pages (Auth / Account / Cart / Checkout / Static / NotFound / errors)
+// and the library PDP render the foundation's `.sf-*` components regardless of the active theme —
+// they hard-import them in JS — so the skin loads app-level to match. Every value reads a
+// `var(--token)` on <html>, so each theme's own tokens still do the visual differentiation, and a
+// theme that wants a different look overrides in its own `shared.css`, which loads afterwards and
+// wins on source order.
+import './foundation/base.css';
+import './foundation/pages.css';
 // Arabic typography + the direction-dependent corrections logical properties cannot make.
 import './styles/rtl.css';
 
@@ -102,7 +101,7 @@ async function bootstrap(): Promise<void> {
   }
 
   // Resolve the theme id BEFORE mounting so the ThemeProvider loads the right package on first
-  // paint (no luxury → naseem flash). Registering the catalog here is idempotent — the theme root
+  // paint (no default-theme → active-theme flash). Registering the catalog here is idempotent — the theme root
   // calls it again — and is what lets the resolver fail closed on a key the registry does not know.
   registerThemes();
   const bootstrapTheme = initialData?.theme ?? null;

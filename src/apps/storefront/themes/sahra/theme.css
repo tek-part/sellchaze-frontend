@@ -288,7 +288,7 @@
 /* brand logos */
 .sh-root .lib-logo__word { font-weight: 400; letter-spacing: 0.12em; text-transform: uppercase; font-size: var(--fs-md); }
 [dir='rtl'] .sh-root .lib-logo__word { letter-spacing: 0; text-transform: none; }
-.sh-root .lib-logos--gray .lib-logo { opacity: 0.5; }
+.sh-root .lib-logos--gray .lib-logo__img { opacity: 0.5; }
 
 /* newsletter band */
 .sh-root .lib-newsletter .lib-title { font-size: var(--fs-3xl); }

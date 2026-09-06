@@ -11,7 +11,7 @@ import {
   ProductCard,
   Section,
   Spinner,
-} from '../themes/luxury-fashion/components';
+} from '../foundation/components';
 import { useAuth } from '../state/auth-context';
 import { useStore } from '../state/store-context';
 import { useAsync } from '../api/useAsync';

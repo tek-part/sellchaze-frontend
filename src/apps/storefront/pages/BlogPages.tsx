@@ -17,7 +17,7 @@ import {
   Input,
   Section,
   StoreImage,
-} from '../themes/luxury-fashion/components';
+} from '../foundation/components';
 import { Pagination } from '../shared-ui';
 import { Seo } from '../seo/Seo';
 import { articleSchema, breadcrumbSchema } from '../seo/schema';

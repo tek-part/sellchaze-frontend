@@ -9,7 +9,7 @@ declare global {
   }
 }
 
-const themes = ['luxury-fashion', 'voltage', 'hearth', 'rouge'] as const;
+const themes = ['naseem', 'bazaar', 'sahra', 'fresh', 'techno'] as const;
 
 for (const theme of themes) {
   test(`${theme} storefront stays inside local web-vitals budgets`, async ({ page }) => {

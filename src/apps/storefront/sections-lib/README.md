@@ -19,7 +19,7 @@ export const myTheme: ThemeModule = {
   layouts, templates: baseTemplates({ home: myHomeSections }),
 };
 ```
-Manifest: `id` kebab-case, `category`, `previewImage: '/media/theme-previews/<id>.svg'`,
+Manifest: `id` kebab-case, `category`, `previewImage: '/media/theme-previews/<id>.jpg'`,
 `schemaVersion: CURRENT_MANIFEST_SCHEMA_VERSION`, `supports.colorSchemes`, `capabilities`, `minEngineVersion: '1.0.0'`.
 
 ## 2. Settings + tokens
@@ -32,7 +32,8 @@ colours → `color.light/dark`, fonts → `typography.fontSans` (`--font`) / `fo
 `DefaultLayout` renders AnnouncementBar → Header → `<main id="sf-main">` → Footer + CartDrawer/MobileNav/
 SearchOverlay, wrapped in `ToastProvider` + `CartProvider` (the library PDP needs the toast). Read
 `context.navigation.header/footer` (NavItem/FooterGroup), `useStore()` for the logo, `useCart()`,
-`useWishlist()`, `useThemeSettings()`. Reusing luxury's `Drawer`/`SearchOverlay` primitives is fine
+`useWishlist()`, `useThemeSettings()`. Reusing the foundation's `Drawer`/`SearchOverlay` primitives
+(`src/apps/storefront/foundation/components`) is fine
 (they are app-level styled); give your own markup a unique class prefix.
 
 ## 4. Templates
@@ -60,7 +61,7 @@ click-select); logical CSS properties only; `LibCarousel` for rails (scroll-snap
 
 ## 7. Register + export
 Append a `CatalogEntry` in `platform/catalog/catalog.ts` (`load: () => import('../../themes/<id>')`),
-add `public/media/theme-previews/<id>.svg` (1200×800), then `npm run themes:manifests` (writes
+add `public/media/theme-previews/<id>.jpg` (1200×800, `node scripts/capture-theme-previews.mjs <id>`), then `npm run themes:manifests` (writes
 `../sellchaze-backend/resources/themes/storefront/<id>.json`; `--all` overwrites existing) and
 `php artisan themes:register` in the backend. Verify: `npm run typecheck && npx eslint src/apps/storefront/themes/<id>
 && npx vitest run && npm run build`, then open `http://localhost:5173/?preview=1&theme=<id>` (and `&lang=ar`).

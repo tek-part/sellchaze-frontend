@@ -12,7 +12,7 @@ import {
   Input,
   Section,
   Spinner,
-} from '../themes/luxury-fashion/components';
+} from '../foundation/components';
 import { useAuth } from '../state/auth-context';
 import { useStore } from '../state/store-context';
 import { ThemeRenderer, useLayout, useTemplate } from '../theme-engine';

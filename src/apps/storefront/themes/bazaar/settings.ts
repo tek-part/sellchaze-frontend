@@ -17,7 +17,7 @@ export const BAZAAR_FONTS = [
 
 export const bazaarSettingsSchema: ThemeSettingsSchema = [
   /* ---- Colors ---- */
-  { id: 'primary_color', type: 'color', label: 'Primary', group: 'Colors', default: '#F97316', hint: 'Buttons, search button, active states, category bar accents.' },
+  { id: 'primary_color', type: 'color', label: 'Primary', group: 'Colors', default: '#C2410C', hint: 'Buttons, search button, active states, category bar accents.' },
   { id: 'accent_color', type: 'color', label: 'Accent', group: 'Colors', default: '#FACC15', hint: 'Ratings, eyebrows, promo highlights.' },
   { id: 'background_color', type: 'color', label: 'Background', group: 'Colors', default: '#FFFFFF' },
   { id: 'text_color', type: 'color', label: 'Text', group: 'Colors', default: '#1F2937' },

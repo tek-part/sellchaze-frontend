@@ -4,7 +4,7 @@
  */
 import { useState, type ReactElement } from 'react';
 import { useTranslation } from 'react-i18next';
-import { SearchOverlay as SharedSearchOverlay } from '../../luxury-fashion/components/SearchOverlay';
+import { SearchOverlay as SharedSearchOverlay } from '../../../foundation/components/SearchOverlay';
 
 export interface SearchOverlayProps {
   open: boolean;

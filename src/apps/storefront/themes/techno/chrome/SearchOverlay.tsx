@@ -3,7 +3,7 @@
  * animated presence) with the theme's placeholder and a direct submit to /search.
  */
 import { useState, type ReactElement } from 'react';
-import { SearchOverlay as SharedSearchOverlay } from '../../luxury-fashion/components/SearchOverlay';
+import { SearchOverlay as SharedSearchOverlay } from '../../../foundation/components/SearchOverlay';
 import { useLocaleCode } from '../../../sections-lib';
 import { tkText } from '../components/i18n';
 

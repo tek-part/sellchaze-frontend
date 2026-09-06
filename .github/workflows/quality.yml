@@ -24,6 +24,14 @@ jobs:
       - run: npm run typecheck
       - run: npm run test -- --reporter=dot
       - run: npm run build
+      # The production deploy ships this exact build; the shared host no longer runs npm.
+      - uses: actions/upload-artifact@v4
+        if: github.event_name == 'push'
+        with:
+          name: dist-${{ github.sha }}
+          path: dist
+          retention-days: 7
+          if-no-files-found: error
       - run: npx playwright install --with-deps chromium
       - run: npm run test:a11y
       - run: npm run test:perf

@@ -186,7 +186,8 @@ export function LibCarousel(props: LibCarouselProps): ReactElement {
       onFocusCapture={() => setPaused(true)}
       onBlurCapture={() => setPaused(false)}
     >
-      <div ref={trackRef} className="lib-carousel__track">
+      {/* The track scrolls, so it must be reachable from the keyboard (WCAG 2.1.1). */}
+      <div ref={trackRef} className="lib-carousel__track" tabIndex={0}>
         {items.map((child, i) => (
           <div key={i} className={cn('lib-carousel__item', itemClassName)} aria-roledescription="slide" aria-label={`${i + 1} / ${items.length}`}>
             {child}
@@ -328,7 +329,7 @@ export function LibRating(props: { value: number; count?: number; showCount?: bo
   if (!(value > 0)) return null;
   const pct = Math.max(0, Math.min(5, value)) * 20;
   return (
-    <span className="lib-rating" aria-label={`${value.toFixed(1)} / 5`}>
+    <span className="lib-rating" role="img" aria-label={`${value.toFixed(1)} / 5`}>
       <span className="lib-rating__stars" aria-hidden>
         <span className="lib-rating__base">★★★★★</span>
         <span className="lib-rating__fill" style={{ width: `${pct}%` }}>★★★★★</span>

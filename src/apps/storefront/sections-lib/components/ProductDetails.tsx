@@ -1,16 +1,15 @@
 /**
- * product-details — the PDP buy box. ADAPTED, not rewritten: wraps luxury-fashion's
- * `ProductDetailsSection` (gallery, variants, quantity, add-to-cart, wishlist/share, tabs, reviews),
- * which is token-driven and already wired to the cart/wishlist/toast stores. Its `.sf-pdp*` skin
- * lives in luxury's `pages.css`, which `main.tsx` already loads app-level for every theme, so no
- * extra stylesheet is needed here. A theme that wants a bespoke PDP overrides `product-details` in
- * `createSectionMap({ 'product-details': MyPdp })`.
+ * product-details — the PDP buy box. Wraps the foundation's `ProductDetailsSection` (gallery,
+ * variants, quantity, add-to-cart, wishlist/share, tabs, reviews), which is token-driven and already
+ * wired to the cart/wishlist/toast stores. Its `.sf-pdp*` skin lives in `foundation/pages.css`,
+ * which `main.tsx` loads app-level for every theme, so no extra stylesheet is needed here. A theme
+ * that wants a bespoke PDP overrides `product-details` in `createSectionMap({ 'product-details': MyPdp })`.
  *
- * Requires the luxury `ToastProvider` somewhere above (the theme's DefaultLayout).
+ * Requires the foundation `ToastProvider` somewhere above (the theme's DefaultLayout).
  */
 import type { ReactElement } from 'react';
 import type { SectionRenderProps } from '../../theme-engine/rendering';
-import { ProductDetailsSection } from '../../themes/luxury-fashion/sections/ProductDetailsSection';
+import { ProductDetailsSection } from '../../foundation/sections/ProductDetailsSection';
 import { defineSection, fields } from '../schema';
 import { useSectionSettings } from '../use-section';
 

@@ -22,7 +22,7 @@ export const technoSettingsSchema: ThemeSettingsSchema = [
   { id: 'accent_color', type: 'color', label: 'Accent', group: 'Colors', default: '#06B6D4', hint: 'Cyan highlights: eyebrows, countdown, chips.' },
   { id: 'background_color', type: 'color', label: 'Background', group: 'Colors', default: '#F3F4F6', hint: 'Page background (cards stay white).' },
   { id: 'text_color', type: 'color', label: 'Text', group: 'Colors', default: '#0B1220' },
-  { id: 'sale_color', type: 'color', label: 'Sale / discount', group: 'Colors', default: '#EF4444' },
+  { id: 'sale_color', type: 'color', label: 'Sale / discount', group: 'Colors', default: '#DC2626' },
 
   /* ---- Typography ---- */
   { id: 'heading_font', type: 'select', label: 'Heading font', group: 'Typography', options: TECHNO_FONTS, default: 'Inter' },

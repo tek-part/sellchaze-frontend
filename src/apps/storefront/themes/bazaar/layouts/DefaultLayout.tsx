@@ -11,7 +11,7 @@ import type { FooterGroup, NavItem } from '../../../types/navigation';
 import { CartProvider } from '../../../state/cart';
 import { useStore } from '../../../state/store-context';
 import { useSectionData } from '../../../sections-lib';
-import { ToastProvider } from '../../luxury-fashion/components/toast/ToastProvider';
+import { ToastProvider } from '../../../foundation/components/toast/ToastProvider';
 import { AnnouncementBar } from '../chrome/AnnouncementBar';
 import { CartDrawer } from '../chrome/CartDrawer';
 import { Footer } from '../chrome/Footer';

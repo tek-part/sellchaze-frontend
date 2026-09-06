@@ -17,7 +17,7 @@ const opt = (name, dflt) => { const i = args.indexOf(name); return i >= 0 ? args
 const base = opt('--base', 'http://localhost:5173');
 const lang = opt('--lang', 'en');
 const ids = args.filter((a, i) => !a.startsWith('--') && args[i - 1] !== '--base' && args[i - 1] !== '--lang');
-const THEMES = ids.length ? ids : ['luxury-fashion', 'voltage', 'hearth', 'rouge', 'naseem', 'bazaar', 'sahra', 'fresh', 'techno'];
+const THEMES = ids.length ? ids : ['naseem', 'bazaar', 'sahra', 'fresh', 'techno'];
 const outDir = path.resolve('public/media/theme-previews');
 await mkdir(outDir, { recursive: true });
 

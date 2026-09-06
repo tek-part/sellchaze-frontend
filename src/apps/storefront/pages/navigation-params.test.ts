@@ -8,7 +8,7 @@ import { withSessionParams } from './NavigationInterceptor';
 
 describe('withSessionParams', () => {
   it('carries the session params onto a bare path', () => {
-    expect(withSessionParams('/blog', '?theme=rouge&preview=1')).toBe('/blog?theme=rouge&preview=1');
+    expect(withSessionParams('/blog', '?theme=sahra&preview=1')).toBe('/blog?theme=sahra&preview=1');
   });
 
   it('returns the href untouched when there is no session to carry', () => {
@@ -17,20 +17,20 @@ describe('withSessionParams', () => {
   });
 
   it('preserves the destination’s own params alongside the session', () => {
-    const out = new URLSearchParams(withSessionParams('/blog?tag=care', '?theme=rouge&preview=1').split('?')[1]);
+    const out = new URLSearchParams(withSessionParams('/blog?tag=care', '?theme=sahra&preview=1').split('?')[1]);
     expect(out.get('tag')).toBe('care');
-    expect(out.get('theme')).toBe('rouge');
+    expect(out.get('theme')).toBe('sahra');
     expect(out.get('preview')).toBe('1');
   });
 
   it('never overrides a param the destination sets explicitly', () => {
-    expect(withSessionParams('/blog?theme=voltage', '?theme=rouge')).toBe('/blog?theme=voltage');
+    expect(withSessionParams('/blog?theme=techno', '?theme=sahra')).toBe('/blog?theme=techno');
   });
 
   it('carries scheme and settings, not unrelated params', () => {
-    const out = withSessionParams('/cart', '?theme=rouge&scheme=dark&settings=abc&page=3&sort=price-asc');
+    const out = withSessionParams('/cart', '?theme=sahra&scheme=dark&settings=abc&page=3&sort=price-asc');
     const params = new URLSearchParams(out.split('?')[1]);
-    expect(params.get('theme')).toBe('rouge');
+    expect(params.get('theme')).toBe('sahra');
     expect(params.get('scheme')).toBe('dark');
     expect(params.get('settings')).toBe('abc');
     // `page` and `sort` belong to the page being left, not the session.
@@ -43,6 +43,6 @@ describe('withSessionParams', () => {
   });
 
   it('leaves the root path valid', () => {
-    expect(withSessionParams('/', '?theme=hearth&preview=1')).toBe('/?theme=hearth&preview=1');
+    expect(withSessionParams('/', '?theme=naseem&preview=1')).toBe('/?theme=naseem&preview=1');
   });
 });

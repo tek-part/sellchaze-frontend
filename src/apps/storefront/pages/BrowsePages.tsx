@@ -10,7 +10,7 @@
 import { previewOrDev } from '../preview';
 import { useMemo, type ReactElement } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Container, EmptyState, ErrorState, Section, Spinner } from '../themes/luxury-fashion/components';
+import { Container, EmptyState, ErrorState, Section, Spinner } from '../foundation/components';
 import { useLocale } from '../i18n/useLocale';
 import { Seo } from '../seo/Seo';
 import { useStore } from '../state/store-context';
