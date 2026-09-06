@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { GoogleLogin, GoogleOAuthProvider } from '@react-oauth/google';
@@ -101,6 +101,41 @@ export default function Login() {
         }
     }
 
+    // Stable callbacks: the Google button re-runs `google.accounts.id.initialize()` whenever its
+    // handlers change identity, which inline arrows did on every keystroke of the form.
+    const handleGoogleSuccess = useCallback(async (cred) => {
+        setError('');
+        setLoading(true);
+        try {
+            const { data } = await api.post('/auth/google', {
+                id_token: cred.credential,
+                registration_role: googleRegisterRole,
+            });
+            if (data.pending_approval) {
+                if (data.access_token && data.refresh_token) {
+                    setTokens({ access_token: data.access_token, refresh_token: data.refresh_token });
+                }
+                toast.success(data.message || t('auth_register_pending_toast'));
+                navigate('/pending-approval', { replace: true });
+                return;
+            }
+            setTokens({ access_token: data.access_token, refresh_token: data.refresh_token });
+            toast.success(t('toast_welcome'));
+            navigate(redirectTo, { replace: true });
+        } catch (err) {
+            const msg = loginErrorMessage(err, t) || t('google_login_failed');
+            setError(msg);
+            toast.error(msg);
+        } finally {
+            setLoading(false);
+        }
+    }, [googleRegisterRole, navigate, redirectTo, t]);
+    const handleGoogleError = useCallback(() => {
+        const msg = t('google_login_failed');
+        setError(msg);
+        toast.error(msg);
+    }, [t]);
+
     return (
         <div className="relative flex min-h-screen flex-col overflow-hidden bg-[#F5F7FC] text-slate-900">
             <BackgroundDecor />
@@ -134,44 +169,8 @@ export default function Login() {
                                 <GoogleOAuthProvider clientId={googleClientId}>
                                     <div className="flex justify-center [&>div]:flex [&>div]:w-full [&>div]:justify-center">
                                         <GoogleLogin
-                                            onSuccess={async (cred) => {
-                                                setError('');
-                                                setLoading(true);
-                                                try {
-                                                    const { data } = await api.post('/auth/google', {
-                                                        id_token: cred.credential,
-                                                        registration_role: googleRegisterRole,
-                                                    });
-                                                    if (data.pending_approval) {
-                                                        if (data.access_token && data.refresh_token) {
-                                                            setTokens({
-                                                                access_token: data.access_token,
-                                                                refresh_token: data.refresh_token,
-                                                            });
-                                                        }
-                                                        toast.success(data.message || t('auth_register_pending_toast'));
-                                                        navigate('/pending-approval', { replace: true });
-                                                        return;
-                                                    }
-                                                    setTokens({
-                                                        access_token: data.access_token,
-                                                        refresh_token: data.refresh_token,
-                                                    });
-                                                    toast.success(t('toast_welcome'));
-                                                    navigate(redirectTo, { replace: true });
-                                                } catch (err) {
-                                                    const msg = loginErrorMessage(err, t) || t('google_login_failed');
-                                                    setError(msg);
-                                                    toast.error(msg);
-                                                } finally {
-                                                    setLoading(false);
-                                                }
-                                            }}
-                                            onError={() => {
-                                                const msg = t('google_login_failed');
-                                                setError(msg);
-                                                toast.error(msg);
-                                            }}
+                                            onSuccess={handleGoogleSuccess}
+                                            onError={handleGoogleError}
                                             theme="outline"
                                             size="large"
                                             text="continue_with"

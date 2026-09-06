@@ -65,6 +65,24 @@ export default function ProfilePage() {
     const [revoking, setRevoking] = useState(false);
 
     const { clientId: googleClientId, resolved: googleConfigResolved } = useGoogleOAuthClientId();
+    // Stable callbacks so the Google button initialises once (see Login.jsx).
+    const handleGoogleConnect = useCallback(async (cred) => {
+        setGoogleBusy(true);
+        try {
+            const { data } = await api.post('/auth/google/connect', { id_token: cred.credential });
+            const u = unwrapUser(data.user);
+            if (u) {
+                setMe(u);
+                window.dispatchEvent(new Event('sellchase:me-updated'));
+            }
+            toast.success(t('profile_google_connected_toast'));
+        } catch (e) {
+            toast.error(e.response?.data?.message || e.message);
+        } finally {
+            setGoogleBusy(false);
+        }
+    }, [t]);
+    const handleGoogleError = useCallback(() => toast.error(t('google_login_failed')), [t]);
 
     const loadProfile = useCallback(async () => {
         const { data } = await api.get('/auth/me');
@@ -628,25 +646,8 @@ export default function ProfilePage() {
                             ) : googleConfigResolved && googleClientId ? (
                                 <GoogleOAuthProvider clientId={googleClientId}>
                                     <GoogleLogin
-                                        onSuccess={async (cred) => {
-                                            setGoogleBusy(true);
-                                            try {
-                                                const { data } = await api.post('/auth/google/connect', {
-                                                    id_token: cred.credential,
-                                                });
-                                                const u = unwrapUser(data.user);
-                                                if (u) {
-                                                    setMe(u);
-                                                    window.dispatchEvent(new Event('sellchase:me-updated'));
-                                                }
-                                                toast.success(t('profile_google_connected_toast'));
-                                            } catch (e) {
-                                                toast.error(e.response?.data?.message || e.message);
-                                            } finally {
-                                                setGoogleBusy(false);
-                                            }
-                                        }}
-                                        onError={() => toast.error(t('google_login_failed'))}
+                                        onSuccess={handleGoogleConnect}
+                                        onError={handleGoogleError}
                                         theme="outline"
                                         size="large"
                                         text="continue_with"
