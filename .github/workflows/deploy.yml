@@ -99,6 +99,11 @@ jobs:
               -exec rm -rf -- {} +
             cp -R "$RELEASE/." "$WEB_ROOT/"
           fi
+          # Tenant storefronts are served by Laravel from this shell (SpaShell); bundles load
+          # from the dashboard origin. Copy it into the API app so the deploy is atomic.
+          API_SHELL_DIR=/home/sellchaze/public_html/api.sellchaze.com/storage/app/storefront
+          mkdir -p "$API_SHELL_DIR"
+          cp "$RELEASE/storefront.html" "$API_SHELL_DIR/shell.html.tmp" && mv -f "$API_SHELL_DIR/shell.html.tmp" "$API_SHELL_DIR/shell.html"
           # Keep the three most recent releases for a quick rollback.
           ls -1dt /home/sellchaze/releases/*/ 2>/dev/null | tail -n +4 | xargs -r rm -rf --
           echo "Deployed $DEPLOY_SHA"
