@@ -20,10 +20,13 @@ jobs:
       github.event.workflow_run.conclusion == 'success' &&
       github.event.workflow_run.event == 'push'
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 50
     environment: production
     env:
       DEPLOY_SHA: ${{ github.event.workflow_run.head_sha }}
+      SSH_HOST: ${{ secrets.SSH_HOST }}
+      SSH_USER: ${{ secrets.SSH_USERNAME }}
+      SSH_FINGERPRINT: ${{ secrets.SSH_HOST_FINGERPRINT }}
 
     steps:
       # The site is built once, in the Quality run, and shipped as-is. Building on the shared
@@ -42,54 +45,68 @@ jobs:
           test -f dist/storefront.html
           du -sh dist
 
-      - name: Upload release to the server
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USERNAME }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          fingerprint: ${{ secrets.SSH_HOST_FINGERPRINT }}
-          port: 22
-          timeout: 120s
-          command_timeout: 20m
-          source: "dist/*"
-          strip_components: 1
-          target: /home/sellchaze/releases/${{ github.event.workflow_run.head_sha }}
+      # The host's brute-force protection (cPHulk) periodically locks SSH for everyone after
+      # bots fail against root. Instead of failing the deploy, wait the lockout out: every SSH
+      # step below retries for up to ~25 minutes. The host key is pinned to SSH_HOST_FINGERPRINT.
+      - name: Prepare SSH (pinned host key, waits out lockouts)
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+        run: |
+          set -e
+          mkdir -p ~/.ssh && chmod 700 ~/.ssh
+          printf '%s\n' "$SSH_PRIVATE_KEY" > ~/.ssh/deploy_key && chmod 600 ~/.ssh/deploy_key
+          for i in $(seq 1 50); do
+            ssh-keyscan -T 15 -p 22 "$SSH_HOST" > ~/.ssh/scanned 2>/dev/null || true
+            if [ -s ~/.ssh/scanned ]; then break; fi
+            echo "attempt $i: host not accepting SSH yet (lockout?) — retrying in 30s"; sleep 30
+          done
+          test -s ~/.ssh/scanned || { echo "SSH never became available"; exit 1; }
+          if ssh-keygen -lf ~/.ssh/scanned | grep -qF "$SSH_FINGERPRINT" \
+             || ssh-keygen -E md5 -lf ~/.ssh/scanned | grep -qF "$SSH_FINGERPRINT"; then
+            cp ~/.ssh/scanned ~/.ssh/known_hosts
+          else
+            echo "Host key fingerprint mismatch:"; ssh-keygen -lf ~/.ssh/scanned; exit 1
+          fi
+
+      - name: Upload release
+        run: |
+          set -e
+          # Retry only on SSH connection failures (exit 255 / scp transport errors), for ~25 min.
+          try() { for i in $(seq 1 50); do "$@" && return 0; rc=$?; [ "$rc" -eq 255 ] || [ "$1" = scp ] || return "$rc"; echo "attempt $i: connection failed (rc=$rc) — retrying in 30s"; sleep 30; done; return 1; }
+          OPTS="-i $HOME/.ssh/deploy_key -o BatchMode=yes -o ConnectTimeout=20 -o ServerAliveInterval=15"
+          RELEASE="/home/sellchaze/releases/$DEPLOY_SHA"
+          try ssh $OPTS -p 22 "$SSH_USER@$SSH_HOST" "mkdir -p '$RELEASE'"
+          try scp $OPTS -P 22 -r dist/. "$SSH_USER@$SSH_HOST:$RELEASE/"
 
       - name: Activate release
-        uses: appleboy/ssh-action@v1.2.0
-        with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USERNAME }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          fingerprint: ${{ secrets.SSH_HOST_FINGERPRINT }}
-          port: 22
-          command_timeout: 10m
-          script_stop: true
-          envs: DEPLOY_SHA
-          script: |
-            set -e
-
-            RELEASE="/home/sellchaze/releases/$DEPLOY_SHA"
-            WEB_ROOT=/home/sellchaze/public_html
-
-            printf '%s\n' "$DEPLOY_SHA" | grep -Eq '^[0-9a-f]{40}$'
-            test -f "$RELEASE/index.html"
-            test -f "$RELEASE/storefront.html"
-
-            # Keep the Laravel API subdomain, cPanel's CGI directory and ACME challenges intact.
-            if command -v rsync >/dev/null 2>&1; then
-              rsync -a --delete \
-                --exclude 'api.sellchaze.com' --exclude 'cgi-bin' --exclude '.well-known' \
-                "$RELEASE/" "$WEB_ROOT/"
-            else
-              find "$WEB_ROOT" -mindepth 1 -maxdepth 1 \
-                ! -name 'api.sellchaze.com' ! -name 'cgi-bin' ! -name '.well-known' \
-                -exec rm -rf -- {} +
-              cp -R "$RELEASE/." "$WEB_ROOT/"
-            fi
-
-            # Keep the three most recent releases for a quick rollback.
-            ls -1dt /home/sellchaze/releases/*/ 2>/dev/null | tail -n +4 | xargs -r rm -rf --
-
-            echo "Deployed $DEPLOY_SHA"
+        run: |
+          set -e
+          cat > remote.sh <<'REMOTE'
+          set -e
+          RELEASE="/home/sellchaze/releases/$DEPLOY_SHA"
+          WEB_ROOT=/home/sellchaze/public_html
+          printf '%s\n' "$DEPLOY_SHA" | grep -Eq '^[0-9a-f]{40}$'
+          test -f "$RELEASE/index.html"
+          test -f "$RELEASE/storefront.html"
+          # Keep the Laravel API subdomain, cPanel's CGI directory and ACME challenges intact.
+          if command -v rsync >/dev/null 2>&1; then
+            rsync -a --delete \
+              --exclude 'api.sellchaze.com' --exclude 'cgi-bin' --exclude '.well-known' \
+              "$RELEASE/" "$WEB_ROOT/"
+          else
+            find "$WEB_ROOT" -mindepth 1 -maxdepth 1 \
+              ! -name 'api.sellchaze.com' ! -name 'cgi-bin' ! -name '.well-known' \
+              -exec rm -rf -- {} +
+            cp -R "$RELEASE/." "$WEB_ROOT/"
+          fi
+          # Keep the three most recent releases for a quick rollback.
+          ls -1dt /home/sellchaze/releases/*/ 2>/dev/null | tail -n +4 | xargs -r rm -rf --
+          echo "Deployed $DEPLOY_SHA"
+          REMOTE
+          OPTS="-i $HOME/.ssh/deploy_key -o BatchMode=yes -o ConnectTimeout=20 -o ServerAliveInterval=15"
+          for i in $(seq 1 50); do
+            if ssh $OPTS -p 22 "$SSH_USER@$SSH_HOST" DEPLOY_SHA="$DEPLOY_SHA" 'bash -s' < remote.sh; then exit 0; fi
+            rc=$?; [ "$rc" -eq 255 ] || exit "$rc"
+            echo "attempt $i: connection failed — retrying in 30s"; sleep 30
+          done
+          echo "SSH never became available"; exit 1
