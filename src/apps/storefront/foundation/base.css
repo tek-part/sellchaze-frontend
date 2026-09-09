@@ -1362,3 +1362,10 @@
 .sf-lang__btn:focus-visible { outline: 1px solid var(--accent); outline-offset: 3px; }
 /* Arabic is not uppercase-able and must not be tracked. */
 .sf-lang__btn[lang='ar'] { font-family: var(--font-arabic); text-transform: none; letter-spacing: normal; }
+
+/* Home-page settle guard (see pages/HomePage.tsx): keep data-driven sections and the footer
+   invisible until the first data round-trip resolves, so their growth is not counted as CLS. */
+[data-sf-home-loading] #sf-main .sf-section-frame:not(:first-child),
+[data-sf-home-loading] footer {
+  visibility: hidden;
+}

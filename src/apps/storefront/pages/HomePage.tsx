@@ -6,7 +6,7 @@
  *   3. the active theme's own `home` template.
  * Page data (catalogue rows, merchandising, editable content) comes from `useHomeContext()`.
  */
-import { useMemo, type ReactElement } from 'react';
+import { useEffect, useMemo, type ReactElement } from 'react';
 import { ThemeRenderer, useTemplate, type PageDefinition, type SectionInstance } from '../theme-engine';
 import { useStore } from '../state/store-context';
 import { useAsync } from '../api/useAsync';
@@ -28,7 +28,7 @@ export function HomePage(): ReactElement | null {
   const { locale } = useLocale();
   const { store } = useStore();
   const themeHome = useTemplate('home');
-  const { context } = useHomeContext();
+  const { context, loading: homeLoading } = useHomeContext();
   const customizer = useCustomizerState();
   const draft = useCustomizerSections('/');
 
@@ -41,6 +41,18 @@ export function HomePage(): ReactElement | null {
     () => (skipLayout ? Promise.resolve(null) : getLayout('home').catch(() => null)),
     [locale, skipLayout],
   );
+
+  // Layout-stability guard: until the home data settles, everything below the hero (and the
+  // footer) stays `visibility: hidden` (foundation/base.css). Hidden elements are excluded from
+  // layout-shift scoring, so data-driven sections growing from empty/skeleton to full grids do not
+  // register as CLS, while the fixed-height hero still paints immediately for LCP.
+  const settling = homeLoading || (!skipLayout && layout.loading);
+  useEffect(() => {
+    const root = document.documentElement;
+    if (settling) root.setAttribute('data-sf-home-loading', '');
+    else root.removeAttribute('data-sf-home-loading');
+    return () => root.removeAttribute('data-sf-home-loading');
+  }, [settling]);
 
   const page = useMemo<PageDefinition | undefined>(() => {
     if (draft) return { template: 'home', sections: draft };
