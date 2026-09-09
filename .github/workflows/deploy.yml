@@ -5,6 +5,12 @@ on:
     workflows: [Frontend Quality]
     types: [completed]
     branches: [main]
+  workflow_dispatch:
+    inputs:
+      sha:
+        description: Commit to deploy (defaults to the latest main that passed Quality)
+        required: false
+        default: ''
 
 permissions:
   contents: read
@@ -17,26 +23,48 @@ concurrency:
 jobs:
   deploy:
     if: >-
-      github.event.workflow_run.conclusion == 'success' &&
-      github.event.workflow_run.event == 'push'
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.workflow_run.conclusion == 'success' &&
+       github.event.workflow_run.event == 'push')
     runs-on: ubuntu-latest
-    timeout-minutes: 50
+    timeout-minutes: 90
     environment: production
     env:
-      DEPLOY_SHA: ${{ github.event.workflow_run.head_sha }}
+      DEPLOY_SHA: ${{ github.event.workflow_run.head_sha || inputs.sha }}
       SSH_HOST: ${{ secrets.SSH_HOST }}
       SSH_USER: ${{ secrets.SSH_USERNAME }}
       SSH_FINGERPRINT: ${{ secrets.SSH_HOST_FINGERPRINT }}
 
     steps:
+      - name: Resolve commit and Quality run
+        id: resolve
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_ID: ${{ github.event.workflow_run.id }}
+        run: |
+          set -e
+          if [ -n "$RUN_ID" ]; then
+            echo "run_id=$RUN_ID" >> "$GITHUB_OUTPUT"; echo "sha=$DEPLOY_SHA" >> "$GITHUB_OUTPUT"; exit 0
+          fi
+          # Manual dispatch: latest successful Quality run on main (optionally for a given sha).
+          if [ -n "$DEPLOY_SHA" ]; then
+            row=$(gh run list -R "$GITHUB_REPOSITORY" --workflow "Frontend Quality" --branch main --status success --commit "$DEPLOY_SHA" --limit 1 --json databaseId,headSha --jq '.[0]')
+          else
+            row=$(gh run list -R "$GITHUB_REPOSITORY" --workflow "Frontend Quality" --branch main --status success --limit 1 --json databaseId,headSha --jq '.[0]')
+          fi
+          test -n "$row" && [ "$row" != "null" ] || { echo "No successful Quality run found"; exit 1; }
+          echo "run_id=$(echo "$row" | jq -r .databaseId)" >> "$GITHUB_OUTPUT"
+          echo "sha=$(echo "$row" | jq -r .headSha)" >> "$GITHUB_OUTPUT"
+      - name: Pin DEPLOY_SHA
+        run: echo "DEPLOY_SHA=${{ steps.resolve.outputs.sha }}" >> "$GITHUB_ENV"
       # The site is built once, in the Quality run, and shipped as-is. Building on the shared
       # cPanel host (npm ci + Vite) exhausted its CPU/IO limits and throttled the live site.
       - name: Download the built site from the Quality run
         uses: actions/download-artifact@v4
         with:
-          name: dist-${{ github.event.workflow_run.head_sha }}
+          name: dist-${{ steps.resolve.outputs.sha }}
           path: dist
-          run-id: ${{ github.event.workflow_run.id }}
+          run-id: ${{ steps.resolve.outputs.run_id }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Verify build
@@ -55,7 +83,7 @@ jobs:
           set -e
           mkdir -p ~/.ssh && chmod 700 ~/.ssh
           printf '%s\n' "$SSH_PRIVATE_KEY" > ~/.ssh/deploy_key && chmod 600 ~/.ssh/deploy_key
-          for i in $(seq 1 50); do
+          for i in $(seq 1 100); do
             ssh-keyscan -T 15 -p 22 "$SSH_HOST" > ~/.ssh/scanned 2>/dev/null || true
             if [ -s ~/.ssh/scanned ]; then break; fi
             echo "attempt $i: host not accepting SSH yet (lockout?) — retrying in 30s"; sleep 30
@@ -72,7 +100,7 @@ jobs:
         run: |
           set -e
           # Retry only on SSH connection failures (exit 255 / scp transport errors), for ~25 min.
-          try() { for i in $(seq 1 50); do "$@" && return 0; rc=$?; [ "$rc" -eq 255 ] || [ "$1" = scp ] || return "$rc"; echo "attempt $i: connection failed (rc=$rc) — retrying in 30s"; sleep 30; done; return 1; }
+          try() { for i in $(seq 1 100); do "$@" && return 0; rc=$?; [ "$rc" -eq 255 ] || [ "$1" = scp ] || return "$rc"; echo "attempt $i: connection failed (rc=$rc) — retrying in 30s"; sleep 30; done; return 1; }
           OPTS="-i $HOME/.ssh/deploy_key -o BatchMode=yes -o ConnectTimeout=20 -o ServerAliveInterval=15"
           RELEASE="/home/sellchaze/releases/$DEPLOY_SHA"
           try ssh $OPTS -p 22 "$SSH_USER@$SSH_HOST" "mkdir -p '$RELEASE'"
@@ -109,7 +137,7 @@ jobs:
           echo "Deployed $DEPLOY_SHA"
           REMOTE
           OPTS="-i $HOME/.ssh/deploy_key -o BatchMode=yes -o ConnectTimeout=20 -o ServerAliveInterval=15"
-          for i in $(seq 1 50); do
+          for i in $(seq 1 100); do
             if ssh $OPTS -p 22 "$SSH_USER@$SSH_HOST" DEPLOY_SHA="$DEPLOY_SHA" 'bash -s' < remote.sh; then exit 0; fi
             rc=$?; [ "$rc" -eq 255 ] || exit "$rc"
             echo "attempt $i: connection failed — retrying in 30s"; sleep 30
