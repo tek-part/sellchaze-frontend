@@ -100,3 +100,38 @@ export function sectionIcon(schema) {
 }
 
 export const categoryIcon = (category) => CATEGORY_ICON[category] || HiOutlineSquares2X2;
+
+/** Fallback icon per block type name when a `BlockSchema.icon` is missing (contract §7). */
+const BLOCK_TYPE_ICON = [
+    [/slide|banner|image|photo|gallery/i, HiOutlinePhoto],
+    [/feature|benefit|perk|usp/i, HiOutlineSparkles],
+    [/quote|testimonial|review/i, HiOutlineChatBubbleBottomCenterText],
+    [/question|faq/i, HiOutlineQuestionMarkCircle],
+    [/logo|brand|partner/i, HiOutlineBuildingStorefront],
+    [/tab|column/i, HiOutlineViewColumns],
+    [/message|announce|notice/i, HiOutlineMegaphone],
+    [/product/i, HiOutlineShoppingBag],
+    [/categor|collection/i, HiOutlineSquares2X2],
+    [/video/i, HiOutlinePlayCircle],
+    [/link|button|cta/i, HiOutlineLink],
+    [/text|heading|title|paragraph|richtext/i, HiOutlineBars3BottomLeft],
+    [/step|timeline/i, HiOutlineQueueList],
+    [/card/i, HiOutlineRectangleStack],
+    [/icon/i, HiOutlineStar],
+];
+
+/** Resolve a block schema's icon: explicit `icon` name → type-name heuristic → generic cube. */
+export function blockIcon(blockSchema) {
+    const name = blockSchema?.icon;
+    if (name && ICON_MAP[name]) return ICON_MAP[name];
+    if (name && ICON_MAP[name.replace(/^Hi(?!Outline)/, 'HiOutline')]) return ICON_MAP[name.replace(/^Hi(?!Outline)/, 'HiOutline')];
+    const key = `${blockSchema?.type || ''} ${blockSchema?.label || ''}`;
+    return BLOCK_TYPE_ICON.find(([re]) => re.test(key))?.[1] || HiOutlineCube;
+}
+
+/** Icon for a variant option (`icon` is a react-icons/hi2 name); `null` when unknown so callers can fall back to text. */
+export function variantIcon(option) {
+    const name = option?.icon;
+    if (!name) return null;
+    return ICON_MAP[name] || ICON_MAP[name.replace(/^Hi(?!Outline)/, 'HiOutline')] || null;
+}

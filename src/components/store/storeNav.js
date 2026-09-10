@@ -26,6 +26,7 @@ import {
  * editor) highlight the right entry.
  */
 const startsWith = (rel, prefix) => rel === prefix || rel.startsWith(`${prefix}/`);
+// Legacy `/themes/:id/settings` links redirect into the full-screen editor, so they highlight "Customize".
 const CUSTOMIZE_RE = /^\/themes\/[^/]+\/settings(\/|$)/;
 
 export function buildStoreNav(t, access = {}) {

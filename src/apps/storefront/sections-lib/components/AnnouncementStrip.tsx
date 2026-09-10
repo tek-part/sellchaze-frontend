@@ -1,14 +1,24 @@
 /**
- * announcement-strip — a slim message band (free shipping, promo codes). Multiple messages rotate
- * (static under reduced motion) or scroll as a marquee. Not dismissible: it is page content placed
- * by the merchant; the chrome-level AnnouncementBar is the dismissible one.
+ * announcement-strip — a slim band of `message` blocks (free shipping, promo codes). Messages rotate
+ * (static under reduced motion), scroll as a marquee, or show inline. Not dismissible: it is page
+ * content placed by the merchant; the chrome-level AnnouncementBar is the dismissible one.
  */
 import { useEffect, useState, type CSSProperties, type ReactElement } from 'react';
 import type { SectionRenderProps } from '../../theme-engine/rendering';
 import { cn } from '../../../../shared/utils/cn';
 import { prefersReducedMotion } from '../../../../shared/env/media';
-import { defineSection, fields, tr } from '../schema';
-import { list, num, str, useSectionSettings } from '../use-section';
+import { defineBlock, defineSection, fields, tr, variants, variantSelect } from '../schema';
+import { num, str, useSectionBlocks, useSectionSettings, useVariant } from '../use-section';
+
+const MESSAGE_FIELDS = [fields.text('text', 'Text', ''), fields.url('url', 'Link', '')] as const;
+
+export const messageBlock = defineBlock({ type: 'message', label: 'Message', icon: 'HiOutlineMegaphone', settings: MESSAGE_FIELDS, limit: 6 });
+
+export const STRIP_MODES = variants('mode', [
+  { value: 'rotate', label: 'Rotate', description: 'One message at a time.', icon: 'HiOutlineArrowPath' },
+  { value: 'marquee', label: 'Marquee', description: 'Continuous scrolling text.', icon: 'HiOutlineForward' },
+  { value: 'static', label: 'Inline', description: 'All messages side by side.', icon: 'HiOutlineBars3' },
+]);
 
 export const announcementStripSchema = defineSection({
   type: 'announcement-strip',
@@ -16,18 +26,20 @@ export const announcementStripSchema = defineSection({
   description: 'A slim band of short messages — shipping, promo codes, news.',
   category: 'marketing',
   icon: 'HiOutlineMegaphone',
+  variants: STRIP_MODES,
+  blocks: { types: [messageBlock], max: 6, legacy: 'items' },
   settings: [
+    variantSelect(STRIP_MODES, 'rotate', 'Display'),
     fields.list(
       'items',
       'Messages',
-      [fields.text('text', 'Text', ''), fields.url('url', 'Link', '')],
+      MESSAGE_FIELDS,
       [
         { text: tr('شحن مجاني للطلبات فوق ٢٠٠ ر.س', 'Free shipping on orders over 200'), url: '' },
         { text: tr('إرجاع مجاني خلال ١٤ يوماً', 'Free returns within 14 days'), url: '' },
       ],
       6,
     ),
-    fields.select('mode', 'Display', [{ value: 'rotate', label: 'Rotate one at a time' }, { value: 'marquee', label: 'Scrolling marquee' }, { value: 'static', label: 'Show all inline' }], 'rotate'),
     fields.range('interval', 'Rotate every (s)', 5, 3, 15),
     fields.color('background', 'Background', ''),
     fields.color('color', 'Text colour', ''),
@@ -36,8 +48,8 @@ export const announcementStripSchema = defineSection({
 
 export function AnnouncementStrip(props: SectionRenderProps): ReactElement | null {
   const s = useSectionSettings(announcementStripSchema, props.settings);
-  const items = list(s, 'items').filter((i) => str(i, 'text'));
-  const mode = str(s, 'mode', 'rotate');
+  const mode = useVariant(announcementStripSchema, props.settings);
+  const items = useSectionBlocks(announcementStripSchema, s).filter((b) => str(b.settings, 'text'));
   const [index, setIndex] = useState(0);
   const interval = num(s, 'interval', 5) * 1000;
 
@@ -52,34 +64,34 @@ export function AnnouncementStrip(props: SectionRenderProps): ReactElement | nul
     ...(str(s, 'background') ? { background: str(s, 'background') } : {}),
     ...(str(s, 'color') ? { color: str(s, 'color') } : {}),
   };
-  const render = (item: (typeof items)[number], key: number): ReactElement => {
-    const text = str(item, 'text');
-    const url = str(item, 'url');
+  const render = (item: (typeof items)[number], key: string): ReactElement => {
+    const text = str(item.settings, 'text');
+    const url = str(item.settings, 'url');
     return url ? <a key={key} href={url} className="lib-strip__item">{text}</a> : <span key={key} className="lib-strip__item">{text}</span>;
   };
 
   if (mode === 'marquee' && !prefersReducedMotion()) {
-    const row = [...items, ...items];
     return (
       <section className="lib-strip lib-strip--marquee" style={style} role="region" aria-label="Announcements">
         <div className="lib-strip__track" aria-hidden>
-          {row.map((item, i) => render(item, i))}
+          {items.map((item) => render(item, item.id))}
+          {items.map((item) => render(item, `${item.id}-dup`))}
         </div>
-        <span className="lib-sr-only">{items.map((i) => str(i, 'text')).join(' · ')}</span>
+        <span className="lib-sr-only">{items.map((i) => str(i.settings, 'text')).join(' · ')}</span>
       </section>
     );
   }
   if (mode === 'static') {
     return (
       <section className="lib-strip lib-strip--static" style={style} role="region" aria-label="Announcements">
-        <div className="lib-container lib-strip__inline">{items.map((item, i) => render(item, i))}</div>
+        <div className="lib-container lib-strip__inline">{items.map((item) => render(item, item.id))}</div>
       </section>
     );
   }
   const current = items[index] ?? items[0]!;
   return (
     <section className={cn('lib-strip', 'lib-strip--rotate')} style={style} role="region" aria-label="Announcements">
-      <div className="lib-container" aria-live="polite">{render(current, index)}</div>
+      <div className="lib-container" aria-live="polite">{render(current, current.id)}</div>
     </section>
   );
 }

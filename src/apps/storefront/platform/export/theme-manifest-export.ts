@@ -7,6 +7,7 @@
  */
 import type { CatalogEntry } from '../catalog/types';
 import type {
+  ThemeBlockSchema,
   ThemeModule,
   ThemeSectionSchema,
   ThemeSettingField,
@@ -38,6 +39,21 @@ export interface BackendSettingsGroup {
   fields: BackendField[];
 }
 
+export interface BackendVariantOption {
+  value: string;
+  label: string;
+  description?: string;
+  icon?: string;
+}
+
+export interface BackendBlockSchema {
+  type: string;
+  label: string;
+  icon?: string;
+  settings: BackendField[];
+  limit?: number;
+}
+
 export interface BackendSectionSchema {
   label: string;
   description?: string;
@@ -45,6 +61,12 @@ export interface BackendSectionSchema {
   icon?: string;
   settings: BackendField[];
   presets?: Array<{ label: string; settings: Record<string, unknown> }>;
+  /** Contract §7: visual variant picker stored in `settings[field]`. */
+  variants?: { field: string; options: BackendVariantOption[] };
+  /** Contract §7: nested block types (+ optional `legacy` list field the editor migrates from). */
+  blocks?: { types: BackendBlockSchema[]; min?: number; max?: number; legacy?: string };
+  /** Contract §7: whether the editor shows the shared "Section style" group. */
+  style: boolean;
 }
 
 export interface BackendTemplate {
@@ -127,14 +149,34 @@ export function groupSettingsSchema(schema: ThemeSettingsSchema): BackendSetting
   return groups;
 }
 
+/** One block schema → its JSON (settings through `fieldToJson`). */
+export function blockToJson(block: ThemeBlockSchema): BackendBlockSchema {
+  const out: BackendBlockSchema = { type: block.type, label: block.label, settings: block.settings.map(fieldToJson) };
+  if (block.icon) out.icon = block.icon;
+  if (block.limit !== undefined) out.limit = block.limit;
+  return out;
+}
+
 /** Section schemas → `sections_schema` map keyed by type (insertion order preserved). */
 export function toSectionsSchema(schemas: ReadonlyArray<ThemeSectionSchema>): Record<string, BackendSectionSchema> {
   const out: Record<string, BackendSectionSchema> = {};
   for (const s of schemas) {
-    const entry: BackendSectionSchema = { label: s.label, category: s.category, settings: s.settings.map(fieldToJson) };
+    const entry: BackendSectionSchema = { label: s.label, category: s.category, settings: s.settings.map(fieldToJson), style: s.style !== false };
     if (s.description) entry.description = s.description;
     if (s.icon) entry.icon = s.icon;
     if (s.presets && s.presets.length > 0) entry.presets = s.presets.map((p) => ({ label: p.label, settings: { ...p.settings } }));
+    if (s.variants && s.variants.options.length > 0) {
+      entry.variants = {
+        field: s.variants.field,
+        options: s.variants.options.map((o) => ({ value: o.value, label: o.label, ...(o.description ? { description: o.description } : {}), ...(o.icon ? { icon: o.icon } : {}) })),
+      };
+    }
+    if (s.blocks && s.blocks.types.length > 0) {
+      entry.blocks = { types: s.blocks.types.map(blockToJson) };
+      if (s.blocks.min !== undefined) entry.blocks.min = s.blocks.min;
+      if (s.blocks.max !== undefined) entry.blocks.max = s.blocks.max;
+      if (s.blocks.legacy) entry.blocks.legacy = s.blocks.legacy;
+    }
     out[s.type] = entry;
   }
   return out;

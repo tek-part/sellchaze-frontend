@@ -114,3 +114,41 @@ Shared pages (auth, account, cart, checkout, wishlist, static, 404) import the f
 (`src/apps/storefront/foundation/components`, skinned app-level by `foundation/base.css` + `pages.css`);
 each theme ships `shared.css` overrides for the `.sf-*` classes it needs to reskin, like
 `themes/naseem/shared.css`.
+
+## 7. Variants, blocks and section style (Shopify-style composition)
+
+Additive to §1/§2 — legacy manifests without these keys stay valid.
+
+```ts
+export interface SectionSchema {
+  // ...§1 fields...
+  /** Display styles: rendered as a visual picker in the inspector; stored in settings[field]. */
+  variants?: { field: string /* usually 'layout' */; options: { value: string; label: string; description?: string; icon?: string }[] };
+  /** Nested components the merchant can add/reorder/remove inside this section. */
+  blocks?: { types: BlockSchema[]; min?: number; max?: number };
+  /** Show the shared "Section style" group (default true). */
+  style?: boolean;
+}
+export interface BlockSchema { type: string; label: string; icon?: string; settings: SettingField[]; limit?: number }
+```
+
+Stored section settings:
+```json
+{ "layout": "carousel",
+  "blocks": [ { "id": "b_3f9…", "type": "slide", "hidden": false, "settings": { "heading": {"ar":"…","en":"…"} } } ],
+  "__style": { "padding_top": 64, "padding_bottom": 64, "background": "surface|primary|custom", "background_color": "#…",
+               "background_image": "", "container": "boxed|narrow|full", "text_align": "start|center|end",
+               "hide_mobile": false, "hide_desktop": false, "anchor": "", "css_class": "" },
+  "__responsive": { "padding_top": { "tablet": 48, "mobile": 32 } } }
+```
+* `blocks` is heterogeneous (one `BlockSchema` per `type`); the backend validates each block's `settings`
+  against its type, drops unknown types, caps at `max`, and passes unknown keys through untouched.
+* `__style` is applied by the library `SectionFrame` wrapper for every section (themes never restyle it):
+  padding (responsive), background, container width, alignment, device visibility, anchor id, css class.
+* Sections that used `list` fields for repeated items (slides, banners, features, quotes, questions) keep
+  those fields for backward compatibility and READ `blocks` first when present; the editor exposes only
+  blocks for them and migrates a legacy list into blocks the first time the section is edited.
+* Manifest export (`npm run themes:manifests`) emits `variants`, `blocks` and `style` per section.
+* Editor UX: sections tree shows blocks nested under their section (expand/collapse, drag within the
+  section, hide, duplicate, remove, "Add block" limited to `blocks.types`); the inspector shows a visual
+  variant picker at the top, the section's own settings, then the "Section style" group.

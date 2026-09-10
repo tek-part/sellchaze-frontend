@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { HiOutlineArrowPath, HiOutlineExclamationTriangle, HiOutlinePlus, HiOutlineSquares2X2, HiOutlineSwatch } from 'react-icons/hi2';
+import { HiOutlineAdjustmentsHorizontal, HiOutlineEye, HiOutlineSquares2X2 } from 'react-icons/hi2';
 import api from '../api/client';
 import useStoreContext from '../hooks/useStoreContext';
 import useStoreLocales from '../hooks/useStoreLocales';
@@ -9,24 +9,25 @@ import { notify } from '../components/ui/notify';
 import { confirmDialog } from '../components/ui/confirmDialog';
 import { toLocalized } from '../lib/localized';
 import { commit, createHistory, redo, reorder, undo, VIEWPORT_WIDTH } from '../apps/storefront/platform/studio/editor-domain';
-import CustomizerTopBar from '../components/customizer/CustomizerTopBar';
+import EditorTopBar from '../components/editor/EditorTopBar';
+import EditorSidebar from '../components/editor/EditorSidebar';
+import Inspector from '../components/editor/Inspector';
 import PreviewFrame from '../components/customizer/PreviewFrame';
 import RevisionsDrawer from '../components/customizer/RevisionsDrawer';
-import SectionSettingsPanel from '../components/customizer/SectionSettingsPanel';
-import ThemeSettingsPanel from '../components/customizer/ThemeSettingsPanel';
-import { SectionList, SectionPicker } from '../components/customizer/SectionsPanel';
 import {
-    FALLBACK_VIEWPORT_WIDTH, defaultsFor, fromApiSections, isTranslatable, newSection, previewBaseFor, previewUrlFor,
-    stableJson, toApiSections, toPreviewSections,
+    FALLBACK_VIEWPORT_WIDTH, blockLimits, blockSchemaFor, defaultsFor, fromApiSections, hasBlocks, isTranslatable, migrateLegacyBlocks,
+    newBlock, newBlockId, newSection, previewBaseFor, previewUrlFor, sectionBlocks, stableJson, toApiSections, toPreviewSections,
 } from '../components/customizer/customizerUtils';
 
 const AUTOSAVE_MS = 900;
 const HYDRATE_DEBOUNCE_MS = 150;
 const WIDTHS = VIEWPORT_WIDTH || FALLBACK_VIEWPORT_WIDTH;
+const MOBILE_QUERY = '(max-width: 1023px)';
 
 const errorMessage = (e) => e?.response?.data?.message || e?.message || 'Error';
 const isNotFound = (e) => e?.response?.status === 404;
 const isEditableTarget = (el) => !!el && (['INPUT', 'TEXTAREA', 'SELECT'].includes(el.tagName) || el.isContentEditable);
+const isMobileViewport = () => typeof window !== 'undefined' && window.matchMedia?.(MOBILE_QUERY).matches;
 
 /** Flatten theme `settings_schema` groups into fields. */
 const fieldsOf = (groups) => (groups || []).flatMap((g) => g.fields || []);
@@ -40,16 +41,23 @@ function normalizeThemeValues(groups, raw, locales, defaultLocale) {
 }
 
 /**
- * Salla-style live customizer: sections + theme settings on the left, the storefront in an iframe
- * on the right, autosave, undo/redo and a single Publish for page + theme.
- * Contract: docs/THEME_SECTIONS_CONTRACT.md (§1 fields, §3 endpoints, §5 postMessage).
+ * Full-screen store editor (Shopify theme editor / Salla "تخصيص" style), rendered inside
+ * EditorLayout: top bar, Sections | Theme settings panel on the start side, live storefront preview
+ * in the middle, the inspector on the end side. Autosave, undo/redo and one Publish for page + theme.
+ *
+ * Query params: `?theme=<id>` edits a non-active installed theme's settings; `?tab=theme` opens the
+ * Theme settings tab. Contract: docs/THEME_SECTIONS_CONTRACT.md (§1 fields, §3 endpoints, §5 postMessage,
+ * §7 variants / blocks / section style — blocks live in `settings.blocks` and share the section history).
  */
 export default function StoreCustomizePage() {
     const { t } = useTranslation();
+    const navigate = useNavigate();
+    const [searchParams, setSearchParams] = useSearchParams();
     const { apiBase, uiBase, store, access } = useStoreContext();
     const { locales, defaultLocale } = useStoreLocales();
     const localesRef = useRef({ locales, defaultLocale });
     localesRef.current = { locales, defaultLocale };
+    const themeIdParam = searchParams.get('theme');
 
     // ----- editor state -------------------------------------------------------------------------
     const [pageKey, setPageKey] = useState('home');
@@ -63,8 +71,11 @@ export default function StoreCustomizePage() {
     const [history, setHistory] = useState(() => createHistory([]));
     const sections = history.present;
     const [selectedId, setSelectedId] = useState(null);
-    const [tab, setTab] = useState('sections');
-    const [view, setView] = useState('list');
+    const [selectedBlockId, setSelectedBlockId] = useState(null); // block inside `selectedId` (contract §7)
+    const [expanded, setExpanded] = useState({}); // section id → blocks expanded in the tree
+    const [tab, setTab] = useState(() => (searchParams.get('tab') === 'theme' ? 'theme' : 'sections'));
+    const [addOpen, setAddOpen] = useState(false);
+    const [pane, setPane] = useState('sections'); // < lg: which of sections | preview | inspector is shown
     const [viewport, setViewport] = useState('desktop');
     const [locale, setLocale] = useState(defaultLocale);
     const [saveStatus, setSaveStatus] = useState('saved');
@@ -75,7 +86,7 @@ export default function StoreCustomizePage() {
     const [revisionsOpen, setRevisionsOpen] = useState(false);
 
     // Theme settings (contract §3 `settings_schema` + PUT themes/settings)
-    const [theme, setTheme] = useState(null); // { id, key, name }
+    const [theme, setTheme] = useState(null); // { id, key, name, isActive }
     const [themeGroups, setThemeGroups] = useState([]);
     const [themeValues, setThemeValues] = useState(null);
     const [themeStatus, setThemeStatus] = useState('loading');
@@ -83,16 +94,28 @@ export default function StoreCustomizePage() {
     const [themeDirty, setThemeDirty] = useState(false);
     const [themeSaveStatus, setThemeSaveStatus] = useState('saved');
     const [themeRevisions, setThemeRevisions] = useState([]);
+    const [selectedGroupId, setSelectedGroupId] = useState(null);
 
     const savedJson = useRef('');
     const themeSavedJson = useRef('');
     const pageRef = useRef(null);
+    const schemaRef = useRef(schema);
+    schemaRef.current = schema;
     const loadSeq = useRef(0);
     const preview = useRef(null);
     const [previewReady, setPreviewReady] = useState(false);
 
     useEffect(() => { setLocale((cur) => (locales.includes(cur) ? cur : defaultLocale)); }, [locales, defaultLocale]);
     useEffect(() => { pageRef.current = page; }, [page]);
+
+    // Keep `?tab=` in the URL so the Theme settings view stays deep-linkable.
+    useEffect(() => {
+        setSearchParams((prev) => {
+            const next = new URLSearchParams(prev);
+            if (tab === 'theme') next.set('tab', 'theme'); else next.delete('tab');
+            return next;
+        }, { replace: true });
+    }, [tab, setSearchParams]);
 
     // ----- loaders ------------------------------------------------------------------------------
     useEffect(() => {
@@ -129,7 +152,9 @@ export default function StoreCustomizePage() {
                 savedJson.current = stableJson(toApiSections(loaded));
                 setSaveStatus('saved');
                 setSelectedId(null);
-                setView('list');
+                setSelectedBlockId(null);
+                setExpanded({});
+                setAddOpen(false);
             }
             setPageDirty(!!payload?.has_unpublished_changes);
             setPageStatus('ready');
@@ -162,30 +187,34 @@ export default function StoreCustomizePage() {
         catch { setThemeRevisions([]); }
     }, [apiBase]);
 
+    // `?theme=<id>` edits that installed theme; otherwise the active one.
     const loadTheme = useCallback(async () => {
         setThemeStatus('loading');
         setThemeError('');
         try {
-            const { data: list } = await api.get(`${apiBase}/themes`);
-            const activeId = list?.active_theme_id ?? null;
-            if (!activeId) { setThemeStatus('error'); setThemeError(t('store_customize_no_theme', 'Activate a theme first')); return; }
-            const { data } = await api.get(`${apiBase}/themes/${activeId}`);
+            let activeId = null;
+            try { const { data: list } = await api.get(`${apiBase}/themes`); activeId = list?.active_theme_id ?? null; }
+            catch (e) { if (!themeIdParam) throw e; }
+            const targetId = themeIdParam ? Number(themeIdParam) : activeId;
+            if (!targetId) { setThemeStatus('error'); setThemeError(t('store_customize_no_theme', 'Activate a theme first')); return; }
+            const { data } = await api.get(`${apiBase}/themes/${targetId}`);
             const groups = data?.version?.settings_schema ?? [];
             const { locales: ls, defaultLocale: dl } = localesRef.current;
             const values = normalizeThemeValues(groups, data?.install?.draft_settings ?? data?.install?.settings ?? {}, ls, dl);
-            setTheme({ id: Number(activeId), key: data?.theme?.key ?? '', name: data?.theme?.name ?? '' });
+            setTheme({ id: Number(targetId), key: data?.theme?.key ?? '', name: data?.theme?.name ?? '', isActive: activeId == null ? undefined : Number(activeId) === Number(targetId) });
             setThemeGroups(groups);
             setThemeValues(values);
             themeSavedJson.current = stableJson(values);
             setThemeSaveStatus('saved');
             setThemeDirty(!!data?.install?.has_unpublished_changes);
             setThemeStatus('ready');
-            loadThemeRevisions(activeId);
+            setSelectedGroupId((cur) => (groups.some((g) => g.id === cur) ? cur : (groups[0]?.id ?? null)));
+            loadThemeRevisions(targetId);
         } catch (e) {
             setThemeStatus('error');
-            setThemeError(errorMessage(e));
+            setThemeError(isNotFound(e) && themeIdParam ? t('editor_theme_load_failed', 'This theme could not be loaded') : errorMessage(e));
         }
-    }, [apiBase, loadThemeRevisions, t]);
+    }, [apiBase, themeIdParam, loadThemeRevisions, t]);
 
     useEffect(() => { loadTheme(); }, [loadTheme]);
 
@@ -348,11 +377,44 @@ export default function StoreCustomizePage() {
     const selectedIndex = sections.findIndex((s) => s.id === selectedId);
     const selected = selectedIndex >= 0 ? sections[selectedIndex] : null;
 
+    /**
+     * Select a section: highlights it in the list and opens it in the inspector (list stays put).
+     * The first time a legacy section (list field, no `blocks`) is selected its rows are converted
+     * into blocks as one undoable history step (contract §7).
+     */
     const select = useCallback((id) => {
         setSelectedId(id);
-        if (id) { setTab('sections'); setView('settings'); }
+        setSelectedBlockId(null);
+        if (id) {
+            setTab('sections');
+            setAddOpen(false);
+            if (isMobileViewport()) setPane('inspector');
+            const { locales: ls, defaultLocale: dl } = localesRef.current;
+            changeSections((prev) => prev.map((s) => (s.id === id ? migrateLegacyBlocks(s, schemaRef.current[s.type], ls, dl) : s)));
+        }
+    }, [changeSections]);
+    // Selecting a section with blocks expands it in the tree (it can still be collapsed afterwards).
+    useEffect(() => {
+        if (!selectedId || !hasBlocks(schema[selected?.type])) return;
+        setExpanded((cur) => (cur[selectedId] ? cur : { ...cur, [selectedId]: true }));
+    }, [selectedId, selected?.type, schema]);
+    const clearSelection = useCallback(() => { setSelectedId(null); setSelectedBlockId(null); }, []);
+
+    /** Select a block: the parent section stays the preview selection (`select-section` posts its id). */
+    const selectBlock = useCallback((sectionId, blockId) => {
+        setSelectedId(sectionId);
+        setSelectedBlockId(blockId);
+        setTab('sections');
+        setAddOpen(false);
+        if (blockId) setExpanded((cur) => (cur[sectionId] ? cur : { ...cur, [sectionId]: true }));
+        if (isMobileViewport()) setPane('inspector');
     }, []);
-    const backToList = useCallback(() => { setView('list'); setSelectedId(null); }, []);
+    const toggleExpanded = useCallback((id) => setExpanded((cur) => ({ ...cur, [id]: !cur[id] })), []);
+
+    const selectGroup = useCallback((id) => {
+        setSelectedGroupId(id);
+        if (isMobileViewport()) setPane('inspector');
+    }, []);
 
     const add = (type) => {
         const created = newSection(type, schema[type], locales, defaultLocale);
@@ -382,28 +444,71 @@ export default function StoreCustomizePage() {
         });
         if (!ok) return;
         changeSections((prev) => prev.filter((_, j) => j !== i));
-        if (target.id === selectedId) backToList();
+        if (target.id === selectedId) clearSelection();
     };
     const toggleVisible = (i) => changeSections((prev) => prev.map((s, j) => (j === i ? { ...s, is_visible: s.is_visible === false } : s)));
     const editSettings = (i, settings) => changeSections((prev) => prev.map((s, j) => (j === i ? { ...s, settings } : s)));
 
+    // ----- blocks (contract §7) — every operation is one history step, so undo/redo covers them ---
+    /** Rewrite section `i`'s blocks through `recipe(blocks)`; a `null` result leaves the section untouched. */
+    const editBlocks = (i, recipe) => changeSections((prev) => prev.map((s, j) => {
+        if (j !== i) return s;
+        const next = recipe(sectionBlocks(s), s);
+        return next ? { ...s, settings: { ...(s.settings || {}), blocks: next } } : s;
+    }));
+    const addBlock = (i, type) => {
+        const section = sections[i];
+        const sc = schema[section?.type];
+        const bs = blockSchemaFor(sc, type);
+        if (!section || !bs) return;
+        const { max } = blockLimits(sc);
+        const current = sectionBlocks(section);
+        if (current.length >= max || (Number.isFinite(bs.limit) && current.filter((b) => b.type === type).length >= bs.limit)) return;
+        const created = newBlock(bs, locales, defaultLocale);
+        editBlocks(i, (blocks) => [...blocks, created]);
+        selectBlock(section.id, created.id);
+    };
+    const moveBlock = (i, from, to) => editBlocks(i, (blocks) => (to < 0 || to >= blocks.length ? null : reorder(blocks, from, to)));
+    const duplicateBlock = (i, bi) => {
+        const section = sections[i];
+        if (!section) return;
+        const { max } = blockLimits(schema[section.type]);
+        const current = sectionBlocks(section);
+        if (!current[bi] || current.length >= max) return;
+        const copy = { ...structuredClone(current[bi]), id: newBlockId() };
+        editBlocks(i, (blocks) => { const next = [...blocks]; next.splice(bi + 1, 0, copy); return next; });
+        selectBlock(section.id, copy.id);
+    };
+    const removeBlock = (i, bi) => {
+        const target = sectionBlocks(sections[i])[bi];
+        if (!target) return;
+        editBlocks(i, (blocks) => blocks.filter((_, k) => k !== bi));
+        if (target.id === selectedBlockId) setSelectedBlockId(null);
+    };
+    const toggleBlockHidden = (i, bi) => editBlocks(i, (blocks) => blocks.map((b, k) => (k === bi ? { ...b, hidden: b.hidden !== true } : b)));
+    const editBlockSettings = (i, bi, settings) => editBlocks(i, (blocks) => blocks.map((b, k) => (k === bi ? { ...b, settings } : b)));
+
     const doUndo = useCallback(() => setHistory((cur) => undo(cur)), []);
     const doRedo = useCallback(() => setHistory((cur) => redo(cur)), []);
 
-    // Keyboard: Delete removes the selection, Cmd/Ctrl+Z undo, Shift+Cmd/Ctrl+Z redo, Esc back to the list.
+    // Keyboard: Delete removes the selection, Cmd/Ctrl+Z undo, Shift+Cmd/Ctrl+Z redo, Esc closes the picker / inspector.
     useEffect(() => {
         const onKey = (e) => {
             if (isEditableTarget(e.target)) return;
             const mod = e.metaKey || e.ctrlKey;
             if (mod && e.key.toLowerCase() === 'z') { e.preventDefault(); if (e.shiftKey) doRedo(); else doUndo(); return; }
             if (mod && e.key.toLowerCase() === 'y') { e.preventDefault(); doRedo(); return; }
-            if (e.key === 'Escape') { if (view !== 'list') backToList(); return; }
-            if ((e.key === 'Delete' || e.key === 'Backspace') && selectedIndex >= 0 && tab === 'sections') { e.preventDefault(); remove(selectedIndex); }
+            if (e.key === 'Escape') { if (addOpen) setAddOpen(false); else if (selectedBlockId) setSelectedBlockId(null); else if (selectedId) clearSelection(); return; }
+            if ((e.key === 'Delete' || e.key === 'Backspace') && selectedIndex >= 0 && tab === 'sections') {
+                e.preventDefault();
+                const bi = selectedBlockId ? sectionBlocks(sections[selectedIndex]).findIndex((b) => b.id === selectedBlockId) : -1;
+                if (bi >= 0) removeBlock(selectedIndex, bi); else remove(selectedIndex);
+            }
         };
         window.addEventListener('keydown', onKey);
         return () => window.removeEventListener('keydown', onKey);
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [doUndo, doRedo, backToList, selectedIndex, view, tab, sections]);
+    }, [doUndo, doRedo, clearSelection, selectedIndex, selectedId, selectedBlockId, addOpen, tab, sections]);
 
     // ----- live preview (contract §5) -----------------------------------------------------------
     const previewBase = previewBaseFor(store);
@@ -433,29 +538,42 @@ export default function StoreCustomizePage() {
 
     const onSectionSelectedInPreview = useCallback((id) => { select(id); }, [select]);
 
+    // ----- exit ---------------------------------------------------------------------------------
+    const exit = async () => {
+        if (combinedSaveStatus !== 'saved') {
+            const ok = await confirmDialog({
+                title: t('editor_exit_title', 'Leave the editor?'),
+                text: t('editor_exit_text', 'Some changes have not been saved yet. Leave anyway?'),
+                confirmText: t('editor_exit_confirm', 'Leave'),
+                danger: true,
+            });
+            if (!ok) return;
+        }
+        navigate(`${uiBase}/themes`);
+    };
+
     // ----- guards -------------------------------------------------------------------------------
     if (access && access.canStoreThemes === false) return <Navigate to={`${uiBase}/overview`} replace />;
 
     const dirty = pageDirty || themeDirty || combinedSaveStatus !== 'saved';
     const canPublish = pageStatus === 'ready' && !!page?.id && dirty;
     const editLocale = locales.includes(locale) ? locale : defaultLocale;
+    const selectedGroup = tab === 'theme' ? themeGroups.find((g) => g.id === selectedGroupId) || null : null;
+    const paneClass = (key) => (pane === key ? 'flex' : 'hidden') + ' lg:flex';
 
-    const tabBtn = (key, Icon, label) => (
-        <button
-            type="button"
-            role="tab"
-            aria-selected={tab === key}
-            onClick={() => { setTab(key); if (key === 'theme') setSelectedId(null); }}
-            className={`flex flex-1 items-center justify-center gap-1.5 border-b-2 px-3 py-2.5 text-xs font-semibold transition ${tab === key ? 'border-brand text-brand' : 'border-transparent text-slate-500 hover:text-slate-800'}`}
-        >
-            <Icon className="h-4 w-4" aria-hidden />
+    const paneBtn = (key, Icon, label) => (
+        <button type="button" onClick={() => setPane(key)} aria-pressed={pane === key} className={`flex flex-1 flex-col items-center gap-0.5 py-2 text-[11px] font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40 ${pane === key ? 'text-brand' : 'text-slate-500'}`}>
+            <Icon className="h-5 w-5" aria-hidden />
             {label}
         </button>
     );
 
     return (
-        <div className="-mx-3 -my-3 flex h-[calc(100vh-72px)] min-h-[560px] flex-col overflow-hidden bg-slate-100 md:-mx-5 md:-my-5 lg:-my-7 lg:-me-7 lg:ms-0">
-            <CustomizerTopBar
+        <div className="flex min-h-0 flex-1 flex-col">
+            <EditorTopBar
+                onExit={exit}
+                storeName={store?.name}
+                theme={theme}
                 pages={pages}
                 pageKey={pageKey}
                 onPageChange={(key) => { if (key !== pageKey) flushSections().finally(() => setPageKey(key)); }}
@@ -482,89 +600,52 @@ export default function StoreCustomizePage() {
             />
 
             <div className="flex min-h-0 flex-1">
-                {/* Left panel */}
-                <aside className="flex w-full shrink-0 flex-col border-e border-slate-200/80 bg-white md:w-80 xl:w-96" aria-label={t('customizer_panel', 'Customizer panel')}>
-                    <div className="flex border-b border-slate-100" role="tablist">
-                        {tabBtn('sections', HiOutlineSquares2X2, t('customizer_tab_sections', 'Sections'))}
-                        {tabBtn('theme', HiOutlineSwatch, t('customizer_tab_theme', 'Theme settings'))}
-                    </div>
-
-                    {tab === 'sections' ? (
-                        pageStatus === 'loading' ? (
-                            <div className="space-y-2 p-3">{[0, 1, 2, 3, 4].map((i) => <div key={i} className="h-12 animate-pulse rounded-xl bg-slate-100" />)}</div>
-                        ) : pageStatus === 'error' ? (
-                            <div className="flex flex-col items-center gap-3 px-6 py-14 text-center">
-                                <span className="grid h-12 w-12 place-items-center rounded-2xl bg-amber-50 text-amber-600"><HiOutlineExclamationTriangle className="h-6 w-6" aria-hidden /></span>
-                                <p className="text-sm font-semibold text-slate-800">{t('customizer_page_unavailable', 'This page could not be loaded')}</p>
-                                <p className="text-xs leading-relaxed text-slate-500">{pageError}</p>
-                                <button type="button" onClick={() => loadPage()} className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50"><HiOutlineArrowPath className="h-4 w-4" aria-hidden />{t('action_retry', 'Retry')}</button>
-                            </div>
-                        ) : view === 'add' ? (
-                            <SectionPicker schema={schema} onPick={(type) => add(type)} onBack={() => setView(selected ? 'settings' : 'list')} />
-                        ) : view === 'settings' && selected ? (
-                            <SectionSettingsPanel
-                                section={selected}
-                                schema={schema[selected.type]}
-                                onBack={backToList}
-                                onChange={(settings) => editSettings(selectedIndex, settings)}
-                                onDuplicate={() => duplicate(selectedIndex)}
-                                onRemove={() => remove(selectedIndex)}
-                                onToggleVisible={() => toggleVisible(selectedIndex)}
-                                locales={locales}
-                                defaultLocale={defaultLocale}
-                                editLocale={editLocale}
-                                viewport={viewport}
-                                apiBase={apiBase}
-                            />
-                        ) : (
-                            <>
-                                {schemaError ? <p className="mx-3 mt-3 rounded-lg bg-amber-50 px-3 py-2 text-[11px] font-medium text-amber-800">{schemaError}</p> : null}
-                                <div className="min-h-0 flex-1 overflow-y-auto">
-                                    <SectionList
-                                        sections={sections}
-                                        schema={schema}
-                                        selectedId={selectedId}
-                                        locale={editLocale}
-                                        defaultLocale={defaultLocale}
-                                        onSelect={select}
-                                        onMove={move}
-                                        onReorder={reorderAt}
-                                        onDuplicate={duplicate}
-                                        onRemove={remove}
-                                        onToggleVisible={toggleVisible}
-                                        onAdd={() => setView('add')}
-                                    />
-                                </div>
-                                <div className="border-t border-slate-100 p-3">
-                                    <button type="button" onClick={() => setView('add')} className="flex w-full items-center justify-center gap-1.5 rounded-xl border border-dashed border-brand/40 bg-brand-light/30 px-3 py-2.5 text-sm font-semibold text-brand transition hover:border-brand hover:bg-brand-light/60">
-                                        <HiOutlinePlus className="h-4 w-4" aria-hidden />
-                                        {t('customizer_add_section', 'Add section')}
-                                    </button>
-                                </div>
-                            </>
-                        )
-                    ) : (
-                        <div className="min-h-0 flex-1 overflow-y-auto">
-                            <ThemeSettingsPanel
-                                groups={themeGroups}
-                                values={themeValues || {}}
-                                onChange={setThemeValues}
-                                status={themeStatus}
-                                error={themeError}
-                                onRetry={loadTheme}
-                                themeName={theme?.name}
-                                locales={locales}
-                                defaultLocale={defaultLocale}
-                                editLocale={editLocale}
-                                viewport={viewport}
-                                apiBase={apiBase}
-                            />
-                        </div>
-                    )}
+                {/* Start panel: sections / theme settings */}
+                <aside className={`${paneClass('sections')} w-full shrink-0 flex-col border-e border-slate-200 bg-white lg:w-80`} aria-label={t('customizer_panel', 'Customizer panel')}>
+                    <EditorSidebar
+                        tab={tab}
+                        onTabChange={(key) => { setTab(key); setAddOpen(false); }}
+                        pageStatus={pageStatus}
+                        pageError={pageError}
+                        onRetryPage={() => loadPage()}
+                        schemaError={schemaError}
+                        sections={sections}
+                        schema={schema}
+                        selectedId={selectedId}
+                        selectedBlockId={selectedBlockId}
+                        expanded={expanded}
+                        onToggleExpanded={toggleExpanded}
+                        locale={editLocale}
+                        defaultLocale={defaultLocale}
+                        onSelect={select}
+                        onMove={move}
+                        onReorder={reorderAt}
+                        onDuplicate={duplicate}
+                        onRemove={remove}
+                        onToggleVisible={toggleVisible}
+                        onSelectBlock={selectBlock}
+                        onAddBlock={addBlock}
+                        onMoveBlock={(i, bi, dir) => moveBlock(i, bi, bi + dir)}
+                        onReorderBlock={moveBlock}
+                        onDuplicateBlock={duplicateBlock}
+                        onRemoveBlock={removeBlock}
+                        onToggleBlockHidden={toggleBlockHidden}
+                        addOpen={addOpen}
+                        onOpenAdd={() => setAddOpen(true)}
+                        onCloseAdd={() => setAddOpen(false)}
+                        onAdd={(type) => add(type)}
+                        themeGroups={themeGroups}
+                        themeStatus={themeStatus}
+                        themeError={themeError}
+                        onRetryTheme={loadTheme}
+                        theme={theme}
+                        selectedGroupId={selectedGroupId}
+                        onSelectGroup={selectGroup}
+                    />
                 </aside>
 
-                {/* Preview */}
-                <main className="hidden min-w-0 flex-1 flex-col overflow-hidden bg-[radial-gradient(circle_at_top,#e2e8f0,#f1f5f9_70%)] p-4 md:flex lg:p-6">
+                {/* Canvas */}
+                <main className={`${paneClass('preview')} min-w-0 flex-1 flex-col overflow-hidden bg-slate-100 p-3 lg:p-5`}>
                     <PreviewFrame
                         ref={preview}
                         src={previewSrc}
@@ -574,7 +655,41 @@ export default function StoreCustomizePage() {
                         openHref={storefrontHref}
                     />
                 </main>
+
+                {/* End panel: inspector */}
+                <aside className={`${paneClass('inspector')} w-full shrink-0 flex-col border-s border-slate-200 bg-white lg:w-96`} aria-label={t('editor_tab_inspector', 'Inspector')}>
+                    <Inspector
+                        tab={tab}
+                        section={selected}
+                        sectionSchema={selected ? schema[selected.type] : null}
+                        onCloseSection={clearSelection}
+                        onSectionChange={(settings) => editSettings(selectedIndex, settings)}
+                        onDuplicate={() => duplicate(selectedIndex)}
+                        onRemove={() => remove(selectedIndex)}
+                        onToggleVisible={() => toggleVisible(selectedIndex)}
+                        selectedBlockId={selectedBlockId}
+                        onSelectBlock={(blockId) => (blockId ? selectBlock(selectedId, blockId) : setSelectedBlockId(null))}
+                        onBlockChange={(bi, settings) => editBlockSettings(selectedIndex, bi, settings)}
+                        onBlockToggleHidden={(bi) => toggleBlockHidden(selectedIndex, bi)}
+                        onBlockRemove={(bi) => removeBlock(selectedIndex, bi)}
+                        group={selectedGroup}
+                        themeValues={themeValues}
+                        onThemeChange={setThemeValues}
+                        locales={locales}
+                        defaultLocale={defaultLocale}
+                        editLocale={editLocale}
+                        viewport={viewport}
+                        apiBase={apiBase}
+                    />
+                </aside>
             </div>
+
+            {/* < lg: switch between the three panes */}
+            <nav className="flex shrink-0 border-t border-slate-200 bg-white lg:hidden" aria-label={t('customizer_panel', 'Customizer panel')}>
+                {paneBtn('sections', HiOutlineSquares2X2, t('customizer_tab_sections', 'Sections'))}
+                {paneBtn('inspector', HiOutlineAdjustmentsHorizontal, t('editor_tab_inspector', 'Inspector'))}
+                {paneBtn('preview', HiOutlineEye, t('editor_tab_preview', 'Preview'))}
+            </nav>
 
             <RevisionsDrawer
                 open={revisionsOpen}

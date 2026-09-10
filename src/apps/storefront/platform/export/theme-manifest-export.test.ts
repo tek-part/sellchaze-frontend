@@ -97,9 +97,42 @@ describe('buildBackendManifest', () => {
     });
     expect(Object.keys(json.sections_schema)).toEqual(['hero', 'faq', 'legacy']);
     expect(json.sections_schema['hero']).toMatchObject({ label: 'Hero', category: 'hero', icon: 'HiOutlinePhoto' });
-    expect(json.sections_schema['legacy']).toEqual({ label: 'Legacy', category: 'content', settings: [] });
+    expect(json.sections_schema['legacy']).toEqual({ label: 'Legacy', category: 'content', settings: [], style: true });
     expect(Object.keys(json.templates)).toEqual(['home', 'product', 'category']);
     expect(json.templates['home']?.sections).toEqual([{ type: 'hero', settings: { heading: { ar: 'x', en: 'y' } } }, { type: 'faq', settings: {} }]);
+  });
+
+  it('emits variants, blocks and style per section (contract §7)', () => {
+    const json = toSectionsSchema([
+      {
+        type: 'hero',
+        label: 'Hero',
+        category: 'hero',
+        style: false,
+        variants: {
+          field: 'layout',
+          options: [{ value: 'slider', label: 'Slider', description: 'Full width', icon: 'HiOutlinePhoto' }, { value: 'split', label: 'Split' }],
+          legacy: [{ field: 'style', map: { old: 'split' } }],
+        },
+        blocks: {
+          types: [{ type: 'slide', label: 'Slide', icon: 'HiOutlinePhoto', limit: 8, settings: [{ id: 'heading', type: 'text', label: 'Heading', translatable: true, default: { ar: 'أ', en: 'A' } }] }],
+          max: 8,
+          legacy: 'slides',
+        },
+        settings: [{ id: 'layout', type: 'select', label: 'Layout', options: [{ value: 'slider', label: 'Slider' }, { value: 'split', label: 'Split' }], default: 'slider' }],
+      },
+      { type: 'plain', label: 'Plain', category: 'content', settings: [] },
+    ]);
+    expect(json['hero']).toMatchObject({
+      style: false,
+      variants: { field: 'layout', options: [{ value: 'slider', label: 'Slider', description: 'Full width', icon: 'HiOutlinePhoto' }, { value: 'split', label: 'Split' }] },
+      blocks: { max: 8, legacy: 'slides', types: [{ type: 'slide', label: 'Slide', icon: 'HiOutlinePhoto', limit: 8 }] },
+    });
+    expect(json['hero']?.blocks?.types[0]?.settings[0]).toMatchObject({ id: 'heading', type: 'text', translatable: true });
+    expect(JSON.stringify(json['hero']?.variants)).not.toContain('legacy');
+    expect(json['plain']).toEqual({ label: 'Plain', category: 'content', settings: [], style: true });
+    expect(json['plain']).not.toHaveProperty('variants');
+    expect(json['plain']).not.toHaveProperty('blocks');
   });
 
   it('toSectionsSchema / toTemplates tolerate empty input', () => {

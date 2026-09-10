@@ -43,6 +43,8 @@ export interface ProductCardModel {
   reviewCount?: number;
   colors?: ReadonlyArray<ProductSwatch>;
   vendor?: string;
+  /** Short plain-text summary shown by list-style product cards (optional). */
+  description?: string;
   /**
    * Optional facet fields. The storefront API does not expose these today, so they are populated
    * only where a mapper can supply them (and in demo catalogues). Facets derive themselves from the

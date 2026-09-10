@@ -569,7 +569,7 @@ function ThemesManager({ mode = 'installed' }) {
         });
     };
 
-    const doCustomize = (theme) => navigate(`${uiBase}/themes/${theme.id}/settings`);
+    const doCustomize = (theme) => navigate(`${uiBase}/customize?theme=${theme.id}&tab=theme`);
 
     /* ---- ordering ---- */
 

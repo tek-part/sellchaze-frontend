@@ -7,11 +7,31 @@
 import { useMemo, type CSSProperties } from 'react';
 import type { ThemeSettingListItem, ThemeSettings } from '../theme-engine/types';
 import { useLocaleCode } from './i18n';
-import { resolveSectionSettings, type SectionSchema } from './schema';
+import { resolveBlocks, resolveSectionSettings, variantOf, type RawBlock, type ResolvedBlock, type SectionSchema } from './schema';
 
 export function useSectionSettings(schema: SectionSchema, raw: Readonly<Record<string, unknown>> | undefined): ThemeSettings {
   const locale = useLocaleCode();
   return useMemo(() => resolveSectionSettings(schema, raw, locale), [schema, raw, locale]);
+}
+
+/**
+ * The section's visible blocks (contract §7): `settings.blocks` → legacy list → `fallback` demo
+ * blocks, resolved for the active language. Pass the resolved settings from `useSectionSettings`
+ * (they carry `blocks` through) or the raw instance settings — both work.
+ */
+export function useSectionBlocks(
+  schema: SectionSchema,
+  settings: Readonly<Record<string, unknown>> | undefined,
+  legacyListField?: string,
+  fallback?: ReadonlyArray<RawBlock>,
+): ReadonlyArray<ResolvedBlock> {
+  const locale = useLocaleCode();
+  return useMemo(() => resolveBlocks(schema, settings, legacyListField, { locale, fallback }), [schema, settings, legacyListField, fallback, locale]);
+}
+
+/** The active variant value of a section (`''` when the schema declares none). */
+export function useVariant(schema: SectionSchema, settings: Readonly<Record<string, unknown>> | undefined): string {
+  return variantOf(schema, settings);
 }
 
 /* ------------------------------------------------------------------ typed readers */

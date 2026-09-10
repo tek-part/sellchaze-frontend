@@ -163,7 +163,22 @@ export function resolveSettings(
     const provided = raw ? raw[field.id] : undefined;
     out[field.id] = coerceField(field, provided === undefined ? field.default : provided, locale);
   }
+  // Composition keys (contract §7) are not schema fields: `blocks` (array of block instances) and
+  // the `__style` / `__responsive` objects pass through untouched — the section library validates
+  // blocks against their block schema and `SectionFrame` reads the style objects.
+  if (raw) {
+    for (const key of PASSTHROUGH_KEYS) {
+      const value = raw[key];
+      if (key === 'blocks' ? Array.isArray(value) : isPlainObject(value)) out[key] = value as unknown as ThemeSettingValue;
+    }
+  }
   return Object.freeze(out);
+}
+
+const PASSTHROUGH_KEYS = ['blocks', '__style', '__responsive'] as const;
+
+function isPlainObject(value: unknown): value is Record<string, unknown> {
+  return value !== null && typeof value === 'object' && !Array.isArray(value);
 }
 
 /**

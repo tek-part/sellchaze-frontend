@@ -1,5 +1,6 @@
 import { lazy, Suspense } from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate, useParams } from 'react-router-dom';
+import useStoreScope from './hooks/useStoreScope';
 import AppErrorBoundary from './components/AppErrorBoundary';
 import AppLayout from './components/AppLayout';
 import StoreRedirect from './components/store/StoreRedirect';
@@ -111,7 +112,7 @@ const StoreOverviewPage = lazy(() => import('./pages/StoreOverviewPage'));
 const StoreThemesPage = lazy(() => import('./pages/StoreThemesPage'));
 const StoreCustomizePage = lazy(() => import('./pages/StoreCustomizePage'));
 const StorePaymentsPage = lazy(() => import('./pages/StorePaymentsPage'));
-const StoreThemeSettingsPage = lazy(() => import('./pages/StoreThemeSettingsPage'));
+const EditorLayout = lazy(() => import('./components/editor/EditorLayout'));
 const StorePagesPage = lazy(() => import('./pages/StorePagesPage'));
 const StoreMediaPage = lazy(() => import('./pages/StoreMediaPage'));
 const StoreGeneralSettingsPage = lazy(() => import('./pages/store/settings/StoreGeneralSettingsPage'));
@@ -168,6 +169,13 @@ function RootRoute() {
 }
 
 
+/** `/themes/:themeId/settings` (both scopes) → `/customize?tab=theme&theme=:themeId`. */
+function ThemeSettingsRedirect() {
+    const { themeId } = useParams();
+    const { uiBase } = useStoreScope();
+    return <Navigate to={`${uiBase}/customize?tab=theme&theme=${encodeURIComponent(themeId)}`} replace />;
+}
+
 function joinPath(base, path) {
     return path ? `${base}/${path}` : base;
 }
@@ -192,8 +200,8 @@ const STORE_ROUTES = [
     { path: 'analytics', element: <StoreAnalyticsPage /> },
     { path: 'themes', element: <StoreThemesPage mode="installed" /> },
     { path: 'themes/marketplace', element: <StoreThemesPage mode="marketplace" /> },
-    { path: 'themes/:themeId/settings', element: <StoreThemeSettingsPage /> },
-    { path: 'customize', element: <StoreCustomizePage /> },
+    // Legacy per-theme settings editor → the full-screen editor's Theme settings tab.
+    { path: 'themes/:themeId/settings', element: <ThemeSettingsRedirect /> },
     { path: 'pages', element: <StorePagesPage /> },
     { path: 'pages/:pageId/builder', element: <StorePageBuilderPage /> },
     { path: 'content/:key', element: <StoreContentPageEditor /> },
@@ -373,6 +381,17 @@ export default function App() {
                 <Route path="/wavex/campaigns/new" element={<WavexCampaignNewPage />} />
                 <Route path="/wavex/campaigns/:id" element={<WavexCampaignDetailPage />} />
                 <Route path="/wavex/campaigns" element={<WavexCampaignsPage />} />
+            </Route>
+            {/* Store editor — full-screen (no app header, no store sidebar), Shopify/Salla style. */}
+            <Route
+                element={
+                    <RequireAuth>
+                        <EditorLayout />
+                    </RequireAuth>
+                }
+            >
+                <Route path="/store/customize" element={<StoreCustomizePage />} />
+                <Route path="/stores/:id/customize" element={<StoreCustomizePage />} />
             </Route>
             <Route path="/403" element={<ForbiddenPage />} />
             <Route path="/401" element={<SessionExpiredPage />} />

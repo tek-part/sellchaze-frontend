@@ -244,6 +244,57 @@ export type ThemeSettings = Readonly<Record<string, ThemeSettingValue>>;
  */
 export type ThemeSectionCategory = 'hero' | 'products' | 'categories' | 'content' | 'marketing' | 'social' | 'layout';
 
+/** One display style of a section (contract §7 `variants.options[]`). */
+export interface ThemeVariantOption {
+  readonly value: string;
+  readonly label: string;
+  readonly description?: string;
+  /** react-icons/hi2 name shown in the visual picker. */
+  readonly icon?: string;
+}
+
+/** Display styles of a section: a visual picker stored in `settings[field]` (contract §7). */
+export interface ThemeSectionVariants {
+  readonly field: string;
+  readonly options: ReadonlyArray<ThemeVariantOption>;
+  /**
+   * Frontend-only: older stored keys/values that map onto a variant (e.g. `style: 'plain'` →
+   * `icons-row`), read when `settings[field]` is absent. Not exported to the manifest.
+   */
+  readonly legacy?: ReadonlyArray<{ readonly field: string; readonly map: Readonly<Record<string, string>> }>;
+}
+
+/** A nested component type the merchant can add/reorder/remove inside a section (contract §7). */
+export interface ThemeBlockSchema {
+  readonly type: string;
+  readonly label: string;
+  readonly icon?: string;
+  /** Flat fields (no nested lists) — the block's `settings` are validated against them. */
+  readonly settings: ReadonlyArray<ThemeListItemField>;
+  /** Max instances of this block type in one section. */
+  readonly limit?: number;
+}
+
+export interface ThemeSectionBlocks {
+  readonly types: ReadonlyArray<ThemeBlockSchema>;
+  readonly min?: number;
+  readonly max?: number;
+  /**
+   * Id of the legacy `list` field this section used for the same items. Read when `blocks` is
+   * absent/empty so stored data from before §7 keeps rendering; the editor hides the list and
+   * migrates it into blocks on first edit.
+   */
+  readonly legacy?: string;
+}
+
+/** A stored block instance inside `settings.blocks` (raw values; validated by the section). */
+export interface ThemeSettingBlock {
+  readonly id: string;
+  readonly type: string;
+  readonly hidden?: boolean;
+  readonly settings?: Readonly<Record<string, unknown>>;
+}
+
 export interface ThemeSectionSchema {
   readonly type: string;
   readonly label: string;
@@ -253,6 +304,12 @@ export interface ThemeSectionSchema {
   readonly icon?: string;
   readonly settings: ThemeSettingsSchema;
   readonly presets?: ReadonlyArray<{ readonly label: string; readonly settings: Readonly<Record<string, unknown>> }>;
+  /** Display styles rendered as a visual picker; stored in `settings[variants.field]` (§7). */
+  readonly variants?: ThemeSectionVariants;
+  /** Nested blocks the merchant composes inside the section (§7). */
+  readonly blocks?: ThemeSectionBlocks;
+  /** Show the shared "Section style" group (default true) — applied by the library `SectionFrame`. */
+  readonly style?: boolean;
 }
 
 /* --------------------------------------------------------------------- manifest */

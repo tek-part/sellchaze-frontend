@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { createSectionMap, libraryDefaultsFor, mergeSectionSchemas, SECTION_LIBRARY, sectionSchemaFor } from './index';
-import { resolveSectionSettings } from './schema';
+import { createSectionMap, libraryDefaultsFor, mergeSectionSchemas, SECTION_LIBRARY, sectionSchemaFor, unwrapSection } from './index';
+import { blocksOf, resolveBlocks, resolveSectionSettings, variantOf } from './schema';
 import { baseTemplates, DEFAULT_HOME_SECTIONS } from './templates';
 
 const REQUIRED_TYPES = [
@@ -8,6 +8,7 @@ const REQUIRED_TYPES = [
   'product-tabs', 'flash-deals', 'banner-grid', 'image-with-text', 'video', 'rich-text', 'features', 'testimonials',
   'brand-logos', 'newsletter', 'faq', 'blog-posts', 'instagram', 'custom-html', 'spacer',
   'category-header', 'product-grid', 'product-details', 'related-products', 'recently-viewed',
+  'multicolumn', 'image-gallery', 'collage', 'countdown-banner', 'contact-form', 'trust-badges', 'icon-list', 'text-with-buttons',
 ];
 
 describe('SECTION_LIBRARY', () => {
@@ -39,6 +40,34 @@ describe('SECTION_LIBRARY', () => {
     }
   });
 
+  it('declares valid variants and blocks (contract §7)', () => {
+    for (const s of SECTION_LIBRARY) {
+      if (s.variants) {
+        const field = s.settings.find((f) => f.id === s.variants!.field);
+        expect(field?.type, `${s.type}.variants.field`).toBe('select');
+        for (const o of s.variants.options) {
+          expect(o.label.length).toBeGreaterThan(0);
+          expect(field && field.type === 'select' && field.options.some((x) => x.value === o.value), `${s.type} variant ${o.value}`).toBe(true);
+        }
+        expect(s.variants.options.some((o) => o.value === variantOf(s, {}))).toBe(true);
+      }
+      for (const b of blocksOf(s)) {
+        expect(b.type).toMatch(/^[a-z0-9]+(-[a-z0-9]+)*$/);
+        const ids = b.settings.map((f) => f.id);
+        expect(new Set(ids).size, `${s.type}.${b.type}`).toBe(ids.length);
+        for (const f of b.settings) expect(f.type).not.toBe('list');
+      }
+      if (s.blocks?.legacy) {
+        const legacy = s.settings.find((f) => f.id === s.blocks!.legacy);
+        expect(legacy?.type, `${s.type}.blocks.legacy`).toBe('list');
+        // Legacy list defaults render as blocks when a section has no `blocks` yet.
+        if (legacy && legacy.type === 'list' && legacy.default.length > 0) {
+          expect(resolveBlocks(s, {}).length).toBe(legacy.default.length);
+        }
+      }
+    }
+  });
+
   it('resolves empty settings to defaults in both languages without throwing', () => {
     for (const s of SECTION_LIBRARY) {
       const en = resolveSectionSettings(s, {}, 'en');
@@ -55,12 +84,16 @@ describe('SECTION_LIBRARY', () => {
 });
 
 describe('createSectionMap / helpers', () => {
-  it('maps every library type to a component and lets a theme override', () => {
+  it('maps every library type to a framed component and lets a theme override', () => {
     const Custom = (): null => null;
     const map = createSectionMap({ 'hero-slider': Custom, 'my-theme-thing': Custom });
     for (const s of SECTION_LIBRARY) expect(typeof map[s.type]).toBe('function');
-    expect(map['hero-slider']).toBe(Custom);
-    expect(map['my-theme-thing']).toBe(Custom);
+    // Every entry (overrides included) is wrapped in the SectionFrame; the wrapper is memoised.
+    expect(unwrapSection(map['hero-slider']!)).toBe(Custom);
+    expect(unwrapSection(map['my-theme-thing']!)).toBe(Custom);
+    expect(map['hero-slider']).not.toBe(Custom);
+    expect(createSectionMap({ 'hero-slider': Custom })['hero-slider']).toBe(map['hero-slider']);
+    expect(createSectionMap()['faq']).toBe(map['faq']);
   });
 
   it('exposes schema and defaults lookups', () => {

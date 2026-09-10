@@ -92,6 +92,23 @@ function FieldControl({ field, value, onChange, locales, defaultLocale, editLoca
             const options = normalizeOptions(field.options);
             return <SearchableSelect value={value ?? ''} onChange={(e) => onChange(e.target.value)} options={options} className="w-full" />;
         }
+        case 'segmented': {
+            // Editor-only control (section style group): a few mutually exclusive options as pills.
+            const options = normalizeOptions(field.options);
+            const current = value ?? field.default ?? options[0]?.value ?? '';
+            return (
+                <div className="grid gap-0.5 rounded-lg border border-slate-200 bg-slate-50 p-0.5" style={{ gridTemplateColumns: `repeat(${Math.max(1, options.length)}, minmax(0, 1fr))` }} role="radiogroup" aria-label={field.label || field.id}>
+                    {options.map((o) => {
+                        const active = o.value === current;
+                        return (
+                            <button key={o.value} type="button" role="radio" aria-checked={active} onClick={() => onChange(o.value)} className={`truncate rounded-md px-2 py-1.5 text-xs font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40 ${active ? 'bg-white text-brand-dark shadow-xs ring-1 ring-slate-200' : 'text-slate-500 hover:text-slate-800'}`}>
+                                {o.label}
+                            </button>
+                        );
+                    })}
+                </div>
+            );
+        }
         case 'color': {
             const hex = toHex6(value);
             return (

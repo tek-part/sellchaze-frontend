@@ -174,6 +174,10 @@ export interface SectionData {
   faq: () => ReadonlyArray<FaqItem>;
   articles: (limit?: number) => ReadonlyArray<ArticleCardModel>;
   collections: () => ReadonlyArray<CollectionCardModel>;
+  /** One product by id or handle across every collection the page serves (demo catalogue in preview). */
+  product: (idOrHandle: string) => ProductCardModel | undefined;
+  /** One category by id or url slug (demo catalogue in preview). */
+  category: (idOrSlug: string) => CategoryCardModel | undefined;
   pageHeader: () => PageHeaderData;
   loading: boolean;
   error: boolean;
@@ -222,6 +226,27 @@ export function useSectionData(context: StorefrontContext): SectionData {
       if (out.length === 0 && catalog) out = DEMO_ARTICLES(locale);
       return limit !== undefined ? out.slice(0, limit) : out;
     };
+    const product = (idOrHandle: string): ProductCardModel | undefined => {
+      const key = idOrHandle.trim();
+      if (!key) return undefined;
+      const match = (p: ProductCardModel): boolean => p.id === key || p.handle === key || p.url.endsWith(`/${key}`);
+      const d = bag(context);
+      for (const hit of Object.values(d.collections ?? {})) {
+        if (Array.isArray(hit)) {
+          const found = (hit as ReadonlyArray<ProductCardModel>).find(match);
+          if (found) return found;
+        }
+      }
+      const flat = arr<ProductCardModel>(d.products).find(match);
+      if (flat) return flat;
+      return catalog?.products.find(match);
+    };
+    const category = (idOrSlug: string): CategoryCardModel | undefined => {
+      const key = idOrSlug.trim();
+      if (!key) return undefined;
+      const match = (c: CategoryCardModel): boolean => c.id === key || c.url.endsWith(`/${key}`);
+      return categoriesFromContext(context).find(match) ?? catalog?.categories.find(match);
+    };
     return {
       products,
       categories,
@@ -230,6 +255,8 @@ export function useSectionData(context: StorefrontContext): SectionData {
       faq,
       articles,
       collections: () => featuredCollectionsFromContext(context),
+      product,
+      category,
       pageHeader: () => pageHeaderFromContext(context),
       loading: isLoading(context),
       error: hasError(context),

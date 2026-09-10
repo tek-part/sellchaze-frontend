@@ -347,8 +347,8 @@ export interface LibProductCardProps {
   showRatings?: boolean;
   showQuickAdd?: boolean;
   showWishlist?: boolean;
-  /** `card` (bordered surface) or `plain` (image + text only). */
-  style?: 'card' | 'plain' | 'minimal';
+  /** `card` (bordered surface), `plain` (image + text only), `list` (horizontal with description), `feature` (large tile). */
+  style?: 'card' | 'plain' | 'minimal' | 'list' | 'feature';
   eager?: boolean;
 }
 
@@ -409,6 +409,9 @@ export function LibProductCard(props: LibProductCardProps): ReactElement {
           <a href={product.url} className="lib-card__link">{product.title}</a>
         </h3>
         {showRatings && typeof product.rating === 'number' ? <LibRating value={product.rating} count={product.reviewCount} showCount /> : null}
+        {style === 'list' || style === 'feature' ? (
+          <p className="lib-card__desc">{product.description || [product.categoryName, product.material].filter(Boolean).join(' · ')}</p>
+        ) : null}
         <div className="lib-card__row">
           <LibPrice amount={product.price} compareAt={product.compareAtPrice} currency={product.currency} />
         </div>
