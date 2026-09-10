@@ -121,9 +121,11 @@ jobs:
           test -f "$RELEASE/.htaccess"
           # Keep the Laravel API subdomain, cPanel's CGI directory and ACME challenges intact.
           if command -v rsync >/dev/null 2>&1; then
-            rsync -a --delete \
+            # cPanel owns the web-root directory metadata (chgrp/mtime fail with exit 23), so sync
+            # contents only: no owner/group/perm/dir-time changes, and tolerate partial-attr codes.
+            rsync -rlt --delete --omit-dir-times --no-perms --no-owner --no-group \
               --exclude 'api.sellchaze.com' --exclude 'cgi-bin' --exclude '.well-known' \
-              "$RELEASE/" "$WEB_ROOT/"
+              "$RELEASE/" "$WEB_ROOT/" || { rc=$?; [ "$rc" -eq 23 ] || [ "$rc" -eq 24 ] || exit "$rc"; }
           else
             find "$WEB_ROOT" -mindepth 1 -maxdepth 1 \
               ! -name 'api.sellchaze.com' ! -name 'cgi-bin' ! -name '.well-known' \
