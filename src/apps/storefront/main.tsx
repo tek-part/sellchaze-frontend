@@ -199,6 +199,14 @@ const isStoreHost = !platformHosts.has(window.location.hostname.toLowerCase());
 
 if ('serviceWorker' in navigator && import.meta.env.PROD && isStoreHost) {
   window.addEventListener('load', () => {
-    void navigator.serviceWorker.register('/storefront-sw.js', { scope: '/' });
+    // Tenant hosts served through the Laravel shell do not host the worker script (the request
+    // falls through to the HTML shell), so only register when a real script is present.
+    void fetch('/storefront-sw.js', { method: 'HEAD', cache: 'no-store' })
+      .then((res) => {
+        const type = res.headers.get('content-type') ?? '';
+        if (!res.ok || !/javascript/i.test(type)) return;
+        return navigator.serviceWorker.register('/storefront-sw.js', { scope: '/' }).then(() => undefined);
+      })
+      .catch(() => undefined);
   });
 }
