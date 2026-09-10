@@ -32,6 +32,8 @@ jobs:
           path: dist
           retention-days: 7
           if-no-files-found: error
+          # dist/.htaccess (SPA rewrites, cache + CORS headers) must ship with the build.
+          include-hidden-files: true
       - run: npx playwright install --with-deps chromium
       - run: npm run test:a11y
       - run: npm run test:perf

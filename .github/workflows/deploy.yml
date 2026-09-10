@@ -71,6 +71,8 @@ jobs:
         run: |
           test -f dist/index.html
           test -f dist/storefront.html
+          # Without the .htaccess the SPA loses deep-link rewrites and cache/CORS headers.
+          test -f dist/.htaccess
           du -sh dist
 
       # The host's brute-force protection (cPHulk) periodically locks SSH for everyone after
@@ -116,6 +118,7 @@ jobs:
           printf '%s\n' "$DEPLOY_SHA" | grep -Eq '^[0-9a-f]{40}$'
           test -f "$RELEASE/index.html"
           test -f "$RELEASE/storefront.html"
+          test -f "$RELEASE/.htaccess"
           # Keep the Laravel API subdomain, cPanel's CGI directory and ACME challenges intact.
           if command -v rsync >/dev/null 2>&1; then
             rsync -a --delete \
