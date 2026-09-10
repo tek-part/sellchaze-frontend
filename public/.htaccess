@@ -22,6 +22,10 @@
     RewriteCond %{REQUEST_FILENAME} -d
     RewriteRule ^ - [L]
 
+    # A missing hashed bundle (stale tab after a deploy) must be a real 404, not index.html —
+    # otherwise the browser reports a MIME error instead of triggering the app's reload handler.
+    RewriteRule ^assets/ - [R=404,L]
+
     # Client-side routes
     RewriteRule ^ index.html [L]
 </IfModule>

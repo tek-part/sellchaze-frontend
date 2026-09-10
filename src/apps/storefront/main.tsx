@@ -42,6 +42,17 @@ import './foundation/pages.css';
 // Arabic typography + the direction-dependent corrections logical properties cannot make.
 import './styles/rtl.css';
 
+// A deploy replaces hashed bundles; a tab opened before it may lazy-load a chunk that no longer
+// exists. Vite reports that as `vite:preloadError` — reload once so the page picks up the new build.
+window.addEventListener('vite:preloadError', (event: Event) => {
+    const key = 'sellchaze:reloaded-for-stale-chunk';
+    if (sessionStorage.getItem(key) === window.location.href) return; // avoid a reload loop
+    sessionStorage.setItem(key, window.location.href);
+    event.preventDefault();
+    window.location.reload();
+});
+
+
 const rootElement = document.getElementById('storefront-root');
 if (!rootElement) {
   throw new Error('Storefront failed to start: #storefront-root element is missing from the document.');

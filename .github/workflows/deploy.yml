@@ -130,6 +130,11 @@ jobs:
               -exec rm -rf -- {} +
             cp -R "$RELEASE/." "$WEB_ROOT/"
           fi
+          # Keep the hashed bundles of the two previous releases available: a tab opened before
+          # this deploy can still lazy-load its chunks instead of crashing.
+          for prev in $(ls -1dt /home/sellchaze/releases/*/ 2>/dev/null | grep -v "$RELEASE/" | head -n 2); do
+            [ -d "$prev/assets" ] && cp -Rn "$prev/assets/." "$WEB_ROOT/assets/" || true
+          done
           # Tenant storefronts are served by Laravel from this shell (SpaShell); bundles load
           # from the dashboard origin. Copy it into the API app so the deploy is atomic.
           API_SHELL_DIR=/home/sellchaze/public_html/api.sellchaze.com/storage/app/storefront

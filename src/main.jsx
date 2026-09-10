@@ -1,5 +1,15 @@
 import React from 'react';
 import { createRoot } from 'react-dom/client';
+
+// A deploy replaces hashed bundles; a tab opened before it may lazy-load a chunk that no longer
+// exists. Vite reports that as `vite:preloadError` — reload once so the page picks up the new build.
+window.addEventListener('vite:preloadError', (event) => {
+    const key = 'sellchaze:reloaded-for-stale-chunk';
+    if (sessionStorage.getItem(key) === window.location.href) return; // avoid a reload loop
+    sessionStorage.setItem(key, window.location.href);
+    event.preventDefault();
+    window.location.reload();
+});
 import { BrowserRouter } from 'react-router-dom';
 import { HelmetProvider } from 'react-helmet-async';
 import { Toaster } from 'react-hot-toast';
