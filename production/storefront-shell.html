@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/png" href="/icon.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#073f4b" />
+    <link rel="manifest" href="/storefront.webmanifest" />
+    <link rel="icon" href="/pwa/icon.svg" />
+    <meta name="color-scheme" content="light dark" />
+    <style>
+      /* The active theme is code-split. Keep its fully laid-out first frame hidden to prevent the
+         empty mount from becoming a visible layout shift; ThemeProvider reveals it atomically. */
+      #storefront-root { visibility: hidden; }
+      html[data-storefront-ready='true'] #storefront-root { visibility: visible; }
+    </style>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <!--
+      Arabic face. display=swap so text is readable immediately in a fallback rather than invisible
+      while the webfont downloads — which matters more in Arabic, where the system fallback is often
+      a poor match and a blank paragraph is the worse trade.
+    -->
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&display=swap"
+    />
+    <title>Store — Modern Luxury Fashion</title>
+    <script type="module" crossorigin src="/assets/storefront-DmSn9tdY-resilient-20261003.js"></script>
+    <link rel="modulepreload" crossorigin href="/assets/jsx-runtime-CB_p5Kcx-resilient-20261003.js">
+    <link rel="modulepreload" crossorigin href="/assets/react-dom-B0r1ZbIB-resilient-20261003.js">
+    <link rel="modulepreload" crossorigin href="/assets/client-C_EXSqK--resilient-20261003.js">
+    <link rel="modulepreload" crossorigin href="/assets/preload-helper-Czpn1I53-resilient-20261003.js">
+    <link rel="modulepreload" crossorigin href="/assets/chunk-62JRHF6Z-BIvW7GpK-resilient-20261003.js">
+    <link rel="modulepreload" crossorigin href="/assets/useTranslation-0n3OkITt-resilient-20261003.js">
+    <link rel="modulepreload" crossorigin href="/assets/store-context-DpVuODFc-resilient-20261003.js">
+    <link rel="modulepreload" crossorigin href="/assets/i18next-YKXWXIRh-resilient-20261003.js">
+    <link rel="modulepreload" crossorigin href="/assets/i18n-CbF7jFdY-resilient-20261003.js">
+    <link rel="modulepreload" crossorigin href="/assets/localized-CmK97aH5-resilient-20261003.js">
+    <link rel="modulepreload" crossorigin href="/assets/theme-engine-2w-H-4ck-resilient-20261003.js">
+    <link rel="modulepreload" crossorigin href="/assets/registry-bridge-DEMPJlTq-resilient-20261003.js">
+    <link rel="modulepreload" crossorigin href="/assets/useLocale-Ciywsyu6-resilient-20261003.js">
+    <link rel="modulepreload" crossorigin href="/assets/Drawer-1rFK-UkS-resilient-20261003.js">
+    <link rel="modulepreload" crossorigin href="/assets/editor-domain-BUm8Rz5a-resilient-20261003.js">
+    <link rel="modulepreload" crossorigin href="/assets/auth-context-C6QCe2P_-resilient-20261003.js">
+    <link rel="modulepreload" crossorigin href="/assets/recently-viewed-X-0kZzOn-resilient-20261003.js">
+    <link rel="modulepreload" crossorigin href="/assets/wishlist-DAodRbGG-resilient-20261003.js">
+    <link rel="stylesheet" crossorigin href="/assets/storefront-controls-2ced254433ea.css">
+  </head>
+  <body>
+    <div id="storefront-root"></div>
+  </body>
+</html>
