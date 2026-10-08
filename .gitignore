@@ -1,4 +1,5 @@
 node_modules
+/production-site
 dist
 playwright-report
 test-results
