@@ -57,12 +57,12 @@ jobs:
           echo "sha=$(echo "$row" | jq -r .headSha)" >> "$GITHUB_OUTPUT"
       - name: Pin DEPLOY_SHA
         run: echo "DEPLOY_SHA=${{ steps.resolve.outputs.sha }}" >> "$GITHUB_ENV"
-      # The site is built once, in the Quality run, and shipped as-is. Building on the shared
-      # cPanel host (npm ci + Vite) exhausted its CPU/IO limits and throttled the live site.
-      - name: Download the built site from the Quality run
+      # Only the verified production capture is deployable until editable-source parity
+      # is established. Older Quality runs have no artifact with this name and fail closed.
+      - name: Download the verified production baseline from the Quality run
         uses: actions/download-artifact@v4
         with:
-          name: dist-${{ steps.resolve.outputs.sha }}
+          name: production-baseline-${{ steps.resolve.outputs.sha }}
           path: dist
           run-id: ${{ steps.resolve.outputs.run_id }}
           github-token: ${{ secrets.GITHUB_TOKEN }}

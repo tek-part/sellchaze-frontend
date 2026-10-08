@@ -21,7 +21,9 @@ python scripts/production_baseline.py
 
 The second command restores to a new, ignored `production-site` directory. It refuses to overwrite an existing directory. Supply `--output another-new-directory` for another copy. Verification checks the archive, each member's size and SHA-256, exact file inventory, and safe paths before extraction.
 
-`npm run build` continues to build the source checkout; it must not be treated as a reproduction of this production baseline. The existing automatic main-branch deployment would replace the live site with that older source build. Keep this recovery branch separate until source parity is established and the deployment change is reviewed.
+`npm run build` continues to build the source checkout; it must not be treated as a reproduction of this production baseline. CI still builds and tests that editable source, but verifies and restores the production archive separately. Only the restored site is uploaded as `production-baseline-<commit>`, and deployment accepts only that artifact name. Older workflow runs cannot silently supply an older source build. All existing quality and security gates remain required by the automatic deployment workflow.
+
+The captured `storefront.html` is byte-identical to `production/storefront-shell.html`, so the deployment's existing copy into Laravel storage preserves the captured shell. This deployment mode deliberately keeps the captured production release stable; future source edits do not become live until the source is reconciled and the artifact selection is explicitly changed.
 
 ## Remaining source reconciliation
 

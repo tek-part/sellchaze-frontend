@@ -24,15 +24,18 @@ jobs:
       - run: npm run typecheck
       - run: npm run test -- --reporter=dot
       - run: npm run build
-      # The production deploy ships this exact build; the shared host no longer runs npm.
+      # The editable source is older than production. Validate it above, but preserve the
+      # captured live release for deployment until source reconciliation is complete.
+      - name: Verify and restore the production baseline
+        run: python3 scripts/production_baseline.py --output production-site
       - uses: actions/upload-artifact@v4
         if: github.event_name == 'push'
         with:
-          name: dist-${{ github.sha }}
-          path: dist
+          name: production-baseline-${{ github.sha }}
+          path: production-site
           retention-days: 7
           if-no-files-found: error
-          # dist/.htaccess (SPA rewrites, cache + CORS headers) must ship with the build.
+          # Preserve .htaccess (SPA rewrites, cache + CORS headers) from production.
           include-hidden-files: true
       - run: npx playwright install --with-deps chromium
       - run: npm run test:a11y
