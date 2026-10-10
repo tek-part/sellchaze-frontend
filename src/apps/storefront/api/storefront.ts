@@ -188,6 +188,7 @@ export const submitCheckout = (body: unknown, key: string): Promise<{ data: unkn
 export const recoverCheckout = (key: string): Promise<{ data: unknown }> => apiFetch('/checkout/recover', { method: 'POST', headers: { 'Idempotency-Key': key }, body: '{}' });
 export interface CheckoutItem { product_id: number; variant_id?: number; quantity: number; personalization?: import('../types/personalization').PersonalizationValues }
 export interface CheckoutQuote {
+  order_minimum?: { amount: string; merchandise_total: string; remaining: string; eligible: boolean };
   requires_shipping: boolean;
   items: ReadonlyArray<{ product_id: number; variant_id: number | null; name: string; unit_price: string; quantity: number; line_total: string; personalization_key?: string; personalization?: ReadonlyArray<import('../types/personalization').PersonalizationEntry> }>;
   currency: string;

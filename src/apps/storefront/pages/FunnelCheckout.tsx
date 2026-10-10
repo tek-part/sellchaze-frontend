@@ -15,6 +15,8 @@ import { cartAdditionLimit } from '../state/cart-quantity';
 import { resolveCardVariant } from '../state/variant-selection';
 import { toVariant } from '../api/mappers';
 import { useVariantSelectionAutomatic } from '../state/store-context';
+import { CheckoutMinimum } from './CheckoutMinimum';
+import { minimumOrderAllows } from './minimum-order';
 
 /** Product-specific checkout: leaves the visitor's ordinary shopping cart intact. */
 export function FunnelCheckout({ productSlug }: { productSlug: string | null }): ReactElement {
@@ -46,7 +48,7 @@ export function FunnelCheckout({ productSlug }: { productSlug: string | null }):
   const quote = !quoteQ.loading && !quoteQ.error && quoteQ.data?.key === quoteKey ? quoteQ.data.quote : null;
   const submit = async (event: FormEvent): Promise<void> => {
     event.preventDefault();
-    if (!payment.paymentRetry && (!quote || !selectionReady || !contact.shippingReady || !contact.phoneVerification.ready || !contact.botProtection.ready)) return;
+    if (!payment.paymentRetry && (!minimumOrderAllows(quote) || !selectionReady || !contact.shippingReady || !contact.phoneVerification.ready || !contact.botProtection.ready)) return;
     await payment.submit({ ...contact.payload(), coupon_code: appliedCoupon });
   };
 
@@ -100,7 +102,8 @@ export function FunnelCheckout({ productSlug }: { productSlug: string | null }):
         </dl> : null}
       </div>
       {payment.error && !payment.unresolved ? <div role="alert"><p className="sf-field__error">{payment.error}</p>{!payment.paymentRetry ? <Button type="button" variant="secondary" onClick={() => { contact.query.reload(); quoteQ.reload(); }}>{label('تحديث خيارات التوصيل', 'Refresh delivery options')}</Button> : null}</div> : null}
-      {!payment.unresolved ? <Button type="submit" block loading={payment.busy} disabled={!payment.paymentMethod || !quote || !contact.shippingReady || (!payment.paymentRetry && (!contact.phoneVerification.ready || !contact.botProtection.ready))}>
+      {!payment.paymentRetry && !payment.unresolved ? <CheckoutMinimum quote={quote} /> : null}
+      {!payment.unresolved ? <Button type="submit" block loading={payment.busy} disabled={!payment.paymentMethod || !quote || !contact.shippingReady || (!payment.paymentRetry && (!minimumOrderAllows(quote) || !contact.phoneVerification.ready || !contact.botProtection.ready))}>
         {label('تأكيد الطلب', 'Place order')}
       </Button> : null}
     </form>}
