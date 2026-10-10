@@ -3,7 +3,7 @@
  * DTOs; callers map them with the store currency (see ./mappers). Cart/auth mutations included.
  * No endpoint is invented — every path matches routes/api.php `/storefront/*`.
  */
-import { apiGet, apiRootFetch, apiSend } from './client';
+import { apiFetch, apiGet, apiRootFetch, apiSend } from './client';
 import type {
   ApiBrand,
   ApiCategory,
@@ -175,7 +175,8 @@ export const applyCoupon = (code: string): Promise<{ data: unknown }> => apiSend
 export const removeCoupon = (): Promise<{ data: unknown }> => apiSend('/checkout/coupon', 'DELETE');
 export interface StorefrontPaymentMethod { slug: string; name: string; test_mode: boolean }
 export const getPaymentMethods = (): Promise<{ data: ReadonlyArray<StorefrontPaymentMethod> }> => apiGet('/payment-methods');
-export const submitCheckout = (body: unknown): Promise<{ data: unknown }> => apiSend('/checkout', 'POST', body);
+export const submitCheckout = (body: unknown, key: string): Promise<{ data: unknown }> => apiFetch('/checkout', { method: 'POST', headers: { 'Idempotency-Key': key }, body: JSON.stringify(body) });
+export const recoverCheckout = (key: string): Promise<{ data: unknown }> => apiFetch('/checkout/recover', { method: 'POST', headers: { 'Idempotency-Key': key }, body: '{}' });
 export interface CheckoutItem { product_id: number; variant_id?: number; quantity: number }
 export interface CheckoutQuote {
   items: ReadonlyArray<{ product_id: number; variant_id: number | null; name: string; unit_price: string; quantity: number; line_total: string }>;

@@ -5,6 +5,7 @@ import { useAsync } from '../api/useAsync';
 import { useLocale } from '../i18n/useLocale';
 import { formatMoney } from '../utils/format';
 import { useCheckoutPaymentFlow } from './useCheckoutPaymentFlow';
+import { CheckoutRecovery } from './CheckoutRecovery';
 import { CheckoutFieldsForm, useCheckoutFields } from './CheckoutFields';
 import './funnel-checkout.css';
 
@@ -37,10 +38,11 @@ export function FunnelCheckout({ productSlug }: { productSlug: string | null }):
   return <Section id="funnel-checkout" className="sf-funnel-checkout"><Container narrow>
     <h2>{label('أكمل طلبك', 'Complete your order')}</h2>
     <p>{label('اختر الكمية وأدخل بيانات التوصيل.', 'Choose your quantity and enter your delivery details.')}</p>
+    <CheckoutRecovery flow={payment} />
     {productQ.loading ? <Spinner label={label('جارٍ تحميل المنتج…', 'Loading product…')} /> : productQ.error ? <ErrorState
       title={label('تعذّر تحميل المنتج', 'Unable to load product')}
       actions={<Button onClick={productQ.reload}>{label('إعادة المحاولة', 'Retry')}</Button>} /> : !product ? <p role="status">{label('هذا المنتج غير متاح للطلب حاليًا.', 'This product is currently unavailable.')}</p> : <form onSubmit={(event) => void submit(event)}>
-      <fieldset disabled={payment.busy || !!payment.paymentRetry} className="sf-funnel-checkout__fields">
+      <fieldset disabled={payment.busy || payment.unresolved} className="sf-funnel-checkout__fields">
         <legend className="sf-funnel-checkout__product">{product.name}</legend>
         <div className="sf-funnel-checkout__selection">
           {variants.length > 0 ? <label className="sf-funnel-checkout__option">
@@ -80,11 +82,10 @@ export function FunnelCheckout({ productSlug }: { productSlug: string | null }):
           <div className="sf-funnel-checkout__grand"><dt>{label('الإجمالي', 'Total')}</dt><dd>{formatMoney(Number(quote.totals.grand_total), quote.currency, locale)}</dd></div>
         </dl> : null}
       </div>
-      {payment.error ? <div role="alert"><p className="sf-field__error">{payment.error}</p>{!payment.paymentRetry ? <Button type="button" variant="secondary" onClick={() => { contact.query.reload(); quoteQ.reload(); }}>{label('تحديث خيارات التوصيل', 'Refresh delivery options')}</Button> : null}</div> : null}
-      <Button type="submit" block loading={payment.busy} disabled={!payment.paymentMethod || (!payment.paymentRetry && (!quote || !contact.shippingReady))}>
-        {payment.paymentRetry ? label('إعادة محاولة الدفع', 'Retry payment') : label('تأكيد الطلب', 'Place order')}
-      </Button>
-      {payment.paymentRetry ? <Button type="button" variant="secondary" block onClick={payment.cancelRetry}>{label('بدء طلب جديد بدلًا من ذلك', 'Start a new order instead')}</Button> : null}
+      {payment.error && !payment.unresolved ? <div role="alert"><p className="sf-field__error">{payment.error}</p>{!payment.paymentRetry ? <Button type="button" variant="secondary" onClick={() => { contact.query.reload(); quoteQ.reload(); }}>{label('تحديث خيارات التوصيل', 'Refresh delivery options')}</Button> : null}</div> : null}
+      {!payment.unresolved ? <Button type="submit" block loading={payment.busy} disabled={!payment.paymentMethod || !quote || !contact.shippingReady}>
+        {label('تأكيد الطلب', 'Place order')}
+      </Button> : null}
     </form>}
   </Container></Section>;
 }
