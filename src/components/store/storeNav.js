@@ -46,6 +46,7 @@ export function buildStoreNav(t, access = {}) {
             key: 'design',
             label: t('store_nav_group_design', 'Design'),
             items: [
+                { key: 'funnels', to: 'funnels', label: t('store_nav_funnels', 'Sales funnels'), Icon: HiOutlineRocketLaunch, show: access.canStorePages },
                 {
                     key: 'themes',
                     to: 'themes',

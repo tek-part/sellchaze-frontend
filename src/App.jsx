@@ -114,6 +114,7 @@ const StoreCustomizePage = lazy(() => import('./pages/StoreCustomizePage'));
 const StorePaymentsPage = lazy(() => import('./pages/StorePaymentsPage'));
 const EditorLayout = lazy(() => import('./components/editor/EditorLayout'));
 const StorePagesPage = lazy(() => import('./pages/StorePagesPage'));
+const StoreFunnelsPage = lazy(() => import('./pages/StoreFunnelsPage'));
 const StoreMediaPage = lazy(() => import('./pages/StoreMediaPage'));
 const StoreGeneralSettingsPage = lazy(() => import('./pages/store/settings/StoreGeneralSettingsPage'));
 const StoreLocalizationSettingsPage = lazy(() => import('./pages/store/settings/StoreLocalizationSettingsPage'));
@@ -203,6 +204,7 @@ const STORE_ROUTES = [
     // Legacy per-theme settings editor → the full-screen editor's Theme settings tab.
     { path: 'themes/:themeId/settings', element: <ThemeSettingsRedirect /> },
     { path: 'pages', element: <StorePagesPage /> },
+    { path: 'funnels', element: <StoreFunnelsPage /> },
     { path: 'pages/:pageId/builder', element: <StorePageBuilderPage /> },
     { path: 'content/:key', element: <StoreContentPageEditor /> },
     { path: 'menus', element: <StoreMenusPage /> },

@@ -583,6 +583,12 @@ function SidebarNavInner({ isAdmin = false, isSupplier = false, roles = [], perm
                                 </NavLink>
                             ) : null}
                             {canStorePages ? (
+                                <NavLink to="/store/funnels" className={subNavLinkClass}>
+                                    <HiOutlineRocketLaunch className="h-4 w-4 shrink-0 opacity-90" aria-hidden />
+                                    {t('store_nav_funnels', 'Sales funnels')}
+                                </NavLink>
+                            ) : null}
+                            {canStorePages ? (
                                 <NavLink to="/store/pages" className={subNavLinkClass}>
                                     <HiOutlineDocumentText className="h-4 w-4 shrink-0 opacity-90" aria-hidden />
                                     {t('nav_store_pages')}
