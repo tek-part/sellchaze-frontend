@@ -58,7 +58,7 @@ export function CartDrawer(props: CartDrawerProps): ReactElement {
                       <div className="fr-qty" role="group" aria-label={frText(locale, 'quantity')}>
                         <button type="button" className="fr-qty__btn" aria-label={frText(locale, 'decrease')} onClick={() => updateQuantity(line.id, Math.max(1, line.quantity - 1))} disabled={line.quantity <= 1}><IconMinus /></button>
                         <span className="fr-qty__value" aria-live="polite">{line.quantity}</span>
-                        <button type="button" className="fr-qty__btn" aria-label={frText(locale, 'increase')} onClick={() => updateQuantity(line.id, line.quantity + 1)}><IconPlus /></button>
+                        <button type="button" className="fr-qty__btn" aria-label={frText(locale, 'increase')} onClick={() => updateQuantity(line.id, line.quantity + 1)} disabled={line.maxQuantity !== undefined && line.quantity >= line.maxQuantity}><IconPlus /></button>
                       </div>
                       <button type="button" className="fr-cart__remove" aria-label={t('common.remove')} onClick={() => remove(line.id)}><IconTrash /></button>
                     </div>

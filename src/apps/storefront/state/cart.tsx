@@ -15,6 +15,7 @@ import {
 } from 'react';
 import type { CartLine, CartTotals } from '../types/cart';
 import { useStore } from './store-context';
+import { addCartLine, changeCartQuantity, boundedQuantity } from './cart-quantity';
 
 const storageKey = (currency: string): string => `sf-cart-v1:${currency}`;
 
@@ -36,7 +37,8 @@ function loadInitial(currency: string): CartLine[] {
   try {
     const raw = window.localStorage.getItem(storageKey(currency));
     const parsed: unknown = raw ? JSON.parse(raw) : null;
-    return Array.isArray(parsed) ? (parsed as CartLine[]) : [];
+    return Array.isArray(parsed) ? (parsed as CartLine[]).filter((line) => line && typeof line.id === 'string' && line.currency === currency && Number.isFinite(line.price) && line.price >= 0)
+      .map((line) => ({ ...line, quantity: boundedQuantity(line.quantity, line.maxQuantity) })).filter((line) => line.quantity > 0) : [];
   } catch {
     return [];
   }
@@ -62,19 +64,7 @@ export function CartProvider(props: { children: ReactNode }): ReactElement {
   }, [lines, store.currency]);
 
   const add = useCallback((line: AddCartInput) => {
-    const quantity = line.quantity ?? 1;
-    setLines((prev) => {
-      const index = prev.findIndex((l) => l.id === line.id);
-      if (index >= 0) {
-        const existing = prev[index];
-        if (!existing) return prev;
-        const cap = line.maxQuantity ?? existing.maxQuantity ?? Number.POSITIVE_INFINITY;
-        const next = [...prev];
-        next[index] = { ...existing, quantity: Math.min(existing.quantity + quantity, cap) };
-        return next;
-      }
-      return [...prev, { ...line, quantity }];
-    });
+    setLines((prev) => addCartLine(prev, line));
   }, []);
 
   const remove = useCallback((id: string) => {
@@ -82,9 +72,7 @@ export function CartProvider(props: { children: ReactNode }): ReactElement {
   }, []);
 
   const updateQuantity = useCallback((id: string, quantity: number) => {
-    setLines((prev) =>
-      quantity <= 0 ? prev.filter((l) => l.id !== id) : prev.map((l) => (l.id === id ? { ...l, quantity } : l)),
-    );
+    setLines((prev) => changeCartQuantity(prev, id, quantity));
   }, []);
 
   const clear = useCallback(() => setLines([]), []);

@@ -16,6 +16,7 @@ export interface ApiVariant {
 }
 
 export interface ApiProduct {
+  option_display?: ReadonlyArray<import('../types/product-options').OptionDisplay> | null;
   id: number;
   name: string;
   slug: string;

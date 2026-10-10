@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import api from '../../api/client';
 import useStoreScope from '../../hooks/useStoreScope';
 import StoreVariantGenerator from './StoreVariantGenerator';
+import StoreOptionDisplay from './StoreOptionDisplay';
 
 const field = 'mt-1 w-full min-w-0 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm';
 const button = 'rounded-lg border border-slate-200 px-3 py-2 text-sm font-semibold disabled:opacity-40';
@@ -28,7 +29,7 @@ export function ProductStockControl({ productId, stock, variantId, onSaved }) {
     </div>;
 }
 
-export default function StoreProductOptions({ productId, locales, defaultLocale, onCount }) {
+export default function StoreProductOptions({ productId, locales, defaultLocale, onCount, media }) {
     const { apiBase } = useStoreScope(); const { permissions = [] } = useOutletContext(); const { i18n } = useTranslation(); const ar = i18n.language.startsWith('ar'); const text = (a, e) => ar ? a : e;
     const [rows, setRows] = useState([]); const [edit, setEdit] = useState(null); const [busy, setBusy] = useState(false); const [error, setError] = useState(''); const [loading, setLoading] = useState(true); const inFlight = useRef(false); const [remove, setRemove] = useState(null);
     const path = `${apiBase}/catalog/products/${productId}/variants`;
@@ -58,6 +59,7 @@ export default function StoreProductOptions({ productId, locales, defaultLocale,
         <header className="flex flex-wrap items-center justify-between gap-3"><div><h2 className="text-lg font-bold">{text('خيارات المنتج', 'Product options')}</h2><p className="text-sm text-slate-500">{text('سعر ومخزون مستقل لكل لون أو مقاس. السعر الفارغ يستخدم سعر المنتج.', 'Independent price and inventory per color or size. An empty price inherits the product price.')}</p></div>{permissions.includes('products-edit') ? <button className={button} disabled={busy} onClick={() => start(null)}>{text('إضافة خيار', 'Add option')}</button> : null}</header>
         {error ? <p role="alert" className="rounded-lg bg-red-50 p-3 text-sm text-red-700">{error}</p> : null}
         {loading ? <p role="status">{text('جارٍ التحميل…', 'Loading…')}</p> : null}
+        {permissions.includes('products-edit') && !loading && !edit && !remove ? <StoreOptionDisplay path={`${apiBase}/catalog/products/${productId}`} rows={rows} locales={locales} media={media} /> : null}
         {permissions.includes('products-edit') && !edit && !remove ? <StoreVariantGenerator path={path} onSaved={load} /> : null}
         {remove ? <div className="rounded-lg border border-red-200 p-4" role="alert"><p>{text('حذف الخيار', 'Delete option')}: {remove.name}?</p><div className="mt-3 flex gap-2"><button className={button} disabled={busy} onClick={destroy}>{text('تأكيد الحذف', 'Confirm deletion')}</button><button className={button} disabled={busy} onClick={() => setRemove(null)}>{text('إلغاء', 'Cancel')}</button></div></div> : null}
         {edit ? <form onSubmit={save} className="rounded-lg border border-emerald-200 p-4"><fieldset disabled={busy} className="min-w-0 space-y-4"><h3 className="font-bold">{edit.id ? text('تعديل الخيار', 'Edit option') : text('خيار جديد', 'New option')}</h3><div className="grid gap-4 sm:grid-cols-2"><label>{text('اسم الخيار', 'Option name')}<input className={field} required maxLength={255} value={edit.name} onChange={(e) => setEdit({ ...edit, name: e.target.value })} /></label>{locales.filter((locale) => locale !== defaultLocale).map((locale) => <label key={locale}>{text('ترجمة الاسم', 'Name translation')} ({locale})<input className={field} dir={locale === 'ar' ? 'rtl' : 'ltr'} maxLength={255} value={edit.translations[locale] || ''} onChange={(e) => setEdit({ ...edit, translations: { ...edit.translations, [locale]: e.target.value } })} /></label>)}{[['sku', 'رمز المخزون', 'SKU'], ['barcode', 'الباركود', 'Barcode'], ['price_override', 'سعر الخيار', 'Option price'], ['compare_price', 'السعر قبل الخصم', 'Compare-at price'], ['cost', 'التكلفة', 'Cost'], ['weight', 'الوزن بالكيلوغرام', 'Weight in kg'], ['position', 'الترتيب', 'Position']].map(([key, a, e]) => <label key={key}>{text(a, e)}<input className={field} type={['sku', 'barcode'].includes(key) ? 'text' : 'number'} min="0" max={key === 'weight' ? '999999.999' : '999999999.99'} step={key === 'position' ? '1' : key === 'weight' ? '0.001' : '0.01'} value={edit[key]} onChange={(event) => setEdit({ ...edit, [key]: event.target.value })} /></label>)}</div>

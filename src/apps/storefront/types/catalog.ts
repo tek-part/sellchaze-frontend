@@ -73,6 +73,7 @@ export interface ProductVariantModel {
   compareAtPrice?: number;
   availableStock?: number;
   available: boolean;
+  options?: Readonly<Record<string, string>>;
 }
 
 /** A key/value spec row rendered in the PDP "Specs" tab. */
@@ -83,6 +84,7 @@ export interface ProductSpec {
 
 /** The full product for a PDP — a superset of the card model. */
 export interface ProductDetailModel extends ProductCardModel {
+  optionDisplay?: ReadonlyArray<import('./product-options').OptionDisplay>;
   sku?: string;
   descriptionHtml?: string;
   images: ReadonlyArray<ProductImage>;
