@@ -18,6 +18,7 @@ export interface ApiVariant {
 
 export interface ApiProduct {
   digital_pool_stock?: number | null;
+  order_quantity_limit?: number | null;
   digital_type?: 'physical' | 'link' | 'codes';
   has_personalization?: boolean;
   personalization_fields?: ReadonlyArray<import('../types/personalization').PersonalizationField> | null;

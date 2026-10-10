@@ -17,6 +17,13 @@ const base: ApiProduct = {
 };
 
 describe('toProductCard', () => {
+  it('keeps the merchant order cap separate from stock and sold-out state', () => {
+    const card = toProductCard({ ...base, order_quantity_limit: 2 }, 'EGP');
+    expect(card.orderMaxQuantity).toBe(2);
+    expect(card.soldOut).toBe(false);
+    expect(toProductCard({ ...base, order_quantity_limit: 0 }, 'EGP').orderMaxQuantity).toBeUndefined();
+    expect(toProductDetail({ ...base, order_quantity_limit: 2 }, 'EGP').orderMaxQuantity).toBe(2);
+  });
   it('maps ids, slug→handle/url and parses string prices', () => {
     const card = toProductCard(base, 'USD');
     expect(card.id).toBe('7');

@@ -28,6 +28,7 @@ export interface ProductMediaModel extends ProductImage {
 /** Compact product shape a card needs — a projection of the full product. */
 export interface ProductCardModel {
   sharedMaxQuantity?: number;
+  orderMaxQuantity?: number;
   digitalType?: 'physical' | 'link' | 'codes';
   hasPersonalization?: boolean;
   id: string;

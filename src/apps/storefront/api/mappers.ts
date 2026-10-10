@@ -39,6 +39,7 @@ export function toProductCard(product: ApiProduct, currency: string, multiplier 
   return {
     id: String(product.id),
     digitalType: product.digital_type ?? 'physical',
+    ...(product.order_quantity_limit != null && product.order_quantity_limit > 0 ? { orderMaxQuantity: product.order_quantity_limit } : {}),
     ...(product.digital_type === 'codes' && product.digital_pool_stock != null ? { sharedMaxQuantity: product.digital_pool_stock } : {}),
     hasPersonalization: product.has_personalization === true || !!product.personalization_fields?.length,
     handle: product.slug,

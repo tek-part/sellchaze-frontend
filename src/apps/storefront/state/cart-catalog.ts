@@ -31,6 +31,7 @@ export function reconcileCartCatalog(lines: ReadonlyArray<CartLine>, requestedId
       ...(image ? { image: image.src } : {}),
       ...(stock !== undefined ? { maxQuantity: stock } : {}),
       ...(product.sharedMaxQuantity !== undefined ? { sharedMaxQuantity: product.sharedMaxQuantity } : {}),
+      ...(product.orderMaxQuantity !== undefined ? { orderMaxQuantity: product.orderMaxQuantity } : {}),
       ...(Object.keys(values).length ? { personalization: values, personalizationEntries: entries } : {}),
     }];
   });

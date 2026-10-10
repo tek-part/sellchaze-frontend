@@ -6,6 +6,13 @@ import { cartPurchaseSummary, reconcileCartCatalog } from './cart-catalog';
 const line: CartLine = { id: '1:default', productId: '1', title: 'Old bag', url: '/products/old-bag', quantity: 3, price: 100, currency: 'EGP', maxQuantity: 8 };
 const product: ProductDetailModel = { id: '1', handle: 'bag', title: 'New bag', url: '/products/bag', currency: 'EGP', price: 125, images: [], availableStock: 2, digitalType: 'physical' };
 describe('current catalog reconciliation', () => {
+  it('refreshes and removes merchant caps independently of available stock', () => {
+    const capped = reconcileCartCatalog([{ ...line, quantity: 4 }], ['1'], [{ ...product, availableStock: 8, orderMaxQuantity: 2 }]);
+    expect(capped[0]).toMatchObject({ quantity: 2, maxQuantity: 8, orderMaxQuantity: 2 });
+    const uncapped = reconcileCartCatalog(capped, ['1'], [{ ...product, availableStock: 8 }]);
+    expect(uncapped[0]?.orderMaxQuantity).toBeUndefined();
+    expect(uncapped[0]?.quantity).toBe(2);
+  });
   it('refreshes prices, slugs, stock and digital routing on stale saved lines', () => {
     const next = reconcileCartCatalog([line], ['1'], [product]);
     expect(next[0]).toMatchObject({ title: 'New bag', url: '/products/bag', price: 125, quantity: 2, maxQuantity: 2, digitalType: 'physical' });
