@@ -19,6 +19,8 @@ export interface CheckoutContactPayload {
   customer_name?: string;
   customer_email?: string;
   customer_phone?: string;
+  phone_verification?: string;
+  bot_proof?: string;
   notes?: string;
   shipping_address?: Record<string, unknown>;
   coupon_code?: string;
