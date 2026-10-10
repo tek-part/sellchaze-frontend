@@ -1,4 +1,5 @@
 import { PersonalizationSummary } from '../apps/storefront/foundation/components/PersonalizationSummary';
+import { DigitalDeliverySummary } from '../apps/storefront/foundation/components/DigitalDeliverySummary';
 import { useCallback, useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import useStoreScope from '../hooks/useStoreScope';
@@ -91,7 +92,7 @@ export default function StoreOrderDetailPage() {
                                 <tbody>
                                     {(order.items || []).map((it) => (
                                         <tr key={it.id} className="border-t border-slate-100">
-                                            <td className="px-5 py-3 font-medium text-slate-900">{it.name}<PersonalizationSummary entries={it.personalization} /></td>
+                                            <td className="px-5 py-3 font-medium text-slate-900">{it.name}<PersonalizationSummary entries={it.personalization} /><DigitalDeliverySummary delivery={it.digital_delivery} /></td>
                                             <td className="px-5 py-3 text-slate-600">{money(it.unit_price)}</td>
                                             <td className="px-5 py-3 text-slate-600">{it.quantity}</td>
                                             <td className="px-5 py-3 font-medium text-slate-900">{money(it.line_total)}</td>

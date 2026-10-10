@@ -24,9 +24,9 @@ export default function ProductRichText({ value, onChange, label, locale, disabl
     });
     useEffect(() => { editor?.setEditable(!disabled, false); }, [editor, disabled]);
     useEffect(() => {
-        if (editor && !source && editor.getHTML() !== value && !editor.isFocused) editor.commands.setContent(sanitizeHtml(value), { emitUpdate: false });
+        if (editor && editor.schema && !editor.isDestroyed && !source && editor.getHTML() !== value && !editor.isFocused) editor.commands.setContent(sanitizeHtml(value), { emitUpdate: false });
     }, [editor, source, value]);
-    if (!editor) return null;
+    if (!editor || !editor.schema || editor.isDestroyed) return null;
     const command = (name) => editor.chain().focus()[name]().run();
     const tools = [['bold', 'عريض', 'Bold', 'toggleBold'], ['italic', 'مائل', 'Italic', 'toggleItalic'], ['underline', 'تسطير', 'Underline', 'toggleUnderline'], ['strike', 'شطب', 'Strike', 'toggleStrike'], ['bulletList', 'قائمة نقطية', 'Bullet list', 'toggleBulletList'], ['orderedList', 'قائمة مرقمة', 'Numbered list', 'toggleOrderedList'], ['blockquote', 'اقتباس', 'Quote', 'toggleBlockquote']];
     const content = <div className={`product-rich-text ${expanded ? 'product-rich-text--expanded' : ''}`} onKeyDown={(event) => { if (event.key === 'Escape') setExpanded(false); }}>

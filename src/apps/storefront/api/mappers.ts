@@ -38,6 +38,7 @@ export function toProductCard(product: ApiProduct, currency: string, multiplier 
 
   return {
     id: String(product.id),
+    digitalType: product.digital_type ?? 'physical',
     hasPersonalization: product.has_personalization === true || !!product.personalization_fields?.length,
     handle: product.slug,
     title: product.name,

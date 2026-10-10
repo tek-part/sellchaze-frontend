@@ -214,6 +214,7 @@ export const resetPassword = (body: { token: string; email: string; password: st
   apiRootFetch('/auth/reset-password', { method: 'POST', body: JSON.stringify(body) });
 
 export interface ApiOrderItem {
+  digital_delivery?: import('../types/digital').DigitalDelivery | null;
   personalization?: ReadonlyArray<import('../types/personalization').PersonalizationEntry>;
   id?: number;
   name: string;

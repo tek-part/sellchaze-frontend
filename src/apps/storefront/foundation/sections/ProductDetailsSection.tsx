@@ -104,6 +104,7 @@ export function ProductDetailsSection(props: SectionRenderProps): ReactElement |
           <div className="sf-pdp__buybox">
             {product.vendor ? <span className="sf-pdp__vendor">{product.vendor}</span> : null}
             <h1 className="sf-pdp__title">{product.title}</h1>
+            {product.digitalType && product.digitalType !== 'physical' ? <p>{ar ? 'منتج رقمي — يُتاح الرابط أو الكود بعد تأكيد الدفع.' : 'Digital product — your link or code is available after payment is confirmed.'}</p> : null}
 
             <div className="sf-pdp__price">
               <Price amount={unitPrice} {...(compareAt !== undefined ? { compareAt } : {})} currency={product.currency} emphasis />
