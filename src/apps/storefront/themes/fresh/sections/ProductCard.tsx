@@ -9,6 +9,7 @@ import { type ReactElement } from 'react';
 import { cn } from '../../../../../shared/utils/cn';
 import type { ProductCardModel } from '../../../types/catalog';
 import { useCart } from '../../../state/cart';
+import { CardVariantPicker, useCardPurchase } from '../../../foundation/components/CardVariantPicker';
 import { useWishlist } from '../../../state/wishlist';
 import { useThemeSettings } from '../../../theme-engine/context';
 import { LibImage, LibPrice, LibRating, useLibT, useLocaleCode } from '../../../sections-lib';
@@ -38,6 +39,7 @@ export function FreshProductCard(props: FreshProductCardProps): ReactElement {
   const locale = useLocaleCode();
   const settings = useThemeSettings();
   const cart = useCart();
+  const purchase = useCardPurchase(product);
   const wishlist = useWishlist();
 
   const themeQuickAdd = settings['show_quick_add'] !== false;
@@ -46,26 +48,16 @@ export function FreshProductCard(props: FreshProductCardProps): ReactElement {
   const defaultUnit = typeof settings['default_unit_label'] === 'string' ? settings['default_unit_label'] : '';
   const unit = showUnit ? productUnit(product) || defaultUnit : '';
 
-  const lineId = `${product.id}:default`;
-  const line = cart.lines.find((l) => l.id === lineId);
-  const qty = line?.quantity ?? 0;
-  const onSale = typeof product.compareAtPrice === 'number' && product.compareAtPrice > product.price;
-  const discount = onSale && product.compareAtPrice ? Math.round((1 - product.price / product.compareAtPrice) * 100) : 0;
+  const lineId = purchase.input?.id;
+  const qty = purchase.quantity;
+  const onSale = typeof purchase.compareAt === 'number' && purchase.compareAt > purchase.price;
+  const discount = onSale && purchase.compareAt ? Math.round((1 - purchase.price / purchase.compareAt) * 100) : 0;
   const wished = wishlist.has(product.id);
 
   const add = (): void => {
-    cart.add({
-      id: lineId,
-      productId: product.id,
-      title: product.title,
-      url: product.url,
-      ...(product.image ? { image: product.image.src } : {}),
-      price: product.price,
-      currency: product.currency,
-      quantity: 1,
-    });
+    purchase.add();
   };
-  const dec = (): void => cart.updateQuantity(lineId, qty - 1);
+  const dec = (): void => { if (lineId) cart.updateQuantity(lineId, qty - 1); };
 
   return (
     <article className={cn('lib-card', 'lib-card--card', 'fr-card', product.soldOut && 'lib-card--soldout', qty > 0 && 'fr-card--in-basket')}>
@@ -101,17 +93,18 @@ export function FreshProductCard(props: FreshProductCardProps): ReactElement {
         {unit ? <span className="fr-card__unit">{unit}</span> : null}
         {showRatings && themeRatings && typeof product.rating === 'number' ? <LibRating value={product.rating} count={product.reviewCount} showCount /> : null}
         <div className="lib-card__row fr-card__row">
-          <LibPrice amount={product.price} compareAt={product.compareAtPrice} currency={product.currency} />
+          <LibPrice amount={purchase.price} compareAt={purchase.compareAt} currency={product.currency} />
         </div>
+        {showQuickAdd && themeQuickAdd && !product.soldOut ? <CardVariantPicker product={product} value={purchase.variantId} onChange={purchase.choose} atLimit={purchase.input !== null && !purchase.canAdd} /> : null}
         {showQuickAdd && themeQuickAdd && !product.soldOut ? (
           qty > 0 ? (
             <div className="fr-card__qty fr-qty" role="group" aria-label={frText(locale, 'quantity')}>
               <button type="button" className="fr-qty__btn" aria-label={frText(locale, 'decrease')} onClick={dec}><IconMinus /></button>
               <span className="fr-qty__value" aria-live="polite">{qty}</span>
-              <button type="button" className="fr-qty__btn" aria-label={frText(locale, 'increase')} onClick={add}><IconPlus /></button>
+              <button type="button" disabled={!purchase.canAdd} className="fr-qty__btn" aria-label={frText(locale, 'increase')} onClick={add}><IconPlus /></button>
             </div>
           ) : (
-            <button type="button" className="fr-card__add" onClick={add} aria-label={`${t('addToCart')}: ${product.title}`}>
+            <button type="button" disabled={!purchase.canAdd} className="fr-card__add" onClick={add} aria-label={`${t('addToCart')}: ${product.title}`}>
               <IconPlus width={18} height={18} />
               <span>{frText(locale, 'add')}</span>
             </button>

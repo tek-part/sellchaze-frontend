@@ -7,7 +7,7 @@ import { useState, type ReactElement } from 'react';
 import { cn } from '../../../../../shared/utils/cn';
 import type { ProductCardModel } from '../../../types/catalog';
 import { useThemeSettings } from '../../../theme-engine/context';
-import { useCart } from '../../../state/cart';
+import { CardVariantPicker, useCardPurchase } from '../../../foundation/components/CardVariantPicker';
 import { useWishlist } from '../../../state/wishlist';
 import { LibImage, LibPrice, LibRating, useLibT, useLocaleCode } from '../../../sections-lib';
 import { productSpecs, useCompare } from './compare';
@@ -28,13 +28,13 @@ export function TkProductCard(props: TkProductCardProps): ReactElement {
   const t = useLibT();
   const locale = useLocaleCode();
   const settings = useThemeSettings();
-  const cart = useCart();
+  const purchase = useCardPurchase(product);
   const wishlist = useWishlist();
   const compare = useCompare();
   const [added, setAdded] = useState(false);
 
-  const onSale = typeof product.compareAtPrice === 'number' && product.compareAtPrice > product.price;
-  const discount = onSale && product.compareAtPrice ? Math.round((1 - product.price / product.compareAtPrice) * 100) : 0;
+  const onSale = typeof purchase.compareAt === 'number' && purchase.compareAt > purchase.price;
+  const discount = onSale && purchase.compareAt ? Math.round((1 - purchase.price / purchase.compareAt) * 100) : 0;
   const wished = wishlist.has(product.id);
   const compared = compare.has(product.id);
   const compareFull = !compared && compare.count >= compare.max;
@@ -42,16 +42,7 @@ export function TkProductCard(props: TkProductCardProps): ReactElement {
   const showCompare = settings['show_compare'] !== false;
 
   const quickAdd = (): void => {
-    cart.add({
-      id: `${product.id}:default`,
-      productId: product.id,
-      title: product.title,
-      url: product.url,
-      ...(product.image ? { image: product.image.src } : {}),
-      price: product.price,
-      currency: product.currency,
-      quantity: 1,
-    });
+    if (!purchase.add()) return;
     setAdded(true);
     window.setTimeout(() => setAdded(false), 1600);
   };
@@ -111,12 +102,12 @@ export function TkProductCard(props: TkProductCardProps): ReactElement {
         ) : null}
         {showRatings && typeof product.rating === 'number' ? <LibRating value={product.rating} count={product.reviewCount} showCount /> : null}
         <div className="lib-card__row tk-card__row">
-          <LibPrice amount={product.price} compareAt={product.compareAtPrice} currency={product.currency} className="tk-card__price" />
+          <LibPrice amount={purchase.price} compareAt={purchase.compareAt} currency={product.currency} className="tk-card__price" />
         </div>
         {showQuickAdd && !product.soldOut ? (
-          <button type="button" className={cn('lib-card__add', added && 'is-added')} onClick={quickAdd} aria-live="polite">
+          <><CardVariantPicker product={product} value={purchase.variantId} onChange={purchase.choose} atLimit={purchase.input !== null && !purchase.canAdd} /><button type="button" disabled={!purchase.canAdd} className={cn('lib-card__add', added && 'is-added')} onClick={quickAdd} aria-live="polite">
             {added ? t('added') : t('addToCart')}
-          </button>
+          </button></>
         ) : null}
       </div>
     </article>

@@ -3,7 +3,7 @@
  * rest), serif name + serif price. Hover cross-fades to the second frame with a 1.03 zoom; optional
  * QuickAdd bar and wishlist toggle sit above the full-card link. One badge max. See §32.4.
  */
-import type { ReactElement } from 'react';
+import { useState, type ReactElement } from 'react';
 import { useTranslation } from 'react-i18next';
 import { cn } from '../../../../shared/utils/cn';
 import type { ProductCardModel } from '../../types/catalog';
@@ -13,6 +13,8 @@ import { Price } from './Price';
 import { Rating } from './Rating';
 import { StoreImage } from './Image';
 import { WishlistButton } from './WishlistButton';
+import { CardVariantPicker } from './CardVariantPicker';
+import { cardCartInput } from '../../utils/card-purchase';
 
 export interface ProductCardProps {
   product: ProductCardModel;
@@ -21,7 +23,7 @@ export interface ProductCardProps {
   wishlisted?: boolean;
   onWishlistToggle?: (id: string) => void;
   showQuickAdd?: boolean;
-  onQuickAdd?: (id: string) => void;
+  onQuickAdd?: (id: string, variantId?: string) => void;
   quickAddLoading?: boolean;
   className?: string;
 }
@@ -39,6 +41,10 @@ export function ProductCard(props: ProductCardProps): ReactElement {
     className,
   } = props;
   const { t } = useTranslation();
+  const [selection, setSelection] = useState<{ productId: string; variantId: string }>();
+  const variantId = selection?.productId === product.id ? selection.variantId : undefined;
+  const variant = product.variants?.find((item) => item.id === variantId);
+  const input = cardCartInput(product, variantId);
 
   return (
     <article className={cn('sf-product-card', className)}>
@@ -72,7 +78,8 @@ export function ProductCard(props: ProductCardProps): ReactElement {
           </div>
         ) : showQuickAdd && onQuickAdd ? (
           <div className="sf-product-card__quickadd">
-            <Button size="sm" block loading={quickAddLoading} onClick={() => onQuickAdd(product.id)}>
+            <CardVariantPicker product={product} value={variantId} onChange={(value) => setSelection({ productId: product.id, variantId: value })} />
+            <Button size="sm" block disabled={!input} loading={quickAddLoading} onClick={() => { if (input) onQuickAdd(product.id, input.variantId); }}>
               {t('product.addToCart')}
             </Button>
           </div>
@@ -88,8 +95,8 @@ export function ProductCard(props: ProductCardProps): ReactElement {
         </Heading>
         <div className="sf-product-card__meta">
           <Price
-            amount={product.price}
-            compareAt={product.compareAtPrice}
+            amount={variant?.price ?? product.price}
+            compareAt={variant?.compareAtPrice ?? product.compareAtPrice}
             currency={product.currency}
             locale={locale}
           />
