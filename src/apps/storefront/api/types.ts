@@ -31,6 +31,7 @@ export interface ApiProduct {
     image_url?: string | null;
     image_responsive?: { src: string; srcset?: string | null; sizes?: string; widths?: ReadonlyArray<number> } | null;
   images?: ReadonlyArray<string> | null;
+  media?: ReadonlyArray<{ id: number; type: 'image' | 'video'; url: string; alt?: string | null; mime?: string | null; position?: number }> | null;
   is_active?: boolean;
   is_featured?: boolean;
   position?: number;

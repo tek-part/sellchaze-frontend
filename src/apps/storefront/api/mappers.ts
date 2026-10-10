@@ -11,6 +11,7 @@ import type {
   ProductCardModel,
   ProductDetailModel,
   ProductImage,
+  ProductMediaModel,
   ProductSpec,
   ProductVariantModel,
   ReviewModel,
@@ -99,9 +100,9 @@ function toSpecs(product: ApiProduct): ProductSpec[] {
 
 export function productImages(product: ApiProduct): ProductImage[] {
   const list = new Set<string>();
-  if (product.images) for (const src of product.images) list.add(src);
   const primary = product.image_url ?? product.image;
   if (primary) list.add(primary);
+  if (product.images) for (const src of product.images) list.add(src);
   return Array.from(list).map((src) => {
     const responsive = src === primary ? product.image_responsive : undefined;
     return {
@@ -111,6 +112,19 @@ export function productImages(product: ApiProduct): ProductImage[] {
       ...(responsive?.sizes ? { sizes: responsive.sizes } : {}),
     };
   });
+}
+
+export function productMedia(product: ApiProduct): ProductMediaModel[] {
+  const primary = product.image_url ?? product.image;
+  const media: ProductMediaModel[] = [];
+  const add = (src: string, type: 'image' | 'video', alt?: string | null): void => {
+    if (!/^(https?:\/\/|\/(?!\/))/i.test(src) || media.some((item) => item.src === src)) return;
+    media.push({ src, type, alt: alt || product.name });
+  };
+  if (primary) add(primary, 'image');
+  for (const item of product.media ?? []) add(item.url, item.type === 'video' ? 'video' : 'image', item.alt);
+  for (const item of productImages(product)) add(item.src, 'image', item.alt);
+  return media;
 }
 
 function toVariant(variant: ApiVariant, multiplier = 1): ProductVariantModel {
@@ -142,6 +156,7 @@ export function toProductDetail(product: ApiProduct, currency: string, multiplie
   return {
     ...base,
     images: images.length > 0 ? images : base.image ? [base.image] : [],
+    media: productMedia(product),
     ...(product.sku ? { sku: product.sku } : {}),
     ...(descriptionHtml ? { descriptionHtml } : {}),
     ...(variants && variants.length > 0 ? { variants } : {}),
