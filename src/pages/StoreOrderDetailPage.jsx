@@ -143,6 +143,7 @@ export default function StoreOrderDetailPage() {
                                 <p>{[order.shipping_address.city, order.shipping_address.state, order.shipping_address.postal_code, order.shipping_address.country].filter(Boolean).join(', ')}</p>
                                 {order.shipping_address.national_address ? <p>{t('order_national_address', 'National address')}: {order.shipping_address.national_address}</p> : null}
                                 {order.shipping_address.phone_alt ? <p>{t('order_phone_alt', 'Alternative phone')}: <bdi>{order.shipping_address.phone_alt}</bdi></p> : null}
+                                {order.shipping_address.delivery_option ? <p>{t('order_delivery_option', 'Shipping option')}: {order.shipping_address.delivery_option}</p> : null}
                             </div>
                         ) : null}
                         {order.customer_notes ? (

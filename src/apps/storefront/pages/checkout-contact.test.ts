@@ -4,6 +4,10 @@ import { checkoutContact, type CheckoutField } from './checkout-contact';
 const field = (key: CheckoutField['key'], enabled = true): CheckoutField => ({ key, enabled, required: false, position: 0, label: { ar: key, en: key }, hint: { ar: '', en: '' } });
 
 describe('configured checkout contact', () => {
+  it('does not send stale free-text city when a shipping region controls it', () => {
+    const payload = checkoutContact([{ ...field('city'), shipping_region: true }, field('address')], { city: 'Old city', address: 'Street' });
+    expect(payload.shipping_address).toEqual({ line1: 'Street' });
+  });
   it('drops values retained in hidden fields after switching payment methods', () => {
     const payload = checkoutContact([field('phone'), field('email', false), field('notes', false)], { phone: ' 01000000000 ', email: 'private@example.test', notes: 'hidden private note' });
     expect(payload.customer_phone).toBe('01000000000');

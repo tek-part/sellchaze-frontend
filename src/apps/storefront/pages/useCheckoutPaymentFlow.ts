@@ -19,6 +19,8 @@ export interface CheckoutContactPayload {
   notes?: string;
   shipping_address?: Record<string, unknown>;
   coupon_code?: string;
+  shipping_region_id?: string;
+  shipping_option_id?: string;
 }
 
 interface RetryState {

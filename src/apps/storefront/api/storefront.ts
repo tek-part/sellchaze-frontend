@@ -182,8 +182,8 @@ export interface CheckoutQuote {
   currency: string;
   totals: { subtotal: string; discount_total: string; shipping_total: string; tax_total: string; grand_total: string };
 }
-export const quoteCheckout = (items: ReadonlyArray<CheckoutItem>, coupon_code: string): Promise<{ data: CheckoutQuote }> =>
-  apiSend('/checkout/quote', 'POST', { items, coupon_code });
+export const quoteCheckout = (items: ReadonlyArray<CheckoutItem>, coupon_code: string, selection: import('../types/shipping').ShippingSelection = {}): Promise<{ data: CheckoutQuote }> =>
+  apiSend('/checkout/quote', 'POST', { items, coupon_code, ...selection });
 export const retryCheckoutPayment = (token: string): Promise<{ data: unknown; payment?: { redirect_url?: string | null } }> =>
   apiSend('/checkout/payment/retry', 'POST', { token });
 

@@ -207,6 +207,7 @@ function structuredShippingRows(data, t) {
     push('country', 'order_address_country', data.country);
     push('national_address', 'order_national_address', data.national_address);
     push('phone_alt', 'order_phone_alt', data.phone_alt);
+    push('delivery_option', 'order_delivery_option', data.delivery_option);
     return rows;
 }
 

@@ -22,14 +22,14 @@ export function FunnelCheckout({ productSlug }: { productSlug: string | null }):
   const variants = product?.variants ?? [];
   const selectionReady = !!product && (!variants.length || variants.some((v) => v.is_active !== false && String(v.id) === variantId));
   const items = useMemo<ReadonlyArray<CheckoutItem>>(() => selectionReady && product ? [{ product_id: product.id, quantity, ...(variantId ? { variant_id: Number(variantId) } : {}) }] : [], [product, selectionReady, quantity, variantId]);
-  const quoteKey = JSON.stringify([items, appliedCoupon]);
-  const quoteQ = useAsync(async () => items.length ? { key: quoteKey, quote: (await quoteCheckout(items, appliedCoupon)).data } : null, [quoteKey, locale]);
-  const quote = !quoteQ.loading && !quoteQ.error && quoteQ.data?.key === quoteKey ? quoteQ.data.quote : null;
   const payment = useCheckoutPaymentFlow({ items, preserveCart: true });
   const contact = useCheckoutFields(payment.paymentMethod);
+  const quoteKey = JSON.stringify([items, appliedCoupon, contact.shippingSelection, contact.shippingReady]);
+  const quoteQ = useAsync(async () => items.length && contact.shippingReady ? { key: quoteKey, quote: (await quoteCheckout(items, appliedCoupon, contact.shippingSelection)).data } : null, [quoteKey, locale]);
+  const quote = !quoteQ.loading && !quoteQ.error && quoteQ.data?.key === quoteKey ? quoteQ.data.quote : null;
   const submit = async (event: FormEvent): Promise<void> => {
     event.preventDefault();
-    if (!payment.paymentRetry && (!quote || !selectionReady || !contact.ready)) return;
+    if (!payment.paymentRetry && (!quote || !selectionReady || !contact.shippingReady)) return;
     await payment.submit({ ...contact.payload(), coupon_code: appliedCoupon });
   };
 
@@ -69,7 +69,7 @@ export function FunnelCheckout({ productSlug }: { productSlug: string | null }):
       </fieldset>
       <div aria-live="polite" className="sf-funnel-checkout__totals">
         {quoteQ.loading && selectionReady ? <Spinner label={label('جارٍ حساب الإجمالي…', 'Calculating total…')} /> : null}
-        {quoteQ.error ? <div role="alert"><p>{quoteQ.error.message}</p><Button type="button" variant="secondary" onClick={quoteQ.reload}>{label('إعادة الحساب', 'Recalculate')}</Button></div> : null}
+        {quoteQ.error ? <div role="alert"><p>{quoteQ.error.message}</p><Button type="button" variant="secondary" onClick={() => { contact.query.reload(); quoteQ.reload(); }}>{label('إعادة الحساب', 'Recalculate')}</Button></div> : null}
         {quote ? <dl>
           <div><dt>{label('المنتجات', 'Products')}</dt><dd>{formatMoney(Number(quote.totals.subtotal), quote.currency, locale)}</dd></div>
           {Number(quote.totals.discount_total) > 0 ? <div><dt>{label('الخصم', 'Discount')}</dt><dd>−{formatMoney(Number(quote.totals.discount_total), quote.currency, locale)}</dd></div> : null}
@@ -78,8 +78,8 @@ export function FunnelCheckout({ productSlug }: { productSlug: string | null }):
           <div className="sf-funnel-checkout__grand"><dt>{label('الإجمالي', 'Total')}</dt><dd>{formatMoney(Number(quote.totals.grand_total), quote.currency, locale)}</dd></div>
         </dl> : null}
       </div>
-      {payment.error ? <p role="alert" className="sf-field__error">{payment.error}</p> : null}
-      <Button type="submit" block loading={payment.busy} disabled={!payment.paymentMethod || (!payment.paymentRetry && (!quote || !contact.ready))}>
+      {payment.error ? <div role="alert"><p className="sf-field__error">{payment.error}</p>{!payment.paymentRetry ? <Button type="button" variant="secondary" onClick={() => { contact.query.reload(); quoteQ.reload(); }}>{label('تحديث خيارات التوصيل', 'Refresh delivery options')}</Button> : null}</div> : null}
+      <Button type="submit" block loading={payment.busy} disabled={!payment.paymentMethod || (!payment.paymentRetry && (!quote || !contact.shippingReady))}>
         {payment.paymentRetry ? label('إعادة محاولة الدفع', 'Retry payment') : label('تأكيد الطلب', 'Place order')}
       </Button>
       {payment.paymentRetry ? <Button type="button" variant="secondary" block onClick={payment.cancelRetry}>{label('بدء طلب جديد بدلًا من ذلك', 'Start a new order instead')}</Button> : null}

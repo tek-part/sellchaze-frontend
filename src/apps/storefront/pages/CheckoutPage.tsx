@@ -25,12 +25,12 @@ export function CheckoutPage(): ReactElement {
   const contact = useCheckoutFields(checkout.paymentMethod);
   const tpl = useTemplate('checkout');
   const items = useMemo(() => cart.lines.map((line) => ({ product_id: Number(line.productId), quantity: line.quantity, ...(line.variantId ? { variant_id: Number(line.variantId) } : {}) })), [cart.lines]);
-  const quoteKey = JSON.stringify([items, appliedCoupon]);
-  const quoteQ = useAsync(async () => items.length ? { key: quoteKey, data: (await quoteCheckout(items, appliedCoupon)).data } : null, [quoteKey, locale]);
+  const quoteKey = JSON.stringify([items, appliedCoupon, contact.shippingSelection, contact.shippingReady]);
+  const quoteQ = useAsync(async () => items.length && contact.shippingReady ? { key: quoteKey, data: (await quoteCheckout(items, appliedCoupon, contact.shippingSelection)).data } : null, [quoteKey, locale]);
   const quote = !quoteQ.loading && !quoteQ.error && quoteQ.data?.key === quoteKey ? quoteQ.data.data : null;
   const placeOrder = async (event: FormEvent): Promise<void> => {
     event.preventDefault();
-    if (!checkout.paymentRetry && (!quote || !contact.ready)) return;
+    if (!checkout.paymentRetry && (!quote || !contact.shippingReady)) return;
     await checkout.submit({ ...contact.payload(), coupon_code: appliedCoupon });
   };
   if (!cart.lines.length && !checkout.completed && !checkout.busy && !checkout.paymentRetry) return <Navigate to="/cart" replace />;
@@ -51,8 +51,8 @@ export function CheckoutPage(): ReactElement {
               {!checkout.paymentMethods.length ? <p className="sf-field__error">{ar ? 'لا توجد طريقة دفع متاحة حاليًا.' : 'No payment method is currently available.'}</p> : null}
             </fieldset>
           </fieldset>
-          {checkout.error ? <p className="sf-field__error" role="alert">{checkout.error}</p> : null}
-          <Button type="submit" block loading={checkout.busy} disabled={!checkout.paymentMethod || (!checkout.paymentRetry && (!quote || !contact.ready))}>
+          {checkout.error ? <div role="alert"><p className="sf-field__error">{checkout.error}</p>{!checkout.paymentRetry ? <Button type="button" variant="secondary" onClick={() => { contact.query.reload(); quoteQ.reload(); }}>{ar ? 'تحديث خيارات التوصيل' : 'Refresh delivery options'}</Button> : null}</div> : null}
+          <Button type="submit" block loading={checkout.busy} disabled={!checkout.paymentMethod || (!checkout.paymentRetry && (!quote || !contact.shippingReady))}>
             {checkout.paymentRetry ? t('checkout.retryPayment', 'Retry payment') : `${t('checkout.placeOrder')}${quote ? ` · ${formatMoney(Number(quote.totals.grand_total), quote.currency, locale)}` : ''}`}
           </Button>
           {checkout.paymentRetry ? <Button type="button" variant="secondary" block onClick={checkout.cancelRetry}>{t('checkout.startNewOrder', 'Start a new order instead')}</Button> : null}
@@ -67,7 +67,7 @@ export function CheckoutPage(): ReactElement {
           </fieldset>
           <div aria-live="polite">
             {quoteQ.loading ? <Spinner label={ar ? 'جارٍ حساب الإجمالي…' : 'Calculating total…'} /> : null}
-            {quoteQ.error ? <div role="alert"><p>{quoteQ.error.message}</p><Button type="button" variant="secondary" onClick={quoteQ.reload}>{ar ? 'إعادة الحساب' : 'Recalculate'}</Button></div> : null}
+            {quoteQ.error ? <div role="alert"><p>{quoteQ.error.message}</p><Button type="button" variant="secondary" onClick={() => { contact.query.reload(); quoteQ.reload(); }}>{ar ? 'إعادة الحساب' : 'Recalculate'}</Button></div> : null}
             {quote ? <>
               <div className="sf-cart-summary__row"><span>{ar ? 'المنتجات' : 'Products'}</span><span>{formatMoney(Number(quote.totals.subtotal), quote.currency, locale)}</span></div>
               {Number(quote.totals.discount_total) > 0 ? <div className="sf-cart-summary__row"><span>{t('checkout.discount')}</span><span>−{formatMoney(Number(quote.totals.discount_total), quote.currency, locale)}</span></div> : null}
