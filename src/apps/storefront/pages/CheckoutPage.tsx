@@ -34,7 +34,7 @@ export function CheckoutPage(): ReactElement {
   const quote = !quoteQ.loading && !quoteQ.error && quoteQ.data?.key === quoteKey ? quoteQ.data.data : null;
   const placeOrder = async (event: FormEvent): Promise<void> => {
     event.preventDefault();
-    if (!checkout.paymentRetry && (!quote || !contact.shippingReady)) return;
+    if (!checkout.paymentRetry && (!quote || !contact.shippingReady || !contact.phoneVerification.ready)) return;
     await checkout.submit({ ...contact.payload(), coupon_code: appliedCoupon });
   };
   if (!cart.lines.length && !checkout.completed && !checkout.busy && !checkout.unresolved) return <Navigate to="/cart" replace />;
@@ -57,7 +57,7 @@ export function CheckoutPage(): ReactElement {
             </fieldset>
           </fieldset>
           {checkout.error && !checkout.unresolved ? <div role="alert"><p className="sf-field__error">{checkout.error}</p>{!checkout.paymentRetry ? <Button type="button" variant="secondary" onClick={() => { contact.query.reload(); quoteQ.reload(); }}>{ar ? 'تحديث خيارات التوصيل' : 'Refresh delivery options'}</Button> : null}</div> : null}
-          {!checkout.unresolved ? <Button type="submit" block loading={checkout.busy} disabled={!checkout.paymentMethod || !quote || !contact.shippingReady}>
+          {!checkout.unresolved ? <Button type="submit" block loading={checkout.busy} disabled={!checkout.paymentMethod || !quote || !contact.shippingReady || (!checkout.paymentRetry && !contact.phoneVerification.ready)}>
             {`${t('checkout.placeOrder')}${quote ? ` · ${formatMoney(Number(quote.totals.grand_total), quote.currency, locale)}` : ''}`}
           </Button> : null}
         </form>

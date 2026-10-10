@@ -8,6 +8,8 @@ import { formatMoney } from '../utils/format';
 import { resolveShipping } from '../utils/shipping';
 import type { ShippingConfiguration, ShippingSelection } from '../types/shipping';
 import { checkoutContact, type CheckoutField, type Values } from './checkout-contact';
+import { usePhoneVerification, type PhoneVerificationConfiguration } from './usePhoneVerification';
+import { CheckoutPhoneVerification } from './CheckoutPhoneVerification';
 
 export function useCheckoutFields(paymentMethod: string, productIds: ReadonlyArray<number>) {
   const { locale } = useLocale();
@@ -17,14 +19,15 @@ export function useCheckoutFields(paymentMethod: string, productIds: ReadonlyArr
   const query = useAsync(async () => {
     const params = new URLSearchParams({ payment_method: paymentMethod });
     (JSON.parse(basketKey) as number[]).forEach((id) => params.append('product_ids[]', String(id)));
-    return { paymentMethod, basketKey, ...(await apiGet<{ data: CheckoutField[]; shipping: ShippingConfiguration; requires_shipping: boolean; has_digital: boolean }>(`/checkout/fields?${params.toString()}`)) };
+    return { paymentMethod, basketKey, ...(await apiGet<{ data: CheckoutField[]; shipping: ShippingConfiguration; requires_shipping: boolean; has_digital: boolean; phone_verification?: PhoneVerificationConfiguration }>(`/checkout/fields?${params.toString()}`)) };
   }, [paymentMethod, basketKey]);
   const ready = !query.loading && !query.error && query.data?.paymentMethod === paymentMethod && query.data?.basketKey === basketKey;
   const fields = ready ? query.data?.data ?? [] : [];
   const shipping = ready ? query.data?.shipping : undefined;
   const resolved = resolveShipping(shipping, chosenShipping);
-  return { fields, ready, query, values, setValues, locale, shipping, requiresShipping: ready ? query.data?.requires_shipping : undefined, hasDigital: ready && query.data?.has_digital, shippingReady: ready && resolved.ready,
-    shippingSelection: resolved.selection, setChosenShipping, payload: () => ({ ...checkoutContact(fields, values), ...resolved.selection }) };
+  const phoneVerification = usePhoneVerification(query.data?.phone_verification, values.phone ?? '', locale);
+  return { fields, ready, query, values, setValues, locale, shipping, phoneVerification, requiresShipping: ready ? query.data?.requires_shipping : undefined, hasDigital: ready && query.data?.has_digital, shippingReady: ready && resolved.ready,
+    shippingSelection: resolved.selection, setChosenShipping, payload: () => ({ ...checkoutContact(fields, values), ...resolved.selection, ...(phoneVerification.proof ? { phone_verification: phoneVerification.proof } : {}) }) };
 }
 
 export function CheckoutFieldsForm({ model }: { model: ReturnType<typeof useCheckoutFields> }): ReactElement {
@@ -46,6 +49,7 @@ export function CheckoutFieldsForm({ model }: { model: ReturnType<typeof useChec
       type={field.key === 'email' ? 'email' : field.key === 'phone' || field.key === 'phone_alt' ? 'tel' : 'text'} autoComplete={autoComplete}
       maxLength={field.key === 'notes' ? 2000 : field.key === 'phone' || field.key === 'phone_alt' ? 50 : field.key === 'postal_code' ? 32 : field.key === 'city' ? 120 : 255} />;
   })}
+    <CheckoutPhoneVerification model={model.phoneVerification} locale={locale} />
     {model.shipping?.enabled && model.shipping.options.length ? <fieldset style={{ display: 'grid', gap: '.75rem', border: 0, padding: 0, margin: 0 }}>
       <legend style={{ marginBottom: '.5rem', fontWeight: 600 }}>{lang === 'ar' ? 'خيار الشحن *' : 'Shipping option *'}</legend>
       {model.shipping.options.map((option) => <label key={option.id} className="sf-account__panel" style={{ display: 'flex', alignItems: 'center', gap: '.75rem', padding: '1rem', cursor: 'pointer' }}>

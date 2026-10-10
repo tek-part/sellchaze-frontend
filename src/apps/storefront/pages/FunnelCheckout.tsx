@@ -39,7 +39,7 @@ export function FunnelCheckout({ productSlug }: { productSlug: string | null }):
   const quote = !quoteQ.loading && !quoteQ.error && quoteQ.data?.key === quoteKey ? quoteQ.data.quote : null;
   const submit = async (event: FormEvent): Promise<void> => {
     event.preventDefault();
-    if (!payment.paymentRetry && (!quote || !selectionReady || !contact.shippingReady)) return;
+    if (!payment.paymentRetry && (!quote || !selectionReady || !contact.shippingReady || !contact.phoneVerification.ready)) return;
     await payment.submit({ ...contact.payload(), coupon_code: appliedCoupon });
   };
 
@@ -93,7 +93,7 @@ export function FunnelCheckout({ productSlug }: { productSlug: string | null }):
         </dl> : null}
       </div>
       {payment.error && !payment.unresolved ? <div role="alert"><p className="sf-field__error">{payment.error}</p>{!payment.paymentRetry ? <Button type="button" variant="secondary" onClick={() => { contact.query.reload(); quoteQ.reload(); }}>{label('تحديث خيارات التوصيل', 'Refresh delivery options')}</Button> : null}</div> : null}
-      {!payment.unresolved ? <Button type="submit" block loading={payment.busy} disabled={!payment.paymentMethod || !quote || !contact.shippingReady}>
+      {!payment.unresolved ? <Button type="submit" block loading={payment.busy} disabled={!payment.paymentMethod || !quote || !contact.shippingReady || (!payment.paymentRetry && !contact.phoneVerification.ready)}>
         {label('تأكيد الطلب', 'Place order')}
       </Button> : null}
     </form>}

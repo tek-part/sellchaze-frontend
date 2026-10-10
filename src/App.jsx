@@ -118,6 +118,7 @@ const StoreCheckoutFieldsPage = lazy(() => import('./pages/store/settings/StoreC
 const StoreDigitalDeliveryPage = lazy(() => import('./pages/store/settings/StoreDigitalDeliveryPage'));
 const StoreOrderLimitsPage = lazy(() => import('./pages/store/settings/StoreOrderLimitsPage'));
 const StoreBlockedPhonesPage = lazy(() => import('./pages/store/StoreBlockedPhonesPage'));
+const StorePhoneVerificationPage = lazy(() => import('./pages/store/settings/StorePhoneVerificationPage'));
 const StoreFunnelsPage = lazy(() => import('./pages/StoreFunnelsPage'));
 const StoreMediaPage = lazy(() => import('./pages/StoreMediaPage'));
 const StoreGeneralSettingsPage = lazy(() => import('./pages/store/settings/StoreGeneralSettingsPage'));
@@ -216,6 +217,8 @@ const STORE_ROUTES = [
     { path: 'settings/digital-delivery', element: <StoreDigitalDeliveryPage /> },
     { path: 'settings/order-limits', element: <StoreOrderLimitsPage /> },
     { path: 'blocked-phone-numbers', element: <StoreBlockedPhonesPage /> },
+    { path: 'blocked-phones', element: <StoreBlockedPhonesPage otp /> },
+    { path: 'settings/phone-verification', element: <StorePhoneVerificationPage /> },
     { path: 'funnels', element: <StoreFunnelsPage /> },
     { path: 'pages/:pageId/builder', element: <StorePageBuilderPage /> },
     { path: 'content/:key', element: <StoreContentPageEditor /> },

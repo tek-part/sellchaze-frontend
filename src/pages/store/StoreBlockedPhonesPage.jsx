@@ -9,12 +9,12 @@ const input = 'w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text
 const button = 'rounded-lg border border-slate-200 px-3 py-2 text-sm font-semibold disabled:opacity-40 dark:border-slate-700';
 const errorText = (error) => Object.values(error.response?.data?.errors || {}).flat().join(' ') || error.response?.data?.message || error.message;
 
-export default function StoreBlockedPhonesPage() {
+export default function StoreBlockedPhonesPage({ otp = false }) {
     const context = useStoreContext();
-    return <BlockedPhones key={context.apiBase} context={context} />;
+    return <BlockedPhones key={`${context.apiBase}:${otp}`} otp={otp} context={{ ...context, apiBase: `${context.apiBase}/${otp ? 'blocked-phones' : 'blocked-phone-numbers'}` }} />;
 }
 
-function BlockedPhones({ context: { apiBase, uiBase, access } }) {
+function BlockedPhones({ context: { apiBase, uiBase, access }, otp }) {
     const { i18n } = useTranslation();
     const ar = i18n.language.startsWith('ar');
     const text = (a, e) => ar ? a : e;
@@ -36,7 +36,7 @@ function BlockedPhones({ context: { apiBase, uiBase, access } }) {
         let active = true;
         if (!access?.canStoreOrders) return undefined;
         setLoading(true);
-        api.get(`${apiBase}/blocked-phone-numbers`, { params: { q: query || undefined, status, page } }).then(({ data: result }) => {
+        api.get(apiBase, { params: { q: query || undefined, status, page } }).then(({ data: result }) => {
             if (!active) return;
             setData(result); setLoading(false);
             if (page > result.meta.last_page) setPage(result.meta.last_page);
@@ -48,7 +48,7 @@ function BlockedPhones({ context: { apiBase, uiBase, access } }) {
         if (working.current) return false;
         working.current = true; setBusy(true); setError(''); setSaved('');
         try {
-            await api[method](`${apiBase}/blocked-phone-numbers${suffix}`, body);
+            await api[method](`${apiBase}${suffix}`, body);
             setSaved(text('تم حفظ قائمة الحظر.', 'Block list saved.')); setRefresh((n) => n + 1);
             return true;
         } catch (e) { setError(errorText(e)); return false; }
@@ -57,10 +57,10 @@ function BlockedPhones({ context: { apiBase, uiBase, access } }) {
     const country = data?.phone_country || 'EG';
     const countryName = new Intl.DisplayNames([ar ? 'ar' : 'en'], { type: 'region' }).of(country) || country;
     return <div className="mx-auto max-w-5xl space-y-5">
-        <PageHeader title={text('أرقام محظورة من الشراء', 'Phones blocked from ordering')} subtitle={text('امنع إنشاء طلبات جديدة لأرقام محددة، وراجع سجل كل تغيير.', 'Prevent new orders for specific numbers and review every change.')} />
+        <PageHeader title={otp ? text('أرقام محظورة من تأكيد OTP', 'Phones blocked from OTP verification') : text('أرقام محظورة من الشراء', 'Phones blocked from ordering')} subtitle={otp ? text('امنع إرسال رموز واتساب أو استخدامها لأرقام محددة.', 'Prevent WhatsApp code sending and verification for specific numbers.') : text('امنع إنشاء طلبات جديدة لأرقام محددة، وراجع سجل كل تغيير.', 'Prevent new orders for specific numbers and review every change.')} />
         <aside className="space-y-2 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm leading-6 text-emerald-900">
-            <p>{text('عند وجود أرقام محظورة نشطة، يصبح الهاتف الصحيح مطلوبًا في كل طلب، حتى المنتجات الرقمية. الأرقام المحلية والدولية المكافئة تُعامل كرقم واحد.', 'When this list has active blocks, every order requires a valid phone, including digital products. Equivalent local and international formats count as one number.')}</p>
-            <p>{text('الحظر يخص هذا المتجر والطلبات الجديدة. الطلبات السابقة وإعادة محاولة دفعها تظل متاحة. إلغاء الحظر يحتفظ بالسجل ويمكن عكسه.', 'Blocking applies to new orders in this store. Existing orders and their payment retries remain available. Unblocking preserves history and can be reversed.')}</p>
+            <p>{otp ? text('هذه القائمة مستقلة عن حظر الشراء. تمنع إرسال رمز OTP والتحقق منه واستخدام تأكيد سابق. إذا كان OTP مطلوبًا، يتوقف إنشاء الطلب حتى إلغاء حظر الرقم.', 'This list is separate from checkout blocking. It prevents sending, verifying and consuming an existing OTP proof. When OTP is required, the number cannot place an order until unblocked.') : text('عند وجود أرقام محظورة نشطة، يصبح الهاتف الصحيح مطلوبًا في كل طلب، حتى المنتجات الرقمية. الأرقام المحلية والدولية المكافئة تُعامل كرقم واحد.', 'When this list has active blocks, every order requires a valid phone, including digital products. Equivalent local and international formats count as one number.')}</p>
+            <p>{otp ? text('عند تعطيل OTP، لا تمنع هذه القائمة الشراء. الطلبات السابقة وإعادة دفعها متاحة، وإلغاء الحظر يحتفظ بالسجل.', 'When OTP is disabled, this list does not block purchases. Existing orders/payment retries remain available and unblocking preserves history.') : text('الحظر يخص هذا المتجر والطلبات الجديدة. الطلبات السابقة وإعادة محاولة دفعها تظل متاحة. إلغاء الحظر يحتفظ بالسجل ويمكن عكسه.', 'Blocking applies to new orders in this store. Existing orders and their payment retries remain available. Unblocking preserves history and can be reversed.')}</p>
             {access.canStoreSettings ? <Link className="underline" to={`${uiBase}/settings/order-limits`}>{text('دولة الأرقام المحلية', 'Local number country')}: {countryName} ({country})</Link> : <p>{text('دولة الأرقام المحلية', 'Local number country')}: {countryName} ({country})</p>}
         </aside>
         {error ? <p role="alert" className="rounded-xl bg-red-50 p-4 text-sm text-red-700">{error}<button className={`${button} mx-2`} onClick={() => { setError(''); setRefresh((n) => n + 1); }}>{text('إعادة تحميل القائمة', 'Reload list')}</button></p> : null}
@@ -104,7 +104,7 @@ function History({ block, apiBase, text, locale, refresh, close }) {
     const [error, setError] = useState('');
     useEffect(() => {
         let active = true; setData(null); setError('');
-        api.get(`${apiBase}/blocked-phone-numbers/${block.id}/history`, { params: { page } }).then(({ data }) => { if (active) setData(data); }).catch((e) => { if (active) setError(errorText(e)); });
+        api.get(`${apiBase}/${block.id}/history`, { params: { page } }).then(({ data }) => { if (active) setData(data); }).catch((e) => { if (active) setError(errorText(e)); });
         return () => { active = false; };
     }, [apiBase, block.id, page, attempt, refresh]);
     const actions = { blocked: text('حظر', 'Blocked'), unblocked: text('إلغاء الحظر', 'Unblocked'), note_changed: text('تعديل الملاحظة', 'Note changed') };
