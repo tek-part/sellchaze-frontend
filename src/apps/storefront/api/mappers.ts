@@ -42,6 +42,8 @@ export function toProductCard(product: ApiProduct, currency: string, multiplier 
     url: `/products/${product.slug}`,
     price,
     currency,
+    ...(product.stock != null ? { availableStock: product.stock } : {}),
+    ...(product.variants?.length ? { variants: product.variants.map((variant) => toVariant(variant, multiplier)) } : {}),
     soldOut: product.is_active === false || (product.variants?.length ? product.variants.every((variant) => !toVariant(variant).available) : product.stock != null && product.stock <= 0),
     ...(compare && compare > price ? { compareAtPrice: compare } : {}),
     ...(image ? { image: {
@@ -111,12 +113,15 @@ export function productImages(product: ApiProduct): ProductImage[] {
   });
 }
 
-function toVariant(variant: ApiVariant): ProductVariantModel {
+function toVariant(variant: ApiVariant, multiplier = 1): ProductVariantModel {
   const fromOptions = variant.options ? Object.values(variant.options).join(' / ') : '';
   const label = variant.name ?? (fromOptions || `Variant ${variant.id}`);
   const available = variant.is_active !== false && (variant.stock == null || variant.stock > 0);
-  const price = variant.price != null ? toNumber(variant.price) : undefined;
-  return { id: String(variant.id), label, available, ...(price !== undefined ? { price } : {}) };
+  const price = variant.price != null ? toNumber(variant.price) * multiplier : undefined;
+  return { id: String(variant.id), label, available, ...(price !== undefined ? { price } : {}),
+    ...(variant.compare_price != null ? { compareAtPrice: toNumber(variant.compare_price) * multiplier } : {}),
+    ...(variant.stock != null ? { availableStock: variant.stock } : {}),
+  };
 }
 
 export function toProductDetail(product: ApiProduct, currency: string, multiplier = 1): ProductDetailModel {
@@ -125,7 +130,7 @@ export function toProductDetail(product: ApiProduct, currency: string, multiplie
   // An empty variants array means the product simply has no variants — NOT "every variant is
   // unavailable". Treat only a non-empty list as variant-gated; otherwise the product is buyable.
   const variants = product.variants && product.variants.length > 0
-    ? product.variants.map((variant) => { const mapped = toVariant(variant); return mapped.price === undefined ? mapped : { ...mapped, price: mapped.price * multiplier }; })
+    ? product.variants.map((variant) => toVariant(variant, multiplier))
     : undefined;
   const anyAvailable = product.is_active !== false && (variants ? variants.some((v) => v.available) : product.stock == null || product.stock > 0);
   // Security: product descriptions are merchant-authored HTML rendered into shoppers' browsers via

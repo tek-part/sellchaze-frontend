@@ -1,0 +1,4 @@
+.sf-card-options { display: grid; gap: .3rem; position: relative; z-index: 2; min-width: 0; margin-block: .5rem; font: inherit; font-size: .8rem; }
+.sf-card-options select { display: block; width: 100%; min-width: 0; max-width: 100%; border: 1px solid currentColor; border-radius: .4rem; padding: .6rem .4rem; background: var(--surface, #fff); color: var(--text, #17211d); font: inherit; text-overflow: ellipsis; }
+.sf-card-options select:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; }
+.lib-card__add:disabled, .fr-card__add:disabled, .fr-qty__btn:disabled { opacity: .5; cursor: not-allowed; }

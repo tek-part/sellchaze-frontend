@@ -39,6 +39,8 @@ export interface ProductCardModel {
   /** Single merchandising label (New, Limited…). */
   badge?: string;
   soldOut?: boolean;
+  availableStock?: number;
+  variants?: ReadonlyArray<ProductVariantModel>;
   rating?: number;
   reviewCount?: number;
   colors?: ReadonlyArray<ProductSwatch>;
@@ -64,6 +66,8 @@ export interface ProductVariantModel {
   id: string;
   label: string;
   price?: number;
+  compareAtPrice?: number;
+  availableStock?: number;
   available: boolean;
 }
 
@@ -78,7 +82,6 @@ export interface ProductDetailModel extends ProductCardModel {
   sku?: string;
   descriptionHtml?: string;
   images: ReadonlyArray<ProductImage>;
-  variants?: ReadonlyArray<ProductVariantModel>;
   inStock?: boolean;
   lowStock?: boolean;
   /** Key selling points shown as a bullet list in the overview. */

@@ -18,7 +18,7 @@ import {
 import { cn } from '../../../shared/utils/cn';
 import { prefersReducedMotion } from '../../../shared/env/media';
 import type { CategoryCardModel, ProductCardModel } from '../types/catalog';
-import { useCart } from '../state/cart';
+import { CardVariantPicker, useCardPurchase } from '../foundation/components/CardVariantPicker';
 import { useWishlist } from '../state/wishlist';
 import { useLibT, useLocaleCode } from './i18n';
 
@@ -355,24 +355,15 @@ export interface LibProductCardProps {
 export function LibProductCard(props: LibProductCardProps): ReactElement {
   const { product, showBadges = true, showRatings = true, showQuickAdd = true, showWishlist = true, style = 'card', eager } = props;
   const t = useLibT();
-  const cart = useCart();
+  const purchase = useCardPurchase(product);
   const wishlist = useWishlist();
   const [added, setAdded] = useState(false);
-  const onSale = typeof product.compareAtPrice === 'number' && product.compareAtPrice > product.price;
-  const discount = onSale && product.compareAtPrice ? Math.round((1 - product.price / product.compareAtPrice) * 100) : 0;
+  const onSale = typeof purchase.compareAt === 'number' && purchase.compareAt > purchase.price;
+  const discount = onSale && purchase.compareAt ? Math.round((1 - purchase.price / purchase.compareAt) * 100) : 0;
   const wished = wishlist.has(product.id);
 
   const quickAdd = (): void => {
-    cart.add({
-      id: `${product.id}:default`,
-      productId: product.id,
-      title: product.title,
-      url: product.url,
-      ...(product.image ? { image: product.image.src } : {}),
-      price: product.price,
-      currency: product.currency,
-      quantity: 1,
-    });
+    if (!purchase.add()) return;
     setAdded(true);
     window.setTimeout(() => setAdded(false), 1600);
   };
@@ -413,12 +404,12 @@ export function LibProductCard(props: LibProductCardProps): ReactElement {
           <p className="lib-card__desc">{product.description || [product.categoryName, product.material].filter(Boolean).join(' · ')}</p>
         ) : null}
         <div className="lib-card__row">
-          <LibPrice amount={product.price} compareAt={product.compareAtPrice} currency={product.currency} />
+          <LibPrice amount={purchase.price} compareAt={purchase.compareAt} currency={product.currency} />
         </div>
         {showQuickAdd && !product.soldOut ? (
-          <button type="button" className={cn('lib-card__add', added && 'is-added')} onClick={quickAdd} aria-live="polite">
+          <><CardVariantPicker product={product} value={purchase.variantId} onChange={purchase.choose} atLimit={purchase.input !== null && !purchase.canAdd} /><button type="button" disabled={!purchase.canAdd} className={cn('lib-card__add', added && 'is-added')} onClick={quickAdd} aria-live="polite">
             {added ? t('added') : t('addToCart')}
-          </button>
+          </button></>
         ) : null}
       </div>
     </article>
