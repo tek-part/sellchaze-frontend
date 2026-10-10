@@ -24,6 +24,8 @@ export interface ApiProduct {
   description?: string | null;
   short_description?: string | null;
   price: string | number;
+  stock?: number | null;
+  track_inventory?: boolean;
   compare_price?: string | number | null;
   image?: string | null;
     image_url?: string | null;

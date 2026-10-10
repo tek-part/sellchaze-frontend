@@ -20,7 +20,8 @@ export function FunnelCheckout({ productSlug }: { productSlug: string | null }):
   const [coupon, setCoupon] = useState('');
   const [appliedCoupon, setAppliedCoupon] = useState('');
   const variants = product?.variants ?? [];
-  const selectionReady = !!product && (!variants.length || variants.some((v) => v.is_active !== false && String(v.id) === variantId));
+  const selectedStock = variants.length ? variants.find((v) => String(v.id) === variantId)?.stock : product?.stock;
+  const selectionReady = !!product && product.is_active !== false && (selectedStock == null || selectedStock >= quantity) && (!variants.length || variants.some((v) => v.is_active !== false && String(v.id) === variantId));
   const items = useMemo<ReadonlyArray<CheckoutItem>>(() => selectionReady && product ? [{ product_id: product.id, quantity, ...(variantId ? { variant_id: Number(variantId) } : {}) }] : [], [product, selectionReady, quantity, variantId]);
   const payment = useCheckoutPaymentFlow({ items, preserveCart: true });
   const contact = useCheckoutFields(payment.paymentMethod);
@@ -46,12 +47,13 @@ export function FunnelCheckout({ productSlug }: { productSlug: string | null }):
             <span>{label('اختر اللون أو المقاس', 'Choose an option')}</span>
             <select value={variantId} onChange={(event) => setVariantId(event.target.value)} required>
               <option value="">{label('اختر…', 'Choose…')}</option>
-              {variants.filter((variant) => variant.is_active !== false).map((variant) => <option key={variant.id} value={variant.id}>{variant.name || Object.values(variant.options ?? {}).join(' / ')}</option>)}
+              {variants.filter((variant) => variant.is_active !== false).map((variant) => <option key={variant.id} value={variant.id} disabled={variant.stock != null && variant.stock <= 0}>{variant.name || Object.values(variant.options ?? {}).join(' / ')}{variant.stock != null && variant.stock <= 0 ? label(' — نفدت الكمية', ' — Sold out') : ''}</option>)}
             </select>
           </label> : null}
           <Input label={label('الكمية', 'Quantity')} type="number" min={1} max={999} step={1} value={quantity} required
             onChange={(event) => setQuantity(Math.max(1, Math.min(999, Math.trunc(Number(event.target.value) || 1))))} />
         </div>
+        {selectedStock != null && selectedStock < quantity ? <p role="status">{label('الكمية المتاحة', 'Available quantity')}: {Math.max(0, selectedStock)}</p> : null}
         <CheckoutFieldsForm model={contact} />
         <div className="sf-funnel-checkout__coupon">
           <Input label={label('كود الخصم', 'Coupon code')} value={coupon} onChange={(event) => setCoupon(event.target.value)} maxLength={100} />

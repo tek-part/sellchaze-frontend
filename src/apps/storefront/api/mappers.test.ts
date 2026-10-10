@@ -35,6 +35,20 @@ describe('toProductCard', () => {
 });
 
 describe('toProductDetail', () => {
+  it('uses available stock for base products and treats null as untracked', () => {
+    const sold = { ...base, variants: [], stock: 0 };
+    expect(toProductCard(sold, 'EGP').soldOut).toBe(true);
+    expect(toProductDetail(sold, 'EGP').inStock).toBe(false);
+    expect(toProductDetail({ ...sold, stock: null }, 'EGP').inStock).toBe(true);
+    expect(toProductDetail({ ...sold, stock: 2 }, 'EGP').inStock).toBe(true);
+    expect(toProductDetail({ ...sold, stock: 2, is_active: false }, 'EGP').inStock).toBe(false);
+  });
+  it('does not use base stock to hide a stocked product option', () => {
+    expect(toProductCard({ ...base, stock: 0 }, 'EGP').soldOut).toBe(false);
+    expect(toProductDetail({ ...base, stock: 0 }, 'EGP').inStock).toBe(true);
+    expect(toProductCard({ ...base, variants: [{ id: 1, stock: 0 }] }, 'EGP').soldOut).toBe(true);
+    expect(toProductCard({ ...base, variants: [{ id: 1, stock: null }] }, 'EGP').soldOut).toBe(false);
+  });
   it('builds variants with availability from stock/active', () => {
     const detail = toProductDetail(base, 'EUR');
     expect(detail.variants).toHaveLength(2);

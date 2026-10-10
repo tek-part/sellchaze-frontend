@@ -128,6 +128,7 @@ const StoreMenusPage = lazy(() => import('./pages/StoreMenusPage'));
 // Phase 6H: route-level lazy loading for the heavier commerce/analytics pages
 // (keeps chart.js and these screens out of the main bundle).
 const StoreCouponsPage = lazy(() => import('./pages/StoreCouponsPage'));
+const StoreInventoryPage = lazy(() => import('./pages/StoreInventoryPage'));
 const StoreCouponFormPage = lazy(() => import('./pages/StoreCouponFormPage'));
 const StoreOrdersPage = lazy(() => import('./pages/StoreOrdersPage'));
 const StoreOrderDetailPage = lazy(() => import('./pages/StoreOrderDetailPage'));
@@ -196,6 +197,7 @@ const STORE_ROUTES = [
     { path: 'orders', element: <StoreOrdersPage /> },
     { path: 'orders/:orderId', element: <StoreOrderDetailPage /> },
     { path: 'coupons', element: <StoreCouponsPage /> },
+    { path: 'inventory', element: <StoreInventoryPage /> },
     { path: 'coupons/new', element: <StoreCouponFormPage /> },
     { path: 'coupons/:couponId/edit', element: <StoreCouponFormPage /> },
     { path: 'reviews', element: <StoreReviewsPage /> },
