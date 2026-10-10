@@ -1,5 +1,5 @@
-import { describe, expect, it } from 'vitest';
-import { identityFontStylesheet, identityForeground, identitySettings, identityTokens } from './store-identity';
+import { beforeAll, describe, expect, it } from 'vitest';
+import { identityFontStylesheet, identityForeground, identitySettings, identityTokens, loadIdentityFonts } from './store-identity';
 import { naseemTheme } from './themes/naseem';
 import { bazaarTheme } from './themes/bazaar';
 import { sahraTheme } from './themes/sahra';
@@ -9,6 +9,7 @@ import { defaultSettings } from './theme-engine/settings';
 import { flattenTokens } from './theme-engine/applyTokens';
 
 describe('store identity across the five themes', () => {
+  beforeAll(() => loadIdentityFonts('Almarai'));
   for (const theme of [naseemTheme, bazaarTheme, sahraTheme, freshTheme, technoTheme]) {
     it(`${theme.manifest.id} retains defaults when unset and applies general identity to both schemes`, () => {
       const settings = defaultSettings(theme.manifest.settingsSchema);

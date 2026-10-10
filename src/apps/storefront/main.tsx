@@ -24,6 +24,7 @@ import { loadStorefrontBootstrap } from './api/bootstrap';
 import type { ThemeSettingValue } from './theme-engine/types';
 import { applyLegacyThemeAlias, resolveStorefrontThemeId } from './theme-resolution';
 import { setActiveThemeMatch } from './active-theme-match';
+import { loadIdentityFonts } from './store-identity';
 import './styles/index.css';
 // Editorial layout for the journal/brands pages. App-level, not theme-level: these render the
 // shared `.sf-*` library, so a theme stylesheet would leave three themes unstyled. Every value
@@ -109,6 +110,12 @@ async function bootstrap(): Promise<void> {
     initialData = await loadStorefrontBootstrap();
   } catch {
     // The store context exposes the normal unresolved-host state; preview/local mode still renders.
+  }
+
+  // Resolve the selected font before first paint. A failed optional catalog must
+  // not prevent the store from rendering with its inherited typography.
+  if (params.get('defaults') !== '1') {
+    await loadIdentityFonts(initialData?.store.identity?.font_family).catch(() => undefined);
   }
 
   // Resolve the theme id BEFORE mounting so the ThemeProvider loads the right package on first

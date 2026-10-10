@@ -1,4 +1,3 @@
-import catalog from '../../shared/store-fonts.json';
 import type { DesignTokens, ThemeSettings } from './theme-engine/types';
 
 export interface StoreIdentity {
@@ -10,7 +9,16 @@ export interface StoreIdentity {
   favicon_url?: string | null;
 }
 
-const fonts: Readonly<Record<string, { weights: ReadonlyArray<number>; arabic: boolean; italic?: boolean }>> = catalog;
+type FontCatalog = Readonly<Record<string, { weights: ReadonlyArray<number>; arabic: boolean; italic?: boolean }>>;
+let fonts: FontCatalog = {};
+let fontCatalogLoad: Promise<void> | undefined;
+
+/** Unconfigured stores and system fonts do not download the 1,950-family catalog. */
+export async function loadIdentityFonts(family?: string | null): Promise<void> {
+  if (!family || family === 'system') return;
+  fontCatalogLoad ??= import('../../shared/store-fonts.json').then(module => { fonts = module.default; });
+  await fontCatalogLoad;
+}
 
 export function identityFont(family: string | null | undefined): string | undefined {
   return family === 'system' || (family && Object.hasOwn(fonts, family)) ? family : undefined;
