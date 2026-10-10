@@ -136,8 +136,9 @@
 
 /* ------------------------------------------------------------ footer */
 .sh-footer { margin-block-start: var(--sp-11); background: var(--surface-2); border-top: 1px solid var(--accent); color: var(--text); }
-.sh-footer__statement { display: grid; gap: var(--sp-9); padding-block: var(--sp-11) var(--sp-9); border-bottom: 1px solid var(--border); }
-@media (min-width: 1024px) { .sh-footer__statement { grid-template-columns: 1.3fr 1fr; align-items: end; gap: var(--sp-12); } }
+.sh-footer__statement { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--sp-9); padding-block: var(--sp-11) var(--sp-9); border-bottom: 1px solid var(--border); }
+.sh-footer__statement > * { min-width: 0; }
+@media (min-width: 1024px) { .sh-footer__statement { grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); align-items: end; gap: var(--sp-12); } }
 .sh-footer__brand { display: flex; flex-direction: column; gap: var(--sp-4); }
 .sh-brand--footer { justify-content: flex-start; }
 .sh-brand--footer .sh-brand__name { font-size: var(--fs-lg); }

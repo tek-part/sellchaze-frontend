@@ -30,7 +30,7 @@ export function useCheckoutFields(paymentMethod: string, productIds: ReadonlyArr
   const phoneVerification = usePhoneVerification(query.data?.phone_verification, values.phone ?? '', locale);
   const botProtection = useBotProtection(query.data?.bot_protection, locale);
   return { fields, ready, query, values, setValues, locale, shipping, phoneVerification, botProtection, requiresShipping: ready ? query.data?.requires_shipping : undefined, hasDigital: ready && query.data?.has_digital, shippingReady: ready && resolved.ready,
-    shippingSelection: resolved.selection, setChosenShipping, payload: () => ({ ...checkoutContact(fields, values), ...resolved.selection, ...(phoneVerification.proof ? { phone_verification: phoneVerification.proof } : {}), ...(botProtection.proof ? { bot_proof: botProtection.proof } : {}) }) };
+    shippingSelection: resolved.selection, shippingStale: resolved.stale === true, setChosenShipping, resetShipping: () => setChosenShipping({}), payload: () => ({ ...checkoutContact(fields, values), ...resolved.selection, ...(phoneVerification.proof ? { phone_verification: phoneVerification.proof } : {}), ...(botProtection.proof ? { bot_proof: botProtection.proof } : {}) }) };
 }
 
 export function CheckoutFieldsForm({ model }: { model: ReturnType<typeof useCheckoutFields> }): ReactElement {
@@ -65,6 +65,6 @@ export function CheckoutFieldsForm({ model }: { model: ReturnType<typeof useChec
       </label>)}
       {model.shipping.free_over !== null ? <small>{lang === 'ar' ? 'الشحن مجاني عندما تصل قيمة المنتجات بعد الخصم إلى ' : 'Free shipping when products after discounts reach '}{formatMoney(Number(model.shipping.free_over), model.shipping.currency, locale)}</small> : null}
     </fieldset> : null}
-    {ready && !model.shippingReady ? <p role="status">{lang === 'ar' ? 'اختر تفاصيل التوصيل لحساب الإجمالي.' : 'Choose delivery details to calculate your total.'}</p> : null}
+    {ready && model.shippingStale ? <div role="alert"><p>{lang === 'ar' ? 'تغيّرت منطقة أو طريقة التوصيل التي اخترتها. أعد الاختيار لحساب الإجمالي الحالي.' : 'Your selected delivery region or method changed. Choose again to calculate the current total.'}</p><Button type="button" variant="secondary" onClick={model.resetShipping}>{lang === 'ar' ? 'إعادة اختيار التوصيل' : 'Choose delivery again'}</Button></div> : ready && !model.shippingReady ? <p role="status">{lang === 'ar' ? 'اختر تفاصيل التوصيل لحساب الإجمالي.' : 'Choose delivery details to calculate your total.'}</p> : null}
   </>;
 }

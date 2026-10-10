@@ -27,6 +27,7 @@ export default function StoreShippingTaxSettingsPage() {
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState('');
+    const [conflict, setConflict] = useState(false);
     const [saved, setSaved] = useState(false);
     const [attempt, setAttempt] = useState(0);
     const [bulkRate, setBulkRate] = useState('');
@@ -36,9 +37,9 @@ export default function StoreShippingTaxSettingsPage() {
     useEffect(() => {
         let active = true;
         if (!access?.canStoreSettings) return undefined;
-        setLoading(true); setError('');
+        setLoading(true); setError(''); setSaved(false);
         api.get(`${apiBase}/shipping`).then(({ data }) => {
-            if (active) { const next = normalize(data.data); setValues(next); setInitial(next); }
+            if (active) { const next = normalize(data.data); setValues(next); setInitial(next); setConflict(false); }
         }).catch((e) => { if (active) setError(errorText(e)); }).finally(() => { if (active) setLoading(false); });
         return () => { active = false; };
     }, [apiBase, access?.canStoreSettings, attempt]);
@@ -53,14 +54,18 @@ export default function StoreShippingTaxSettingsPage() {
     const makeDefault = (id, checked) => change((current) => ({ ...current, options: current.options.map((row) => ({ ...row, is_default: row.id === id ? checked : false, enabled: row.id === id && checked ? true : row.enabled })) }));
     async function save(event) {
         event.preventDefault();
-        if (submitting.current || !values) return;
+        if (submitting.current || !values || conflict || loading) return;
         submitting.current = true; setSaving(true); setError(''); setSaved(false);
         try {
             const body = { ...values, shipping_free_over: values.shipping_free_over === '' ? null : values.shipping_free_over,
                 options: values.options.map(({ icon_url: _url, ...option }) => option) };
             const { data } = await api.put(`${apiBase}/shipping`, body);
             const next = normalize(data.data); setValues(next); setInitial(next); setSaved(true);
-        } catch (e) { setError(errorText(e)); }
+        } catch (e) {
+            const changed = e.response?.status === 409;
+            setConflict(changed);
+            setError(changed ? label('تغيّرت إعدادات الشحن أو خيارات الشراء في جلسة أخرى. أعد تحميلها قبل الحفظ.', 'Shipping or shopping settings changed in another session. Reload them before saving.') : errorText(e));
+        }
         finally { submitting.current = false; setSaving(false); }
     }
     const numeric = (key, text, props = {}) => <FormField label={text} htmlFor={key}><input id={key} className={INPUT_CLASS} type="number" min="0" step="0.01" required value={values[key]} onChange={(e) => change({ [key]: e.target.value })} {...props} /></FormField>;
@@ -71,10 +76,10 @@ export default function StoreShippingTaxSettingsPage() {
         if (panel) setTab(panel.id === 'shipping-panel-regions' ? 'regions' : 'options');
     }} className="mx-auto max-w-5xl space-y-5">
         <PageHeader title={label('إعدادات الشحن والضريبة', 'Shipping & tax')} subtitle={label('حدد مناطق التوصيل وخيارات الشحن المتاحة لعملائك وأسعارها.', 'Set delivery regions, shipping choices and prices for your customers.')} />
-        {error ? <div role="alert" className="rounded-xl bg-red-50 p-4 text-sm text-red-700">{error}{!values ? <button type="button" className={button} onClick={() => setAttempt((n) => n + 1)}>{label('إعادة المحاولة', 'Retry')}</button> : null}</div> : null}
+        {error ? <div role="alert" className="rounded-xl bg-red-50 p-4 text-sm text-red-700 dark:bg-red-950 dark:text-red-200">{error}{!values || conflict ? <button type="button" disabled={saving || loading} className={button} onClick={() => setAttempt((n) => n + 1)}>{values ? label('إعادة تحميل الإعدادات', 'Reload settings') : label('إعادة المحاولة', 'Retry')}</button> : null}</div> : null}
         {saved ? <p role="status" className="rounded-xl bg-emerald-50 p-4 text-emerald-800">{label('تم حفظ إعدادات الشحن.', 'Shipping settings saved.')}</p> : null}
         {loading ? <p role="status">{label('جارٍ تحميل الإعدادات…', 'Loading settings…')}</p> : values ? <>
-            <fieldset disabled={saving} className="space-y-5">
+            <fieldset disabled={saving || conflict} className="space-y-5">
                 <SettingsCard title={label('أسعار الشحن', 'Shipping prices')} description={label('السعر الافتراضي يُستخدم عندما لا توجد مناطق أو خيارات شحن. أدخل صفرًا للشحن المجاني.', 'The default price applies when there are no regions or shipping options. Enter zero for free shipping.')}>
                     <Toggle label={label('تفعيل الشحن', 'Enable shipping')} checked={values.shipping_enabled} onChange={(shipping_enabled) => change({ shipping_enabled })} />
                     <div className="mt-5 grid gap-5 sm:grid-cols-2">{numeric('shipping_flat_rate', `${label('السعر الافتراضي', 'Default price')} (${store?.currency})`)}{numeric('shipping_free_over', label('شحن مجاني ابتداءً من', 'Free shipping from'), { required: false, placeholder: label('اختياري', 'Optional') })}</div>
@@ -111,7 +116,7 @@ export default function StoreShippingTaxSettingsPage() {
                 </div>
                 <SettingsCard title={label('الضريبة', 'Tax')}><Toggle label={label('تفعيل الضريبة', 'Enable tax')} checked={values.tax_enabled} onChange={(tax_enabled) => change({ tax_enabled })} /><div className="mt-5 grid items-center gap-5 sm:grid-cols-2">{numeric('tax_rate', label('نسبة الضريبة %', 'Tax rate %'), { max: 100, step: '0.001' })}<Toggle label={label('الأسعار تشمل الضريبة', 'Prices include tax')} checked={values.tax_prices_include} onChange={(tax_prices_include) => change({ tax_prices_include })} /></div></SettingsCard>
             </fieldset>
-            <SaveBar dirty={dirty} saving={saving} saveLabel={label('حفظ إعدادات الشحن', 'Save shipping settings')} onReset={() => { setValues(initial); setError(''); setSaved(false); }} />
+            <SaveBar dirty={dirty && !conflict} saving={saving} saveLabel={label('حفظ إعدادات الشحن', 'Save shipping settings')} onReset={() => { setValues(initial); setError(''); setSaved(false); }} />
         </> : null}
     </form><StoreCarrierSettings key={apiBase} apiBase={apiBase} /></div>;
 }

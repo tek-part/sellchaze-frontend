@@ -17,12 +17,14 @@ export function cartRequiresShipping(lines: ReadonlyArray<Pick<CartLine, 'digita
 }
 
 /** Defaults come from the current store; removed or disabled selections cannot reach checkout. */
-export function resolveShipping(config: ShippingConfiguration | undefined, chosen: ShippingSelection) {
+export function resolveShipping(config: ShippingConfiguration | undefined, chosen: ShippingSelection): { selection: ShippingSelection; ready: boolean; stale?: boolean } {
   if (!config?.enabled) return { selection: {} as ShippingSelection, ready: !!config };
   const regions = config.regions_enabled ? config.regions.filter((row) => row.enabled).sort((a, b) => a.position - b.position) : [];
   const options = config.options.filter((row) => row.enabled).sort((a, b) => b.priority - a.priority);
-  const region = regions.find((row) => row.id === chosen.shipping_region_id) ?? (config.auto_select_region ? regions[0] : undefined);
-  const option = options.find((row) => row.id === chosen.shipping_option_id) ?? options.find((row) => row.is_default);
+  const region = chosen.shipping_region_id !== undefined ? regions.find((row) => row.id === chosen.shipping_region_id) : (config.auto_select_region ? regions[0] : undefined);
+  const option = chosen.shipping_option_id !== undefined ? options.find((row) => row.id === chosen.shipping_option_id) : options.find((row) => row.is_default);
+  // A default is for an untouched form. Never replace an explicit destination or delivery method.
+  const stale = Boolean((chosen.shipping_region_id && !region) || (chosen.shipping_option_id && !option));
   const selection: ShippingSelection = { ...(region ? { shipping_region_id: region.id } : {}), ...(option ? { shipping_option_id: option.id } : {}) };
-  return { selection, ready: (!config.regions_enabled || !!region) && (!options.length || !!option) };
+  return { selection, ready: !stale && (!config.regions_enabled || !!region) && (!options.length || !!option), ...(stale ? { stale: true } : {}) };
 }
