@@ -36,17 +36,34 @@ describe('delivery selection', () => {
     expect(resolveShipping(data, {})).toEqual({ ready: false, selection: {} });
     expect(resolveShipping(data, { shipping_region_id: 'cairo', shipping_option_id: 'express' }).ready).toBe(true);
   });
-  it('discards stale and disabled IDs after settings refresh', () => {
+  it('blocks removed or disabled explicit IDs instead of buying another destination or method', () => {
     const data = config(); data.regions = data.regions.map((row) => ({ ...row, enabled: row.id !== 'cairo' })); data.options = data.options.map((row) => ({ ...row, enabled: false }));
-    expect(resolveShipping(data, { shipping_region_id: 'cairo', shipping_option_id: 'express' })).toEqual({ ready: true, selection: { shipping_region_id: 'alex' } });
+    expect(resolveShipping(data, { shipping_region_id: 'cairo', shipping_option_id: 'express' })).toEqual({ ready: false, selection: {}, stale: true });
+    expect(resolveShipping(data, { shipping_region_id: 'alex', shipping_option_id: 'express' })).toEqual({ ready: false, selection: { shipping_region_id: 'alex' }, stale: true });
+    expect(resolveShipping(data, {})).toEqual({ ready: true, selection: { shipping_region_id: 'alex' } });
     data.auto_select_region = false;
-    expect(resolveShipping(data, { shipping_region_id: 'deleted' }).ready).toBe(false);
+    expect(resolveShipping(data, { shipping_region_id: 'deleted' })).toEqual({ ready: false, selection: {}, stale: true });
+    expect(resolveShipping(data, {})).toEqual({ ready: false, selection: {} });
+  });
+  it('retains deliberate blank and valid choices when defaults or the automatic policy change', () => {
+    const data = config();
+    expect(resolveShipping(data, { shipping_region_id: '', shipping_option_id: '' })).toEqual({ ready: false, selection: {} });
+    data.auto_select_region = false;
+    expect(resolveShipping(data, { shipping_region_id: 'alex' })).toEqual({ ready: true, selection: { shipping_region_id: 'alex', shipping_option_id: 'express' } });
+    data.auto_select_region = true; data.regions.reverse();
+    expect(resolveShipping(data, { shipping_region_id: 'alex' }).selection.shipping_region_id).toBe('alex');
+    const express = data.options[0];
+    if (!express) throw new Error('Review configuration requires an express option');
+    data.options = [...data.options.map((row) => ({ ...row, is_default: false })), { ...express, id: 'standard', is_default: true, priority: 10 }];
+    expect(resolveShipping(data, { shipping_region_id: 'alex', shipping_option_id: 'express' }).selection.shipping_option_id).toBe('express');
+    expect(resolveShipping(data, { shipping_region_id: 'alex', shipping_option_id: 'deleted' })).toEqual({ ready: false, selection: { shipping_region_id: 'alex' }, stale: true });
   });
   it('does not quote before configuration loads and drops selections when shipping is disabled', () => {
     expect(resolveShipping(undefined, {}).ready).toBe(false);
     const data = config(); data.enabled = false;
     expect(resolveShipping(data, { shipping_region_id: 'alex' })).toEqual({ ready: true, selection: {} });
     data.enabled = true; data.regions_enabled = false; data.options = [];
-    expect(resolveShipping(data, { shipping_region_id: 'alex' })).toEqual({ ready: true, selection: {} });
+    expect(resolveShipping(data, { shipping_region_id: 'alex' })).toEqual({ ready: false, selection: {}, stale: true });
+    expect(resolveShipping(data, {})).toEqual({ ready: true, selection: {} });
   });
 });
