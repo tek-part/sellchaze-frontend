@@ -129,6 +129,8 @@ const StoreMenusPage = lazy(() => import('./pages/StoreMenusPage'));
 // (keeps chart.js and these screens out of the main bundle).
 const StoreCouponsPage = lazy(() => import('./pages/StoreCouponsPage'));
 const StoreInventoryPage = lazy(() => import('./pages/StoreInventoryPage'));
+const StoreProductsPage = lazy(() => import('./pages/StoreProductsPage'));
+const StoreProductEditorPage = lazy(() => import('./pages/StoreProductEditorPage'));
 const StoreCouponFormPage = lazy(() => import('./pages/StoreCouponFormPage'));
 const StoreOrdersPage = lazy(() => import('./pages/StoreOrdersPage'));
 const StoreOrderDetailPage = lazy(() => import('./pages/StoreOrderDetailPage'));
@@ -219,7 +221,9 @@ const STORE_ROUTES = [
     { path: 'settings/shipping', element: <StoreShippingTaxSettingsPage /> },
     { path: 'settings/domains', element: <StoreDomainsPage /> },
     { path: 'settings/publish', element: <StorePublishPage /> },
-    { path: 'products/*', element: <Navigate to="/products" replace /> },
+    { path: 'products', element: <StoreProductsPage /> },
+    { path: 'products/new', element: <StoreProductEditorPage /> },
+    { path: 'products/:productId/edit', element: <StoreProductEditorPage /> },
     { path: 'categories/*', element: <Navigate to="/categories" replace /> },
 ];
 

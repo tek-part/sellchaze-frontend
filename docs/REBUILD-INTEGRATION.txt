@@ -1,0 +1,22 @@
+Rebuild integration checkpoint — 2026-10-10
+
+This integration includes merchant navigation/theme browsing, funnel drafts
+and AI-assisted content, published funnel checkout, checkout fields/shipping,
+Bosta connection/shipment controls, inventory and durable checkout recovery,
+and a tenant storefront product/variant editor.
+
+Product management routes: /store/products and /stores/{id}/products.
+The original /products B2B catalog is preserved. See the backend documents
+STORE-CATALOG-EDITOR.txt, CHECKOUT-RECOVERY.txt, STOREFRONT-INVENTORY.txt,
+STORE-CARRIERS.txt, STORE-SHIPPING.txt, CHECKOUT-FIELDS.txt and FUNNEL-AI.txt
+for contracts and acceptance limits.
+
+Full competitor feature/design/theme/AI parity is unfinished. Merging this
+checkpoint does not declare the rebuild complete or production-ready.
+Deployment now requires explicit workflow_dispatch; Quality checks and the
+verified production-capture artifact restriction remain intact. No production
+deployment or source-parity claim is part of this merge.
+
+Local build verification writes to ../audit/commerce-build so the captured
+production dist stays intact. Generated local build-review assets are excluded
+from source linting; they are ignored by Git and are not part of the PR.
