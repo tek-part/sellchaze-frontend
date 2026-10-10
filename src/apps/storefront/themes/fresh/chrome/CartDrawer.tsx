@@ -25,8 +25,8 @@ export function CartDrawer(props: CartDrawerProps): ReactElement {
   const { t } = useTranslation();
   const { locale } = useLocale();
   const { lines, totals, updateQuantity, remove } = useCart();
-  const remaining = freeShippingThreshold ? Math.max(0, freeShippingThreshold - totals.subtotal) : 0;
-  const pct = freeShippingThreshold ? Math.min(100, (totals.subtotal / freeShippingThreshold) * 100) : 0;
+  const remaining = freeShippingThreshold !== undefined ? Math.max(0, Math.round((freeShippingThreshold - totals.subtotal) * 100) / 100) : 0;
+  const pct = freeShippingThreshold !== undefined ? freeShippingThreshold > 0 ? Math.min(100, (totals.subtotal / freeShippingThreshold) * 100) : 100 : 0;
   const preview = typeof window !== 'undefined' && window.location.search.includes('preview=1') ? '?preview=1' : '';
 
   return (
@@ -41,7 +41,7 @@ export function CartDrawer(props: CartDrawerProps): ReactElement {
       ) : (
         <>
           <div className="sf-overlay__body fr-cart">
-            {freeShippingThreshold && cartRequiresShipping(lines) ? (
+            {freeShippingThreshold !== undefined && cartRequiresShipping(lines) ? (
               <div className="fr-cart__ship">
                 <span>{remaining > 0 ? t('cart.freeShippingProgress', { amount: formatMoney(remaining, totals.currency, locale) }) : t('cart.freeShippingReached')}</span>
                 <div className="fr-cart__track" aria-hidden><div className="fr-cart__fill" style={{ width: `${pct}%` }} /></div>

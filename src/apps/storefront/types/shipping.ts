@@ -1,4 +1,5 @@
 export interface ShippingSelection { shipping_region_id?: string; shipping_option_id?: string }
+export interface ShippingOffer { enabled: boolean; currency: string; free_over: string | null }
 export interface DeliveryRegion {
   id: string; name: { ar: string; en: string }; country: string; rate: string; enabled: boolean; position: number;
 }

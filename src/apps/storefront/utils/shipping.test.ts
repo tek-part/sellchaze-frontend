@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { cartRequiresShipping, resolveShipping } from './shipping';
+import { cartRequiresShipping, resolveShipping, shippingThreshold } from './shipping';
 import type { ShippingConfiguration } from '../types/shipping';
 
 const config = (): ShippingConfiguration => ({ enabled: true, regions_enabled: true, auto_select_region: true, currency: 'EGP', flat_rate: '25', free_over: null,
@@ -7,6 +7,21 @@ const config = (): ShippingConfiguration => ({ enabled: true, regions_enabled: t
   options: [{ id: 'express', name: { ar: 'سريع', en: 'Express' }, description: { ar: '', en: '' }, enabled: true, is_default: true, priority: 1, rate: '85' }] });
 
 describe('delivery selection', () => {
+  it('uses the configured offer in the displayed currency, including zero thresholds', () => {
+    const offer = { enabled: true, currency: 'EGP', free_over: '500.00' };
+    expect(shippingThreshold(offer, 'EGP', {})).toBe(500);
+    expect(shippingThreshold(offer, 'USD', { USD: 0.02 })).toBe(10);
+    expect(shippingThreshold({ ...offer, free_over: '0.00' }, 'EGP', {})).toBe(0);
+    expect(shippingThreshold({ ...offer, free_over: '10.25' }, 'USD', { USD: 0.333 })).toBe(3.41);
+  });
+  it('does not fabricate an offer when disabled, unset, malformed or missing a conversion rate', () => {
+    const offer = { enabled: true, currency: 'EGP', free_over: '500.00' };
+    expect(shippingThreshold(undefined, 'EGP', {})).toBeUndefined();
+    expect(shippingThreshold({ ...offer, enabled: false }, 'EGP', {})).toBeUndefined();
+    for (const free_over of [null, '', '-1', '500oops', '1e2']) expect(shippingThreshold({ ...offer, free_over }, 'EGP', {})).toBeUndefined();
+    const conversions: ReadonlyArray<Readonly<Record<string, number>>> = [{}, { USD: 0 }, { USD: -1 }, { USD: Infinity }];
+    for (const rates of conversions) expect(shippingThreshold(offer, 'USD', rates)).toBeUndefined();
+  });
   it('hides shipping presentation for digital-only bags and retains it for mixed and legacy bags', () => {
     expect(cartRequiresShipping([{ digitalType: 'link' }, { digitalType: 'codes' }])).toBe(false);
     expect(cartRequiresShipping([{ digitalType: 'codes' }, { digitalType: 'physical' }])).toBe(true);

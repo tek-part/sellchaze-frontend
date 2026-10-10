@@ -141,7 +141,7 @@ export function DefaultLayout(props: LayoutRenderProps): ReactElement {
             year={data.year ?? 2026}
           />
 
-          <CartDrawer open={cartOpen} onClose={() => setCartOpen(false)} {...(data.freeShippingThreshold ? { freeShippingThreshold: data.freeShippingThreshold } : {})} />
+          <CartDrawer open={cartOpen} onClose={() => setCartOpen(false)} {...(data.freeShippingThreshold !== undefined ? { freeShippingThreshold: data.freeShippingThreshold } : {})} />
           <MobileNav open={menuOpen} onClose={() => setMenuOpen(false)} items={nav} onSearchOpen={() => setSearchOpen(true)} />
           <SearchOverlay open={searchOpen} onClose={() => setSearchOpen(false)} />
         </div>

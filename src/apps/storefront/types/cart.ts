@@ -16,6 +16,8 @@ export interface CartLine {
   currency: string;
   quantity: number;
   maxQuantity?: number;
+  /** Available code units shared by every variant/personalization of this product. */
+  sharedMaxQuantity?: number;
   /** Variant summary, e.g. "Size M · Black". */
   attributes?: string;
   personalization?: import('./personalization').PersonalizationValues;

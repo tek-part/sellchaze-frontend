@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import type { ProductCardModel } from '../../types/catalog';
 import { useCart } from '../../state/cart';
 import { cardCartInput } from '../../utils/card-purchase';
+import { cartAdditionLimit } from '../../state/cart-quantity';
 import './card-options.css';
 
 export function useCardPurchase(product: ProductCardModel) {
@@ -12,7 +13,7 @@ export function useCardPurchase(product: ProductCardModel) {
   const variant = product.variants?.find((item) => item.id === variantId);
   const input = cardCartInput(product, variantId);
   const quantity = input ? cart.lines.find((line) => line.id === input.id)?.quantity ?? 0 : 0;
-  const canAdd = input !== null && quantity < (input.maxQuantity ?? 999);
+  const canAdd = input !== null && cartAdditionLimit(cart.lines, input) > 0;
   return { variantId, variant, input, quantity, canAdd,
     price: variant?.price ?? product.price,
     compareAt: variant?.compareAtPrice ?? product.compareAtPrice,

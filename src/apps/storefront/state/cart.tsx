@@ -15,7 +15,7 @@ import {
 } from 'react';
 import type { CartLine, CartTotals } from '../types/cart';
 import { useStore } from './store-context';
-import { addCartLine, changeCartQuantity, boundedQuantity } from './cart-quantity';
+import { addCartLine, changeCartQuantity, normalizeCartLines } from './cart-quantity';
 
 const storageKey = (currency: string): string => `sf-cart-v1:${currency}`;
 
@@ -37,8 +37,7 @@ function loadInitial(currency: string): CartLine[] {
   try {
     const raw = window.localStorage.getItem(storageKey(currency));
     const parsed: unknown = raw ? JSON.parse(raw) : null;
-    return Array.isArray(parsed) ? (parsed as CartLine[]).filter((line) => line && typeof line.id === 'string' && line.currency === currency && Number.isFinite(line.price) && line.price >= 0)
-      .map((line) => ({ ...line, quantity: boundedQuantity(line.quantity, line.maxQuantity) })).filter((line) => line.quantity > 0) : [];
+    return Array.isArray(parsed) ? normalizeCartLines((parsed as CartLine[]).filter((line) => line && typeof line.id === 'string' && line.currency === currency && Number.isFinite(line.price) && line.price >= 0)) : [];
   } catch {
     return [];
   }

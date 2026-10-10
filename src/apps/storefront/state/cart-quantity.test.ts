@@ -1,8 +1,48 @@
 import { describe, expect, it } from 'vitest';
-import { addCartLine, changeCartQuantity } from './cart-quantity';
+import { addCartLine, changeCartQuantity, cartAdditionLimit, cartLineLimit, normalizeCartLines } from './cart-quantity';
 
 const item = { id: '1:2', productId: '1', variantId: '2', title: 'Bag', url: '/bag', price: 20, currency: 'EGP', maxQuantity: 3 };
 describe('cart stock limits', () => {
+  it('shares code units across variants and personalizations while retaining each SKU limit', () => {
+    const codes = { ...item, digitalType: 'codes' as const, sharedMaxQuantity: 3 };
+    let lines = addCartLine([], { ...codes, maxQuantity: 1, quantity: 2 });
+    lines = addCartLine(lines, { ...codes, id: '1:3:Bob', variantId: '3', quantity: 2 });
+    expect(lines.map((line) => line.quantity)).toEqual([1, 2]);
+    expect(cartAdditionLimit(lines, { ...codes, variantId: '4' })).toBe(0);
+    expect(cartLineLimit(lines, lines[1]!)).toBe(2);
+    expect(changeCartQuantity(lines, '1:3:Bob', 99)).toEqual(lines);
+    lines = changeCartQuantity(lines, '1:3:Bob', 1);
+    expect(cartAdditionLimit(lines, { ...codes, variantId: '4' })).toBe(1);
+    const personalized = addCartLine(lines, { ...codes, id: '1:3:Alice', variantId: '3', quantity: 2 });
+    expect(personalized.map((line) => line.quantity)).toEqual([1, 1, 1]);
+  });
+  it('refreshes a code pool across every variant, including an exhausted or replenished observation', () => {
+    const codes = { ...item, digitalType: 'codes' as const, sharedMaxQuantity: 4 };
+    const lines = addCartLine(addCartLine([], { ...codes, quantity: 2 }), { ...codes, id: '1:3', variantId: '3', quantity: 2 });
+    const smaller = addCartLine(lines, { ...codes, sharedMaxQuantity: 1 });
+    expect(smaller.map((line) => line.quantity)).toEqual([1]);
+    expect(smaller[0]?.sharedMaxQuantity).toBe(1);
+    expect(cartAdditionLimit(smaller, { ...codes, variantId: '3' })).toBe(3);
+    const replenished = addCartLine(smaller, { ...codes, id: '1:3', variantId: '3', quantity: 3 });
+    expect(replenished.map((line) => line.quantity)).toEqual([1, 3]);
+    expect(replenished.every((line) => line.sharedMaxQuantity === 4)).toBe(true);
+    expect(addCartLine(replenished, { ...codes, sharedMaxQuantity: 0 })).toEqual([]);
+  });
+  it('restores aggregate pool and SKU limits from persisted lines, without counting duplicate IDs', () => {
+    const codes = { ...item, digitalType: 'codes' as const, sharedMaxQuantity: 3 };
+    const saved = [{ ...codes, quantity: 2 }, { ...codes, id: '1:3', variantId: '3', quantity: 2 }, { ...codes, quantity: 2 }];
+    expect(normalizeCartLines(saved).map((line) => line.quantity)).toEqual([2, 1]);
+    expect(normalizeCartLines([{ ...item, quantity: 3 }, { ...item, id: 'Alice', maxQuantity: 1, quantity: 1 }]).map((line) => line.quantity)).toEqual([1]);
+  });
+  it('keeps different products and shared-link/physical variants independent', () => {
+    const codes = { ...item, digitalType: 'codes' as const, sharedMaxQuantity: 1 };
+    const lines = addCartLine([], codes);
+    expect(addCartLine(lines, { ...codes, id: 'other', productId: 'other' })).toHaveLength(2);
+    for (const digitalType of ['physical', 'link'] as const) {
+      const independent = { ...item, digitalType };
+      expect(addCartLine(addCartLine([], { ...independent, quantity: 3 }), { ...independent, id: '1:3', variantId: '3', quantity: 3 }).map((line) => line.quantity)).toEqual([3, 3]);
+    }
+  });
   it('shares a SKU cap across different personalized lines for add and quantity edits', () => {
     const first = { ...item, id: '1:2:Alice', quantity: 2 };
     const second = { ...item, id: '1:2:Bob', quantity: 2 };

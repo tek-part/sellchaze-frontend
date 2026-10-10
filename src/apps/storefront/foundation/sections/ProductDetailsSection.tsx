@@ -17,7 +17,7 @@ import { ProductPersonalizationFields } from '../components/ProductPersonalizati
 import type { PersonalizationChoice } from '../../types/personalization';
 import { personalizedLineId, normalizedPersonalization, personalizationReady } from '../../utils/personalization';
 import { resolveVariant, selectionFor, type VariantSelection } from '../../state/variant-selection';
-import { stockCap, boundedQuantity, skuQuantity } from '../../state/cart-quantity';
+import { boundedQuantity, cartAdditionLimit } from '../../state/cart-quantity';
 import { variantGallery, variantImage } from '../../utils/variant-image';
 import { QuantityStepper } from '../components/QuantityStepper';
 import { Button } from '../components/Button';
@@ -65,8 +65,7 @@ export function ProductDetailsSection(props: SectionRenderProps): ReactElement |
   const customFields = product.personalizationFields ?? [];
   const customReady = !custom.busy && personalizationReady(customFields, custom.values);
   const lineId = personalizedLineId(product.id, variantId, custom.values);
-  const inCart = skuQuantity(cart.lines, { productId: product.id, ...(variantId ? { variantId } : {}) });
-  const remaining = Math.max(0, stockCap(availableStock) - inCart);
+  const remaining = cartAdditionLimit(cart.lines, { productId: product.id, digitalType: product.digitalType ?? 'physical', ...(variantId ? { variantId } : {}), ...(availableStock !== undefined ? { maxQuantity: availableStock } : {}), ...(product.sharedMaxQuantity !== undefined ? { sharedMaxQuantity: product.sharedMaxQuantity } : {}) });
   const quantity = Math.max(1, boundedQuantity(qty, remaining));
   const unavailable = outOfStock || remaining === 0;
 
@@ -76,6 +75,7 @@ export function ProductDetailsSection(props: SectionRenderProps): ReactElement |
       id: lineId,
       productId: product.id,
       digitalType: product.digitalType ?? 'physical',
+      ...(product.sharedMaxQuantity !== undefined ? { sharedMaxQuantity: product.sharedMaxQuantity } : {}),
       ...(variantId ? { variantId } : {}),
       title: product.title,
       url: product.url,

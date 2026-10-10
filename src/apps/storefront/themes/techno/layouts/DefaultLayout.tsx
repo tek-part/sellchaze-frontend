@@ -130,7 +130,7 @@ export function DefaultLayout(props: LayoutRenderProps): ReactElement {
               year={data.year ?? 2026}
             />
 
-            <CartDrawer open={cartOpen} onClose={() => setCartOpen(false)} {...(data.freeShippingThreshold ? { freeShippingThreshold: data.freeShippingThreshold } : {})} />
+            <CartDrawer open={cartOpen} onClose={() => setCartOpen(false)} {...(data.freeShippingThreshold !== undefined ? { freeShippingThreshold: data.freeShippingThreshold } : {})} />
             <CompareDrawer open={compareOpen} onClose={() => setCompareOpen(false)} />
             <MobileNav open={menuOpen} onClose={() => setMenuOpen(false)} items={nav} onSearchOpen={() => setSearchOpen(true)} onCompareOpen={() => setCompareOpen(true)} {...(supportPhone ? { supportPhone } : {})} />
             <SearchOverlay open={searchOpen} onClose={() => setSearchOpen(false)} />
