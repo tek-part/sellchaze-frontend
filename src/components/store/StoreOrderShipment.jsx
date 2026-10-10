@@ -27,7 +27,7 @@ export default function StoreOrderShipment({ order, apiBase, uiBase, onOrderUpda
     const [paperSize, setPaperSize] = useState('A4');
     const [labelBusy, setLabelBusy] = useState(false);
     const [labelSaved, setLabelSaved] = useState(false);
-    const [form, setForm] = useState({ city_id: '', district_id: '', address_line: [order.shipping_address?.line1, order.shipping_address?.line2].filter(Boolean).join(', '), package_size: 'MEDIUM', description: (order.items || []).map((item) => `${item.name} × ${item.quantity}`).join(', ').slice(0, 500), notes: '' });
+    const [form, setForm] = useState({ city_id: '', district_id: '', address_line: [order.shipping_address?.line1, order.shipping_address?.line2].filter(Boolean).join(', '), package_size: 'MEDIUM', description: (order.items || []).filter((item) => !item.digital_delivery).map((item) => `${item.name} × ${item.quantity}`).join(', ').slice(0, 500), notes: '' });
     const working = useRef(false);
     const lastRevision = useRef(null);
     const endpoint = `${apiBase}/orders/${order.id}/shipment`;
@@ -88,6 +88,7 @@ export default function StoreOrderShipment({ order, apiBase, uiBase, onOrderUpda
     const field = (name, title, props = {}) => <FormField label={title} htmlFor={`shipment-${name}`}><input id={`shipment-${name}`} className={INPUT_CLASS} value={form[name]} onChange={(e) => setForm({ ...form, [name]: e.target.value })} {...props} /></FormField>;
     return <SettingsCard title={text('شحنة الطلب • Bosta', 'Order shipment • Bosta')} actions={<Link className="text-sm text-brand underline" to={`${uiBase}/settings/shipping`}>{text('إعدادات الربط', 'Connection settings')}</Link>}>
         <div className="space-y-4">
+            {order.fulfillment?.type === 'mixed' ? <p className="rounded-lg bg-sky-50 p-3 text-sm text-sky-900">{text('تحتوي الشحنة على المنتجات الفعلية فقط. تُسلّم المنتجات الرقمية عبر الإيصال الخاص بعد تأكيد الدفع.', 'This shipment contains physical products only. Digital products are delivered through the private receipt after payment confirmation.')}</p> : null}
             {error ? <p role="alert" className="rounded-lg bg-red-50 p-3 text-sm text-red-700">{error}</p> : null}
             {!loaded ? <button type="button" className={button} disabled={busy} onClick={() => { setError(''); load().catch((e) => setError(errorText(e))); }}>{text('تحميل حالة الشحن', 'Load shipping status')}</button> : null}
             {shipment ? <div className="space-y-2 rounded-xl bg-slate-50 p-4 text-sm"><p className="font-semibold">{shipment.status === 'rejected' ? text('رفضت الشركة طلب الشحن', 'Carrier rejected the request') : uncertain ? text('نتيجة الإرسال غير مؤكدة', 'Dispatch result is unconfirmed') : states[shipment.carrier_state] ? states[shipment.carrier_state][ar ? 0 : 1] : shipment.carrier_state_label || text('تم إنشاء الشحنة', 'Shipment created')}</p><p>{text('مرجع الشحنة', 'Shipment reference')}: <bdi className="break-all font-mono text-xs">{shipment.business_reference}</bdi></p>{shipment.tracking_number ? <p>{text('رقم التتبع', 'Tracking number')}: <bdi className="font-mono">{shipment.tracking_number}</bdi></p> : null}{shipment.synced_at ? <p className="text-xs text-slate-500">{text('آخر تحديث', 'Last updated')}: {new Date(shipment.synced_at).toLocaleString(ar ? 'ar-EG' : 'en-GB')}</p> : null}</div> : null}

@@ -57,7 +57,7 @@ export default function StoreInventoryPage() {
             setHistory({ name: product.name, rows: data.data, loading: false });
         } catch (e) { setHistory(null); setError(errorText(e)); }
     }
-    const labels = { variant_deleted: text('حذف صنف', 'Variant deleted'), adjusted: text('تعديل الكمية', 'Stock adjustment'), reserved: text('حجز لطلب', 'Order reservation'), shipped: text('شحن الطلب', 'Order shipped'), cancelled: text('فك حجز طلب ملغى', 'Cancelled order released') };
+    const labels = { variant_deleted: text('حذف صنف', 'Variant deleted'), adjusted: text('تعديل الكمية', 'Stock adjustment'), reserved: text('حجز لطلب', 'Order reservation'), shipped: text('شحن الطلب', 'Order shipped'), digital_committed: text('احتساب وحدات رقمية', 'Digital units committed'), cancelled: text('فك حجز طلب ملغى', 'Cancelled order released') };
     return <div className="space-y-5">
         <div className="border-s-4 border-brand ps-4"><h1 className="text-2xl font-bold">{text('مخزون المتجر', 'Store inventory')}</h1><p className="mt-2 text-sm text-slate-500">{text('المتاح للبيع = الكمية الفعلية − المحجوز للطلبات. يُفك الحجز عند الإلغاء وتُخصم الكمية عند الشحن.', 'Available to sell = on hand − reserved orders. Cancellation releases reservations; shipping deducts stock.')}</p></div>
         <p className="text-sm text-slate-500">{text('فعّل التتبع للمنتجات محدودة الكمية. المنتجات دون تتبع تقبل الطلبات دون حد مخزون. هذا مخزون المتجر الإلكتروني؛ مخازن التوريد تُدار من قسم المخزون.', 'Enable tracking for limited stock. Untracked products have no inventory limit. This is online store stock; supplier warehouses are managed in Inventory.')}</p>

@@ -4,7 +4,7 @@
  * heading + sans body, with Amiri paired for Arabic), applies the `color_scheme` setting to the
  * engine, and projects the card settings as data attributes so `theme.css` can restyle library cards.
  */
-import { useEffect, useState, type ReactElement } from 'react';
+import { useEffect, useRef, useState, type ReactElement } from 'react';
 import type { LayoutRenderProps } from '../../../theme-engine/rendering';
 import { useTheme, useThemeSettings } from '../../../theme-engine/context';
 import type { ColorSchemePreference } from '../../../theme-engine/types';
@@ -68,7 +68,13 @@ const SCHEMES: ReadonlyArray<ColorSchemePreference> = ['auto', 'light', 'dark'];
 function useColorSchemeSetting(value: unknown): void {
   const { setColorSchemePreference } = useTheme();
   const pref = typeof value === 'string' && (SCHEMES as ReadonlyArray<string>).includes(value) ? (value as ColorSchemePreference) : 'auto';
+  const previous = useRef<ColorSchemePreference | null>(null);
   useEffect(() => {
+    const first = previous.current === null;
+    if (previous.current === pref) return;
+    previous.current = pref;
+    // Preserve the engine's initial preview scheme when the merchant uses auto.
+    if (first && pref === 'auto') return;
     setColorSchemePreference(pref);
   }, [pref, setColorSchemePreference]);
 }

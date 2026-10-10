@@ -8,6 +8,7 @@ import toast from 'react-hot-toast';
 import api from '../api/client';
 import StatusBadge from '../components/StatusBadge';
 import StoreOrderShipment from '../components/store/StoreOrderShipment';
+import StoreOrderDigitalEmail from '../components/store/StoreOrderDigitalEmail';
 
 // Mirrors StoreOrderService::TRANSITIONS — only valid next actions are shown.
 const TRANSITIONS = {
@@ -22,7 +23,10 @@ const TRANSITIONS = {
 export default function StoreOrderDetailPage() {
     const { orderId } = useParams();
     const { apiBase, uiBase } = useStoreScope();
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
+    const ar = i18n.language.startsWith('ar');
+    const [bankReference, setBankReference] = useState('');
+    const [bankReview, setBankReview] = useState(false);
 
     const [order, setOrder] = useState(null);
     const [err, setErr] = useState('');
@@ -55,7 +59,20 @@ export default function StoreOrderDetailPage() {
     if (err) return <p className="rounded-lg border border-red-100 bg-red-50 px-3 py-2 text-sm text-red-700">{err}</p>;
     if (!order) return <div className="flex min-h-48 items-center justify-center text-sm text-slate-500">{t('loading', 'Loading…')}</div>;
 
-    const nextStatuses = TRANSITIONS[order.status] || [];
+    const confirmBankPayment = async () => {
+        setSaving(true);
+        try {
+            const { data } = await api.post(`${apiBase}/orders/${orderId}/payment/confirm-bank`, { reference: bankReference, note: note || null });
+            setOrder(data.data);
+            setBankReview(false);
+            setNote('');
+            toast.success(ar ? 'تم تأكيد الدفع البنكي' : 'Bank payment confirmed');
+        } catch (e) {
+            toast.error(e.response?.data?.message || e.message);
+        } finally { setSaving(false); }
+    };
+    const nextStatuses = order.next_statuses || TRANSITIONS[order.status] || [];
+    const requiresShipping = order.fulfillment?.requires_shipping !== false;
     const money = (v) => `${order.currency} ${v}`;
 
     return (
@@ -73,7 +90,8 @@ export default function StoreOrderDetailPage() {
 
             <div className="grid gap-5 lg:grid-cols-3">
                 <div className="space-y-5 lg:col-span-2">
-                    <StoreOrderShipment key={`${apiBase}-${order.id}`} order={order} apiBase={apiBase} uiBase={uiBase} onOrderUpdated={load} />
+                    {requiresShipping ? <StoreOrderShipment key={`${apiBase}-${order.id}`} order={order} apiBase={apiBase} uiBase={uiBase} onOrderUpdated={load} /> : <div className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-card"><h2 className="font-semibold">{ar ? 'طلب رقمي' : 'Digital order'}</h2><p className="mt-2 text-sm text-slate-600">{ar ? 'لا يحتاج هذا الطلب إلى شحن. يستلم المشتري المنتجات عبر الإيصال الخاص والبريد بعد تأكيد الدفع.' : 'This order does not need shipping. The buyer receives products through the private receipt and email after payment confirmation.'}</p></div>}
+                    {(order.items || []).some((item) => item.digital_delivery) ? <StoreOrderDigitalEmail key={`${apiBase}-${order.id}`} order={order} apiBase={apiBase} onOrderUpdated={load} /> : null}
                     {/* Items */}
                     <div className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-card">
                         <div className="border-b border-slate-100 px-5 py-3">
@@ -136,6 +154,19 @@ export default function StoreOrderDetailPage() {
                 {/* Sidebar: customer + status actions */}
                 <div className="space-y-5">
                     <div className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-card">
+                        <h2 className="mb-3 text-base font-semibold text-slate-900">{ar ? 'الدفع' : 'Payment'}</h2>
+                        <p className="text-sm text-slate-700">{order.payment_method === 'bank_transfer' ? (ar ? 'تحويل بنكي' : 'Bank transfer') : order.payment_method} · {order.payment_status === 'paid' ? (ar ? 'مدفوع' : 'Paid') : (ar ? 'بانتظار الدفع' : 'Awaiting payment')}</p>
+                        {order.payment_method === 'bank_transfer' && order.payment_status !== 'paid' && order.status !== 'cancelled' ? <>
+                            <p className="my-3 text-sm text-slate-600">{ar ? 'أكد الدفع بعد التحقق من وصول المبلغ إلى حسابك. يتيح التأكيد المنتجات الرقمية للمشتري ويرسلها بالبريد.' : 'Confirm only after verifying funds reached your account. Confirmation releases digital products and sends them by email.'}</p>
+                            <label className="block text-sm text-slate-700">{ar ? 'مرجع التحويل البنكي' : 'Bank transfer reference'}<input className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2" value={bankReference} maxLength={200} onChange={(e) => { setBankReference(e.target.value); setBankReview(false); }} /></label>
+                            {bankReview ? <div className="mt-3 space-y-2 rounded-lg bg-amber-50 p-3 text-sm text-slate-800">
+                                <p>{ar ? 'تأكيد استلام' : 'Confirm receipt of'} {money(order.grand_total)} · <bdi>{bankReference}</bdi></p>
+                                <button type="button" disabled={saving} onClick={confirmBankPayment} className="rounded-lg bg-brand px-3 py-2 text-white disabled:opacity-50">{ar ? 'تأكيد وصول المبلغ' : 'Confirm funds received'}</button>
+                                <button type="button" disabled={saving} onClick={() => setBankReview(false)} className="ms-2 px-3 py-2">{ar ? 'إلغاء' : 'Cancel'}</button>
+                            </div> : <button type="button" disabled={!bankReference.trim() || saving} onClick={() => setBankReview(true)} className="mt-3 rounded-lg bg-brand px-3 py-2 text-sm text-white disabled:opacity-50">{ar ? 'مراجعة تأكيد الدفع' : 'Review payment confirmation'}</button>}
+                        </> : null}
+                    </div>
+                    <div className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-card">
                         <h2 className="mb-3 text-base font-semibold text-slate-900">{t('order_customer', 'Customer')}</h2>
                         <p className="text-sm font-medium text-slate-900">{order.customer?.name}</p>
                         <p className="text-sm text-slate-600">{order.customer?.email}</p>
@@ -180,7 +211,7 @@ export default function StoreOrderDetailPage() {
                                             onClick={() => changeStatus(s)}
                                             className={`rounded-lg px-3 py-2 text-sm font-semibold disabled:opacity-50 ${s === 'cancelled' ? 'border border-red-200 bg-red-50 text-red-700 hover:bg-red-100' : 'bg-brand text-white hover:bg-brand-dark'}`}
                                         >
-                                            {t(`order_action_${s}`, t(`order_status_${s}`, s))}
+                                            {!requiresShipping && s === 'delivered' ? (ar ? 'إتمام التسليم الرقمي' : 'Complete digital delivery') : t(`order_action_${s}`, t(`order_status_${s}`, s))}
                                         </button>
                                     ))}
                                 </div>

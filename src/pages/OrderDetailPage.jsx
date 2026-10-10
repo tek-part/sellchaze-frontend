@@ -663,6 +663,7 @@ export default function OrderDetailPage() {
 
     /** Suppliers only see Deliveries after their quotation is accepted (parity with legacy flow). */
     const supplierSeesDeliveriesSection = useMemo(() => {
+        if (row?.storefront_fulfillment?.requires_shipping === false) return false;
         if (!isSupplier) {
             return true;
         }
@@ -671,7 +672,7 @@ export default function OrderDetailPage() {
         }
         const st = String(myQuotation.status ?? '').toLowerCase();
         return ['accepted', 'deal'].includes(st);
-    }, [isSupplier, myQuotation]);
+    }, [isSupplier, myQuotation, row?.storefront_fulfillment?.requires_shipping]);
 
     const itemRows = useMemo(() => {
         if (!row) {
@@ -1192,6 +1193,8 @@ export default function OrderDetailPage() {
                                         {row.store_order_number || row.ref_number || t('order_none')}
                                     </span>
                                     <p className="mt-1 text-xs text-slate-500">{t('order_storefront_items_hint')}</p>
+                                    {row.storefront_fulfillment?.type === 'mixed' ? <p className="mt-2 text-sm text-sky-800">{i18n.language.startsWith('ar') ? 'المتابعة هنا للمنتجات الفعلية فقط. المنتجات الرقمية وتسويتها تُتابع داخل طلب المتجر؛ بيانات الدفع تخص طلب العميل الكامل.' : 'This workflow covers physical products only. Digital fulfillment is managed in the store order; payment information describes the complete customer order.'}</p> : null}
+                                    {row.storefront_fulfillment?.requires_shipping === false ? <p className="mt-2 text-sm text-sky-800">{i18n.language.startsWith('ar') ? 'طلب رقمي محفوظ من مسار سابق. يُسلّم عبر الإيصال الخاص داخل المتجر ولا يمكن إنشاء شحنة له.' : 'Digital order retained from an earlier workflow. Delivery is managed through the store receipt; a shipment cannot be created.'}</p> : null}
                                 </div>
                                 {row.store_order_id != null &&
                                 myUserId != null &&
@@ -2083,7 +2086,7 @@ export default function OrderDetailPage() {
                                         <SidebarField icon={HiOutlineCurrencyDollar} label={t('order_paid_amount')}>
                                             <span className="tabular-nums font-semibold">
                                                 {row.paid_amount != null ? row.paid_amount : t('order_none')}
-                                                <span className="ms-1 font-normal text-slate-500">(USD)</span>
+                                                <span className="ms-1 font-normal text-slate-500">({row.currency || 'USD'})</span>
                                             </span>
                                         </SidebarField>
                                         {row.payment_transaction_id ? (

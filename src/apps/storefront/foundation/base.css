@@ -1267,6 +1267,12 @@
 .sf-newsletter--banded .sf-newsletter__form { width: 100%; max-width: 480px; }
 .sf-newsletter__field { flex: 1; }
 .sf-newsletter__success { color: var(--success); font-family: var(--font); }
+.sf-order-receipt { padding: 1.5rem; color: var(--text); background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow-wrap: anywhere; }
+.sf-order-receipt h2, .sf-order-receipt h3 { margin: 0 0 1rem; }
+.sf-order-receipt > div, .sf-order-receipt p { margin-bottom: 1rem; }
+.sf-order-receipt__bank { padding: 1rem; background: var(--surface-2); border-radius: var(--radius); }
+.sf-order-receipt__bank dl > div { display: flex; flex-wrap: wrap; gap: .5rem; margin-bottom: .75rem; }
+.sf-order-receipt__bank dd { margin: 0; }
 
 /* ==================================================== Countdown · §32.3 ==== */
 .sf-countdown { display: inline-flex; align-items: flex-start; gap: var(--sp-3); }
