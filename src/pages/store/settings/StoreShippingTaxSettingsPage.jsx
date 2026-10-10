@@ -8,6 +8,7 @@ import SaveBar from '../../../components/ui/SaveBar';
 import SettingsCard from '../../../components/ui/SettingsCard';
 import Toggle from '../../../components/ui/Toggle';
 import StoreMediaPicker from '../../../components/store/StoreMediaPicker';
+import StoreCarrierSettings from '../../../components/store/StoreCarrierSettings';
 import useStoreContext from '../../../hooks/useStoreContext';
 import { useDirty } from '../../../hooks/useStoreSettings';
 import { countryOptions } from '../../../apps/storefront/utils/countries';
@@ -65,7 +66,7 @@ export default function StoreShippingTaxSettingsPage() {
     const numeric = (key, text, props = {}) => <FormField label={text} htmlFor={key}><input id={key} className={INPUT_CLASS} type="number" min="0" step="0.01" required value={values[key]} onChange={(e) => change({ [key]: e.target.value })} {...props} /></FormField>;
     const names = (collection, row) => <div className="grid gap-4 sm:grid-cols-2">{['ar', 'en'].map((language) => <FormField key={language} label={language === 'ar' ? label('الاسم بالعربية', 'Arabic name') : label('الاسم بالإنجليزية', 'English name')} htmlFor={`${row.id}-${language}`}><input id={`${row.id}-${language}`} className={INPUT_CLASS} dir={language === 'ar' ? 'rtl' : 'ltr'} maxLength={120} required value={row.name[language]} onChange={(e) => updateRow(collection, row.id, { name: { ...row.name, [language]: e.target.value } })} /></FormField>)}</div>;
     const rowNumber = (collection, row, key, title) => <FormField label={title} htmlFor={`${row.id}-${key}`}><input id={`${row.id}-${key}`} className={INPUT_CLASS} type="number" min="0" max={key === 'rate' ? undefined : 999} step={key === 'rate' ? '0.01' : '1'} required value={row[key]} onChange={(e) => updateRow(collection, row.id, { [key]: e.target.value })} /></FormField>;
-    return <form onSubmit={save} onInvalidCapture={(event) => {
+    return <div className="mx-auto max-w-5xl space-y-5"><form onSubmit={save} onInvalidCapture={(event) => {
         const panel = event.target.closest('[role="tabpanel"]');
         if (panel) setTab(panel.id === 'shipping-panel-regions' ? 'regions' : 'options');
     }} className="mx-auto max-w-5xl space-y-5">
@@ -112,5 +113,5 @@ export default function StoreShippingTaxSettingsPage() {
             </fieldset>
             <SaveBar dirty={dirty} saving={saving} saveLabel={label('حفظ إعدادات الشحن', 'Save shipping settings')} onReset={() => { setValues(initial); setError(''); setSaved(false); }} />
         </> : null}
-    </form>;
+    </form><StoreCarrierSettings key={apiBase} apiBase={apiBase} /></div>;
 }

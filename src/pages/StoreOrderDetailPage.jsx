@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
 import api from '../api/client';
 import StatusBadge from '../components/StatusBadge';
+import StoreOrderShipment from '../components/store/StoreOrderShipment';
 
 // Mirrors StoreOrderService::TRANSITIONS — only valid next actions are shown.
 const TRANSITIONS = {
@@ -70,6 +71,7 @@ export default function StoreOrderDetailPage() {
 
             <div className="grid gap-5 lg:grid-cols-3">
                 <div className="space-y-5 lg:col-span-2">
+                    <StoreOrderShipment key={`${apiBase}-${order.id}`} order={order} apiBase={apiBase} uiBase={uiBase} />
                     {/* Items */}
                     <div className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-card">
                         <div className="border-b border-slate-100 px-5 py-3">
