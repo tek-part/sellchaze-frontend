@@ -29,6 +29,7 @@ export interface ProductMediaModel extends ProductImage {
 export interface ProductCardModel {
   sharedMaxQuantity?: number;
   orderMaxQuantity?: number;
+  autoSelectVariants?: boolean;
   digitalType?: 'physical' | 'link' | 'codes';
   hasPersonalization?: boolean;
   id: string;

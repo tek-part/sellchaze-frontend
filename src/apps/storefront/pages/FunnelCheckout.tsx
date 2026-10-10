@@ -12,6 +12,9 @@ import { ProductPersonalizationFields } from '../foundation/components/ProductPe
 import type { PersonalizationChoice } from '../types/personalization';
 import { personalizationReady, normalizedPersonalization } from '../utils/personalization';
 import { cartAdditionLimit } from '../state/cart-quantity';
+import { resolveCardVariant } from '../state/variant-selection';
+import { toVariant } from '../api/mappers';
+import { useVariantSelectionAutomatic } from '../state/store-context';
 
 /** Product-specific checkout: leaves the visitor's ordinary shopping cart intact. */
 export function FunnelCheckout({ productSlug }: { productSlug: string | null }): ReactElement {
@@ -20,16 +23,20 @@ export function FunnelCheckout({ productSlug }: { productSlug: string | null }):
   const label = (arabic: string, english: string): string => ar ? arabic : english;
   const productQ = useAsync(() => productSlug ? getProduct(productSlug) : Promise.resolve(null), [productSlug, locale]);
   const product = productQ.data?.data;
-  const [variantId, setVariantId] = useState('');
+  const [selection, setSelection] = useState<{ productId: number; id: string }>();
   const [quantity, setQuantity] = useState(1);
   const [coupon, setCoupon] = useState('');
   const [appliedCoupon, setAppliedCoupon] = useState('');
   const [customChoice, setCustomChoice] = useState<{ productId: number; choice: PersonalizationChoice }>();
   const custom = customChoice?.productId === product?.id ? customChoice?.choice ?? { values: {}, entries: [], busy: false } : { values: {}, entries: [], busy: false };
   const variants = product?.variants ?? [];
+  const automatic = useVariantSelectionAutomatic(product?.auto_select_variant);
+  const explicitId = selection?.productId === product?.id ? selection?.id : undefined;
+  const selectedVariant = resolveCardVariant(variants.map((variant) => toVariant(variant)), explicitId, automatic);
+  const variantId = selectedVariant?.id ?? '';
   const selectedStock = variants.length ? variants.find((v) => String(v.id) === variantId)?.stock : product?.stock;
   const purchaseLimit = Math.min(999, cartAdditionLimit([], { productId: String(product?.id), digitalType: product?.digital_type ?? 'physical', maxQuantity: selectedStock ?? undefined, orderMaxQuantity: product?.order_quantity_limit || undefined, sharedMaxQuantity: product?.digital_pool_stock ?? undefined }));
-  const selectionReady = !!product && product.is_active !== false && !custom.busy && personalizationReady(product.personalization_fields ?? [], custom.values) && quantity >= 1 && quantity <= purchaseLimit && (!variants.length || variants.some((v) => v.is_active !== false && String(v.id) === variantId));
+  const selectionReady = !!product && product.is_active !== false && !custom.busy && personalizationReady(product.personalization_fields ?? [], custom.values) && quantity >= 1 && quantity <= purchaseLimit && (!variants.length || selectedVariant?.available === true);
   const customKey = JSON.stringify(custom.values);
   const items = useMemo<ReadonlyArray<CheckoutItem>>(() => selectionReady && product ? [{ product_id: product.id, quantity, personalization: normalizedPersonalization(JSON.parse(customKey) as Record<string, string>), ...(variantId ? { variant_id: Number(variantId) } : {}) }] : [], [product, selectionReady, quantity, variantId, customKey]);
   const payment = useCheckoutPaymentFlow({ items, preserveCart: true });
@@ -55,7 +62,7 @@ export function FunnelCheckout({ productSlug }: { productSlug: string | null }):
         <div className="sf-funnel-checkout__selection">
           {variants.length > 0 ? <label className="sf-funnel-checkout__option">
             <span>{label('اختر اللون أو المقاس', 'Choose an option')}</span>
-            <select value={variantId} onChange={(event) => setVariantId(event.target.value)} required>
+            <select value={variantId} onChange={(event) => setSelection({ productId: product.id, id: event.target.value })} required>
               <option value="">{label('اختر…', 'Choose…')}</option>
               {variants.filter((variant) => variant.is_active !== false).map((variant) => <option key={variant.id} value={variant.id} disabled={variant.stock != null && variant.stock <= 0}>{variant.name || Object.values(variant.options ?? {}).join(' / ')}{variant.stock != null && variant.stock <= 0 ? label(' — نفدت الكمية', ' — Sold out') : ''}</option>)}
             </select>

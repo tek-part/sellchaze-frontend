@@ -17,6 +17,7 @@ export interface ApiVariant {
 }
 
 export interface ApiProduct {
+  auto_select_variant?: boolean;
   digital_pool_stock?: number | null;
   order_quantity_limit?: number | null;
   digital_type?: 'physical' | 'link' | 'codes';
@@ -105,6 +106,7 @@ export interface ApiCoupon {
 }
 
 export interface ApiStoreSummary {
+  auto_select_variants?: boolean;
   shipping?: import('../types/shipping').ShippingOffer;
   id: number;
   name: string;
