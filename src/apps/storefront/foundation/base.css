@@ -673,6 +673,7 @@
 .sf-tab:disabled { color: var(--border-strong); cursor: not-allowed; }
 .sf-tabs__indicator {
   position: absolute;
+  left: 0;
   bottom: -1px;
   height: 1px;
   background: var(--accent);

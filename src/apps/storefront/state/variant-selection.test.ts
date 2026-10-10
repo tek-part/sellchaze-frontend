@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { resolveVariant, selectionFor } from './variant-selection';
+import { blankSelection, resolveCardVariant, resolveVariant, selectionAutomatic, selectionFor } from './variant-selection';
 import type { ProductVariantModel } from '../types/catalog';
 
 const variants: ProductVariantModel[] = [
@@ -9,6 +9,33 @@ const variants: ProductVariantModel[] = [
   { id: '4', label: 'Legacy', available: true },
 ];
 describe('variant property selection', () => {
+  it('uses current store policy over cached card data, with an independent preview fallback', () => {
+    expect(selectionAutomatic(false, true)).toBe(false);
+    expect(selectionAutomatic(true, false)).toBe(true);
+    expect(selectionAutomatic(undefined, false)).toBe(false);
+    expect(selectionAutomatic()).toBe(true);
+  });
+  it('leaves both property and card selections empty when automatic selection is disabled', () => {
+    expect(resolveVariant(variants, undefined, false)).toBeUndefined();
+    expect(resolveCardVariant(variants, undefined, false)).toBeUndefined();
+    const blank = blankSelection(variants);
+    expect(blank.values).toEqual({});
+    expect(blank.id).toBeUndefined();
+    expect(resolveVariant(variants, blank)).toBeUndefined();
+    expect(resolveVariant(variants, selectionFor(variants[2]!), false)?.id).toBe('3');
+    expect(resolveCardVariant(variants, '3', false)?.id).toBe('3');
+  });
+  it('never auto-selects sold out stock, or falls back from an explicit card choice', () => {
+    const stockGone = { ...variants[0]!, availableStock: 0 };
+    expect(resolveCardVariant([variants[1]!, stockGone])).toBeUndefined();
+    expect(resolveVariant([variants[1]!, stockGone])).toBeUndefined();
+    expect(resolveCardVariant(variants, 'missing')).toBeUndefined();
+    expect(resolveCardVariant(variants, '')).toBeUndefined();
+    expect(resolveCardVariant(variants, '2')?.id).toBe('2');
+    expect(resolveCardVariant(variants, '2')?.available).toBe(false);
+    expect(resolveCardVariant([stockGone, variants[2]!], '1')?.id).toBe('1');
+    expect(resolveCardVariant([stockGone, variants[2]!])?.id).toBe('3');
+  });
   it('starts at an available SKU and preserves its zero price', () => {
     expect(resolveVariant(variants)?.id).toBe('1');
     expect(resolveVariant(variants)?.price).toBe(0);

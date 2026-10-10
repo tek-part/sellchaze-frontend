@@ -10,8 +10,10 @@ import { loadStorefrontBootstrap } from '../api/bootstrap';
 import type { ApiStorefrontBootstrap } from '../api/storefront';
 import type { ApiStorefrontNavigation } from '../api/types';
 import { useAsync } from '../api/useAsync';
+import { selectionAutomatic } from './variant-selection';
 
 export interface StoreInfo {
+  autoSelectVariants?: boolean;
   shipping?: import('../types/shipping').ShippingOffer;
   id: string;
   name: string;
@@ -78,6 +80,7 @@ export function StoreProvider(props: { children: ReactNode; initialData?: ApiSto
     const supportedLocales = supportedFromApi.length ? supportedFromApi : [defaultLocale];
     store = {
       id: String(s.id),
+      ...(s.auto_select_variants !== undefined ? { autoSelectVariants: s.auto_select_variants } : {}),
       name: s.name,
       slug: s.slug,
       currency,
@@ -111,4 +114,9 @@ export function useStore(): StoreContextValue {
   const context = useContext(StoreContext);
   if (!context) throw new Error('useStore must be used within a <StoreProvider>.');
   return context;
+}
+
+/** Optional context keeps standalone foundation cards usable in previews. */
+export function useVariantSelectionAutomatic(productPreference?: boolean): boolean {
+  return selectionAutomatic(useContext(StoreContext)?.store.autoSelectVariants, productPreference);
 }

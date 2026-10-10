@@ -123,6 +123,7 @@ const StoreFunnelsPage = lazy(() => import('./pages/StoreFunnelsPage'));
 const StoreMediaPage = lazy(() => import('./pages/StoreMediaPage'));
 const StoreGeneralSettingsPage = lazy(() => import('./pages/store/settings/StoreGeneralSettingsPage'));
 const StoreBotProtectionPage = lazy(() => import('./pages/store/settings/StoreBotProtectionPage'));
+const StoreShoppingPreferencesPage = lazy(() => import('./pages/store/settings/StoreShoppingPreferencesPage'));
 const StoreLocalizationSettingsPage = lazy(() => import('./pages/store/settings/StoreLocalizationSettingsPage'));
 const StoreShippingTaxSettingsPage = lazy(() => import('./pages/store/settings/StoreShippingTaxSettingsPage'));
 const StoreDomainsPage = lazy(() => import('./pages/store/settings/StoreDomainsPage'));
@@ -227,6 +228,7 @@ const STORE_ROUTES = [
     { path: 'media', element: <StoreMediaPage /> },
     { path: 'settings/general', element: <StoreGeneralSettingsPage /> },
     { path: 'settings/bot-protection', element: <StoreBotProtectionPage /> },
+    { path: 'settings/shopping-preferences', element: <StoreShoppingPreferencesPage /> },
     { path: 'settings/localization', element: <StoreLocalizationSettingsPage /> },
     { path: 'settings/payments', element: <StorePaymentsPage /> },
     { path: 'settings/shipping', element: <StoreShippingTaxSettingsPage /> },

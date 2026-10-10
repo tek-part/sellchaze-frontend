@@ -39,6 +39,7 @@ export function toProductCard(product: ApiProduct, currency: string, multiplier 
   return {
     id: String(product.id),
     digitalType: product.digital_type ?? 'physical',
+    autoSelectVariants: product.auto_select_variant !== false,
     ...(product.order_quantity_limit != null && product.order_quantity_limit > 0 ? { orderMaxQuantity: product.order_quantity_limit } : {}),
     ...(product.digital_type === 'codes' && product.digital_pool_stock != null ? { sharedMaxQuantity: product.digital_pool_stock } : {}),
     hasPersonalization: product.has_personalization === true || !!product.personalization_fields?.length,
@@ -131,7 +132,7 @@ export function productMedia(product: ApiProduct): ProductMediaModel[] {
   return media;
 }
 
-function toVariant(variant: ApiVariant, multiplier = 1): ProductVariantModel {
+export function toVariant(variant: ApiVariant, multiplier = 1): ProductVariantModel {
   const fromOptions = variant.options ? Object.values(variant.options).join(' / ') : '';
   const label = variant.name ?? (fromOptions || `Variant ${variant.id}`);
   const available = variant.is_active !== false && (variant.stock == null || variant.stock > 0);

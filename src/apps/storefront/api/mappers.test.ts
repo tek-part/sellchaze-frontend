@@ -17,6 +17,12 @@ const base: ApiProduct = {
 };
 
 describe('toProductCard', () => {
+  it('carries the store selection preference into both cards and product details', () => {
+    expect(toProductCard(base, 'EGP').autoSelectVariants).toBe(true);
+    expect(toProductCard({ ...base, auto_select_variant: false }, 'EGP').autoSelectVariants).toBe(false);
+    expect(toProductDetail({ ...base, auto_select_variant: false }, 'EGP').autoSelectVariants).toBe(false);
+    expect(toProductDetail({ ...base, auto_select_variant: true }, 'EGP').autoSelectVariants).toBe(true);
+  });
   it('keeps the merchant order cap separate from stock and sold-out state', () => {
     const card = toProductCard({ ...base, order_quantity_limit: 2 }, 'EGP');
     expect(card.orderMaxQuantity).toBe(2);

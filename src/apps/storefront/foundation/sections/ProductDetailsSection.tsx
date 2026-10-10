@@ -16,7 +16,7 @@ import { ProductOptionPicker } from '../components/ProductOptionPicker';
 import { ProductPersonalizationFields } from '../components/ProductPersonalizationFields';
 import type { PersonalizationChoice } from '../../types/personalization';
 import { personalizedLineId, normalizedPersonalization, personalizationReady } from '../../utils/personalization';
-import { resolveVariant, selectionFor, type VariantSelection } from '../../state/variant-selection';
+import { blankSelection, resolveVariant, selectionFor, variantAvailable, type VariantSelection } from '../../state/variant-selection';
 import { boundedQuantity, cartAdditionLimit } from '../../state/cart-quantity';
 import { variantGallery, variantImage } from '../../utils/variant-image';
 import { QuantityStepper } from '../components/QuantityStepper';
@@ -26,6 +26,7 @@ import { ShareButton } from '../components/ShareButton';
 import { Tabs } from '../components/Tabs';
 import { ReviewList, ReviewSummary } from '../components/Reviews';
 import { useCart } from '../../state/cart';
+import { useVariantSelectionAutomatic } from '../../state/store-context';
 import { useWishlist } from '../../state/wishlist';
 import { useToast } from '../components/toast/useToast';
 import { productDetailOf, reviewsFor } from './section-data';
@@ -36,6 +37,7 @@ export function ProductDetailsSection(props: SectionRenderProps): ReactElement |
   const ar = i18n.language.startsWith('ar');
   const { settings, context } = props;
   const product = productDetailOf(context);
+  const automatic = useVariantSelectionAutomatic(product?.autoSelectVariants);
   const cart = useCart();
   const wishlist = useWishlist();
   const toast = useToast();
@@ -49,14 +51,15 @@ export function ProductDetailsSection(props: SectionRenderProps): ReactElement |
   // Product data arrives asynchronously. Resolve the displayed default on every render,
   // so an untouched select still adds the visible variant instead of the parent product.
   const choice = selection?.productId === product?.id ? selection?.choice : undefined;
-  const activeVariant = resolveVariant(product?.variants ?? [], choice);
+  const activeVariant = resolveVariant(product?.variants ?? [], choice, automatic);
   const variantId = activeVariant?.id;
 
   if (!product) return null;
 
   const showSku = flag(settings, 'show_sku', false);
   const showShare = flag(settings, 'show_share', true);
-  const outOfStock = product.inStock === false || Boolean(product.variants?.length && !activeVariant?.available);
+  const selectionRequired = Boolean(product.variants?.length && !activeVariant);
+  const outOfStock = product.inStock === false || Boolean(activeVariant && !variantAvailable(activeVariant));
   const unitPrice = activeVariant?.price ?? product.price;
   const selectedImage = variantImage(product, activeVariant);
   const compareAt = activeVariant?.compareAtPrice ?? product.compareAtPrice;
@@ -67,7 +70,7 @@ export function ProductDetailsSection(props: SectionRenderProps): ReactElement |
   const lineId = personalizedLineId(product.id, variantId, custom.values);
   const remaining = cartAdditionLimit(cart.lines, { productId: product.id, digitalType: product.digitalType ?? 'physical', ...(variantId ? { variantId } : {}), ...(availableStock !== undefined ? { maxQuantity: availableStock } : {}), ...(product.sharedMaxQuantity !== undefined ? { sharedMaxQuantity: product.sharedMaxQuantity } : {}), ...(product.orderMaxQuantity !== undefined ? { orderMaxQuantity: product.orderMaxQuantity } : {}) });
   const quantity = Math.max(1, boundedQuantity(qty, remaining));
-  const unavailable = outOfStock || remaining === 0;
+  const unavailable = selectionRequired || outOfStock || remaining === 0;
 
   const addToCart = (): void => {
     if (unavailable || !customReady) return;
@@ -117,7 +120,8 @@ export function ProductDetailsSection(props: SectionRenderProps): ReactElement |
 
             {product.variants && product.variants.length > 0 ? (
               <ProductOptionPicker variants={product.variants} display={product.optionDisplay ?? []}
-                selection={choice ?? selectionFor(activeVariant ?? product.variants[0]!)}
+                automatic={automatic}
+                selection={choice ?? (activeVariant ? selectionFor(activeVariant) : blankSelection(product.variants))}
                 onChange={(next) => { setSelection({ productId: product.id, choice: next }); setQuantityChoice({ productId: product.id, value: 1 }); }} />
             ) : null}
 
@@ -125,7 +129,7 @@ export function ProductDetailsSection(props: SectionRenderProps): ReactElement |
             <div className="sf-pdp__row">
               <QuantityStepper value={quantity} onChange={(value) => setQuantityChoice({ productId: product.id, value })} max={Math.max(1, remaining)} disabled={unavailable} label={t('pdp.quantityFor', { title: product.title })} />
               <Button className="sf-pdp__add" onClick={addToCart} disabled={unavailable || !customReady}>
-                {outOfStock ? (ar ? 'هذا الاختيار غير متاح' : 'This selection is unavailable') : remaining === 0 ? (ar ? 'الكمية المتاحة في السلة' : 'Available quantity is in your bag') : t('product.addToCart')}
+                {outOfStock ? (ar ? 'هذا الاختيار غير متاح' : 'This selection is unavailable') : selectionRequired ? (ar ? 'اختر خيارات المنتج' : 'Choose product options') : remaining === 0 ? (ar ? 'الكمية المتاحة في السلة' : 'Available quantity is in your bag') : t('product.addToCart')}
               </Button>
             </div>
 

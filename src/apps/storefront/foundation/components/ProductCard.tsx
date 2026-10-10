@@ -15,6 +15,8 @@ import { StoreImage } from './Image';
 import { WishlistButton } from './WishlistButton';
 import { CardVariantPicker } from './CardVariantPicker';
 import { cardCartInput } from '../../utils/card-purchase';
+import { resolveCardVariant } from '../../state/variant-selection';
+import { useVariantSelectionAutomatic } from '../../state/store-context';
 
 export interface ProductCardProps {
   product: ProductCardModel;
@@ -41,9 +43,11 @@ export function ProductCard(props: ProductCardProps): ReactElement {
     className,
   } = props;
   const { t } = useTranslation();
+  const automatic = useVariantSelectionAutomatic(product.autoSelectVariants);
   const [selection, setSelection] = useState<{ productId: string; variantId: string }>();
-  const variantId = selection?.productId === product.id ? selection.variantId : undefined;
-  const variant = product.variants?.find((item) => item.id === variantId);
+  const explicitId = selection?.productId === product.id ? selection.variantId : undefined;
+  const variant = resolveCardVariant(product.variants ?? [], explicitId, automatic);
+  const variantId = variant?.id;
   const input = cardCartInput(product, variantId);
 
   return (

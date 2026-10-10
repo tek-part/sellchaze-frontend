@@ -4,13 +4,17 @@ import type { ProductCardModel } from '../../types/catalog';
 import { useCart } from '../../state/cart';
 import { cardCartInput } from '../../utils/card-purchase';
 import { cartAdditionLimit } from '../../state/cart-quantity';
+import { resolveCardVariant } from '../../state/variant-selection';
+import { useVariantSelectionAutomatic } from '../../state/store-context';
 import './card-options.css';
 
 export function useCardPurchase(product: ProductCardModel) {
   const [selection, setSelection] = useState<{ productId: string; variantId: string }>();
   const cart = useCart();
-  const variantId = selection?.productId === product.id ? selection.variantId : undefined;
-  const variant = product.variants?.find((item) => item.id === variantId);
+  const automatic = useVariantSelectionAutomatic(product.autoSelectVariants);
+  const explicitId = selection?.productId === product.id ? selection.variantId : undefined;
+  const variant = resolveCardVariant(product.variants ?? [], explicitId, automatic);
+  const variantId = variant?.id;
   const input = cardCartInput(product, variantId);
   const quantity = input ? cart.lines.find((line) => line.id === input.id)?.quantity ?? 0 : 0;
   const canAdd = input !== null && cartAdditionLimit(cart.lines, input) > 0;
