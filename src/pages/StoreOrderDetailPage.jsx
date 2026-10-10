@@ -71,7 +71,7 @@ export default function StoreOrderDetailPage() {
 
             <div className="grid gap-5 lg:grid-cols-3">
                 <div className="space-y-5 lg:col-span-2">
-                    <StoreOrderShipment key={`${apiBase}-${order.id}`} order={order} apiBase={apiBase} uiBase={uiBase} />
+                    <StoreOrderShipment key={`${apiBase}-${order.id}`} order={order} apiBase={apiBase} uiBase={uiBase} onOrderUpdated={load} />
                     {/* Items */}
                     <div className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-card">
                         <div className="border-b border-slate-100 px-5 py-3">
@@ -119,7 +119,7 @@ export default function StoreOrderDetailPage() {
                                         <div className="min-w-0">
                                             <p className="text-sm text-slate-800">
                                                 <StatusBadge status={ev.to_status} label={t(`order_status_${ev.to_status}`, ev.to_status)} />
-                                                {ev.actor ? <span className="ms-2 text-xs text-slate-500">· {ev.actor}</span> : <span className="ms-2 text-xs text-slate-400">· {t('order_by_customer', 'customer')}</span>}
+                                                {ev.actor ? <span className="ms-2 text-xs text-slate-500">· {ev.actor}</span> : <span className="ms-2 text-xs text-slate-400">· {ev.source === 'carrier' ? 'Bosta' : t('order_by_customer', 'customer')}</span>}
                                             </p>
                                             {ev.notes ? <p className="mt-0.5 text-xs text-slate-600">{ev.notes}</p> : null}
                                             <p className="mt-0.5 text-xs text-slate-400">{ev.created_at ? new Date(ev.created_at).toLocaleString() : ''}</p>
