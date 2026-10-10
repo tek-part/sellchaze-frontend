@@ -5,6 +5,7 @@ import { useAsync } from '../api/useAsync';
 import { useLocale } from '../i18n/useLocale';
 import { formatMoney } from '../utils/format';
 import { useCheckoutPaymentFlow } from './useCheckoutPaymentFlow';
+import { CheckoutFieldsForm, useCheckoutFields } from './CheckoutFields';
 import './funnel-checkout.css';
 
 /** Product-specific checkout: leaves the visitor's ordinary shopping cart intact. */
@@ -18,7 +19,6 @@ export function FunnelCheckout({ productSlug }: { productSlug: string | null }):
   const [quantity, setQuantity] = useState(1);
   const [coupon, setCoupon] = useState('');
   const [appliedCoupon, setAppliedCoupon] = useState('');
-  const [form, setForm] = useState({ name: '', email: '', phone: '', city: '', address: '', notes: '' });
   const variants = product?.variants ?? [];
   const selectionReady = !!product && (!variants.length || variants.some((v) => v.is_active !== false && String(v.id) === variantId));
   const items = useMemo<ReadonlyArray<CheckoutItem>>(() => selectionReady && product ? [{ product_id: product.id, quantity, ...(variantId ? { variant_id: Number(variantId) } : {}) }] : [], [product, selectionReady, quantity, variantId]);
@@ -26,12 +26,11 @@ export function FunnelCheckout({ productSlug }: { productSlug: string | null }):
   const quoteQ = useAsync(async () => items.length ? { key: quoteKey, quote: (await quoteCheckout(items, appliedCoupon)).data } : null, [quoteKey, locale]);
   const quote = !quoteQ.loading && !quoteQ.error && quoteQ.data?.key === quoteKey ? quoteQ.data.quote : null;
   const payment = useCheckoutPaymentFlow({ items, preserveCart: true });
-  const set = (key: keyof typeof form) => (event: { target: { value: string } }): void => setForm((current) => ({ ...current, [key]: event.target.value }));
+  const contact = useCheckoutFields(payment.paymentMethod);
   const submit = async (event: FormEvent): Promise<void> => {
     event.preventDefault();
-    if (!payment.paymentRetry && (!quote || !selectionReady)) return;
-    await payment.submit({ customer_name: form.name, customer_email: form.email, customer_phone: form.phone, notes: form.notes,
-      shipping_address: { name: form.name, line1: form.address, city: form.city }, coupon_code: appliedCoupon });
+    if (!payment.paymentRetry && (!quote || !selectionReady || !contact.ready)) return;
+    await payment.submit({ ...contact.payload(), coupon_code: appliedCoupon });
   };
 
   return <Section id="funnel-checkout" className="sf-funnel-checkout"><Container narrow>
@@ -53,14 +52,7 @@ export function FunnelCheckout({ productSlug }: { productSlug: string | null }):
           <Input label={label('الكمية', 'Quantity')} type="number" min={1} max={999} step={1} value={quantity} required
             onChange={(event) => setQuantity(Math.max(1, Math.min(999, Math.trunc(Number(event.target.value) || 1))))} />
         </div>
-        <Input label={label('الاسم بالكامل', 'Full name')} value={form.name} onChange={set('name')} maxLength={255} required autoComplete="name" />
-        <div className="sf-funnel-checkout__selection">
-          <Input label={label('رقم الهاتف', 'Phone number')} type="tel" value={form.phone} onChange={set('phone')} maxLength={50} required autoComplete="tel" />
-          <Input label={label('البريد الإلكتروني', 'Email address')} type="email" value={form.email} onChange={set('email')} maxLength={255} required autoComplete="email" />
-        </div>
-        <Input label={label('المدينة / المحافظة', 'City / region')} value={form.city} onChange={set('city')} maxLength={120} required autoComplete="address-level2" />
-        <Input label={label('العنوان بالتفصيل', 'Delivery address')} value={form.address} onChange={set('address')} maxLength={255} required autoComplete="street-address" />
-        <Input label={label('ملاحظات الطلب (اختياري)', 'Order notes (optional)')} value={form.notes} onChange={set('notes')} maxLength={2000} />
+        <CheckoutFieldsForm model={contact} />
         <div className="sf-funnel-checkout__coupon">
           <Input label={label('كود الخصم', 'Coupon code')} value={coupon} onChange={(event) => setCoupon(event.target.value)} maxLength={100} />
           <Button type="button" variant="secondary" disabled={!selectionReady || quoteQ.loading} onClick={() => { setAppliedCoupon(coupon.trim()); quoteQ.reload(); }}>{label('تطبيق', 'Apply')}</Button>
@@ -87,7 +79,7 @@ export function FunnelCheckout({ productSlug }: { productSlug: string | null }):
         </dl> : null}
       </div>
       {payment.error ? <p role="alert" className="sf-field__error">{payment.error}</p> : null}
-      <Button type="submit" block loading={payment.busy} disabled={!payment.paymentMethod || (!payment.paymentRetry && !quote)}>
+      <Button type="submit" block loading={payment.busy} disabled={!payment.paymentMethod || (!payment.paymentRetry && (!quote || !contact.ready))}>
         {payment.paymentRetry ? label('إعادة محاولة الدفع', 'Retry payment') : label('تأكيد الطلب', 'Place order')}
       </Button>
       {payment.paymentRetry ? <Button type="button" variant="secondary" block onClick={payment.cancelRetry}>{label('بدء طلب جديد بدلًا من ذلك', 'Start a new order instead')}</Button> : null}

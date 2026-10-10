@@ -199,12 +199,14 @@ function structuredShippingRows(data, t) {
         rows.push({ key: 'type', labelKey: 'order_address_type', value: typeDisp });
     }
     push('warehouse', 'order_address_warehouse', warehouseDisplay);
-    push('addr1', 'order_address_line1', data.address_1);
-    push('addr2', 'order_address_line2', data.address_2);
+    push('addr1', 'order_address_line1', data.address_1 ?? data.line1);
+    push('addr2', 'order_address_line2', data.address_2 ?? data.line2);
     push('city', 'order_address_city', data.city);
     push('state', 'order_address_state', data.state);
-    push('zip', 'order_address_zip', data.zip);
+    push('zip', 'order_address_zip', data.zip ?? data.postal_code);
     push('country', 'order_address_country', data.country);
+    push('national_address', 'order_national_address', data.national_address);
+    push('phone_alt', 'order_phone_alt', data.phone_alt);
     return rows;
 }
 

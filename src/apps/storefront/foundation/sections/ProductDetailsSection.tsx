@@ -4,7 +4,7 @@
  * tabs + reviews. Reads the product from context.data.product. Settings: show_sku, show_share,
  * gallery_layout. §08 product-details.
  */
-import { useMemo, useState, type ReactElement } from 'react';
+import { useState, type ReactElement } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { SectionRenderProps } from '../../theme-engine/rendering';
 import { Container } from '../components/Container';
@@ -33,21 +33,20 @@ export function ProductDetailsSection(props: SectionRenderProps): ReactElement |
   const toast = useToast();
   const reviews = reviewsFor(context);
 
-  const firstAvailable = product?.variants?.find((v) => v.available)?.id;
-  const [variantId, setVariantId] = useState<string | undefined>(firstAvailable);
+  const [selection, setSelection] = useState<{ productId: string; id: string }>();
   const [qty, setQty] = useState(1);
   const [activeTab, setActiveTab] = useState('description');
-
-  const activeVariant = useMemo(
-    () => product?.variants?.find((v) => v.id === variantId),
-    [product?.variants, variantId],
-  );
+  // Product data arrives asynchronously. Resolve the displayed default on every render,
+  // so an untouched select still adds the visible variant instead of the parent product.
+  const activeVariant = product?.variants?.find((variant) => variant.available && selection?.productId === product.id && variant.id === selection.id)
+    ?? product?.variants?.find((variant) => variant.available);
+  const variantId = activeVariant?.id;
 
   if (!product) return null;
 
   const showSku = flag(settings, 'show_sku', false);
   const showShare = flag(settings, 'show_share', true);
-  const outOfStock = product.inStock === false || (product.variants && product.variants.length > 0 && !firstAvailable);
+  const outOfStock = product.inStock === false || (product.variants && product.variants.length > 0 && !activeVariant);
   const unitPrice = activeVariant?.price ?? product.price;
 
   const addToCart = (): void => {
@@ -92,7 +91,7 @@ export function ProductDetailsSection(props: SectionRenderProps): ReactElement |
               <Select
                 label={t('pdp.variant')}
                 value={variantId ?? ''}
-                onChange={(e) => setVariantId(e.target.value)}
+                onChange={(e) => setSelection({ productId: product.id, id: e.target.value })}
                 options={product.variants.map((v) => ({ value: v.id, label: v.label, disabled: !v.available }))}
               />
             ) : null}

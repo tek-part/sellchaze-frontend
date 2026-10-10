@@ -140,7 +140,9 @@ export default function StoreOrderDetailPage() {
                             <div className="mt-3 rounded-lg bg-slate-50 p-3 text-xs text-slate-600">
                                 <p>{order.shipping_address.name}</p>
                                 <p>{order.shipping_address.line1}{order.shipping_address.line2 ? `, ${order.shipping_address.line2}` : ''}</p>
-                                <p>{[order.shipping_address.city, order.shipping_address.state, order.shipping_address.country].filter(Boolean).join(', ')}</p>
+                                <p>{[order.shipping_address.city, order.shipping_address.state, order.shipping_address.postal_code, order.shipping_address.country].filter(Boolean).join(', ')}</p>
+                                {order.shipping_address.national_address ? <p>{t('order_national_address', 'National address')}: {order.shipping_address.national_address}</p> : null}
+                                {order.shipping_address.phone_alt ? <p>{t('order_phone_alt', 'Alternative phone')}: <bdi>{order.shipping_address.phone_alt}</bdi></p> : null}
                             </div>
                         ) : null}
                         {order.customer_notes ? (

@@ -72,6 +72,7 @@ export function buildStoreNav(t, access = {}) {
                     show: access.canStorePages,
                     isActive: (rel) => startsWith(rel, '/pages') || startsWith(rel, '/content'),
                 },
+                { key: 'checkout-fields', to: 'checkout-fields', label: t('store_nav_checkout_fields', 'Checkout form'), Icon: HiOutlineDocumentText, show: access.canStoreSettings },
                 { key: 'menus', to: 'menus', label: t('store_nav_menus', 'Menus'), Icon: HiOutlineBars3BottomLeft, show: access.canStoreMenus },
                 { key: 'media', to: 'media', label: t('store_nav_media', 'Media'), Icon: HiOutlinePhoto, show: access.canStorePages || access.canStoreThemes },
             ],

@@ -178,6 +178,7 @@ export const getPaymentMethods = (): Promise<{ data: ReadonlyArray<StorefrontPay
 export const submitCheckout = (body: unknown): Promise<{ data: unknown }> => apiSend('/checkout', 'POST', body);
 export interface CheckoutItem { product_id: number; variant_id?: number; quantity: number }
 export interface CheckoutQuote {
+  items: ReadonlyArray<{ product_id: number; variant_id: number | null; name: string; unit_price: string; quantity: number; line_total: string }>;
   currency: string;
   totals: { subtotal: string; discount_total: string; shipping_total: string; tax_total: string; grand_total: string };
 }

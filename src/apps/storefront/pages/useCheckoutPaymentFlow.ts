@@ -13,11 +13,11 @@ import { useCart } from '../state/cart';
 import { withSessionParams } from './NavigationInterceptor';
 
 export interface CheckoutContactPayload {
-  customer_name: string;
-  customer_email: string;
+  customer_name?: string;
+  customer_email?: string;
   customer_phone?: string;
   notes?: string;
-  shipping_address: Record<string, unknown>;
+  shipping_address?: Record<string, unknown>;
   coupon_code?: string;
 }
 
@@ -41,6 +41,7 @@ export function useCheckoutPaymentFlow(options?: { items: ReadonlyArray<Checkout
   const [error, setError] = useState<string>();
   const [busy, setBusy] = useState(false);
   const submitting = useRef(false);
+  const completed = useRef(false);
   const items = options?.items;
   const preserveCart = options?.preserveCart ?? false;
 
@@ -59,7 +60,7 @@ export function useCheckoutPaymentFlow(options?: { items: ReadonlyArray<Checkout
   }, [t]);
 
   const submit = useCallback(async (payload: CheckoutContactPayload): Promise<void> => {
-    if (submitting.current) return;
+    if (submitting.current || completed.current) return;
     submitting.current = true;
     setBusy(true);
     setError(undefined);
@@ -77,6 +78,9 @@ export function useCheckoutPaymentFlow(options?: { items: ReadonlyArray<Checkout
             })),
           }) as CheckoutResponse;
 
+      // Clearing the external cart store can render CheckoutPage before router navigation.
+      // Keep its empty-cart redirect from preempting this successful order transition.
+      completed.current = true;
       if (!preserveCart) cart.clear();
       if (response.payment?.redirect_url) {
         window.location.assign(response.payment.redirect_url);
@@ -107,6 +111,7 @@ export function useCheckoutPaymentFlow(options?: { items: ReadonlyArray<Checkout
   }, []);
 
   return {
+    completed: completed.current,
     paymentMethods,
     paymentMethod,
     setPaymentMethod,
