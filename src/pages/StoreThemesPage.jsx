@@ -362,6 +362,8 @@ function ThemesManager({ mode = 'installed' }) {
     // Marketplace only: category chips come from the public catalog; filtering is client-side.
     const [categories, setCategories] = useState([]);
     const [category, setCategory] = useState('');
+    const [search, setSearch] = useState('');
+    const [priceFilter, setPriceFilter] = useState('all');
     const isMarketplace = mode === 'marketplace';
 
     useEffect(() => {
@@ -578,9 +580,14 @@ function ThemesManager({ mode = 'installed' }) {
     // narrowed by the selected category chip.
     const visible = useMemo(() => {
         if (!isMarketplace) return themes.filter((th) => th.installed);
-        if (!category) return themes;
-        return themes.filter((th) => String(th.category || '').toLowerCase() === category.toLowerCase());
-    }, [themes, isMarketplace, category]);
+        const query = search.trim().toLocaleLowerCase();
+        return themes.filter((theme) => {
+            const matchesCategory = !category || String(theme.category || '').toLowerCase() === category.toLowerCase();
+            const matchesPrice = priceFilter === 'all' || (priceFilter === 'paid' ? theme.premium : !theme.premium);
+            const matchesSearch = !query || [theme.name, theme.description, theme.author, theme.category].some((value) => String(value || '').toLocaleLowerCase().includes(query));
+            return matchesCategory && matchesPrice && matchesSearch;
+        });
+    }, [themes, isMarketplace, category, search, priceFilter]);
 
     const activeTheme = themes.find((th) => th.isActive) || null;
 
@@ -618,6 +625,25 @@ function ThemesManager({ mode = 'installed' }) {
                     </div>
                 ) : null}
             </div>
+
+            {isMarketplace ? (
+                <form className="flex flex-wrap items-end gap-3 rounded-xl border border-slate-200 bg-white p-4" onSubmit={(event) => event.preventDefault()} role="search">
+                    <label className="flex min-w-48 flex-1 flex-col gap-1.5 text-sm font-medium text-slate-700">
+                        {t('theme_search_label', 'Search themes')}
+                        <input type="search" value={search} onChange={(event) => setSearch(event.target.value)} className="rounded-lg border border-slate-200 px-3 py-2 outline-hidden focus:border-brand focus:ring-2 focus:ring-brand/20" />
+                    </label>
+                    <label className="flex min-w-40 flex-col gap-1.5 text-sm font-medium text-slate-700">
+                        {t('theme_price_filter', 'Price')}
+                        <select value={priceFilter} onChange={(event) => setPriceFilter(event.target.value)} className="rounded-lg border border-slate-200 bg-white px-3 py-2 focus:border-brand focus:ring-2 focus:ring-brand/20">
+                            <option value="all">{t('theme_price_all', 'All prices')}</option>
+                            <option value="free">{t('theme_free', 'Free')}</option>
+                            <option value="paid">{t('theme_price_paid', 'Paid')}</option>
+                        </select>
+                    </label>
+                    <button type="button" onClick={() => { setSearch(''); setPriceFilter('all'); setCategory(''); }} className="rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-700 hover:bg-slate-50">{t('theme_filters_reset', 'Reset filters')}</button>
+                    {!loading ? <p role="status" className="w-full text-xs text-slate-500">{t('theme_results', { count: visible.length })}</p> : null}
+                </form>
+            ) : null}
 
             {/* Installed / Marketplace tabs */}
             <div className="flex flex-wrap items-center justify-between gap-3">
@@ -704,10 +730,10 @@ function ThemesManager({ mode = 'installed' }) {
                     <HiOutlineSwatch className="h-9 w-9 text-slate-300" />
                     {isMarketplace ? (
                         <>
-                            <p className="text-base font-semibold text-slate-700">{t('theme_empty_none_title', 'No themes available')}</p>
+                            <p className="text-base font-semibold text-slate-700">{themes.length ? t('no_results') : t('theme_empty_none_title', 'No themes available')}</p>
                             <p className="max-w-sm text-sm text-slate-500">
-                                {category
-                                    ? t('theme_empty_category_body', 'No themes in this category yet.')
+                                {themes.length
+                                    ? t('theme_filters_empty', 'Try another search or reset your filters.')
                                     : t('theme_empty_none_body', 'No themes have been published to the marketplace yet.')}
                             </p>
                         </>

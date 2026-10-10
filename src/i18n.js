@@ -5,6 +5,8 @@ const resources = {
     en: {
         translation: {
             app_name: 'Sellchaze',
+            theme_filters_empty: 'Try another search or reset your filters.',
+            sidebar_collapse: 'Collapse sidebar', sidebar_expand: 'Expand sidebar', theme_search_label: 'Search themes', theme_price_filter: 'Price', theme_price_all: 'All prices', theme_price_paid: 'Paid', theme_filters_reset: 'Reset filters', theme_results: '{{count}} themes',
             select_placeholder: '— Select —',
             search: 'Search…',
             no_results: 'No results',
@@ -2876,6 +2878,8 @@ stdout_logfile=/path/to/your-app/storage/logs/wavex-worker.log`,
     ar: {
         translation: {
             app_name: 'سيلتشيس',
+            theme_filters_empty: 'جرّب بحثًا آخر أو أعد تعيين الفلاتر.',
+            sidebar_collapse: 'طي القائمة الجانبية', sidebar_expand: 'إظهار القائمة الجانبية', theme_search_label: 'البحث في الثيمات', theme_price_filter: 'السعر', theme_price_all: 'كل الأسعار', theme_price_paid: 'مدفوع', theme_filters_reset: 'إعادة تعيين الفلاتر', theme_results: '{{count}} ثيمات',
             select_placeholder: '— اختر —',
             search: 'بحث…',
             no_results: 'لا توجد نتائج',

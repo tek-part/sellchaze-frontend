@@ -22,12 +22,8 @@ import {
     HiOutlineClipboardDocumentList,
     HiOutlineChevronDown,
     HiOutlineCog6Tooth,
-    HiOutlineCube,
     HiOutlineGlobeAlt,
     HiOutlineBuildingStorefront,
-    HiOutlineHome,
-    HiOutlineMegaphone,
-    HiOutlinePresentationChartLine,
     HiOutlineSignal,
     HiOutlineUserCircle,
     HiOutlineArrowUturnLeft,
@@ -39,9 +35,9 @@ import NotificationsMenu from './NotificationsMenu';
 import { useChatUnread } from '../lib/useChatUnread';
 import { CHAT_ENABLED } from '../lib/features';
 import SidebarNav from './SidebarNav';
-import { isAnySection } from '../shared/utils/activeSection';
 import UserAvatar from './UserAvatar';
 import AdminSidebar from './admin/AdminSidebar';
+import MerchantSidebar from './MerchantSidebar';
 
 function unwrapUser(payload) {
     if (!payload) {
@@ -67,6 +63,7 @@ export default function AppLayout() {
     const [storeUrl, setStoreUrl] = useState(null);
     const [logoutOpen, setLogoutOpen] = useState(false);
     const [mobileNavOpen, setMobileNavOpen] = useState(false);
+    const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
     const [impersonationActive, setImpersonationActive] = useState(() => isImpersonating());
     const [impersonationExitLoading, setImpersonationExitLoading] = useState(false);
 
@@ -168,44 +165,7 @@ export default function AppLayout() {
     const canViewActivityLogs = permissions.includes('activity-logs-list');
     const currentLng = i18n.language?.startsWith('ar') ? 'ar' : 'en';
     const headerIconBtnClass =
-        'inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-white/80 transition-all duration-200 hover:bg-white/10 hover:text-white focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-accent/60';
-
-    // The header highlights the *section* you are in, not one exact URL — the
-    // links point at an entry page (/orders/in) while any route below the
-    // section root keeps the item lit.
-    const here = (...roots) => isAnySection(location.pathname, roots);
-    const primaryNav = [
-        { key: 'home', to: '/dashboard', label: t('nav_home', 'Home'), Icon: HiOutlineHome, active: here('/dashboard') },
-        { key: 'orders', to: '/orders/in', label: t('orders', 'Orders'), Icon: HiOutlineClipboardDocumentList, active: here('/orders') },
-        { key: 'products', to: '/products', label: t('products', 'Products'), Icon: HiOutlineCube, active: here('/products') },
-        {
-            key: 'community',
-            to: '/community',
-            label: t('feed_title', 'Community'),
-            Icon: HiOutlineMegaphone,
-            // Reels and the legacy /feed URL are part of the same destination.
-            active: here('/community', '/reels', '/feed'),
-            className: 'hidden xl:flex',
-        },
-        {
-            key: 'store',
-            to: '/store/overview',
-            label: t('store_and_channels', 'Store & Channels'),
-            Icon: HiOutlineBuildingStorefront,
-            active: here('/store'),
-            className: 'hidden 2xl:flex',
-        },
-        ...(isAdmin
-            ? [{
-                key: 'reports',
-                to: '/admin/reports/orders',
-                label: t('reports', 'Reports'),
-                Icon: HiOutlinePresentationChartLine,
-                active: here('/admin/reports'),
-                className: 'hidden 2xl:flex',
-            }]
-            : []),
-    ];
+        'inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-slate-600 transition-colors hover:bg-slate-100 hover:text-brand focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand/60';
 
     function toggleLanguage() {
         const next = currentLng === 'en' ? 'ar' : 'en';
@@ -240,9 +200,10 @@ export default function AppLayout() {
     }
 
     return (
-        <div className="flex h-dvh max-h-dvh w-full flex-col overflow-hidden bg-surface">
+        <div className={`${isAdminOnly ? '' : 'merchant-workspace'} flex h-dvh max-h-dvh w-full flex-col overflow-hidden bg-surface`}>
             <div className="flex min-h-0 min-w-0 flex-1 overflow-hidden bg-surface">
                 {isAdminOnly ? <AdminSidebar me={me} permissions={permissions} /> : null}
+                {!isAdminOnly && !sidebarCollapsed ? <MerchantSidebar me={me} permissions={permissions} storeUrl={storeUrl} onCollapse={() => setSidebarCollapsed(true)} /> : null}
                 <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
                 {impersonationActive ? (
                     <div
@@ -263,7 +224,7 @@ export default function AppLayout() {
                         </button>
                     </div>
                 ) : null}
-                <header className={`z-40 flex h-[72px] shrink-0 items-center justify-between gap-3 px-3 md:px-5 lg:px-8 ${isAdminOnly ? 'border-b border-slate-200/80 bg-white text-slate-900 shadow-[0_1px_0_rgba(15,23,42,0.02)]' : 'bg-[#0a3d7c] text-white shadow-[0_1px_0_rgba(255,255,255,0.08)]'}`}>
+                <header className="z-40 flex h-[72px] shrink-0 items-center justify-between gap-3 border-b border-slate-200/70 bg-white px-3 text-slate-900 md:px-5 lg:px-8">
                     {isAdminOnly ? (
                         <>
                             <div className="flex min-w-0 items-center gap-3">
@@ -325,41 +286,26 @@ export default function AppLayout() {
                     <div className="flex min-w-0 flex-1 items-center gap-2 lg:gap-3">
                         <Link
                             to="/dashboard"
-                            className="me-1 flex shrink-0 items-center rounded-lg outline-hidden focus-visible:ring-2 focus-visible:ring-accent"
+                            className="me-1 flex shrink-0 items-center rounded-lg outline-hidden focus-visible:ring-2 focus-visible:ring-accent lg:hidden"
                             aria-label={t('app_name')}
                         >
                             <span className="grid h-10 w-10 place-items-center overflow-hidden rounded-xl bg-white shadow-sm">
                                 <img src="/icon.png" alt="" className="h-8 w-8 object-contain" />
                             </span>
-                            <span className="ms-2 hidden text-lg font-extrabold tracking-tight text-white xl:inline">Sellchaze</span>
+                            <span className="ms-2 hidden text-lg font-extrabold tracking-tight text-slate-900 sm:inline">Sellchaze</span>
                         </Link>
                         <button
                             type="button"
                             onClick={() => setMobileNavOpen(true)}
-                            className="inline-flex h-10 items-center justify-center gap-2 rounded-xl px-2.5 text-sm font-semibold text-white transition hover:bg-white/10"
+                            className="inline-flex h-10 items-center justify-center gap-2 rounded-xl px-2.5 text-sm font-semibold text-slate-600 transition hover:bg-slate-100 lg:hidden"
                             aria-label={t('nav_all', 'All')}
                             title={t('nav_all', 'All')}
                         >
                             <HiOutlineBars3 className="h-5 w-5" aria-hidden />
                             <span className="hidden sm:inline">{t('nav_all', 'All')}</span>
                         </button>
-                        <nav className="hidden min-w-0 items-center gap-1 lg:flex" aria-label={t('primary_navigation', 'Primary navigation')}>
-                            {primaryNav.map(({ key, to, label, Icon, active, className = '' }) => (
-                                <Link
-                                    key={key}
-                                    to={to}
-                                    aria-current={active ? 'page' : undefined}
-                                    className={`items-center gap-2 rounded-xl py-2.5 text-sm font-semibold transition ${className || 'flex'} ${
-                                        active
-                                            ? 'bg-white px-3.5 text-brand-dark shadow-sm'
-                                            : 'px-3 text-white/90 hover:bg-white/10 hover:text-white'
-                                    }`}
-                                >
-                                    <Icon className="h-5 w-5" aria-hidden />
-                                    {label}
-                                </Link>
-                            ))}
-                        </nav>
+                        {sidebarCollapsed ? <button type="button" onClick={() => setSidebarCollapsed(false)} className="hidden rounded-lg p-2 text-slate-600 hover:bg-slate-100 lg:inline-flex" aria-label={t('sidebar_expand', 'Expand sidebar')}><HiOutlineBars3 className="h-5 w-5" aria-hidden /></button> : null}
+
                     </div>
                     {/* hide actions on mobile/tablet; show on desktop */}
                     <div className="ms-auto hidden flex-row items-center gap-3 lg:flex" dir="ltr">
@@ -426,7 +372,7 @@ export default function AppLayout() {
                             {CHAT_ENABLED && (
                                 <Link
                                     to="/chat"
-                                    className="relative inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-white/80 transition-all duration-200 hover:bg-white/10 hover:text-white focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-accent/60"
+                                    className={`relative ${headerIconBtnClass}`}
                                     title={t('nav_messages', 'Messages')}
                                     aria-label={t('nav_messages', 'Messages')}
                                 >
@@ -459,11 +405,11 @@ export default function AppLayout() {
                                 {({ open }) => (
                                     <>
                                         <UserAvatar user={me} alt="" sizeClass="h-8 w-8 md:h-9 md:w-9" />
-                                        <span className="hidden max-w-44 truncate text-sm font-semibold text-white md:inline">
+                                        <span className="hidden max-w-44 truncate text-sm font-semibold text-slate-700 md:inline">
                                             {me.name}
                                         </span>
                                         <HiOutlineChevronDown
-                                            className={`h-3.5 w-3.5 shrink-0 text-white/60 transition duration-200 ${open ? '-rotate-180' : ''}`}
+                                            className={`h-3.5 w-3.5 shrink-0 text-slate-500 transition duration-200 ${open ? '-rotate-180' : ''}`}
                                             aria-hidden
                                         />
                                     </>
@@ -706,10 +652,10 @@ export default function AppLayout() {
                     transition
                     className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs transition duration-200 data-closed:opacity-0"
                 />
-                <div className="fixed inset-0 flex">
+                <div className="fixed inset-0 flex" dir={currentLng === 'ar' ? 'rtl' : 'ltr'}>
                     <DialogPanel
                         transition
-                        className="relative flex h-full w-[min(86vw,22rem)] flex-col overflow-hidden rounded-e-3xl bg-white shadow-2xl shadow-brand-dark/20 transition duration-300 ease-out data-closed:-translate-x-full lg:w-[70vw]"
+                        className={`${isAdminOnly ? '' : 'merchant-workspace merchant-sidebar'} relative flex h-full w-[min(86vw,22rem)] flex-col overflow-hidden rounded-e-2xl bg-white shadow-2xl shadow-slate-900/10 transition duration-300 ease-out data-closed:-translate-x-full rtl:data-closed:translate-x-full`}
                     >
                         {/* Soft brand glow in the top corner — decoration only. */}
                         <div
@@ -735,7 +681,7 @@ export default function AppLayout() {
                         </div>
                         <div className="relative min-h-0 flex-1 overflow-y-auto px-3 py-4 [scrollbar-width:thin] lg:px-8 lg:py-6">
                             <SidebarNav
-                                variant="mega"
+                                variant="list"
                                 isAdmin={isAdmin}
                                 isSupplier={isSupplier}
                                 roles={me.roles ?? []}
