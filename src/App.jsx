@@ -114,6 +114,7 @@ const StoreCustomizePage = lazy(() => import('./pages/StoreCustomizePage'));
 const StorePaymentsPage = lazy(() => import('./pages/StorePaymentsPage'));
 const EditorLayout = lazy(() => import('./components/editor/EditorLayout'));
 const StorePagesPage = lazy(() => import('./pages/StorePagesPage'));
+const StoreSimplePageEditor = lazy(() => import('./pages/StoreSimplePageEditor'));
 const StoreCheckoutFieldsPage = lazy(() => import('./pages/store/settings/StoreCheckoutFieldsPage'));
 const StoreDigitalDeliveryPage = lazy(() => import('./pages/store/settings/StoreDigitalDeliveryPage'));
 const StoreOrderLimitsPage = lazy(() => import('./pages/store/settings/StoreOrderLimitsPage'));
@@ -216,6 +217,8 @@ const STORE_ROUTES = [
     // Legacy per-theme settings editor → the full-screen editor's Theme settings tab.
     { path: 'themes/:themeId/settings', element: <ThemeSettingsRedirect /> },
     { path: 'pages', element: <StorePagesPage /> },
+    { path: 'simple-pages/create', element: <StoreSimplePageEditor /> },
+    { path: 'simple-pages/:pageId', element: <StoreSimplePageEditor /> },
     { path: 'checkout-fields', element: <StoreCheckoutFieldsPage /> },
     { path: 'thanks-edit', element: <StoreThankYouPage /> },
     { path: 'settings/digital-delivery', element: <StoreDigitalDeliveryPage /> },

@@ -74,7 +74,7 @@ export function buildStoreNav(t, access = {}) {
                     label: t('store_nav_pages', 'Pages'),
                     Icon: HiOutlineDocumentText,
                     show: access.canStorePages,
-                    isActive: (rel) => startsWith(rel, '/pages') || startsWith(rel, '/content'),
+                    isActive: (rel) => startsWith(rel, '/pages') || startsWith(rel, '/content') || startsWith(rel, '/simple-pages'),
                 },
                 { key: 'checkout-fields', to: 'checkout-fields', label: t('store_nav_checkout_fields', 'Checkout form'), Icon: HiOutlineDocumentText, show: access.canStoreSettings },
                 { key: 'thanks-edit', to: 'thanks-edit', label: t('store_nav_thank_you', 'Thank-you page'), Icon: HiOutlineDocumentText, show: access.canStoreSettings },

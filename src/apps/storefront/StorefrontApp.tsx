@@ -26,6 +26,7 @@ import { CustomizeBridge } from './customize/CustomizeBridge';
 import { isCustomizeMode } from './customize/customizer-state';
 import { shippingThreshold } from './utils/shipping';
 import { StoreIdentityHead } from './seo/StoreIdentityHead';
+import { appendFooterPages, appendHeaderPages } from './shared-ui/automatic-page-navigation';
 
 type PreviewData = typeof import('./dev/sampleData');
 
@@ -189,19 +190,23 @@ export function StorefrontApp(): ReactElement {
       : [];
     // A merchant-managed menu wins when it has items; otherwise fall back to the generated chrome
     // (categories + the routes AppRoutes registers) so a store without menus still navigates.
-    const menuHeader = navigation.header.length > 0 ? toNavItems(navigation.header, locale, store.defaultLocale) : null;
-    const header: NavItem[] = menuHeader
+    const managedHeader = navigation.header.filter((item) => !item.automatic_page);
+    const menuHeader = managedHeader.length > 0 ? toNavItems(managedHeader, locale, store.defaultLocale) : null;
+    const headerBase: NavItem[] = menuHeader
       ?? (dev && previewData && categoryNav.length === 0
         ? previewData.sampleNav(manifest.id, t, locale)
         : buildHeaderNav(categoryNav, t));
     // Production previously rendered an EMPTY footer (`[]`), so every live storefront shipped a
     // footer with no links. Build real groups from the store's own categories plus the routes that
     // actually exist in AppRoutes — never links to routes we do not serve.
-    const menuFooter = navigation.footer.length > 0 ? footerFromMenu(navigation.footer, locale, store.defaultLocale, t) : null;
-    const footer: FooterGroup[] = menuFooter
+    const header = appendHeaderPages(headerBase, toNavItems(navigation.header.filter((item) => item.automatic_page), locale, store.defaultLocale));
+    const managedFooter = navigation.footer.filter((item) => !item.automatic_page);
+    const menuFooter = managedFooter.length > 0 ? footerFromMenu(managedFooter, locale, store.defaultLocale, t) : null;
+    const footerBase: FooterGroup[] = menuFooter
       ?? (dev && previewData && categoryNav.length === 0
         ? previewData.sampleFooter(manifest.id, t, locale)
         : buildFooter(categoryNav, t));
+    const footer = appendFooterPages(footerBase, toNavItems(navigation.footer.filter((item) => item.automatic_page), locale, store.defaultLocale), t('footer.links'));
     const announcements = dev && previewData ? previewData.sampleAnnouncements(manifest.id, locale) : [];
 
     return {

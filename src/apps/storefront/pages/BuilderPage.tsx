@@ -22,6 +22,9 @@ import { PolicyPage } from './StaticPages';
 import { NotFoundPage } from './NotFoundPage';
 import { toSectionInstances } from './HomePage';
 import { FunnelCheckout } from './FunnelCheckout';
+import { currentPublishedPage } from './published-page';
+import { sanitizeHtml } from '../../../shared/utils/sanitizeHtml';
+import './simple-page.css';
 
 export function BuilderPage({ funnel = false }: { funnel?: boolean }): ReactElement | null {
   const { slug = '' } = useParams();
@@ -30,10 +33,10 @@ export function BuilderPage({ funnel = false }: { funnel?: boolean }): ReactElem
   const customizer = useCustomizerState();
   const path = `${funnel ? '/funnels' : '/pages'}/${slug}`;
   const draft = useCustomizerSections(path);
-  const pageQ = useAsync(() => funnel ? getFunnel(slug) : getPage(slug).catch(() => null), [slug, locale, funnel]);
+  const pageQ = useAsync(async () => ({ locale, data: await (funnel ? getFunnel(slug) : getPage(slug)) }), [slug, locale, funnel]);
   const { context } = useHomeContext();
 
-  const api = pageQ.data?.data.slug === slug ? pageQ.data.data : null;
+  const api = currentPublishedPage(pageQ, slug, locale);
   const page = useMemo<PageDefinition | null>(() => {
     if (draft) return { template: 'page', sections: draft };
     if (api && api.sections.length > 0) return { template: api.template || 'page', sections: toSectionInstances(api.sections) };
@@ -42,12 +45,17 @@ export function BuilderPage({ funnel = false }: { funnel?: boolean }): ReactElem
 
   if (!draft && pageQ.loading) return <Section><Container><Spinner label={locale === 'ar' ? 'جارٍ التحميل…' : 'Loading…'} /></Container></Section>;
 
-  if (funnel && !draft && pageQ.error && !(pageQ.error instanceof ApiError && pageQ.error.status === 404)) {
+  if (!draft && pageQ.error && !(pageQ.error instanceof ApiError && pageQ.error.status === 404)) {
     return <Section><Container><ErrorState
-      title={locale === 'ar' ? 'تعذّر تحميل مسار البيع' : 'Unable to load this funnel'}
+      title={locale === 'ar' ? 'تعذّر تحميل الصفحة' : 'Unable to load this page'}
       description={locale === 'ar' ? 'حاول مرة أخرى بعد قليل.' : 'Please try again in a moment.'}
       actions={<Button onClick={pageQ.reload}>{locale === 'ar' ? 'إعادة المحاولة' : 'Retry'}</Button>}
     /></Container></Section>;
+  }
+
+  if (!draft && api?.template === 'simple' && typeof api.content_html === 'string') {
+    return <><Seo path={api.public_path || path} title={pickLocalized(api.title, locale, store.defaultLocale)} />
+      <Section><Container narrow><article className="sf-content-page"><h1>{pickLocalized(api.title, locale, store.defaultLocale)}</h1><div dangerouslySetInnerHTML={{ __html: sanitizeHtml(api.content_html, { formatting: true }) }} /></article></Container></Section></>;
   }
 
   // No published builder page → the policy/static page for this slug (or its not-found state).
