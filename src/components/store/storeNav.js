@@ -86,6 +86,7 @@ export function buildStoreNav(t, access = {}) {
             label: t('nav_store_settings', 'Store settings'),
             items: [
                 { key: 'general', to: 'settings/general', label: t('store_nav_general', 'General'), Icon: HiOutlineCog6Tooth, show: access.canStoreSettings },
+                { key: 'bot-protection', to: 'settings/bot-protection', label: t('store_nav_bot_protection', 'Bot protection'), Icon: HiOutlineCog6Tooth, show: access.canStoreSettings },
                 { key: 'localization', to: 'settings/localization', label: t('store_nav_localization', 'Language & currency'), Icon: HiOutlineLanguage, show: access.canStoreSettings },
                 { key: 'payments', to: 'settings/payments', label: t('store_nav_payments', 'Payment gateways'), Icon: HiOutlineCreditCard, show: access.canStorePayments },
                 { key: 'shipping', to: 'settings/shipping', label: t('store_nav_shipping', 'Shipping & tax'), Icon: HiOutlineTruck, show: access.canStoreSettings },
