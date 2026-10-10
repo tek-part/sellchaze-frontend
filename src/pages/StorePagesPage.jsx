@@ -9,6 +9,7 @@ import FormField, { INPUT_CLASS } from '../components/ui/FormField';
 import { notify } from '../components/ui/notify';
 import SearchableSelect from '../components/ui/SearchableSelect';
 import useStoreContext from '../hooks/useStoreContext';
+import SimplePagesPanel from '../components/store/SimplePagesPanel';
 
 const badgeCls = 'inline-block rounded-full border px-2 py-0.5 text-xs font-medium';
 const thCls = 'px-4 py-3.5 text-start';
@@ -179,6 +180,7 @@ export default function StorePagesPage() {
             {err && <p className="rounded-lg border border-red-100 bg-red-50 px-3 py-2 text-sm text-red-700">{err}</p>}
 
             {/* Standard pages — fixed system pages editable with structured fields. */}
+            <SimplePagesPanel />
             <div className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-card">
                 <div className="border-b border-slate-100 px-4 py-3">
                     <h2 className="text-sm font-semibold text-slate-900">{t('standard_pages_title', 'Standard pages')}</h2>

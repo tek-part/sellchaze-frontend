@@ -138,6 +138,8 @@ export interface ApiStorefrontLocale {
  * client-side switch re-labels without a round trip.
  */
 export interface ApiNavItem {
+  /** Automatic content-page links supplement the theme chrome instead of replacing it. */
+  automatic_page?: boolean;
   label: string;
   label_i18n?: Readonly<Record<string, string | null | undefined>> | null;
   type?: 'url' | 'internal' | 'category' | 'product' | string;

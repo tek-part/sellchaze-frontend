@@ -12,6 +12,9 @@
  * depth control; server-side sanitisation on write remains the primary line (see docs/security).
  */
 
+import { richTextStyle } from './richTextFormatting';
+
+const FORMATTED_TAGS = new Set(['p', 'div', 'span', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'blockquote', 'li']);
 const ALLOWED_TAGS = new Set([
   'p', 'br', 'hr', 'span', 'div',
   'strong', 'b', 'em', 'i', 'u', 's', 'small', 'mark', 'sub', 'sup',
@@ -46,7 +49,7 @@ function stripToText(html: string): string {
     .replace(/>/g, '&gt;');
 }
 
-function sanitizeNode(node: Node, doc: Document): Node | null {
+function sanitizeNode(node: Node, doc: Document, formatting: boolean): Node | null {
   if (node.nodeType === 3 /* text */) return doc.createTextNode(node.textContent ?? '');
   if (node.nodeType !== 1 /* element */) return null;
 
@@ -57,13 +60,17 @@ function sanitizeNode(node: Node, doc: Document): Node | null {
     // Drop the element but keep its (sanitised) text/children — e.g. an unknown wrapper.
     const frag = doc.createElement('span');
     for (const child of Array.from(el.childNodes)) {
-      const clean = sanitizeNode(child, doc);
+      const clean = sanitizeNode(child, doc, formatting);
       if (clean) frag.appendChild(clean);
     }
     return frag.childNodes.length > 0 ? frag : null;
   }
 
   const clean = doc.createElement(tag);
+  if (formatting && FORMATTED_TAGS.has(tag)) {
+    const style = richTextStyle(el.getAttribute('style') ?? '');
+    if (style) clean.setAttribute('style', style);
+  }
   const allowed = ALLOWED_ATTRS[tag] ?? [];
   for (const attr of Array.from(el.attributes)) {
     const name = attr.name.toLowerCase();
@@ -82,7 +89,7 @@ function sanitizeNode(node: Node, doc: Document): Node | null {
     clean.setAttribute('controls', ''); clean.setAttribute('playsinline', ''); clean.setAttribute('preload', 'metadata');
   }
   for (const child of Array.from(el.childNodes)) {
-    const cleanChild = sanitizeNode(child, doc);
+    const cleanChild = sanitizeNode(child, doc, formatting);
     if (cleanChild) clean.appendChild(cleanChild);
   }
   return clean;
@@ -92,14 +99,14 @@ function sanitizeNode(node: Node, doc: Document): Node | null {
  * Sanitise an untrusted HTML string to a safe subset. Returns `''` for empty/nullish input.
  * In a non-DOM runtime it strips all markup to text (safe-by-default).
  */
-export function sanitizeHtml(input: string | null | undefined): string {
+export function sanitizeHtml(input: string | null | undefined, options: { formatting?: boolean } = {}): string {
   if (!input) return '';
   if (typeof DOMParser === 'undefined') return stripToText(input);
   try {
     const doc = new DOMParser().parseFromString(input, 'text/html');
     const out = doc.createElement('div');
     for (const child of Array.from(doc.body.childNodes)) {
-      const clean = sanitizeNode(child, doc);
+      const clean = sanitizeNode(child, doc, Boolean(options.formatting));
       if (clean) out.appendChild(clean);
     }
     return out.innerHTML;

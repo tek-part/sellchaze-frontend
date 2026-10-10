@@ -1,0 +1,10 @@
+.sf-thank-you {display:grid;gap:1.25rem;overflow-wrap:anywhere;color:var(--text)}
+.sf-thank-you h1 {font-size:var(--fs-2xl);font-weight:700;line-height:1.3}
+.sf-thank-you .sf-prose {min-width:0;line-height:1.8}
+.sf-thank-you .sf-prose :is(h1,h2,h3,h4,h5,h6) {color:inherit}
+.sf-thank-you .sf-prose h2 {font-size:1.5em;font-weight:700}.sf-thank-you .sf-prose h3 {font-size:1.25em;font-weight:700}
+.sf-thank-you .sf-prose ul {list-style:disc;padding-inline-start:1.5rem}.sf-thank-you .sf-prose ol {list-style:decimal;padding-inline-start:1.5rem}
+.sf-thank-you .sf-prose blockquote {border-inline-start:3px solid var(--border);padding-inline-start:1rem;margin-block:1rem}
+.sf-thank-you .sf-prose pre,.sf-thank-you .sf-prose table {display:block;max-width:100%;overflow-x:auto}
+.sf-thank-you .sf-prose a {text-decoration:underline}
+.sf-thank-you .sf-btn {justify-self:start}

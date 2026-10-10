@@ -1,0 +1,13 @@
+.simple-page-prose { overflow-wrap: anywhere; line-height: 1.8; }
+.simple-page-prose h1 { font-size: 1.65em; font-weight: 700; margin-block: .5em; }
+.simple-page-prose h2 { font-size: 1.4em; font-weight: 700; margin-block: .65em; }
+.simple-page-prose h3 { font-size: 1.2em; font-weight: 700; }
+.simple-page-prose p { margin-block: .75em; }
+.simple-page-prose ul, .simple-page-prose ol { padding-inline-start: 1.5em; }
+.simple-page-prose ul { list-style: disc; }
+.simple-page-prose ol { list-style: decimal; }
+.simple-page-prose a { color: #047857; text-decoration: underline; }
+.dark .simple-page-prose a { color: #6ee7b7; }
+.simple-page-prose img, .simple-page-prose video { display: block; max-width: 100%; height: auto; margin-block: 1em; }
+.simple-page-prose pre, .simple-page-prose table { display: block; max-width: 100%; overflow: auto; }
+.simple-page-prose blockquote { border-inline-start: 3px solid #94a3b8; padding-inline-start: 1em; }
