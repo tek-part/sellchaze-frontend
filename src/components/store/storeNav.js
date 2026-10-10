@@ -37,6 +37,7 @@ export function buildStoreNav(t, access = {}) {
             items: [
                 { key: 'overview', to: 'overview', label: t('store_nav_overview', 'Overview'), Icon: HiOutlineSquares2X2, show: true },
                 { key: 'orders', to: 'orders', label: t('store_nav_orders', 'Orders'), Icon: HiOutlineShoppingBag, show: access.canStoreOrders },
+                { key: 'blocked-phone-numbers', to: 'blocked-phone-numbers', label: t('store_nav_blocked_phones', 'Blocked phones'), Icon: HiOutlineShoppingBag, show: access.canStoreOrders },
                 { key: 'inventory', to: 'inventory', label: t('store_nav_inventory', 'Store inventory'), Icon: HiOutlineSquares2X2, show: access.canStoreInventory },
                 { key: 'products', to: 'products', label: t('products', 'Products'), Icon: HiOutlineShoppingBag, show: access.canStoreProducts },
                 { key: 'coupons', to: 'coupons', label: t('store_nav_coupons', 'Coupons'), Icon: HiOutlineTicket, show: access.canStoreCoupons },
