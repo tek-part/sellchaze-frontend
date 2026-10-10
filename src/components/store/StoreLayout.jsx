@@ -23,6 +23,7 @@ export default function StoreLayout() {
     const { t } = useTranslation();
     const location = useLocation();
     const isAdminScope = !owner;
+    const unifiedNavigation = owner && parent.unifiedStoreNavigation;
     const canAdminEdit = Array.isArray(parent.permissions) && parent.permissions.includes('stores-edit');
 
     const access = useMemo(() => {
@@ -92,22 +93,22 @@ export default function StoreLayout() {
     return (
         <div className="flex items-start gap-6">
             {/* Desktop rail */}
-            <aside className="sticky top-0 hidden w-64 shrink-0 self-start lg:block">
+            {!unifiedNavigation && <aside className="sticky top-0 hidden w-64 shrink-0 self-start lg:block">
                 <StoreSidebar {...sidebarProps} />
-            </aside>
+            </aside>}
 
             <div className="min-w-0 flex-1">
                 {/* Mobile / tablet: sticky sub-bar + the active group's items as a scroll strip. */}
-                <div className="sticky -top-3 z-30 -mx-3 mb-4 border-b border-slate-200/80 bg-surface/95 backdrop-blur md:-top-5 md:-mx-5 lg:hidden">
+                <div className={`mb-4 border-b border-slate-200/80 bg-surface/95 ${unifiedNavigation ? 'pb-3' : 'sticky -top-3 z-30 -mx-3 backdrop-blur md:-top-5 md:-mx-5 lg:hidden'}`}>
                     <div className="flex items-center gap-3 px-3 py-2.5 md:px-5">
-                        <button
+                        {!unifiedNavigation && <button
                             type="button"
                             onClick={() => setDrawerOpen(true)}
                             className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-700 shadow-xs transition hover:bg-brand-light/60 hover:text-brand-dark"
                             aria-label={t('store_nav_open_menu', 'Open store menu')}
                         >
                             <HiOutlineBars3 className="h-5 w-5" aria-hidden />
-                        </button>
+                        </button>}
                         <div className="flex min-w-0 flex-1 items-center gap-2">
                             {store?.logo_url ? (
                                 <img src={store.logo_url} alt="" className="h-8 w-8 shrink-0 rounded-lg border border-slate-200 object-cover" />
@@ -116,7 +117,7 @@ export default function StoreLayout() {
                             {store ? <StoreStatusPill status={store.status} size="xs" className="shrink-0" /> : null}
                         </div>
                     </div>
-                    {activeGroup ? (
+                    {!unifiedNavigation && activeGroup ? (
                         <div className="sc-rail flex gap-1.5 overflow-x-auto px-3 pb-2.5 md:px-5">
                             {activeGroup.items.map((item) => {
                                 const active = item.isActive(rel);
@@ -160,7 +161,7 @@ export default function StoreLayout() {
             </div>
 
             {/* Mobile drawer */}
-            <Dialog open={drawerOpen} onClose={() => setDrawerOpen(false)} className="relative z-60 lg:hidden">
+            <Dialog open={!unifiedNavigation && drawerOpen} onClose={() => setDrawerOpen(false)} className="relative z-60 lg:hidden">
                 <DialogBackdrop
                     transition
                     className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs transition duration-200 data-closed:opacity-0"

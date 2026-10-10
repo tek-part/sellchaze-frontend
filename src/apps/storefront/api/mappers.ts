@@ -42,6 +42,7 @@ export function toProductCard(product: ApiProduct, currency: string, multiplier 
     url: `/products/${product.slug}`,
     price,
     currency,
+    soldOut: product.is_active === false || (product.variants?.length ? product.variants.every((variant) => !toVariant(variant).available) : product.stock != null && product.stock <= 0),
     ...(compare && compare > price ? { compareAtPrice: compare } : {}),
     ...(image ? { image: {
       src: responsive?.src ?? image,
@@ -126,7 +127,7 @@ export function toProductDetail(product: ApiProduct, currency: string, multiplie
   const variants = product.variants && product.variants.length > 0
     ? product.variants.map((variant) => { const mapped = toVariant(variant); return mapped.price === undefined ? mapped : { ...mapped, price: mapped.price * multiplier }; })
     : undefined;
-  const anyAvailable = variants ? variants.some((v) => v.available) : true;
+  const anyAvailable = product.is_active !== false && (variants ? variants.some((v) => v.available) : product.stock == null || product.stock > 0);
   // Security: product descriptions are merchant-authored HTML rendered into shoppers' browsers via
   // `dangerouslySetInnerHTML` by the themes. Sanitise centrally here (defence-in-depth) so every
   // theme receives already-safe markup — no theme change required. See docs/security.

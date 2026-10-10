@@ -37,6 +37,8 @@ export function buildStoreNav(t, access = {}) {
             items: [
                 { key: 'overview', to: 'overview', label: t('store_nav_overview', 'Overview'), Icon: HiOutlineSquares2X2, show: true },
                 { key: 'orders', to: 'orders', label: t('store_nav_orders', 'Orders'), Icon: HiOutlineShoppingBag, show: access.canStoreOrders },
+                { key: 'inventory', to: 'inventory', label: t('store_nav_inventory', 'Store inventory'), Icon: HiOutlineSquares2X2, show: access.canStoreInventory },
+                { key: 'products', to: 'products', label: t('products', 'Products'), Icon: HiOutlineShoppingBag, show: access.canStoreProducts },
                 { key: 'coupons', to: 'coupons', label: t('store_nav_coupons', 'Coupons'), Icon: HiOutlineTicket, show: access.canStoreCoupons },
                 { key: 'reviews', to: 'reviews', label: t('store_nav_reviews', 'Reviews'), Icon: HiOutlineChatBubbleLeftRight, show: access.canStoreReviews },
                 { key: 'analytics', to: 'analytics', label: t('store_nav_analytics', 'Analytics'), Icon: HiOutlineChartBar, show: access.canStoreAnalytics },
@@ -46,6 +48,7 @@ export function buildStoreNav(t, access = {}) {
             key: 'design',
             label: t('store_nav_group_design', 'Design'),
             items: [
+                { key: 'funnels', to: 'funnels', label: t('store_nav_funnels', 'Sales funnels'), Icon: HiOutlineRocketLaunch, show: access.canStorePages },
                 {
                     key: 'themes',
                     to: 'themes',
@@ -71,13 +74,14 @@ export function buildStoreNav(t, access = {}) {
                     show: access.canStorePages,
                     isActive: (rel) => startsWith(rel, '/pages') || startsWith(rel, '/content'),
                 },
+                { key: 'checkout-fields', to: 'checkout-fields', label: t('store_nav_checkout_fields', 'Checkout form'), Icon: HiOutlineDocumentText, show: access.canStoreSettings },
                 { key: 'menus', to: 'menus', label: t('store_nav_menus', 'Menus'), Icon: HiOutlineBars3BottomLeft, show: access.canStoreMenus },
                 { key: 'media', to: 'media', label: t('store_nav_media', 'Media'), Icon: HiOutlinePhoto, show: access.canStorePages || access.canStoreThemes },
             ],
         },
         {
             key: 'settings',
-            label: t('store_nav_group_settings', 'Settings'),
+            label: t('nav_store_settings', 'Store settings'),
             items: [
                 { key: 'general', to: 'settings/general', label: t('store_nav_general', 'General'), Icon: HiOutlineCog6Tooth, show: access.canStoreSettings },
                 { key: 'localization', to: 'settings/localization', label: t('store_nav_localization', 'Language & currency'), Icon: HiOutlineLanguage, show: access.canStoreSettings },

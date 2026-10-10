@@ -92,7 +92,8 @@ export function AppRoutes(): ReactElement {
         <Route path="/blog" element={<BlogPage />} />
         <Route path="/blog/:slug" element={<BlogDetailPage />} />
         {/* Published custom pages (sections from the layout API); falls back to the policy pages. */}
-        <Route path="/pages/:slug" element={<BuilderPage />} />
+        <Route path="/pages/:slug" element={<BuilderPage key="page" />} />
+        <Route path="/funnels/:slug" element={<BuilderPage key="funnel" funnel />} />
 
         <Route path="*" element={<NotFoundPage />} />
       </Routes>

@@ -114,6 +114,8 @@ const StoreCustomizePage = lazy(() => import('./pages/StoreCustomizePage'));
 const StorePaymentsPage = lazy(() => import('./pages/StorePaymentsPage'));
 const EditorLayout = lazy(() => import('./components/editor/EditorLayout'));
 const StorePagesPage = lazy(() => import('./pages/StorePagesPage'));
+const StoreCheckoutFieldsPage = lazy(() => import('./pages/store/settings/StoreCheckoutFieldsPage'));
+const StoreFunnelsPage = lazy(() => import('./pages/StoreFunnelsPage'));
 const StoreMediaPage = lazy(() => import('./pages/StoreMediaPage'));
 const StoreGeneralSettingsPage = lazy(() => import('./pages/store/settings/StoreGeneralSettingsPage'));
 const StoreLocalizationSettingsPage = lazy(() => import('./pages/store/settings/StoreLocalizationSettingsPage'));
@@ -126,6 +128,9 @@ const StoreMenusPage = lazy(() => import('./pages/StoreMenusPage'));
 // Phase 6H: route-level lazy loading for the heavier commerce/analytics pages
 // (keeps chart.js and these screens out of the main bundle).
 const StoreCouponsPage = lazy(() => import('./pages/StoreCouponsPage'));
+const StoreInventoryPage = lazy(() => import('./pages/StoreInventoryPage'));
+const StoreProductsPage = lazy(() => import('./pages/StoreProductsPage'));
+const StoreProductEditorPage = lazy(() => import('./pages/StoreProductEditorPage'));
 const StoreCouponFormPage = lazy(() => import('./pages/StoreCouponFormPage'));
 const StoreOrdersPage = lazy(() => import('./pages/StoreOrdersPage'));
 const StoreOrderDetailPage = lazy(() => import('./pages/StoreOrderDetailPage'));
@@ -194,6 +199,7 @@ const STORE_ROUTES = [
     { path: 'orders', element: <StoreOrdersPage /> },
     { path: 'orders/:orderId', element: <StoreOrderDetailPage /> },
     { path: 'coupons', element: <StoreCouponsPage /> },
+    { path: 'inventory', element: <StoreInventoryPage /> },
     { path: 'coupons/new', element: <StoreCouponFormPage /> },
     { path: 'coupons/:couponId/edit', element: <StoreCouponFormPage /> },
     { path: 'reviews', element: <StoreReviewsPage /> },
@@ -203,6 +209,8 @@ const STORE_ROUTES = [
     // Legacy per-theme settings editor → the full-screen editor's Theme settings tab.
     { path: 'themes/:themeId/settings', element: <ThemeSettingsRedirect /> },
     { path: 'pages', element: <StorePagesPage /> },
+    { path: 'checkout-fields', element: <StoreCheckoutFieldsPage /> },
+    { path: 'funnels', element: <StoreFunnelsPage /> },
     { path: 'pages/:pageId/builder', element: <StorePageBuilderPage /> },
     { path: 'content/:key', element: <StoreContentPageEditor /> },
     { path: 'menus', element: <StoreMenusPage /> },
@@ -213,7 +221,9 @@ const STORE_ROUTES = [
     { path: 'settings/shipping', element: <StoreShippingTaxSettingsPage /> },
     { path: 'settings/domains', element: <StoreDomainsPage /> },
     { path: 'settings/publish', element: <StorePublishPage /> },
-    { path: 'products/*', element: <Navigate to="/products" replace /> },
+    { path: 'products', element: <StoreProductsPage /> },
+    { path: 'products/new', element: <StoreProductEditorPage /> },
+    { path: 'products/:productId/edit', element: <StoreProductEditorPage /> },
     { path: 'categories/*', element: <Navigate to="/categories" replace /> },
 ];
 

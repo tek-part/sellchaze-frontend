@@ -32,6 +32,7 @@ export function storeAccess(roles = [], permissions = []) {
         isStoreOwner,
         canStoreView,
         canStoreProducts,
+        canStoreInventory: can('products-list'),
         canStoreCategories,
         canStoreOrders,
         canStoreCoupons,
@@ -55,7 +56,7 @@ export function storeAccess(roles = [], permissions = []) {
  */
 export function fullStoreAccess() {
     const all = storeAccess(['Merchant'], []);
-    return { ...all, isStoreOwner: false };
+    return { ...all, canStoreInventory: true, isStoreOwner: false };
 }
 
 export default storeAccess;

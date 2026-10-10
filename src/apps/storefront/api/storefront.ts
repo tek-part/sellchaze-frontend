@@ -3,7 +3,7 @@
  * DTOs; callers map them with the store currency (see ./mappers). Cart/auth mutations included.
  * No endpoint is invented — every path matches routes/api.php `/storefront/*`.
  */
-import { apiGet, apiRootFetch, apiSend } from './client';
+import { apiFetch, apiGet, apiRootFetch, apiSend } from './client';
 import type {
   ApiBrand,
   ApiCategory,
@@ -105,6 +105,8 @@ export interface ApiBuilderPage {
   title: string | Record<string, string | null | undefined>;
   slug: string;
   template: string;
+  public_path?: string;
+  funnel_product_slug?: string | null;
   seo?: { title?: string | null; description?: string | null; image?: string | null } | null;
   sections: ReadonlyArray<ApiLayoutSection>;
 }
@@ -112,6 +114,11 @@ export interface ApiBuilderPage {
 /** GET /storefront/pages/{slug} — a published custom (page|landing) page; 404 when unpublished. */
 export function getPage(slug: string): Promise<{ data: ApiBuilderPage }> {
   return apiGet(`/pages/${encodeURIComponent(slug)}`);
+}
+
+/** A published product funnel; ordinary pages cannot be served through this endpoint. */
+export function getFunnel(slug: string): Promise<{ data: ApiBuilderPage }> {
+  return apiGet(`/funnels/${encodeURIComponent(slug)}`);
 }
 
 /* ---- merchandising surfaces ---- */
@@ -168,7 +175,16 @@ export const applyCoupon = (code: string): Promise<{ data: unknown }> => apiSend
 export const removeCoupon = (): Promise<{ data: unknown }> => apiSend('/checkout/coupon', 'DELETE');
 export interface StorefrontPaymentMethod { slug: string; name: string; test_mode: boolean }
 export const getPaymentMethods = (): Promise<{ data: ReadonlyArray<StorefrontPaymentMethod> }> => apiGet('/payment-methods');
-export const submitCheckout = (body: unknown): Promise<{ data: unknown }> => apiSend('/checkout', 'POST', body);
+export const submitCheckout = (body: unknown, key: string): Promise<{ data: unknown }> => apiFetch('/checkout', { method: 'POST', headers: { 'Idempotency-Key': key }, body: JSON.stringify(body) });
+export const recoverCheckout = (key: string): Promise<{ data: unknown }> => apiFetch('/checkout/recover', { method: 'POST', headers: { 'Idempotency-Key': key }, body: '{}' });
+export interface CheckoutItem { product_id: number; variant_id?: number; quantity: number }
+export interface CheckoutQuote {
+  items: ReadonlyArray<{ product_id: number; variant_id: number | null; name: string; unit_price: string; quantity: number; line_total: string }>;
+  currency: string;
+  totals: { subtotal: string; discount_total: string; shipping_total: string; tax_total: string; grand_total: string };
+}
+export const quoteCheckout = (items: ReadonlyArray<CheckoutItem>, coupon_code: string, selection: import('../types/shipping').ShippingSelection = {}): Promise<{ data: CheckoutQuote }> =>
+  apiSend('/checkout/quote', 'POST', { items, coupon_code, ...selection });
 export const retryCheckoutPayment = (token: string): Promise<{ data: unknown; payment?: { redirect_url?: string | null } }> =>
   apiSend('/checkout/payment/retry', 'POST', { token });
 

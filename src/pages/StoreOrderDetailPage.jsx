@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
 import api from '../api/client';
 import StatusBadge from '../components/StatusBadge';
+import StoreOrderShipment from '../components/store/StoreOrderShipment';
 
 // Mirrors StoreOrderService::TRANSITIONS — only valid next actions are shown.
 const TRANSITIONS = {
@@ -70,6 +71,7 @@ export default function StoreOrderDetailPage() {
 
             <div className="grid gap-5 lg:grid-cols-3">
                 <div className="space-y-5 lg:col-span-2">
+                    <StoreOrderShipment key={`${apiBase}-${order.id}`} order={order} apiBase={apiBase} uiBase={uiBase} onOrderUpdated={load} />
                     {/* Items */}
                     <div className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-card">
                         <div className="border-b border-slate-100 px-5 py-3">
@@ -117,7 +119,7 @@ export default function StoreOrderDetailPage() {
                                         <div className="min-w-0">
                                             <p className="text-sm text-slate-800">
                                                 <StatusBadge status={ev.to_status} label={t(`order_status_${ev.to_status}`, ev.to_status)} />
-                                                {ev.actor ? <span className="ms-2 text-xs text-slate-500">· {ev.actor}</span> : <span className="ms-2 text-xs text-slate-400">· {t('order_by_customer', 'customer')}</span>}
+                                                {ev.actor ? <span className="ms-2 text-xs text-slate-500">· {ev.actor}</span> : <span className="ms-2 text-xs text-slate-400">· {ev.source === 'carrier' ? 'Bosta' : t('order_by_customer', 'customer')}</span>}
                                             </p>
                                             {ev.notes ? <p className="mt-0.5 text-xs text-slate-600">{ev.notes}</p> : null}
                                             <p className="mt-0.5 text-xs text-slate-400">{ev.created_at ? new Date(ev.created_at).toLocaleString() : ''}</p>
@@ -140,7 +142,10 @@ export default function StoreOrderDetailPage() {
                             <div className="mt-3 rounded-lg bg-slate-50 p-3 text-xs text-slate-600">
                                 <p>{order.shipping_address.name}</p>
                                 <p>{order.shipping_address.line1}{order.shipping_address.line2 ? `, ${order.shipping_address.line2}` : ''}</p>
-                                <p>{[order.shipping_address.city, order.shipping_address.state, order.shipping_address.country].filter(Boolean).join(', ')}</p>
+                                <p>{[order.shipping_address.city, order.shipping_address.state, order.shipping_address.postal_code, order.shipping_address.country].filter(Boolean).join(', ')}</p>
+                                {order.shipping_address.national_address ? <p>{t('order_national_address', 'National address')}: {order.shipping_address.national_address}</p> : null}
+                                {order.shipping_address.phone_alt ? <p>{t('order_phone_alt', 'Alternative phone')}: <bdi>{order.shipping_address.phone_alt}</bdi></p> : null}
+                                {order.shipping_address.delivery_option ? <p>{t('order_delivery_option', 'Shipping option')}: {order.shipping_address.delivery_option}</p> : null}
                             </div>
                         ) : null}
                         {order.customer_notes ? (

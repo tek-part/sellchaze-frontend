@@ -3,6 +3,37 @@ layer(base);
 
 @import 'tailwindcss';
 
+/* Merchant workspace: logical borders preserve the same layout in Arabic and English. */
+.merchant-workspace {
+  --color-brand: #168849;
+  --color-brand-dark: #106b39;
+  --color-brand-light: #e3f4e9;
+  --color-accent: #22b35e;
+  --color-accent-dark: #168849;
+  --color-accent-light: #f0faf3;
+  --color-surface: #ffffff;
+  --color-surface-muted: #f6f7f9;
+  --shadow-card: 0 1px 3px rgb(15 23 42 / 0.04);
+  --shadow-soft: 0 4px 20px rgb(15 23 42 / 0.05);
+}
+
+.merchant-sidebar nav a[aria-current='page'] {
+  background: #e0f2e7;
+  color: #116c3b;
+  box-shadow: none;
+  border-inline-start: 3px solid #22b35e;
+  --tw-ring-shadow: 0 0 #0000;
+}
+
+.merchant-sidebar nav a,
+.merchant-sidebar nav button {
+  border-radius: 8px;
+}
+
+.merchant-sidebar nav svg {
+  color: currentColor;
+}
+
 @theme {
   --font-sans: Plus Jakarta Sans, system-ui, sans-serif;
   --font-arabic: IBM Plex Sans Arabic, Plus Jakarta Sans, system-ui, sans-serif;

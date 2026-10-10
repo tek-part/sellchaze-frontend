@@ -1,11 +1,12 @@
 import { Disclosure, DisclosureButton, DisclosurePanel } from '@headlessui/react';
 import { createContext, useContext } from 'react';
 import { motion } from 'framer-motion';
-import { NavLink, useLocation } from 'react-router-dom';
+import { Link, NavLink, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useChatUnread } from '../lib/useChatUnread';
 import { CHAT_ENABLED } from '../lib/features';
 import { storeAccess } from '../lib/storeAccess';
+import { buildStoreNav, relativeStorePath } from './store/storeNav';
 import { FaGoogle, FaWhatsapp } from 'react-icons/fa';
 import {
     HiOutlineArrowDownTray,
@@ -215,21 +216,10 @@ function SidebarNavInner({ isAdmin = false, isSupplier = false, roles = [], perm
     const isAdminOnly = isAdmin && !isSupplier && !hasBusinessRole;
     // Type-based store access (owners see everything; employees/admin-internal
     // users need store.* grants) — shared with StoreLayout via lib/storeAccess.
-    const {
-        canStoreOrders,
-        canStoreCoupons,
-        canStoreReviews,
-        canStoreAnalytics,
-        canStoreThemes,
-        canStorePages,
-        canStoreMenus,
-        canStoreSettings,
-        canStorePayments,
-        storeMyGroup,
-        storeSalesGroup,
-        hasStoreAccess,
-    } = storeAccess(roles, permissions);
-    const openStore = usePathPrefix('/store');
+    const access = storeAccess(roles, permissions);
+    const { hasStoreAccess } = access;
+    const storeGroups = hasStoreAccess ? buildStoreNav(t, access) : [];
+    const storePath = relativeStorePath(location.pathname, '/store');
     const openReports = usePathPrefix('/admin/reports');
     const openAdminSettings = usePathPrefix('/settings');
 
@@ -531,85 +521,24 @@ function SidebarNavInner({ isAdmin = false, isSupplier = false, roles = [], perm
                         </NavGroup>
                     ) : null}
 
-                    {storeSalesGroup ? (
-                        <NavGroup
-                            title={t('nav_store_group_sales')}
-                            icon={HiOutlineShoppingBag}
-                            defaultOpen={openStore}
-                            groupActive={openStore}
+                    {storeGroups.map((group) => {
+                        const active = group.items.some((item) => item.isActive(storePath));
+                        return <NavGroup
+                            key={`${group.key}-${active}`}
+                            title={group.label}
+                            icon={group.items[0].Icon}
+                            defaultOpen={active}
+                            groupActive={active}
                         >
-                            {canStoreOrders ? (
-                                <NavLink to="/store/orders" className={subNavLinkClass}>
-                                    <HiOutlineShoppingBag className="h-4 w-4 shrink-0 opacity-90" aria-hidden />
-                                    {t('nav_store_orders')}
-                                </NavLink>
-                            ) : null}
-                            {canStoreCoupons ? (
-                                <NavLink to="/store/coupons" className={subNavLinkClass}>
-                                    <HiOutlineTicket className="h-4 w-4 shrink-0 opacity-90" aria-hidden />
-                                    {t('nav_store_coupons')}
-                                </NavLink>
-                            ) : null}
-                        </NavGroup>
-                    ) : null}
-
-                    {storeMyGroup ? (
-                        <NavGroup
-                            title={t('nav_store_group_mystore')}
-                            icon={HiOutlineBuildingStorefront}
-                            defaultOpen={openStore}
-                            groupActive={openStore}
-                        >
-                            <NavLink to="/store/overview" className={subNavLinkClass}>
-                                <HiOutlineSquares2X2 className="h-4 w-4 shrink-0 opacity-90" aria-hidden />
-                                {t('store_nav_overview', 'Overview')}
-                            </NavLink>
-                            {canStoreSettings ? (
-                                <NavLink to="/store/settings/general" className={subNavLinkClass}>
-                                    <HiOutlineCog6Tooth className="h-4 w-4 shrink-0 opacity-90" aria-hidden />
-                                    {t('nav_store_settings')}
-                                </NavLink>
-                            ) : null}
-                            {canStorePayments ? (
-                                <NavLink to="/store/settings/payments" className={subNavLinkClass}>
-                                    <HiOutlineCreditCard className="h-4 w-4 shrink-0 opacity-90" aria-hidden />
-                                    {t('nav_store_payments', 'Payment gateways')}
-                                </NavLink>
-                            ) : null}
-                            {canStoreThemes ? (
-                                <NavLink to="/store/themes" className={subNavLinkClass}>
-                                    <HiOutlineRectangleGroup className="h-4 w-4 shrink-0 opacity-90" aria-hidden />
-                                    {t('nav_store_appearance')}
-                                </NavLink>
-                            ) : null}
-                            {canStorePages ? (
-                                <NavLink to="/store/pages" className={subNavLinkClass}>
-                                    <HiOutlineDocumentText className="h-4 w-4 shrink-0 opacity-90" aria-hidden />
-                                    {t('nav_store_pages')}
-                                </NavLink>
-                            ) : null}
-                            {canStoreMenus ? (
-                                <NavLink to="/store/menus" className={subNavLinkClass}>
-                                    <HiOutlineNewspaper className="h-4 w-4 shrink-0 opacity-90" aria-hidden />
-                                    {t('nav_store_menus')}
-                                </NavLink>
-                            ) : null}
-                        </NavGroup>
-                    ) : null}
-
-                    {canStoreReviews ? (
-                        <NavLink to="/store/reviews" className={navLinkClass}>
-                            <HiOutlineChatBubbleLeftRight className="h-5 w-5 shrink-0 opacity-95" aria-hidden />
-                            {t('nav_store_reviews')}
-                        </NavLink>
-                    ) : null}
-
-                    {canStoreAnalytics ? (
-                        <NavLink to="/store/analytics" className={navLinkClass}>
-                            <HiOutlineChartBar className="h-5 w-5 shrink-0 opacity-95" aria-hidden />
-                            {t('nav_store_analytics')}
-                        </NavLink>
-                    ) : null}
+                            {group.items.map((item) => {
+                                const selected = item.isActive(storePath);
+                                return <Link key={item.key} to={`/store/${item.to}`} aria-current={selected ? 'page' : undefined} className={subNavLinkClass({ isActive: selected })}>
+                                    <item.Icon className="h-4 w-4 shrink-0 opacity-90" aria-hidden />
+                                    {item.label}
+                                </Link>;
+                            })}
+                        </NavGroup>;
+                    })}
 
                     {can('stores-list') ? (
                         <NavLink to="/stores" className={navLinkClass}>
