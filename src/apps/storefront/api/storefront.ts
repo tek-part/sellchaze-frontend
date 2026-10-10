@@ -42,6 +42,11 @@ export function getStore(): Promise<ApiStorefrontBootstrap> {
   return apiGet('/');
 }
 
+/** Saved presentation only; order receipts continue through their private capability endpoint. */
+export function getThankYouPage(): Promise<{ data: import('../pages/thank-you').ThankYouPageData }> {
+  return apiGet('/thank-you');
+}
+
 /** Merchandising filter driven by real product flags. */
 export type ProductFilter = 'best_sellers' | 'new_arrivals' | 'trending' | 'on_sale';
 

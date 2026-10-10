@@ -1,0 +1,7 @@
+.thank-you-preview {overflow-wrap:anywhere;min-width:0;line-height:1.8}
+.thank-you-preview img,.thank-you-preview video {max-width:100%;height:auto}
+.thank-you-preview h1 {font-size:2em}.thank-you-preview h2 {font-size:1.6em}.thank-you-preview h3 {font-size:1.3em}
+.thank-you-preview :is(h1,h2,h3,h4,h5,h6) {font-weight:700;margin-block:1em .4em}
+.thank-you-preview ul {list-style:disc;padding-inline-start:24px}.thank-you-preview ol {list-style:decimal;padding-inline-start:24px}
+.thank-you-preview a {color:#047857;text-decoration:underline}.thank-you-preview table {display:block;overflow-x:auto;max-width:100%}
+.dark .thank-you-preview a {color:#6ee7b7}.dark .thank-you-editor .text-slate-800 {color:#f1f5f9}.dark .thank-you-editor .text-slate-500 {color:#cbd5e1}

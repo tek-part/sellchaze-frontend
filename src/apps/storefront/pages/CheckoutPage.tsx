@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { Button, ButtonLink, Container, Input, Section, Spinner } from '../foundation/components';
 import { useCart } from '../state/cart';
 import { useStore } from '../state/store-context';
-import { quoteCheckout } from '../api/storefront';
+import { getThankYouPage, quoteCheckout } from '../api/storefront';
 import { useAsync } from '../api/useAsync';
 import { useLocale } from '../i18n/useLocale';
 import { formatMoney } from '../utils/format';
@@ -18,6 +18,8 @@ import { PersonalizationSummary } from '../foundation/components/Personalization
 import { OrderReceiptPanel } from './OrderReceiptPanel';
 import { CheckoutMinimum } from './CheckoutMinimum';
 import { minimumOrderAllows } from './minimum-order';
+import { ThankYouContent, ThankYouProducts } from './ThankYouContent';
+import { currentThankYou } from './thank-you';
 
 export function CheckoutPage(): ReactElement {
   const { t } = useTranslation();
@@ -92,14 +94,19 @@ export function CheckoutPage(): ReactElement {
 
 export function OrderSuccessPage(): ReactElement {
   const { t } = useTranslation();
+  const { locale } = useLocale();
   const [params] = useSearchParams();
   const { store } = useStore();
   const tpl = useTemplate('order-success');
   const number = params.get('number');
+  const thankYouQuery = useAsync(async () => ({ locale, data: (await getThankYouPage()).data }), [locale]);
+  const custom = currentThankYou(thankYouQuery, locale);
   useEffect(() => {
     const scope = window.location.origin;
     if (number && readCheckoutAttempt(scope)?.orderNumber === number) clearCheckoutAttempt(scope);
   }, [number]);
+  if (thankYouQuery.loading) return <><Section><Container narrow><Spinner label={locale === 'ar' ? 'جارٍ تحميل الصفحة…' : 'Loading page…'} /></Container></Section><OrderReceiptPanel number={number} /></>;
+  if (custom) return <><ThankYouContent page={custom} number={number} /><OrderReceiptPanel number={number} /><ThankYouProducts page={custom} /></>;
   if (tpl) return <><ThemeRenderer page={tpl} context={flowContext(store)} /><OrderReceiptPanel number={number} /></>;
   return (
     <><Section>

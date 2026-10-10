@@ -10,3 +10,6 @@
 .product-rich-text__hint{padding:10px;font-size:12px;color:#64748b}.product-rich-text__source,.product-rich-text__insert{display:block;padding:12px;font-size:13px}.product-rich-text__source textarea{display:block;width:100%;border:1px solid #cbd5e1;padding:12px;font-family:monospace}.product-rich-text__insert select{display:block;margin-top:6px;width:100%}
 .product-rich-text__link{display:flex;flex-wrap:wrap;gap:8px;padding:12px;align-items:end}.product-rich-text__link input{border:1px solid #cbd5e1;padding:6px;display:block;max-width:100%}
 .product-rich-text--expanded{position:fixed;inset:12px;z-index:80;overflow:auto;box-shadow:0 0 0 100vmax #0009}.product-rich-text--expanded .tiptap{min-height:55vh}
+.dark .product-rich-text{border-color:#334155;background:#1e293b;color:#f1f5f9}.dark .product-rich-text__toolbar{background:#0f172a;border-color:#334155}
+.dark .product-rich-text button,.dark .product-rich-text select,.dark .product-rich-text__source textarea,.dark .product-rich-text__link input{background:#1e293b;color:#f1f5f9;border-color:#475569}
+.dark .product-rich-text button[aria-pressed=true]{background:#064e3b;border-color:#34d399}.dark .product-rich-text__hint{color:#cbd5e1}.dark .product-rich-text .tiptap a{color:#6ee7b7}
