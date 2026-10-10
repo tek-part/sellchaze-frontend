@@ -183,6 +183,7 @@ export const ar: TranslationShape = {
     continueShopping: 'مواصلة التسوق',
     freeShippingProgress: 'يفصلك {{amount}} عن حد الشحن المجاني قبل الخصومات',
     freeShippingReached: 'وصلت لحد الشحن المجاني قبل الخصومات؛ تُؤكد التكلفة عند الدفع',
+    updatedAvailability: 'تم تحديث السلة حسب الأسعار والكميات المتاحة حاليًا. راجع المنتجات قبل إتمام الشراء.',
     taxNote: 'تُحتسب رسوم الشحن والضرائب عند إتمام الشراء',
     eyebrow: '// السلة',
     emptyVoltage: 'لا شيء محمّل بعد — اذهب وابحث عن تجهيزتك التالية.',

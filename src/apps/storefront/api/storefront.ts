@@ -151,6 +151,11 @@ export function getProduct(slug: string): Promise<{ data: ApiProduct; seo?: unkn
   return apiGet(`/products/${encodeURIComponent(slug)}`);
 }
 
+/** Read-only, uncached catalog refresh; never creates a cart, reservation or order. */
+export function getCartCatalog(productIds: ReadonlyArray<number>): Promise<{ store_id: number; data: ApiProduct[] }> {
+  return apiSend('/cart/catalog', 'POST', { product_ids: productIds });
+}
+
 export function getCategories(): Promise<{ data: ReadonlyArray<ApiCategory> }> {
   return apiGet('/categories');
 }

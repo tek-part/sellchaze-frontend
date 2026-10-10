@@ -181,6 +181,7 @@ export const en = {
     continueShopping: 'Continue shopping',
     freeShippingProgress: '{{amount}} away from the free-shipping threshold before discounts',
     freeShippingReached: 'Free-shipping threshold reached before discounts; confirmed at checkout',
+    updatedAvailability: 'Your basket was updated with current prices and availability. Please review the items before checkout.',
     taxNote: 'Shipping & taxes calculated at checkout',
     eyebrow: '// Cart',
     emptyVoltage: 'Nothing loaded yet — go find your next build.',

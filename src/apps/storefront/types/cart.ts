@@ -1,6 +1,6 @@
 /**
- * Cart view-models. The client cart is real and works offline (localStorage); Phase 6 syncs it with
- * the backend. A line is a product+variant+personalization with a quantity.
+ * Cart view-models. Store/currency-scoped client storage works offline; current catalog refresh
+ * supplies price/availability observations. A line is a product+variant+personalization.
  */
 export interface CartLine {
   /** Stable line id including normalized personalization, when present. */
