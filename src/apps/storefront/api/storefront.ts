@@ -105,6 +105,7 @@ export interface ApiBuilderPage {
   title: string | Record<string, string | null | undefined>;
   slug: string;
   template: string;
+  public_path?: string;
   seo?: { title?: string | null; description?: string | null; image?: string | null } | null;
   sections: ReadonlyArray<ApiLayoutSection>;
 }
@@ -112,6 +113,11 @@ export interface ApiBuilderPage {
 /** GET /storefront/pages/{slug} — a published custom (page|landing) page; 404 when unpublished. */
 export function getPage(slug: string): Promise<{ data: ApiBuilderPage }> {
   return apiGet(`/pages/${encodeURIComponent(slug)}`);
+}
+
+/** A published product funnel; ordinary pages cannot be served through this endpoint. */
+export function getFunnel(slug: string): Promise<{ data: ApiBuilderPage }> {
+  return apiGet(`/funnels/${encodeURIComponent(slug)}`);
 }
 
 /* ---- merchandising surfaces ---- */

@@ -115,8 +115,19 @@ export default function StorePageBuilderPage() {
         toast.success(t('page_sections_saved', 'Layout saved'));
         setPreviewVersion((value) => value + 1);
     });
+    const saveMetadata = async () => {
+        const { data } = await api.put(`${apiBase}/pages/${pageId}`, { title: page.title, slug: page.slug, template: page.template, seo: page.seo || {} });
+        // Keep fields edited while the request was in flight; refresh only server-derived paths.
+        setPage((current) => ({ ...current, public_path: data.data.public_path, preview_path: data.data.preview_path }));
+    };
+    const refreshPreview = async () => {
+        const { data } = await api.post(`${apiBase}/pages/${pageId}/preview`);
+        setPreviewUrl(data.preview_url);
+        setPreviewVersion((value) => value + 1);
+    };
     const savePage = () => run(async () => {
-        await api.put(`${apiBase}/pages/${pageId}`, { title: page.title, slug: page.slug, template: page.template, seo: page.seo || {} });
+        await saveMetadata();
+        await refreshPreview();
         toast.success(t('page_saved', 'Saved'));
     });
     const publishPage = async () => {
@@ -127,16 +138,17 @@ export default function StorePageBuilderPage() {
             const { data } = await api.post(`${apiBase}/pages/${pageId}/publish`);
             setPage((current) => ({ ...current, ...data.data }));
             setDirty(false);
-            setPreviewVersion((value) => value + 1);
+            await refreshPreview();
             toast.success(t('page_published', 'Page published'));
         } catch (e) { toast.error(e.response?.data?.message || e.message); }
         finally { setPublishing(false); }
     };
     const restore = (rid) => run(async () => { await api.post(`${apiBase}/pages/${pageId}/revisions/${rid}/restore`); toast.success(t('page_restored', 'Restored')); load(); });
-    const preview = async () => {
-        try { await api.put(`${apiBase}/pages/${pageId}/sections`, { sections: sections.map(({ id: _id, ...section }) => section) }); const { data } = await api.post(`${apiBase}/pages/${pageId}/preview`); setPreviewUrl(data.preview_url); setPreviewVersion((value) => value + 1); }
-        catch (e) { toast.error(e.response?.data?.message || e.message); }
-    };
+    const preview = () => run(async () => {
+        await api.put(`${apiBase}/pages/${pageId}/sections`, { sections: sections.map(({ id: _id, ...section }) => section) });
+        await saveMetadata();
+        await refreshPreview();
+    });
     async function run(fn) { setSaving(true); try { await fn(); } catch (e) { toast.error(e.response?.data?.message || e.message); } finally { setSaving(false); } }
 
     useEffect(() => {
@@ -150,8 +162,8 @@ export default function StorePageBuilderPage() {
 
     const sendPreviewState = useCallback(() => {
         if (!previewUrl) return;
-        previewFrame.current?.contentWindow?.postMessage({ channel: 'sellchaze-theme-studio', version: 1, type: 'hydrate', payload: { sections, locale, path: `/pages/${page?.slug || ''}` } }, new URL(previewUrl).origin);
-    }, [locale, page?.slug, previewUrl, sections]);
+        previewFrame.current?.contentWindow?.postMessage({ channel: 'sellchaze-theme-studio', version: 1, type: 'hydrate', payload: { sections, locale, path: page?.preview_path || `/pages/${page?.slug || ''}` } }, new URL(previewUrl).origin);
+    }, [locale, page?.slug, page?.preview_path, previewUrl, sections]);
 
     useEffect(() => {
         const receive = (event) => {
@@ -177,7 +189,7 @@ export default function StorePageBuilderPage() {
                 <div className="flex gap-2">
                     <button type="button" onClick={() => setHistory(undo(history))} disabled={!history.past.length} className="rounded-xl border border-slate-200 px-3 py-2 text-sm disabled:opacity-40">Undo</button>
                     <button type="button" onClick={() => setHistory(redo(history))} disabled={!history.future.length} className="rounded-xl border border-slate-200 px-3 py-2 text-sm disabled:opacity-40">Redo</button>
-                    <button type="button" onClick={preview} className="rounded-xl border border-slate-200 px-3 py-2 text-sm">{t('theme_preview', 'Preview')}</button>
+                    <button type="button" onClick={preview} disabled={saving || publishing} className="rounded-xl border border-slate-200 px-3 py-2 text-sm disabled:opacity-40">{t('theme_preview', 'Preview')}</button>
                     <button type="button" onClick={publishPage} disabled={publishing || saving || !dirty} className="rounded-xl bg-emerald-600 px-4 py-2 text-sm font-semibold text-white disabled:opacity-40">{publishing ? t('theme_publishing', 'Publishing…') : t('theme_publish', 'Publish')}</button>
                     <button type="button" onClick={() => navigate(`${uiBase}/pages`)} className="rounded-xl border border-slate-200 px-3 py-2 text-sm">{t('cancel', 'Back')}</button>
                 </div>
@@ -253,7 +265,7 @@ export default function StorePageBuilderPage() {
                 <div className="mb-3 flex flex-wrap items-center gap-2">
                     {Object.keys(VIEWPORT_WIDTH).map((mode) => <button key={mode} type="button" onClick={() => setViewport(mode)} className={`rounded-lg px-3 py-1.5 text-xs ${viewport === mode ? 'bg-brand text-white' : 'bg-white'}`}>{mode}</button>)}
                     {['ar', 'en'].map((lang) => <button key={lang} type="button" onClick={() => setLocale(lang)} className={`rounded-lg px-3 py-1.5 text-xs ${locale === lang ? 'bg-slate-800 text-white' : 'bg-white'}`}>{lang.toUpperCase()}</button>)}
-                    <code className="ms-auto text-xs text-slate-500">/pages/{page.slug}</code>
+                    <code className="ms-auto text-xs text-slate-500">{page.preview_path || `/pages/${page.slug}`}</code>
                 </div>
                 {previewUrl ? (
                     <div className="mx-auto overflow-hidden rounded-xl bg-white shadow-lg transition-[width]" style={{ width: `min(100%, ${VIEWPORT_WIDTH[viewport]}px)` }}>

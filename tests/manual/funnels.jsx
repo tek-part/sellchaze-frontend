@@ -24,7 +24,7 @@ api.defaults.adapter = async (config) => {
     else if (['/my-store/funnels', '/my-store/funnels/generate'].includes(config.url) && config.method === 'post') {
         if (config.url.endsWith('/generate') && scenario.get('ai') === 'error') throw Object.assign(new Error('Synthetic provider failure'), { response: { status: 502, data: { message: 'Synthetic provider failure' } } });
         const input = JSON.parse(config.data);
-        const record = { ...input, id: records.length + 1, page_id: records.length + 100, status: 'draft', product: { name: 'حقيبة قماش' }, public_path: `/pages/${input.slug}` };
+        const record = { ...input, id: records.length + 1, page_id: records.length + 100, status: 'draft', product: { name: 'حقيبة قماش' }, public_path: `/funnels/${input.slug}` };
         records.push(record); data = { data: record };
     } else if (config.url === '/my-store/funnels') data = { data: records.filter((r) => (!config.params?.search || r.title.includes(config.params.search)) && (!config.params?.status || r.status === config.params.status)), meta: { last_page: 1 } };
     else if (config.method !== 'get') throw new Error('Unsupported local fixture operation');
