@@ -21,6 +21,10 @@ export interface ProductSwatch {
   available?: boolean;
 }
 
+export interface ProductMediaModel extends ProductImage {
+  type: 'image' | 'video';
+}
+
 /** Compact product shape a card needs — a projection of the full product. */
 export interface ProductCardModel {
   id: string;
@@ -82,6 +86,7 @@ export interface ProductDetailModel extends ProductCardModel {
   sku?: string;
   descriptionHtml?: string;
   images: ReadonlyArray<ProductImage>;
+  media?: ReadonlyArray<ProductMediaModel>;
   inStock?: boolean;
   lowStock?: boolean;
   /** Key selling points shown as a bullet list in the overview. */

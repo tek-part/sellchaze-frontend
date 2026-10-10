@@ -36,13 +36,13 @@ export function ProductPage(): ReactElement | null {
   const dev = previewOrDev();
   const multiplier = store.currencyMultipliers[currency] ?? 1;
   let detail: ProductDetailModel | null = productQ.data ? toProductDetail(productQ.data.data, currency, multiplier) : null;
-  if (dev && !detail) detail = sampleProductDetail(slug, manifest.id, locale);
+  if (dev && !detail && !productQ.loading) detail = sampleProductDetail(slug, manifest.id, locale);
 
   // Record the view (client-side history) once the product resolves.
   const viewedId = detail?.id;
   useEffect(() => {
     if (detail && viewedId) {
-      const { images: _images, variants: _variants, descriptionHtml: _d, ...card } = detail;
+      const { images: _images, media: _media, variants: _variants, descriptionHtml: _d, ...card } = detail;
       record(card);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps

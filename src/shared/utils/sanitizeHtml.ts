@@ -18,7 +18,7 @@ const ALLOWED_TAGS = new Set([
   'ul', 'ol', 'li',
   'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
   'blockquote', 'pre', 'code',
-  'a', 'figure', 'figcaption', 'table', 'thead', 'tbody', 'tr', 'th', 'td',
+  'a', 'figure', 'figcaption', 'table', 'thead', 'tbody', 'tr', 'th', 'td', 'img', 'video',
 ]);
 
 /** Attributes allowed per-tag. Everything else (notably all `on*` handlers) is dropped. */
@@ -26,9 +26,13 @@ const ALLOWED_ATTRS: Readonly<Record<string, ReadonlyArray<string>>> = {
   a: ['href', 'title', 'target', 'rel'],
   td: ['colspan', 'rowspan'],
   th: ['colspan', 'rowspan', 'scope'],
+  img: ['src', 'alt', 'title'],
+  video: ['src', 'poster', 'title'],
 };
 
 const SAFE_URL = /^(https?:|mailto:|tel:|\/|#|\.\/|\.\.\/)/i;
+const SAFE_MEDIA_URL = /^(https?:\/\/|\/(?!\/))/i;
+const DROP_TAGS = new Set(['script', 'style', 'iframe', 'object', 'embed', 'svg', 'math', 'template']);
 
 /**
  * Non-DOM fallback: remove tags AND escape any remaining angle brackets so the result is inert when
@@ -48,6 +52,7 @@ function sanitizeNode(node: Node, doc: Document): Node | null {
 
   const el = node as Element;
   const tag = el.tagName.toLowerCase();
+  if (DROP_TAGS.has(tag)) return null;
   if (!ALLOWED_TAGS.has(tag)) {
     // Drop the element but keep its (sanitised) text/children — e.g. an unknown wrapper.
     const frag = doc.createElement('span');
@@ -65,11 +70,16 @@ function sanitizeNode(node: Node, doc: Document): Node | null {
     if (!allowed.includes(name)) continue; // drops every on* handler, style, class, id, etc.
     const value = attr.value;
     if ((name === 'href' || name === 'src') && !SAFE_URL.test(value.trim())) continue; // block javascript:/data:
+    if ((name === 'src' || name === 'poster') && !SAFE_MEDIA_URL.test(value.trim())) continue;
     clean.setAttribute(name, value);
   }
   // Force safe link semantics for target=_blank.
   if (tag === 'a' && clean.getAttribute('target') === '_blank') {
     clean.setAttribute('rel', 'noopener noreferrer nofollow');
+  }
+  if (tag === 'img') clean.setAttribute('loading', 'lazy');
+  if (tag === 'video') {
+    clean.setAttribute('controls', ''); clean.setAttribute('playsinline', ''); clean.setAttribute('preload', 'metadata');
   }
   for (const child of Array.from(el.childNodes)) {
     const cleanChild = sanitizeNode(child, doc);

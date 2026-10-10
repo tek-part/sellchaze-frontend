@@ -9,6 +9,7 @@ import { useTranslation } from 'react-i18next';
 import type { SectionRenderProps } from '../../theme-engine/rendering';
 import { Container } from '../components/Container';
 import { ProductGallery } from '../components/ProductGallery';
+import { ProductDescription } from '../components/ProductDescription';
 import { Price } from '../components/Price';
 import { Rating } from '../components/Rating';
 import { Select } from '../components/Select';
@@ -74,7 +75,7 @@ export function ProductDetailsSection(props: SectionRenderProps): ReactElement |
     <section className="sf-section">
       <Container>
         <div className="sf-pdp">
-          <ProductGallery images={product.images} title={product.title} />
+          <ProductGallery key={product.id} images={product.images} media={product.media} title={product.title} />
 
           <div className="sf-pdp__buybox">
             {product.vendor ? <span className="sf-pdp__vendor">{product.vendor}</span> : null}
@@ -118,7 +119,7 @@ export function ProductDetailsSection(props: SectionRenderProps): ReactElement |
 
             <Tabs tabs={tabs} value={activeTab} onChange={setActiveTab} renderPanel={(id) =>
               id === 'description' ? (
-                <div className="sf-prose" dangerouslySetInnerHTML={{ __html: product.descriptionHtml ?? '' }} />
+                <ProductDescription html={product.descriptionHtml ?? ''} />
               ) : (
                 <p className="sf-pdp__desc">
                   {t('pdp.luxuryShipping')}
