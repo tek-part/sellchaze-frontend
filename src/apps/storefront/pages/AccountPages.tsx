@@ -14,6 +14,8 @@ import {
   Spinner,
 } from '../foundation/components';
 import { useAuth } from '../state/auth-context';
+import { PersonalizationSummary } from '../foundation/components/PersonalizationSummary';
+import { DigitalDeliverySummary } from '../foundation/components/DigitalDeliverySummary';
 import { useStore } from '../state/store-context';
 import { ThemeRenderer, useLayout, useTemplate } from '../theme-engine';
 import { flowContext } from './flow-context';
@@ -195,6 +197,8 @@ export function OrderDetailPage(): ReactElement {
             <div key={item.id ?? i} className="sf-card-row">
               <div>
                 <div style={{ fontFamily: 'var(--heading)', color: 'var(--text)' }}>{item.name}</div>
+                <PersonalizationSummary entries={item.personalization} />
+                <DigitalDeliverySummary delivery={item.digital_delivery} />
                 <div className="sf-card-row__meta">{t('account.qty', { count: item.quantity })}</div>
               </div>
               <div>{formatMoney(Number(item.price) * item.quantity, currency)}</div>

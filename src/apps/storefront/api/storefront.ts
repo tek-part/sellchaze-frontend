@@ -177,9 +177,9 @@ export interface StorefrontPaymentMethod { slug: string; name: string; test_mode
 export const getPaymentMethods = (): Promise<{ data: ReadonlyArray<StorefrontPaymentMethod> }> => apiGet('/payment-methods');
 export const submitCheckout = (body: unknown, key: string): Promise<{ data: unknown }> => apiFetch('/checkout', { method: 'POST', headers: { 'Idempotency-Key': key }, body: JSON.stringify(body) });
 export const recoverCheckout = (key: string): Promise<{ data: unknown }> => apiFetch('/checkout/recover', { method: 'POST', headers: { 'Idempotency-Key': key }, body: '{}' });
-export interface CheckoutItem { product_id: number; variant_id?: number; quantity: number }
+export interface CheckoutItem { product_id: number; variant_id?: number; quantity: number; personalization?: import('../types/personalization').PersonalizationValues }
 export interface CheckoutQuote {
-  items: ReadonlyArray<{ product_id: number; variant_id: number | null; name: string; unit_price: string; quantity: number; line_total: string }>;
+  items: ReadonlyArray<{ product_id: number; variant_id: number | null; name: string; unit_price: string; quantity: number; line_total: string; personalization_key?: string; personalization?: ReadonlyArray<import('../types/personalization').PersonalizationEntry> }>;
   currency: string;
   totals: { subtotal: string; discount_total: string; shipping_total: string; tax_total: string; grand_total: string };
 }
@@ -214,6 +214,8 @@ export const resetPassword = (body: { token: string; email: string; password: st
   apiRootFetch('/auth/reset-password', { method: 'POST', body: JSON.stringify(body) });
 
 export interface ApiOrderItem {
+  digital_delivery?: import('../types/digital').DigitalDelivery | null;
+  personalization?: ReadonlyArray<import('../types/personalization').PersonalizationEntry>;
   id?: number;
   name: string;
   quantity: number;

@@ -126,7 +126,7 @@ export function useCheckoutPaymentFlow(options?: { items: ReadonlyArray<Checkout
       ...payload,
       payment_method: paymentMethod,
       ...(preserveCart ? { cart_mode: 'direct' } : {}),
-      items: items ?? cart.lines.map((line) => ({ product_id: Number(line.productId), variant_id: line.variantId ? Number(line.variantId) : undefined, quantity: line.quantity })),
+      items: items ?? cart.lines.map((line) => ({ product_id: Number(line.productId), variant_id: line.variantId ? Number(line.variantId) : undefined, quantity: line.quantity, ...(line.personalization ? { personalization: line.personalization } : {}) })),
     } };
     saveCheckoutAttempt(scope, next);
     setAttempt(next);

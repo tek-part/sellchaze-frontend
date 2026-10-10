@@ -3,7 +3,7 @@ import type { AddCartInput } from '../state/cart';
 
 /** A card cannot add a parent SKU while the product requires a purchasable option. */
 export function cardCartInput(product: ProductCardModel, variantId?: string): AddCartInput | null {
-  if (product.soldOut) return null;
+  if (product.soldOut || product.hasPersonalization) return null;
   const variant = product.variants?.find((item) => item.id === variantId);
   if (product.variants?.length && !variant?.available) return null;
   const stock = variant ? variant.availableStock : product.availableStock;

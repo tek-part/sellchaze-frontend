@@ -7,6 +7,8 @@ import { useTranslation } from 'react-i18next';
 import { Drawer } from '../../../foundation/components/Drawer';
 import { formatMoney } from '../../../utils/format';
 import { useCart } from '../../../state/cart';
+import { cartLineLimit } from '../../../state/cart-quantity';
+import { PersonalizationSummary } from '../../../foundation/components/PersonalizationSummary';
 import { useLocale } from '../../../i18n/useLocale';
 import { IconMinus, IconPlus, IconTrash } from './icons';
 
@@ -51,12 +53,13 @@ export function CartDrawer(props: CartDrawerProps): ReactElement {
                   <div className="nsm-cart__info">
                     <a href={line.url} className="nsm-cart__title">{line.title}</a>
                     {line.attributes ? <span className="nsm-cart__attrs">{line.attributes}</span> : null}
+                    <PersonalizationSummary entries={line.personalizationEntries} />
                     <span className="nsm-cart__price">{formatMoney(line.price * line.quantity, line.currency, locale)}</span>
                     <div className="nsm-cart__controls">
                       <div className="nsm-qty" role="group" aria-label={t('product.quantity')}>
                         <button type="button" className="nsm-qty__btn" aria-label={t('product.decreaseQuantity')} onClick={() => updateQuantity(line.id, Math.max(1, line.quantity - 1))} disabled={line.quantity <= 1}><IconMinus /></button>
                         <span className="nsm-qty__value" aria-live="polite">{line.quantity}</span>
-                        <button type="button" className="nsm-qty__btn" aria-label={t('product.increaseQuantity')} onClick={() => updateQuantity(line.id, line.quantity + 1)} disabled={line.maxQuantity !== undefined && line.quantity >= line.maxQuantity}><IconPlus /></button>
+                        <button type="button" className="nsm-qty__btn" aria-label={t('product.increaseQuantity')} onClick={() => updateQuantity(line.id, line.quantity + 1)} disabled={line.quantity >= cartLineLimit(lines, line)}><IconPlus /></button>
                       </div>
                       <button type="button" className="nsm-cart__remove" aria-label={t('common.remove')} onClick={() => remove(line.id)}><IconTrash /></button>
                     </div>
@@ -70,7 +73,7 @@ export function CartDrawer(props: CartDrawerProps): ReactElement {
               <span>{t('cart.subtotal')}</span>
               <strong>{formatMoney(totals.subtotal, totals.currency, locale)}</strong>
             </div>
-            <a href={`/checkout${preview}`} className="lib-btn lib-btn--primary lib-btn--lg lib-btn--block">{t('cart.checkout')}</a>
+            <a href={`/checkout${preview}`} onClick={onClose} className="lib-btn lib-btn--primary lib-btn--lg lib-btn--block">{t('cart.checkout')}</a>
             <a href={`/cart${preview}`} className="lib-btn lib-btn--secondary lib-btn--md lib-btn--block" onClick={onClose}>{t('cart.viewBag')}</a>
           </div>
         </>

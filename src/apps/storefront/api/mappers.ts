@@ -38,6 +38,8 @@ export function toProductCard(product: ApiProduct, currency: string, multiplier 
 
   return {
     id: String(product.id),
+    digitalType: product.digital_type ?? 'physical',
+    hasPersonalization: product.has_personalization === true || !!product.personalization_fields?.length,
     handle: product.slug,
     title: product.name,
     url: `/products/${product.slug}`,
@@ -160,6 +162,7 @@ export function toProductDetail(product: ApiProduct, currency: string, multiplie
     images: images.length > 0 ? images : base.image ? [base.image] : [],
     media: productMedia(product),
     optionDisplay: product.option_display ?? [],
+    personalizationFields: product.personalization_fields ?? [],
     ...(product.sku ? { sku: product.sku } : {}),
     ...(descriptionHtml ? { descriptionHtml } : {}),
     ...(variants && variants.length > 0 ? { variants } : {}),

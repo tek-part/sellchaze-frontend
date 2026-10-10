@@ -1,0 +1,13 @@
+.sf-personalization { min-width: 0; display: grid; gap: 1rem; border: 1px solid var(--border); border-radius: var(--radius-md, 8px); padding: 1rem; margin: 1rem 0; }
+.sf-personalization legend { padding-inline: .35rem; font-weight: 600; }
+.sf-personalization label { display: grid; gap: .4rem; }
+.sf-personalization textarea, .sf-personalization input { box-sizing: border-box; width: 100%; min-width: 0; border: 1px solid var(--border); border-radius: 6px; padding: .6rem; background: var(--surface); color: var(--text); font: inherit; }
+.sf-personalization small { color: var(--text-muted); }
+.sf-personalization__preview { display: flex; flex-wrap: wrap; align-items: center; gap: .6rem; margin-block-start: .5rem; overflow-wrap: anywhere; }
+.sf-personalization__preview img { width: 64px; height: 64px; object-fit: contain; border-radius: 6px; }
+.sf-personalization__preview button { text-decoration: underline; font: inherit; color: inherit; }
+.sf-personalization-summary { margin: .5rem 0; font-size: .85rem; overflow-wrap: anywhere; white-space: pre-wrap; }
+.sf-personalization-summary div { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); gap: .5rem; }
+.sf-personalization-summary dt { opacity: .75; }
+.sf-personalization-summary dd { margin: 0; }
+.sf-personalization-summary a { text-decoration: underline; }
