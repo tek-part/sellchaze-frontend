@@ -92,9 +92,9 @@ export default function StoreOrderDetailPage() {
 
             <div className="grid gap-5 lg:grid-cols-3">
                 <div className="space-y-5 lg:col-span-2">
-                    <StoreOrderCashPayment key={`${apiBase}-${order.id}`} order={order} apiBase={apiBase} onOrderUpdated={setOrder} />
-                    {requiresShipping ? <StoreOrderShipment key={`${apiBase}-${order.id}`} order={order} apiBase={apiBase} uiBase={uiBase} onOrderUpdated={load} /> : <div className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-card"><h2 className="font-semibold">{ar ? 'طلب رقمي' : 'Digital order'}</h2><p className="mt-2 text-sm text-slate-600">{ar ? 'لا يحتاج هذا الطلب إلى شحن. يستلم المشتري المنتجات عبر الإيصال الخاص والبريد بعد تأكيد الدفع.' : 'This order does not need shipping. The buyer receives products through the private receipt and email after payment confirmation.'}</p></div>}
-                    {(order.items || []).some((item) => item.digital_delivery) ? <StoreOrderDigitalEmail key={`${apiBase}-${order.id}`} order={order} apiBase={apiBase} onOrderUpdated={load} /> : null}
+                    <StoreOrderCashPayment key={`cash-${apiBase}-${order.id}`} order={order} apiBase={apiBase} onOrderUpdated={setOrder} />
+                    {requiresShipping ? <StoreOrderShipment key={`shipment-${apiBase}-${order.id}`} order={order} apiBase={apiBase} uiBase={uiBase} onOrderUpdated={load} /> : <div className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-card"><h2 className="font-semibold">{ar ? 'طلب رقمي' : 'Digital order'}</h2><p className="mt-2 text-sm text-slate-600">{ar ? 'لا يحتاج هذا الطلب إلى شحن. يستلم المشتري المنتجات عبر الإيصال الخاص والبريد بعد تأكيد الدفع.' : 'This order does not need shipping. The buyer receives products through the private receipt and email after payment confirmation.'}</p></div>}
+                    {(order.items || []).some((item) => item.digital_delivery) ? <StoreOrderDigitalEmail key={`email-${apiBase}-${order.id}`} order={order} apiBase={apiBase} onOrderUpdated={load} /> : null}
                     {(order.items || []).some((item) => item.digital_delivery) ? <StoreOrderDigitalDelivery key={`delivery-${apiBase}-${order.id}`} order={order} apiBase={apiBase} onOrderUpdated={load} /> : null}
                     {/* Items */}
                     <div className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-card">
