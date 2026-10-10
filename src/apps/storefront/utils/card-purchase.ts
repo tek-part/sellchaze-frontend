@@ -13,7 +13,7 @@ export function cardCartInput(product: ProductCardModel, variantId?: string): Ad
     title: product.title, url: product.url, price: variant?.price ?? product.price,
     currency: product.currency, quantity: 1,
     ...(variant ? { variantId: variant.id, attributes: variant.label } : {}),
-    ...(product.image ? { image: product.image.src } : {}),
+    ...(variant?.image || product.image ? { image: (variant?.image ?? product.image)!.src } : {}),
     ...(stock !== undefined ? { maxQuantity: stock } : {}),
   };
 }

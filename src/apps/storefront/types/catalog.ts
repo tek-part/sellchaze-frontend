@@ -67,6 +67,7 @@ export interface ProductCardModel {
 }
 
 export interface ProductVariantModel {
+  image?: ProductImage;
   id: string;
   label: string;
   price?: number;

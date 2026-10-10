@@ -5,6 +5,7 @@
  */
 
 export interface ApiVariant {
+  image_url?: string | null;
   id: number;
   name?: string;
   sku?: string | null;

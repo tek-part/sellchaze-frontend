@@ -15,6 +15,7 @@ import { Rating } from '../components/Rating';
 import { ProductOptionPicker } from '../components/ProductOptionPicker';
 import { resolveVariant, selectionFor, type VariantSelection } from '../../state/variant-selection';
 import { stockCap, boundedQuantity } from '../../state/cart-quantity';
+import { variantGallery, variantImage } from '../../utils/variant-image';
 import { QuantityStepper } from '../components/QuantityStepper';
 import { Button } from '../components/Button';
 import { WishlistButton } from '../components/WishlistButton';
@@ -53,6 +54,7 @@ export function ProductDetailsSection(props: SectionRenderProps): ReactElement |
   const showShare = flag(settings, 'show_share', true);
   const outOfStock = product.inStock === false || Boolean(product.variants?.length && !activeVariant?.available);
   const unitPrice = activeVariant?.price ?? product.price;
+  const selectedImage = variantImage(product, activeVariant);
   const compareAt = activeVariant?.compareAtPrice ?? product.compareAtPrice;
   const availableStock = product.variants?.length ? activeVariant?.availableStock : product.availableStock;
   const lineId = `${product.id}:${variantId ?? 'default'}`;
@@ -69,7 +71,7 @@ export function ProductDetailsSection(props: SectionRenderProps): ReactElement |
       ...(variantId ? { variantId } : {}),
       title: product.title,
       url: product.url,
-      ...(product.image ? { image: product.image.src } : {}),
+      ...(selectedImage || product.image ? { image: selectedImage ?? product.image!.src } : {}),
       price: unitPrice,
       currency: product.currency,
       quantity,
@@ -88,7 +90,7 @@ export function ProductDetailsSection(props: SectionRenderProps): ReactElement |
     <section className="sf-section">
       <Container>
         <div className="sf-pdp">
-          <ProductGallery key={product.id} images={product.images} media={product.media} title={product.title} />
+          <ProductGallery key={`${product.id}:${variantId ?? 'default'}:${selectedImage ?? ''}`} images={product.images} media={variantGallery(product, selectedImage)} {...(selectedImage ? { initialSrc: selectedImage } : {})} title={product.title} />
 
           <div className="sf-pdp__buybox">
             {product.vendor ? <span className="sf-pdp__vendor">{product.vendor}</span> : null}

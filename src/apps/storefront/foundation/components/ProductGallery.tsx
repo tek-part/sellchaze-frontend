@@ -14,6 +14,7 @@ export interface ProductGalleryProps {
   images: ReadonlyArray<ProductImage>;
   media?: ReadonlyArray<ProductMediaModel>;
   title: string;
+  initialSrc?: string;
   enableZoom?: boolean;
   className?: string;
 }
@@ -22,7 +23,7 @@ export function ProductGallery(props: ProductGalleryProps): ReactElement {
   const { images, media, title, enableZoom = true, className } = props;
   const { t, i18n } = useTranslation();
   const items: ReadonlyArray<ProductMediaModel> = media?.length ? media : images.map((item) => ({ ...item, type: 'image' }));
-  const [active, setActive] = useState(0);
+  const [active, setActive] = useState(() => Math.max(0, items.findIndex((item) => item.type === 'image' && item.src === props.initialSrc)));
   const [videoError, setVideoError] = useState('');
   const thumbsRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
