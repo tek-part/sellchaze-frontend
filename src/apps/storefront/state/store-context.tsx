@@ -12,6 +12,7 @@ import type { ApiStorefrontNavigation } from '../api/types';
 import { useAsync } from '../api/useAsync';
 
 export interface StoreInfo {
+  shipping?: import('../types/shipping').ShippingOffer;
   id: string;
   name: string;
   slug: string;
@@ -83,6 +84,7 @@ export function StoreProvider(props: { children: ReactNode; initialData?: ApiSto
       baseCurrency,
       supportedCurrencies,
       currencyMultipliers: s.currency_multipliers || { [baseCurrency]: 1 },
+      ...(s.shipping ? { shipping: s.shipping } : {}),
       defaultLocale,
       supportedLocales,
       ...(s.logo_url ? { logoUrl: s.logo_url } : {}),

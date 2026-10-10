@@ -17,6 +17,7 @@ export interface ApiVariant {
 }
 
 export interface ApiProduct {
+  digital_pool_stock?: number | null;
   digital_type?: 'physical' | 'link' | 'codes';
   has_personalization?: boolean;
   personalization_fields?: ReadonlyArray<import('../types/personalization').PersonalizationField> | null;
@@ -103,6 +104,7 @@ export interface ApiCoupon {
 }
 
 export interface ApiStoreSummary {
+  shipping?: import('../types/shipping').ShippingOffer;
   id: number;
   name: string;
   slug: string;

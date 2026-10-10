@@ -12,6 +12,10 @@ const product = toProductCard({ id: 7, name: 'Shirt', slug: 'shirt', price: '125
 }, 'EGP', 2);
 
 describe('product card purchase choices', () => {
+  it('carries both shared code stock and the selected variant cap into quick-add', () => {
+    const codes = toProductCard({ id: 8, name: 'Guide', slug: 'guide', price: '100', digital_type: 'codes', digital_pool_stock: 3, stock: 3, variants: [{ id: 1, name: 'Edition', stock: 1 }] }, 'EGP');
+    expect(cardCartInput(codes, '1')).toMatchObject({ digitalType: 'codes', sharedMaxQuantity: 3, maxQuantity: 1 });
+  });
   it('requires an explicit valid option and prevents sold-out/hidden choices', () => {
     expect(cardCartInput(product)).toBeNull();
     expect(cardCartInput(product, 'unknown')).toBeNull();

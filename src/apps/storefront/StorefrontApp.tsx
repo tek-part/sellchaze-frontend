@@ -24,6 +24,7 @@ import { NavigationInterceptor } from './pages/NavigationInterceptor';
 import { RouteAnnouncer } from './pages/RouteAnnouncer';
 import { CustomizeBridge } from './customize/CustomizeBridge';
 import { isCustomizeMode } from './customize/customizer-state';
+import { shippingThreshold } from './utils/shipping';
 
 type PreviewData = typeof import('./dev/sampleData');
 
@@ -212,7 +213,7 @@ export function StorefrontApp(): ReactElement {
       navigation: { header, footer },
       data: {
         announcements,
-        freeShippingThreshold: 200,
+        freeShippingThreshold: shippingThreshold(store.shipping, store.currency, store.currencyMultipliers),
         // Resolved once here, at the app boundary, so rendered chrome carries no request-time clock
         // (engine invariant I4) while never going stale in source.
         year: BUILD_YEAR,
@@ -222,7 +223,7 @@ export function StorefrontApp(): ReactElement {
         ...(dev && previewData ? { social: previewData.sampleSocial() } : {}),
       },
     };
-  }, [categoriesQ.data, navigation, store.name, store.currency, store.description, store.defaultLocale, manifest.id, t, locale, previewData]);
+  }, [categoriesQ.data, navigation, store.name, store.currency, store.currencyMultipliers, store.shipping, store.description, store.defaultLocale, manifest.id, t, locale, previewData]);
 
   return (
     <div className="sf-root" data-theme-id={manifest.id}>
