@@ -9,6 +9,7 @@ import api from '../api/client';
 import StatusBadge from '../components/StatusBadge';
 import StoreOrderShipment from '../components/store/StoreOrderShipment';
 import StoreOrderDigitalEmail from '../components/store/StoreOrderDigitalEmail';
+import StoreOrderDigitalDelivery from '../components/store/StoreOrderDigitalDelivery';
 import StoreOrderCashPayment from '../components/store/StoreOrderCashPayment';
 
 // Mirrors StoreOrderService::TRANSITIONS — only valid next actions are shown.
@@ -94,6 +95,7 @@ export default function StoreOrderDetailPage() {
                     <StoreOrderCashPayment key={`${apiBase}-${order.id}`} order={order} apiBase={apiBase} onOrderUpdated={setOrder} />
                     {requiresShipping ? <StoreOrderShipment key={`${apiBase}-${order.id}`} order={order} apiBase={apiBase} uiBase={uiBase} onOrderUpdated={load} /> : <div className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-card"><h2 className="font-semibold">{ar ? 'طلب رقمي' : 'Digital order'}</h2><p className="mt-2 text-sm text-slate-600">{ar ? 'لا يحتاج هذا الطلب إلى شحن. يستلم المشتري المنتجات عبر الإيصال الخاص والبريد بعد تأكيد الدفع.' : 'This order does not need shipping. The buyer receives products through the private receipt and email after payment confirmation.'}</p></div>}
                     {(order.items || []).some((item) => item.digital_delivery) ? <StoreOrderDigitalEmail key={`${apiBase}-${order.id}`} order={order} apiBase={apiBase} onOrderUpdated={load} /> : null}
+                    {(order.items || []).some((item) => item.digital_delivery) ? <StoreOrderDigitalDelivery key={`delivery-${apiBase}-${order.id}`} order={order} apiBase={apiBase} onOrderUpdated={load} /> : null}
                     {/* Items */}
                     <div className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-card">
                         <div className="border-b border-slate-100 px-5 py-3">
