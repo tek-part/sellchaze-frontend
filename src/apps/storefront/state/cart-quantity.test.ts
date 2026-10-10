@@ -3,6 +3,26 @@ import { addCartLine, changeCartQuantity, cartAdditionLimit, cartLineLimit, norm
 
 const item = { id: '1:2', productId: '1', variantId: '2', title: 'Bag', url: '/bag', price: 20, currency: 'EGP', maxQuantity: 3 };
 describe('cart stock limits', () => {
+  it('combines a merchant limit across physical/link variants and personalization without limiting other products', () => {
+    for (const digitalType of ['physical', 'link'] as const) {
+      const capped = { ...item, digitalType, orderMaxQuantity: 3, maxQuantity: 8 };
+      const lines = addCartLine(addCartLine([], { ...capped, quantity: 2 }), { ...capped, id: 'Bob', variantId: '3', quantity: 2 });
+      expect(lines.map((line) => line.quantity)).toEqual([2, 1]);
+      expect(cartAdditionLimit(lines, { ...capped, variantId: '4' })).toBe(0);
+      expect(changeCartQuantity(lines, lines[1]!.id, 99)).toEqual(lines);
+      expect(addCartLine(lines, { ...capped, productId: 'other', id: 'other', quantity: 3 })).toHaveLength(3);
+    }
+  });
+  it('respects the smallest of order, code-pool and SKU limits and clears a disabled merchant limit on refresh', () => {
+    const capped = { ...item, digitalType: 'codes' as const, sharedMaxQuantity: 5, orderMaxQuantity: 4 };
+    const lines = addCartLine(addCartLine([], { ...capped, quantity: 3 }), { ...capped, id: 'B', variantId: '3', quantity: 3 });
+    expect(lines.map((line) => line.quantity)).toEqual([3, 1]);
+    const uncapped = addCartLine(lines, { ...capped, id: 'B', variantId: '3', orderMaxQuantity: undefined, quantity: 3 });
+    expect(uncapped.map((line) => line.quantity)).toEqual([3, 2]);
+    expect(uncapped.every((line) => line.orderMaxQuantity === undefined)).toBe(true);
+    const saved = [{ ...item, orderMaxQuantity: 5, quantity: 3 }, { ...item, id: 'B', variantId: '3', orderMaxQuantity: 2, quantity: 1 }];
+    expect(normalizeCartLines(saved).map((line) => line.quantity)).toEqual([2]);
+  });
   it('shares code units across variants and personalizations while retaining each SKU limit', () => {
     const codes = { ...item, digitalType: 'codes' as const, sharedMaxQuantity: 3 };
     let lines = addCartLine([], { ...codes, maxQuantity: 1, quantity: 2 });

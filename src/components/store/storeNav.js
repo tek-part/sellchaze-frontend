@@ -37,6 +37,7 @@ export function buildStoreNav(t, access = {}) {
             items: [
                 { key: 'overview', to: 'overview', label: t('store_nav_overview', 'Overview'), Icon: HiOutlineSquares2X2, show: true },
                 { key: 'orders', to: 'orders', label: t('store_nav_orders', 'Orders'), Icon: HiOutlineShoppingBag, show: access.canStoreOrders },
+                { key: 'blocked-phone-numbers', to: 'blocked-phone-numbers', label: t('store_nav_blocked_phones', 'Blocked phones'), Icon: HiOutlineShoppingBag, show: access.canStoreOrders },
                 { key: 'inventory', to: 'inventory', label: t('store_nav_inventory', 'Store inventory'), Icon: HiOutlineSquares2X2, show: access.canStoreInventory },
                 { key: 'products', to: 'products', label: t('products', 'Products'), Icon: HiOutlineShoppingBag, show: access.canStoreProducts },
                 { key: 'coupons', to: 'coupons', label: t('store_nav_coupons', 'Coupons'), Icon: HiOutlineTicket, show: access.canStoreCoupons },
@@ -88,6 +89,7 @@ export function buildStoreNav(t, access = {}) {
                 { key: 'payments', to: 'settings/payments', label: t('store_nav_payments', 'Payment gateways'), Icon: HiOutlineCreditCard, show: access.canStorePayments },
                 { key: 'shipping', to: 'settings/shipping', label: t('store_nav_shipping', 'Shipping & tax'), Icon: HiOutlineTruck, show: access.canStoreSettings },
                 { key: 'digital-delivery', to: 'settings/digital-delivery', label: t('store_nav_digital_delivery', 'Digital delivery'), Icon: HiOutlineDocumentText, show: access.canStoreSettings },
+                { key: 'order-limits', to: 'settings/order-limits', label: t('store_nav_order_limits', 'Order limits'), Icon: HiOutlineDocumentText, show: access.canStoreSettings },
                 { key: 'domains', to: 'settings/domains', label: t('store_nav_domains', 'Domains'), Icon: HiOutlineGlobeAlt, show: access.canStoreSettings },
                 { key: 'publish', to: 'settings/publish', label: t('store_nav_publish', 'Publish'), Icon: HiOutlineRocketLaunch, show: access.canStoreSettings },
             ],

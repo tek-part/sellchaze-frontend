@@ -11,6 +11,7 @@ import './funnel-checkout.css';
 import { ProductPersonalizationFields } from '../foundation/components/ProductPersonalizationFields';
 import type { PersonalizationChoice } from '../types/personalization';
 import { personalizationReady, normalizedPersonalization } from '../utils/personalization';
+import { cartAdditionLimit } from '../state/cart-quantity';
 
 /** Product-specific checkout: leaves the visitor's ordinary shopping cart intact. */
 export function FunnelCheckout({ productSlug }: { productSlug: string | null }): ReactElement {
@@ -27,7 +28,8 @@ export function FunnelCheckout({ productSlug }: { productSlug: string | null }):
   const custom = customChoice?.productId === product?.id ? customChoice?.choice ?? { values: {}, entries: [], busy: false } : { values: {}, entries: [], busy: false };
   const variants = product?.variants ?? [];
   const selectedStock = variants.length ? variants.find((v) => String(v.id) === variantId)?.stock : product?.stock;
-  const selectionReady = !!product && product.is_active !== false && !custom.busy && personalizationReady(product.personalization_fields ?? [], custom.values) && (selectedStock == null || selectedStock >= quantity) && (!variants.length || variants.some((v) => v.is_active !== false && String(v.id) === variantId));
+  const purchaseLimit = Math.min(999, cartAdditionLimit([], { productId: String(product?.id), digitalType: product?.digital_type ?? 'physical', maxQuantity: selectedStock ?? undefined, orderMaxQuantity: product?.order_quantity_limit || undefined, sharedMaxQuantity: product?.digital_pool_stock ?? undefined }));
+  const selectionReady = !!product && product.is_active !== false && !custom.busy && personalizationReady(product.personalization_fields ?? [], custom.values) && quantity >= 1 && quantity <= purchaseLimit && (!variants.length || variants.some((v) => v.is_active !== false && String(v.id) === variantId));
   const customKey = JSON.stringify(custom.values);
   const items = useMemo<ReadonlyArray<CheckoutItem>>(() => selectionReady && product ? [{ product_id: product.id, quantity, personalization: normalizedPersonalization(JSON.parse(customKey) as Record<string, string>), ...(variantId ? { variant_id: Number(variantId) } : {}) }] : [], [product, selectionReady, quantity, variantId, customKey]);
   const payment = useCheckoutPaymentFlow({ items, preserveCart: true });
@@ -58,10 +60,11 @@ export function FunnelCheckout({ productSlug }: { productSlug: string | null }):
               {variants.filter((variant) => variant.is_active !== false).map((variant) => <option key={variant.id} value={variant.id} disabled={variant.stock != null && variant.stock <= 0}>{variant.name || Object.values(variant.options ?? {}).join(' / ')}{variant.stock != null && variant.stock <= 0 ? label(' — نفدت الكمية', ' — Sold out') : ''}</option>)}
             </select>
           </label> : null}
-          <Input label={label('الكمية', 'Quantity')} type="number" min={1} max={999} step={1} value={quantity} required
-            onChange={(event) => setQuantity(Math.max(1, Math.min(999, Math.trunc(Number(event.target.value) || 1))))} />
+          <Input label={label('الكمية', 'Quantity')} type="number" min={1} max={purchaseLimit} step={1} value={quantity} required
+            onChange={(event) => setQuantity(Math.max(1, Math.min(purchaseLimit, Math.trunc(Number(event.target.value) || 1))))} />
         </div>
         {selectedStock != null && selectedStock < quantity ? <p role="status">{label('الكمية المتاحة', 'Available quantity')}: {Math.max(0, selectedStock)}</p> : null}
+        {product.order_quantity_limit ? <p>{label('أقصى عدد قطع من هذا المنتج في الطلب', 'Maximum units of this product per order')}: {product.order_quantity_limit}</p> : null}
         <ProductPersonalizationFields key={product.id} productId={String(product.id)} fields={product.personalization_fields ?? []} choice={custom} onChange={(next) => setCustomChoice({ productId: product.id, choice: next })} />
         <CheckoutFieldsForm model={contact} />
         <div className="sf-funnel-checkout__coupon">

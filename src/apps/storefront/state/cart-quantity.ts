@@ -10,13 +10,16 @@ export function skuQuantity(lines: ReadonlyArray<CartLine>, selection: Pick<Cart
 export function cartLineLimit(lines: ReadonlyArray<CartLine>, line: CartLine): number {
   return cartAdditionLimit(lines.filter((item) => item.id !== line.id), line);
 }
-export function cartAdditionLimit(lines: ReadonlyArray<CartLine>, line: Pick<CartLine, 'productId' | 'variantId' | 'digitalType' | 'maxQuantity' | 'sharedMaxQuantity'>): number {
+export function cartAdditionLimit(lines: ReadonlyArray<CartLine>, line: Pick<CartLine, 'productId' | 'variantId' | 'digitalType' | 'maxQuantity' | 'sharedMaxQuantity' | 'orderMaxQuantity'>): number {
   const skuRemaining = stockCap(line.maxQuantity) - skuQuantity(lines, line);
   const productLines = lines.filter((item) => item.productId === line.productId);
   const sharedCaps = [line, ...productLines].filter((item) => item.digitalType === 'codes' && item.sharedMaxQuantity !== undefined).map((item) => stockCap(item.sharedMaxQuantity));
   const sharedCap = line.digitalType === 'codes' && line.sharedMaxQuantity !== undefined ? stockCap(line.sharedMaxQuantity) : sharedCaps.length ? Math.min(...sharedCaps) : Number.MAX_SAFE_INTEGER;
   const poolRemaining = sharedCap - productLines.reduce((sum, item) => sum + item.quantity, 0);
-  return Math.max(0, Math.min(skuRemaining, poolRemaining));
+  const orderCaps = [line, ...productLines].filter((item) => item.orderMaxQuantity !== undefined).map((item) => stockCap(item.orderMaxQuantity));
+  const orderCap = line.orderMaxQuantity !== undefined ? stockCap(line.orderMaxQuantity) : orderCaps.length ? Math.min(...orderCaps) : Number.MAX_SAFE_INTEGER;
+  const orderRemaining = orderCap - productLines.reduce((sum, item) => sum + item.quantity, 0);
+  return Math.max(0, Math.min(skuRemaining, poolRemaining, orderRemaining));
 }
 /** Restore saved limits as aggregate constraints, keeping earlier buyer selections first. */
 export function normalizeCartLines(lines: ReadonlyArray<CartLine>): CartLine[] {
@@ -28,7 +31,8 @@ export function normalizeCartLines(lines: ReadonlyArray<CartLine>): CartLine[] {
     // Every line sees the strictest recorded shared cap, including a later saved observation.
     const sharedCaps = lines.filter((item) => item.productId === line.productId && item.digitalType === 'codes' && item.sharedMaxQuantity !== undefined).map((item) => stockCap(item.sharedMaxQuantity));
     const skuCaps = lines.filter((item) => sameSku(item, line) && item.maxQuantity !== undefined).map((item) => stockCap(item.maxQuantity));
-    const candidate = { ...line, ...(skuCaps.length ? { maxQuantity: Math.min(...skuCaps) } : {}), ...(sharedCaps.length ? { digitalType: 'codes' as const, sharedMaxQuantity: Math.min(...sharedCaps) } : {}) };
+    const orderCaps = lines.filter((item) => item.productId === line.productId && item.orderMaxQuantity !== undefined).map((item) => stockCap(item.orderMaxQuantity));
+    const candidate = { ...line, ...(orderCaps.length ? { orderMaxQuantity: Math.min(...orderCaps) } : {}), ...(skuCaps.length ? { maxQuantity: Math.min(...skuCaps) } : {}), ...(sharedCaps.length ? { digitalType: 'codes' as const, sharedMaxQuantity: Math.min(...sharedCaps) } : {}) };
     const quantity = boundedQuantity(candidate.quantity, cartAdditionLimit(accepted, candidate));
     if (quantity > 0) accepted.push({ ...candidate, quantity });
   }
@@ -56,6 +60,10 @@ export function addCartLine(lines: ReadonlyArray<CartLine>, line: CartAddition):
     }
     if (item.productId === line.productId && line.digitalType === 'codes') {
       updated = { ...updated, digitalType: 'codes', ...(line.sharedMaxQuantity !== undefined ? { sharedMaxQuantity: line.sharedMaxQuantity } : {}) };
+    }
+    if (item.productId === line.productId) {
+      const { orderMaxQuantity: _oldOrderCap, ...rest } = updated;
+      updated = { ...rest, ...(line.orderMaxQuantity !== undefined ? { orderMaxQuantity: line.orderMaxQuantity } : {}) };
     }
     return updated;
   }));

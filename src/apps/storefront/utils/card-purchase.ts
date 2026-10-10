@@ -12,6 +12,7 @@ export function cardCartInput(product: ProductCardModel, variantId?: string): Ad
     id: `${product.id}:${variant?.id ?? 'default'}`, productId: product.id,
     digitalType: product.digitalType ?? 'physical',
     ...(product.sharedMaxQuantity !== undefined ? { sharedMaxQuantity: product.sharedMaxQuantity } : {}),
+    ...(product.orderMaxQuantity !== undefined ? { orderMaxQuantity: product.orderMaxQuantity } : {}),
     title: product.title, url: product.url, price: variant?.price ?? product.price,
     currency: product.currency, quantity: 1,
     ...(variant ? { variantId: variant.id, attributes: variant.label } : {}),

@@ -18,6 +18,8 @@ export interface CartLine {
   maxQuantity?: number;
   /** Available code units shared by every variant/personalization of this product. */
   sharedMaxQuantity?: number;
+  /** Merchant cap shared by all units of this product, independently of stock. */
+  orderMaxQuantity?: number;
   /** Variant summary, e.g. "Size M · Black". */
   attributes?: string;
   personalization?: import('./personalization').PersonalizationValues;

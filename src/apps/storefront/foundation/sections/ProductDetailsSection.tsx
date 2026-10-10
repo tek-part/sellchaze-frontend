@@ -65,7 +65,7 @@ export function ProductDetailsSection(props: SectionRenderProps): ReactElement |
   const customFields = product.personalizationFields ?? [];
   const customReady = !custom.busy && personalizationReady(customFields, custom.values);
   const lineId = personalizedLineId(product.id, variantId, custom.values);
-  const remaining = cartAdditionLimit(cart.lines, { productId: product.id, digitalType: product.digitalType ?? 'physical', ...(variantId ? { variantId } : {}), ...(availableStock !== undefined ? { maxQuantity: availableStock } : {}), ...(product.sharedMaxQuantity !== undefined ? { sharedMaxQuantity: product.sharedMaxQuantity } : {}) });
+  const remaining = cartAdditionLimit(cart.lines, { productId: product.id, digitalType: product.digitalType ?? 'physical', ...(variantId ? { variantId } : {}), ...(availableStock !== undefined ? { maxQuantity: availableStock } : {}), ...(product.sharedMaxQuantity !== undefined ? { sharedMaxQuantity: product.sharedMaxQuantity } : {}), ...(product.orderMaxQuantity !== undefined ? { orderMaxQuantity: product.orderMaxQuantity } : {}) });
   const quantity = Math.max(1, boundedQuantity(qty, remaining));
   const unavailable = outOfStock || remaining === 0;
 
@@ -76,6 +76,7 @@ export function ProductDetailsSection(props: SectionRenderProps): ReactElement |
       productId: product.id,
       digitalType: product.digitalType ?? 'physical',
       ...(product.sharedMaxQuantity !== undefined ? { sharedMaxQuantity: product.sharedMaxQuantity } : {}),
+      ...(product.orderMaxQuantity !== undefined ? { orderMaxQuantity: product.orderMaxQuantity } : {}),
       ...(variantId ? { variantId } : {}),
       title: product.title,
       url: product.url,
@@ -130,6 +131,7 @@ export function ProductDetailsSection(props: SectionRenderProps): ReactElement |
 
             {product.lowStock && !outOfStock ? <span className="sf-pdp__stock sf-pdp__stock--low">{t('pdp.lowStockSoon')}</span> : null}
 
+            {product.orderMaxQuantity !== undefined ? <p>{ar ? 'أقصى عدد قطع من هذا المنتج في الطلب، عبر كل الخيارات' : 'Maximum units of this product per order, across all options'}: {product.orderMaxQuantity}</p> : null}
             <div className="sf-pdp__actions">
               <WishlistButton active={wishlist.has(product.id)} onToggle={() => wishlist.toggle(product.id)} labelledText={t('pdp.save')} />
               {showShare ? (
