@@ -9,6 +9,7 @@ import api from '../api/client';
 import StatusBadge from '../components/StatusBadge';
 import StoreOrderShipment from '../components/store/StoreOrderShipment';
 import StoreOrderDigitalEmail from '../components/store/StoreOrderDigitalEmail';
+import StoreOrderCashPayment from '../components/store/StoreOrderCashPayment';
 
 // Mirrors StoreOrderService::TRANSITIONS — only valid next actions are shown.
 const TRANSITIONS = {
@@ -90,6 +91,7 @@ export default function StoreOrderDetailPage() {
 
             <div className="grid gap-5 lg:grid-cols-3">
                 <div className="space-y-5 lg:col-span-2">
+                    <StoreOrderCashPayment key={`${apiBase}-${order.id}`} order={order} apiBase={apiBase} onOrderUpdated={setOrder} />
                     {requiresShipping ? <StoreOrderShipment key={`${apiBase}-${order.id}`} order={order} apiBase={apiBase} uiBase={uiBase} onOrderUpdated={load} /> : <div className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-card"><h2 className="font-semibold">{ar ? 'طلب رقمي' : 'Digital order'}</h2><p className="mt-2 text-sm text-slate-600">{ar ? 'لا يحتاج هذا الطلب إلى شحن. يستلم المشتري المنتجات عبر الإيصال الخاص والبريد بعد تأكيد الدفع.' : 'This order does not need shipping. The buyer receives products through the private receipt and email after payment confirmation.'}</p></div>}
                     {(order.items || []).some((item) => item.digital_delivery) ? <StoreOrderDigitalEmail key={`${apiBase}-${order.id}`} order={order} apiBase={apiBase} onOrderUpdated={load} /> : null}
                     {/* Items */}
@@ -155,7 +157,7 @@ export default function StoreOrderDetailPage() {
                 <div className="space-y-5">
                     <div className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-card">
                         <h2 className="mb-3 text-base font-semibold text-slate-900">{ar ? 'الدفع' : 'Payment'}</h2>
-                        <p className="text-sm text-slate-700">{order.payment_method === 'bank_transfer' ? (ar ? 'تحويل بنكي' : 'Bank transfer') : order.payment_method} · {order.payment_status === 'paid' ? (ar ? 'مدفوع' : 'Paid') : (ar ? 'بانتظار الدفع' : 'Awaiting payment')}</p>
+                        <p className="text-sm text-slate-700">{order.payment_method === 'bank_transfer' ? (ar ? 'تحويل بنكي' : 'Bank transfer') : order.payment_method === 'cod' ? (ar ? 'الدفع عند الاستلام' : 'Cash on delivery') : order.payment_method} · {order.payment_status === 'paid' ? (ar ? 'مدفوع' : 'Paid') : (ar ? 'بانتظار الدفع' : 'Awaiting payment')}</p>
                         {order.payment_method === 'bank_transfer' && order.payment_status !== 'paid' && order.status !== 'cancelled' ? <>
                             <p className="my-3 text-sm text-slate-600">{ar ? 'أكد الدفع بعد التحقق من وصول المبلغ إلى حسابك. يتيح التأكيد المنتجات الرقمية للمشتري ويرسلها بالبريد.' : 'Confirm only after verifying funds reached your account. Confirmation releases digital products and sends them by email.'}</p>
                             <label className="block text-sm text-slate-700">{ar ? 'مرجع التحويل البنكي' : 'Bank transfer reference'}<input className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2" value={bankReference} maxLength={200} onChange={(e) => { setBankReference(e.target.value); setBankReview(false); }} /></label>

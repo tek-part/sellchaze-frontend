@@ -38,6 +38,7 @@ export function OrderReceiptPanel({ number }: { number: string | null }): ReactE
     {query.loading ? <Spinner label={ar ? 'جارٍ تحميل الإيصال…' : 'Loading receipt…'} /> : query.error ? <p role="alert">{ar ? 'تعذر فتح الإيصال. قد يكون الرابط منتهيًا أو غير صالح.' : 'Unable to open this receipt. The link may be invalid or expired.'}</p> : order ? <>
       <p><bdi>{order.number}</bdi> · {formatMoney(Number(order.total), order.currency ?? 'USD', locale)}</p>
       <p role="status">{order.status === 'cancelled' ? (ar ? 'الطلب ملغى' : 'Order cancelled') : order.payment_status === 'paid' ? (ar ? 'تم تأكيد الدفع' : 'Payment confirmed') : (ar ? 'بانتظار تأكيد الدفع' : 'Awaiting payment confirmation')}</p>
+      {order.payment_method === 'cod' && order.payment_status !== 'paid' && order.status !== 'cancelled' ? <p>{ar ? 'الدفع عند الاستلام: تتاح المنتجات الرقمية بعد مراجعة المتجر لتحصيل كامل قيمة الطلب. تسليم الطرد وحده لا يؤكد الدفع.' : 'Cash on delivery: digital products become available after the store verifies collection of the full order amount. Parcel delivery alone does not confirm payment.'}</p> : null}
       {order.items?.map((item, index) => <div key={item.id ?? index}><h3>{item.name} × {item.quantity}</h3><DigitalDeliverySummary delivery={item.digital_delivery} /></div>)}
       {bank && order.status !== 'cancelled' ? <div className="sf-order-receipt__bank">
         <h3>{ar ? 'تعليمات التحويل البنكي' : 'Bank transfer instructions'}{bank.test_mode ? (ar ? ' (تجريبي)' : ' (Test)') : ''}</h3>
