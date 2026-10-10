@@ -71,7 +71,8 @@ export default function StoreOrderDetailPage() {
             toast.error(e.response?.data?.message || e.message);
         } finally { setSaving(false); }
     };
-    const nextStatuses = TRANSITIONS[order.status] || [];
+    const nextStatuses = order.next_statuses || TRANSITIONS[order.status] || [];
+    const requiresShipping = order.fulfillment?.requires_shipping !== false;
     const money = (v) => `${order.currency} ${v}`;
 
     return (
@@ -89,7 +90,7 @@ export default function StoreOrderDetailPage() {
 
             <div className="grid gap-5 lg:grid-cols-3">
                 <div className="space-y-5 lg:col-span-2">
-                    <StoreOrderShipment key={`${apiBase}-${order.id}`} order={order} apiBase={apiBase} uiBase={uiBase} onOrderUpdated={load} />
+                    {requiresShipping ? <StoreOrderShipment key={`${apiBase}-${order.id}`} order={order} apiBase={apiBase} uiBase={uiBase} onOrderUpdated={load} /> : <div className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-card"><h2 className="font-semibold">{ar ? 'طلب رقمي' : 'Digital order'}</h2><p className="mt-2 text-sm text-slate-600">{ar ? 'لا يحتاج هذا الطلب إلى شحن. يستلم المشتري المنتجات عبر الإيصال الخاص والبريد بعد تأكيد الدفع.' : 'This order does not need shipping. The buyer receives products through the private receipt and email after payment confirmation.'}</p></div>}
                     {(order.items || []).some((item) => item.digital_delivery) ? <StoreOrderDigitalEmail key={`${apiBase}-${order.id}`} order={order} apiBase={apiBase} onOrderUpdated={load} /> : null}
                     {/* Items */}
                     <div className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-card">
@@ -210,7 +211,7 @@ export default function StoreOrderDetailPage() {
                                             onClick={() => changeStatus(s)}
                                             className={`rounded-lg px-3 py-2 text-sm font-semibold disabled:opacity-50 ${s === 'cancelled' ? 'border border-red-200 bg-red-50 text-red-700 hover:bg-red-100' : 'bg-brand text-white hover:bg-brand-dark'}`}
                                         >
-                                            {t(`order_action_${s}`, t(`order_status_${s}`, s))}
+                                            {!requiresShipping && s === 'delivered' ? (ar ? 'إتمام التسليم الرقمي' : 'Complete digital delivery') : t(`order_action_${s}`, t(`order_status_${s}`, s))}
                                         </button>
                                     ))}
                                 </div>
