@@ -85,7 +85,7 @@ export async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> 
     ...init,
     headers: {
       Accept: 'application/json',
-      ...(hasBody ? { 'Content-Type': 'application/json' } : {}),
+      ...(hasBody && !(init?.body instanceof FormData) ? { 'Content-Type': 'application/json' } : {}),
       ...authHeader(),
       ...localeHeader(),
       ...(init?.headers ?? {}),

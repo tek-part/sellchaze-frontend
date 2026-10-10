@@ -23,6 +23,7 @@ export function useCardPurchase(product: ProductCardModel) {
 
 export function CardVariantPicker({ product, value, onChange, atLimit = false }: { product: ProductCardModel; value?: string; onChange: (value: string) => void; atLimit?: boolean }): ReactElement | null {
   const { i18n } = useTranslation(); const ar = i18n.language.startsWith('ar');
+  if (product.hasPersonalization) return <a className="sf-card-options" href={product.url}>{ar ? 'تخصيص المنتج' : 'Personalize product'}</a>;
   if (!product.variants?.length) return null;
   const choose = ar ? 'اختر الخيار' : 'Choose an option';
   return <label className="sf-card-options"><span>{choose}</span><select aria-label={`${choose}: ${product.title}`} value={value ?? ''} onChange={(event) => onChange(event.target.value)}>

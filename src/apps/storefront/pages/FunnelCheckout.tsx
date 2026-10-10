@@ -8,6 +8,9 @@ import { useCheckoutPaymentFlow } from './useCheckoutPaymentFlow';
 import { CheckoutRecovery } from './CheckoutRecovery';
 import { CheckoutFieldsForm, useCheckoutFields } from './CheckoutFields';
 import './funnel-checkout.css';
+import { ProductPersonalizationFields } from '../foundation/components/ProductPersonalizationFields';
+import type { PersonalizationChoice } from '../types/personalization';
+import { personalizationReady, normalizedPersonalization } from '../utils/personalization';
 
 /** Product-specific checkout: leaves the visitor's ordinary shopping cart intact. */
 export function FunnelCheckout({ productSlug }: { productSlug: string | null }): ReactElement {
@@ -20,10 +23,13 @@ export function FunnelCheckout({ productSlug }: { productSlug: string | null }):
   const [quantity, setQuantity] = useState(1);
   const [coupon, setCoupon] = useState('');
   const [appliedCoupon, setAppliedCoupon] = useState('');
+  const [customChoice, setCustomChoice] = useState<{ productId: number; choice: PersonalizationChoice }>();
+  const custom = customChoice?.productId === product?.id ? customChoice?.choice ?? { values: {}, entries: [], busy: false } : { values: {}, entries: [], busy: false };
   const variants = product?.variants ?? [];
   const selectedStock = variants.length ? variants.find((v) => String(v.id) === variantId)?.stock : product?.stock;
-  const selectionReady = !!product && product.is_active !== false && (selectedStock == null || selectedStock >= quantity) && (!variants.length || variants.some((v) => v.is_active !== false && String(v.id) === variantId));
-  const items = useMemo<ReadonlyArray<CheckoutItem>>(() => selectionReady && product ? [{ product_id: product.id, quantity, ...(variantId ? { variant_id: Number(variantId) } : {}) }] : [], [product, selectionReady, quantity, variantId]);
+  const selectionReady = !!product && product.is_active !== false && !custom.busy && personalizationReady(product.personalization_fields ?? [], custom.values) && (selectedStock == null || selectedStock >= quantity) && (!variants.length || variants.some((v) => v.is_active !== false && String(v.id) === variantId));
+  const customKey = JSON.stringify(custom.values);
+  const items = useMemo<ReadonlyArray<CheckoutItem>>(() => selectionReady && product ? [{ product_id: product.id, quantity, personalization: normalizedPersonalization(JSON.parse(customKey) as Record<string, string>), ...(variantId ? { variant_id: Number(variantId) } : {}) }] : [], [product, selectionReady, quantity, variantId, customKey]);
   const payment = useCheckoutPaymentFlow({ items, preserveCart: true });
   const contact = useCheckoutFields(payment.paymentMethod);
   const quoteKey = JSON.stringify([items, appliedCoupon, contact.shippingSelection, contact.shippingReady]);
@@ -56,6 +62,7 @@ export function FunnelCheckout({ productSlug }: { productSlug: string | null }):
             onChange={(event) => setQuantity(Math.max(1, Math.min(999, Math.trunc(Number(event.target.value) || 1))))} />
         </div>
         {selectedStock != null && selectedStock < quantity ? <p role="status">{label('الكمية المتاحة', 'Available quantity')}: {Math.max(0, selectedStock)}</p> : null}
+        <ProductPersonalizationFields key={product.id} productId={String(product.id)} fields={product.personalization_fields ?? []} choice={custom} onChange={(next) => setCustomChoice({ productId: product.id, choice: next })} />
         <CheckoutFieldsForm model={contact} />
         <div className="sf-funnel-checkout__coupon">
           <Input label={label('كود الخصم', 'Coupon code')} value={coupon} onChange={(event) => setCoupon(event.target.value)} maxLength={100} />

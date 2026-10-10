@@ -1,3 +1,4 @@
+import { PersonalizationSummary } from '../apps/storefront/foundation/components/PersonalizationSummary';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Dialog, DialogBackdrop, DialogPanel, DialogTitle } from '@headlessui/react';
 import { Link, useLocation, useNavigate, useOutletContext, useParams } from 'react-router-dom';
@@ -1231,6 +1232,7 @@ export default function OrderDetailPage() {
                                                         <p className="font-medium text-slate-900">
                                                             {String(it?.name ?? '').trim() || t('order_none')}
                                                         </p>
+                                                        <PersonalizationSummary entries={it?.personalization} />
                                                         {it?.product_id != null ? (
                                                             <p className="mt-0.5 text-xs text-slate-500">
                                                                 {t('order_col_product_id')}: {it.product_id}

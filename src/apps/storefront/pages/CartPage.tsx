@@ -14,6 +14,8 @@ import {
 import type { ProductCardModel } from '../types/catalog';
 import type { CartLine } from '../types/cart';
 import { useCart } from '../state/cart';
+import { cartLineLimit } from '../state/cart-quantity';
+import { PersonalizationSummary } from '../foundation/components/PersonalizationSummary';
 import { useStore } from '../state/store-context';
 import { formatMoney } from '../utils/format';
 import { ThemeRenderer, useTemplate } from '../theme-engine';
@@ -69,9 +71,10 @@ export function CartPage(): ReactElement {
                   quantity={line.quantity}
                   onQuantityChange={(q) => cart.updateQuantity(line.id, q)}
                   onRemove={() => cart.remove(line.id)}
-                  {...(line.maxQuantity ? { maxQuantity: line.maxQuantity } : {})}
+                  maxQuantity={cartLineLimit(cart.lines, line)}
                   {...(line.attributes ? { attributes: line.attributes } : {})}
                 />
+                <PersonalizationSummary entries={line.personalizationEntries} />
               </div>
             ))}
           </div>

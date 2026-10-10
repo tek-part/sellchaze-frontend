@@ -13,8 +13,11 @@ import { ProductDescription } from '../components/ProductDescription';
 import { Price } from '../components/Price';
 import { Rating } from '../components/Rating';
 import { ProductOptionPicker } from '../components/ProductOptionPicker';
+import { ProductPersonalizationFields } from '../components/ProductPersonalizationFields';
+import type { PersonalizationChoice } from '../../types/personalization';
+import { personalizedLineId, normalizedPersonalization, personalizationReady } from '../../utils/personalization';
 import { resolveVariant, selectionFor, type VariantSelection } from '../../state/variant-selection';
-import { stockCap, boundedQuantity } from '../../state/cart-quantity';
+import { stockCap, boundedQuantity, skuQuantity } from '../../state/cart-quantity';
 import { variantGallery, variantImage } from '../../utils/variant-image';
 import { QuantityStepper } from '../components/QuantityStepper';
 import { Button } from '../components/Button';
@@ -42,6 +45,7 @@ export function ProductDetailsSection(props: SectionRenderProps): ReactElement |
   const [quantityChoice, setQuantityChoice] = useState<{ productId: string; value: number }>();
   const qty = quantityChoice?.productId === product?.id ? quantityChoice?.value ?? 1 : 1;
   const [activeTab, setActiveTab] = useState('description');
+  const [customChoice, setCustomChoice] = useState<{ productId: string; choice: PersonalizationChoice }>();
   // Product data arrives asynchronously. Resolve the displayed default on every render,
   // so an untouched select still adds the visible variant instead of the parent product.
   const choice = selection?.productId === product?.id ? selection?.choice : undefined;
@@ -57,14 +61,17 @@ export function ProductDetailsSection(props: SectionRenderProps): ReactElement |
   const selectedImage = variantImage(product, activeVariant);
   const compareAt = activeVariant?.compareAtPrice ?? product.compareAtPrice;
   const availableStock = product.variants?.length ? activeVariant?.availableStock : product.availableStock;
-  const lineId = `${product.id}:${variantId ?? 'default'}`;
-  const inCart = cart.lines.find((line) => line.id === lineId)?.quantity ?? 0;
+  const custom = customChoice?.productId === product.id ? customChoice.choice : { values: {}, entries: [], busy: false };
+  const customFields = product.personalizationFields ?? [];
+  const customReady = !custom.busy && personalizationReady(customFields, custom.values);
+  const lineId = personalizedLineId(product.id, variantId, custom.values);
+  const inCart = skuQuantity(cart.lines, { productId: product.id, ...(variantId ? { variantId } : {}) });
   const remaining = Math.max(0, stockCap(availableStock) - inCart);
   const quantity = Math.max(1, boundedQuantity(qty, remaining));
   const unavailable = outOfStock || remaining === 0;
 
   const addToCart = (): void => {
-    if (unavailable) return;
+    if (unavailable || !customReady) return;
     cart.add({
       id: lineId,
       productId: product.id,
@@ -77,6 +84,8 @@ export function ProductDetailsSection(props: SectionRenderProps): ReactElement |
       quantity,
       ...(availableStock !== undefined ? { maxQuantity: availableStock } : {}),
       ...(activeVariant ? { attributes: activeVariant.label } : {}),
+      personalization: normalizedPersonalization(custom.values),
+      personalizationEntries: custom.entries,
     });
     toast.toast({ message: t('pdp.addedToBag', { title: product.title }), variant: 'success' });
   };
@@ -109,9 +118,10 @@ export function ProductDetailsSection(props: SectionRenderProps): ReactElement |
                 onChange={(next) => { setSelection({ productId: product.id, choice: next }); setQuantityChoice({ productId: product.id, value: 1 }); }} />
             ) : null}
 
+            <ProductPersonalizationFields key={product.id} productId={product.id} fields={customFields} choice={custom} onChange={(next) => setCustomChoice({ productId: product.id, choice: next })} />
             <div className="sf-pdp__row">
               <QuantityStepper value={quantity} onChange={(value) => setQuantityChoice({ productId: product.id, value })} max={Math.max(1, remaining)} disabled={unavailable} label={t('pdp.quantityFor', { title: product.title })} />
-              <Button className="sf-pdp__add" onClick={addToCart} disabled={unavailable}>
+              <Button className="sf-pdp__add" onClick={addToCart} disabled={unavailable || !customReady}>
                 {outOfStock ? (ar ? 'هذا الاختيار غير متاح' : 'This selection is unavailable') : remaining === 0 ? (ar ? 'الكمية المتاحة في السلة' : 'Available quantity is in your bag') : t('product.addToCart')}
               </Button>
             </div>

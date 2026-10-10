@@ -17,6 +17,8 @@ export interface ApiVariant {
 }
 
 export interface ApiProduct {
+  has_personalization?: boolean;
+  personalization_fields?: ReadonlyArray<import('../types/personalization').PersonalizationField> | null;
   option_display?: ReadonlyArray<import('../types/product-options').OptionDisplay> | null;
   id: number;
   name: string;

@@ -14,6 +14,7 @@ import { useCheckoutPaymentFlow } from './useCheckoutPaymentFlow';
 import { CheckoutRecovery } from './CheckoutRecovery';
 import { clearCheckoutAttempt, readCheckoutAttempt } from './checkout-attempt';
 import { CheckoutFieldsForm, useCheckoutFields } from './CheckoutFields';
+import { PersonalizationSummary } from '../foundation/components/PersonalizationSummary';
 
 export function CheckoutPage(): ReactElement {
   const { t } = useTranslation();
@@ -26,7 +27,7 @@ export function CheckoutPage(): ReactElement {
   const checkout = useCheckoutPaymentFlow();
   const contact = useCheckoutFields(checkout.paymentMethod);
   const tpl = useTemplate('checkout');
-  const items = useMemo(() => cart.lines.map((line) => ({ product_id: Number(line.productId), quantity: line.quantity, ...(line.variantId ? { variant_id: Number(line.variantId) } : {}) })), [cart.lines]);
+  const items = useMemo(() => cart.lines.map((line) => ({ product_id: Number(line.productId), quantity: line.quantity, ...(line.personalization ? { personalization: line.personalization } : {}), ...(line.variantId ? { variant_id: Number(line.variantId) } : {}) })), [cart.lines]);
   const quoteKey = JSON.stringify([items, appliedCoupon, contact.shippingSelection, contact.shippingReady]);
   const quoteQ = useAsync(async () => items.length && contact.shippingReady ? { key: quoteKey, data: (await quoteCheckout(items, appliedCoupon, contact.shippingSelection)).data } : null, [quoteKey, locale]);
   const quote = !quoteQ.loading && !quoteQ.error && quoteQ.data?.key === quoteKey ? quoteQ.data.data : null;
@@ -60,7 +61,7 @@ export function CheckoutPage(): ReactElement {
           </Button> : null}
         </form>
         <aside className="sf-cart-summary">
-          {quote ? quote.items.map((line) => <div key={`${line.product_id}:${line.variant_id}`} className="sf-cart-summary__row"><span>{line.name} × {line.quantity}</span><span>{formatMoney(Number(line.line_total), quote.currency, locale)}</span></div>) : cart.lines.map((line) => <div key={line.id} className="sf-cart-summary__row"><span>{line.title} × {line.quantity}</span></div>)}
+          {quote ? quote.items.map((line) => <div key={`${line.product_id}:${line.variant_id}:${line.personalization_key ?? ''}`}><div className="sf-cart-summary__row"><span>{line.name} × {line.quantity}</span><span>{formatMoney(Number(line.line_total), quote.currency, locale)}</span></div><PersonalizationSummary entries={line.personalization} /></div>) : cart.lines.map((line) => <div key={line.id}><div className="sf-cart-summary__row"><span>{line.title} × {line.quantity}</span></div><PersonalizationSummary entries={line.personalizationEntries} /></div>)}
           <fieldset disabled={checkout.busy || checkout.unresolved} style={{ border: 0, padding: 0, margin: 0 }}>
             <div className="sf-pdp__row"><Input label={t('checkout.couponCode')} value={coupon} maxLength={100} onChange={(event) => setCoupon(event.target.value)} />
               <Button type="button" variant="secondary" disabled={quoteQ.loading} onClick={() => { setAppliedCoupon(coupon.trim()); quoteQ.reload(); }}>{t('checkout.apply')}</Button>

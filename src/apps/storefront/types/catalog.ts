@@ -27,6 +27,7 @@ export interface ProductMediaModel extends ProductImage {
 
 /** Compact product shape a card needs — a projection of the full product. */
 export interface ProductCardModel {
+  hasPersonalization?: boolean;
   id: string;
   /** URL-safe slug. */
   handle: string;
@@ -85,6 +86,7 @@ export interface ProductSpec {
 
 /** The full product for a PDP — a superset of the card model. */
 export interface ProductDetailModel extends ProductCardModel {
+  personalizationFields?: ReadonlyArray<import('./personalization').PersonalizationField>;
   optionDisplay?: ReadonlyArray<import('./product-options').OptionDisplay>;
   sku?: string;
   descriptionHtml?: string;
