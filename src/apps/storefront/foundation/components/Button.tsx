@@ -49,7 +49,7 @@ export function Button(props: ButtonProps): ReactElement {
         loading && 'sf-btn--loading',
         className,
       )}
-      disabled={disabled ?? loading}
+      disabled={disabled || loading}
       aria-busy={loading || undefined}
       {...rest}
     >

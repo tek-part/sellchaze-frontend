@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { ApiError } from '../api/client';
@@ -7,8 +7,10 @@ import {
   retryCheckoutPayment,
   submitCheckout,
   type StorefrontPaymentMethod,
+  type CheckoutItem,
 } from '../api/storefront';
 import { useCart } from '../state/cart';
+import { withSessionParams } from './NavigationInterceptor';
 
 export interface CheckoutContactPayload {
   customer_name: string;
@@ -29,7 +31,7 @@ interface CheckoutResponse {
   payment?: { redirect_url?: string | null };
 }
 
-export function useCheckoutPaymentFlow() {
+export function useCheckoutPaymentFlow(options?: { items: ReadonlyArray<CheckoutItem>; preserveCart?: boolean }) {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const cart = useCart();
@@ -38,6 +40,9 @@ export function useCheckoutPaymentFlow() {
   const [paymentRetry, setPaymentRetry] = useState<RetryState>();
   const [error, setError] = useState<string>();
   const [busy, setBusy] = useState(false);
+  const submitting = useRef(false);
+  const items = options?.items;
+  const preserveCart = options?.preserveCart ?? false;
 
   useEffect(() => {
     let active = true;
@@ -54,6 +59,8 @@ export function useCheckoutPaymentFlow() {
   }, [t]);
 
   const submit = useCallback(async (payload: CheckoutContactPayload): Promise<void> => {
+    if (submitting.current) return;
+    submitting.current = true;
     setBusy(true);
     setError(undefined);
     try {
@@ -62,20 +69,22 @@ export function useCheckoutPaymentFlow() {
         : await submitCheckout({
             ...payload,
             payment_method: paymentMethod,
-            items: cart.lines.map((line) => ({
+            ...(preserveCart ? { cart_mode: 'direct' } : {}),
+            items: items ?? cart.lines.map((line) => ({
               product_id: Number(line.productId),
               variant_id: line.variantId ? Number(line.variantId) : undefined,
               quantity: line.quantity,
             })),
           }) as CheckoutResponse;
 
-      cart.clear();
+      if (!preserveCart) cart.clear();
       if (response.payment?.redirect_url) {
         window.location.assign(response.payment.redirect_url);
         return;
       }
       const number = response.data?.number;
-      navigate(number ? `/order/success?number=${encodeURIComponent(number)}` : '/order/success');
+      navigate(withSessionParams(number ? `/order/success?number=${encodeURIComponent(number)}` : '/order/success', window.location.search));
+      window.scrollTo({ top: 0, behavior: 'auto' });
     } catch (requestError) {
       if (requestError instanceof ApiError) {
         const body = requestError.payload as { payment_retry?: { token?: string }; data?: { number?: string }; message?: string } | undefined;
@@ -87,9 +96,10 @@ export function useCheckoutPaymentFlow() {
       }
       setError(requestError instanceof Error ? requestError.message : t('checkout.orderFailed'));
     } finally {
+      submitting.current = false;
       setBusy(false);
     }
-  }, [cart, navigate, paymentMethod, paymentRetry, t]);
+  }, [cart, items, preserveCart, navigate, paymentMethod, paymentRetry, t]);
 
   const cancelRetry = useCallback(() => {
     setPaymentRetry(undefined);

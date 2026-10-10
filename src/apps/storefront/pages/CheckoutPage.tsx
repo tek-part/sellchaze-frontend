@@ -158,7 +158,7 @@ export function OrderSuccessPage(): ReactElement {
           </span>
           <h1 className="sf-state__title">{t('checkout.thankYou')}</h1>
           <p className="sf-state__text">
-            {number ? t('checkout.orderConfirmedNumber', { number }) : t('checkout.orderConfirmed')} {t('checkout.confirmationEmail')}
+            {number ? t('checkout.orderConfirmedNumber', { number }) : t('checkout.orderConfirmed')}
           </p>
           <div className="sf-state__actions">
             <a className="sf-btn sf-btn--primary sf-btn--md" href="/">

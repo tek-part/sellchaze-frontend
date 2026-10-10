@@ -21,6 +21,7 @@ import { useHomeContext } from './home-context';
 import { PolicyPage } from './StaticPages';
 import { NotFoundPage } from './NotFoundPage';
 import { toSectionInstances } from './HomePage';
+import { FunnelCheckout } from './FunnelCheckout';
 
 export function BuilderPage({ funnel = false }: { funnel?: boolean }): ReactElement | null {
   const { slug = '' } = useParams();
@@ -63,6 +64,7 @@ export function BuilderPage({ funnel = false }: { funnel?: boolean }): ReactElem
         {...(seo?.image ? { image: seo.image } : {})}
       />
       <ThemeRenderer page={page} context={context} selectedSectionId={customizer.active ? customizer.selectedId : null} />
+      {!customizer.active && api?.funnel_product_slug !== undefined ? <FunnelCheckout key={api.funnel_product_slug} productSlug={api.funnel_product_slug} /> : null}
     </>
   );
 }
