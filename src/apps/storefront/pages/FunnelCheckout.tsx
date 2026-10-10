@@ -1,3 +1,4 @@
+import { UiBlock } from '../ui-blocks/UiBlocks';
 import { useMemo, useState, type FormEvent, type ReactElement } from 'react';
 import { Button, Container, ErrorState, Input, Section, Spinner } from '../foundation/components';
 import { getProduct, quoteCheckout, type CheckoutItem } from '../api/storefront';
@@ -58,7 +59,7 @@ export function FunnelCheckout({ productSlug }: { productSlug: string | null }):
     <CheckoutRecovery flow={payment} />
     {productQ.loading ? <Spinner label={label('جارٍ تحميل المنتج…', 'Loading product…')} /> : productQ.error ? <ErrorState
       title={label('تعذّر تحميل المنتج', 'Unable to load product')}
-      actions={<Button onClick={productQ.reload}>{label('إعادة المحاولة', 'Retry')}</Button>} /> : !product ? <p role="status">{label('هذا المنتج غير متاح للطلب حاليًا.', 'This product is currently unavailable.')}</p> : <form onSubmit={(event) => void submit(event)}>
+      actions={<Button onClick={productQ.reload}>{label('إعادة المحاولة', 'Retry')}</Button>} /> : !product ? <p role="status">{label('هذا المنتج غير متاح للطلب حاليًا.', 'This product is currently unavailable.')}</p> : <><UiBlock slot="before_checkout" /><form onSubmit={(event) => void submit(event)}>
       <fieldset disabled={payment.busy || payment.unresolved} className="sf-funnel-checkout__fields">
         <legend className="sf-funnel-checkout__product">{product.name}</legend>
         <div className="sf-funnel-checkout__selection">
@@ -106,6 +107,6 @@ export function FunnelCheckout({ productSlug }: { productSlug: string | null }):
       {!payment.unresolved ? <Button type="submit" block loading={payment.busy} disabled={!payment.paymentMethod || !quote || !contact.shippingReady || (!payment.paymentRetry && (!minimumOrderAllows(quote) || !contact.phoneVerification.ready || !contact.botProtection.ready))}>
         {label('تأكيد الطلب', 'Place order')}
       </Button> : null}
-    </form>}
+    </form><UiBlock slot="after_checkout" /></>}
   </Container></Section>;
 }

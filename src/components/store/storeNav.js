@@ -78,6 +78,7 @@ export function buildStoreNav(t, access = {}) {
                 },
                 { key: 'checkout-fields', to: 'checkout-fields', label: t('store_nav_checkout_fields', 'Checkout form'), Icon: HiOutlineDocumentText, show: access.canStoreSettings },
                 { key: 'thanks-edit', to: 'thanks-edit', label: t('store_nav_thank_you', 'Thank-you page'), Icon: HiOutlineDocumentText, show: access.canStoreSettings },
+                { key: 'ui-blocks', to: 'ui-blocks', label: t('store_nav_ui_blocks', 'UI blocks'), Icon: HiOutlineDocumentText, show: access.canStorePages },
                 { key: 'menus', to: 'menus', label: t('store_nav_menus', 'Menus'), Icon: HiOutlineBars3BottomLeft, show: access.canStoreMenus },
                 { key: 'media', to: 'media', label: t('store_nav_media', 'Media'), Icon: HiOutlinePhoto, show: access.canStorePages || access.canStoreThemes },
             ],

@@ -1,3 +1,4 @@
+import { UiBlock } from '../../../ui-blocks/UiBlocks';
 /**
  * Bazaar DefaultLayout — global chrome shell: top utility bar (AnnouncementBar) → two-row Header
  * with category bar → <main> → Footer, plus the CartDrawer, MobileNav and SearchOverlay it controls.
@@ -87,6 +88,7 @@ export function DefaultLayout(props: LayoutRenderProps): ReactElement {
         >
           <div className={settings['sticky_header'] !== false ? 'bz-chrome bz-chrome--sticky' : 'bz-chrome'}>
             {showTopBar ? <AnnouncementBar messages={messages} url={str(settings['announcement_url'])} /> : null}
+            <UiBlock slot="before_header" />
             <Header
               storeName={context.store.name}
               {...(logoUrl ? { logoUrl } : {})}
@@ -98,10 +100,12 @@ export function DefaultLayout(props: LayoutRenderProps): ReactElement {
               onCartOpen={() => setCartOpen(true)}
               onMenuOpen={() => setMenuOpen(true)}
             />
+            <UiBlock slot="after_header" />
           </div>
 
           <main id="sf-main" className="bz-main">{children}</main>
 
+          <UiBlock slot="before_footer" />
           <Footer
             storeName={context.store.name}
             {...(context.store.description ? { blurb: context.store.description } : {})}
@@ -112,6 +116,7 @@ export function DefaultLayout(props: LayoutRenderProps): ReactElement {
             social={data.social ?? []}
             year={data.year ?? 2026}
           />
+          <UiBlock slot="after_footer" />
 
           <CartDrawer open={cartOpen} onClose={() => setCartOpen(false)} {...(data.freeShippingThreshold !== undefined ? { freeShippingThreshold: data.freeShippingThreshold } : {})} />
           <MobileNav open={menuOpen} onClose={() => setMenuOpen(false)} items={nav} categories={categories} onSearchOpen={() => setSearchOpen(true)} />

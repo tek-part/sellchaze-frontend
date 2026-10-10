@@ -1,3 +1,4 @@
+import { UiBlock } from '../../../ui-blocks/UiBlocks';
 /**
  * Naseem DefaultLayout — global chrome shell: AnnouncementBar → Header → <main> → Footer, plus the
  * CartDrawer, MobileNav and SearchOverlay it controls. Loads the merchant's Google fonts, and
@@ -79,6 +80,7 @@ export function DefaultLayout(props: LayoutRenderProps): ReactElement {
         >
           {messages.length > 0 ? <AnnouncementBar messages={messages} url={typeof settings['announcement_url'] === 'string' ? settings['announcement_url'] : ''} /> : null}
 
+          <UiBlock slot="before_header" />
           <Header
             storeName={context.store.name}
             {...(store.logoUrl ? { logoUrl: store.logoUrl } : {})}
@@ -89,9 +91,11 @@ export function DefaultLayout(props: LayoutRenderProps): ReactElement {
             onCartOpen={() => setCartOpen(true)}
             onMenuOpen={() => setMenuOpen(true)}
           />
+          <UiBlock slot="after_header" />
 
           <main id="sf-main" className="nsm-main">{children}</main>
 
+          <UiBlock slot="before_footer" />
           <Footer
             storeName={context.store.name}
             {...(context.store.description ? { blurb: context.store.description } : {})}
@@ -101,6 +105,7 @@ export function DefaultLayout(props: LayoutRenderProps): ReactElement {
             social={data.social ?? []}
             year={data.year ?? 2026}
           />
+          <UiBlock slot="after_footer" />
 
           <CartDrawer open={cartOpen} onClose={() => setCartOpen(false)} {...(data.freeShippingThreshold !== undefined ? { freeShippingThreshold: data.freeShippingThreshold } : {})} />
           <MobileNav open={menuOpen} onClose={() => setMenuOpen(false)} items={nav} onSearchOpen={() => setSearchOpen(true)} />
