@@ -15,6 +15,7 @@ import { CheckoutRecovery } from './CheckoutRecovery';
 import { clearCheckoutAttempt, readCheckoutAttempt } from './checkout-attempt';
 import { CheckoutFieldsForm, useCheckoutFields } from './CheckoutFields';
 import { PersonalizationSummary } from '../foundation/components/PersonalizationSummary';
+import { OrderReceiptPanel } from './OrderReceiptPanel';
 
 export function CheckoutPage(): ReactElement {
   const { t } = useTranslation();
@@ -95,9 +96,9 @@ export function OrderSuccessPage(): ReactElement {
     const scope = window.location.origin;
     if (number && readCheckoutAttempt(scope)?.orderNumber === number) clearCheckoutAttempt(scope);
   }, [number]);
-  if (tpl) return <ThemeRenderer page={tpl} context={flowContext(store)} />;
+  if (tpl) return <><ThemeRenderer page={tpl} context={flowContext(store)} /><OrderReceiptPanel number={number} /></>;
   return (
-    <Section>
+    <><Section>
       <Container narrow>
         <div className="sf-state">
           <span className="sf-state__code" aria-hidden>
@@ -114,6 +115,6 @@ export function OrderSuccessPage(): ReactElement {
           </div>
         </div>
       </Container>
-    </Section>
+    </Section><OrderReceiptPanel number={number} /></>
   );
 }

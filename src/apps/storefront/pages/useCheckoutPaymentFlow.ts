@@ -13,6 +13,7 @@ import {
 import { useCart } from '../state/cart';
 import { withSessionParams } from './NavigationInterceptor';
 import { clearCheckoutAttempt, readCheckoutAttempt, resumeCheckoutAttempt, saveCheckoutAttempt, type CheckoutAttempt } from './checkout-attempt';
+import { saveOrderReceipt } from './order-receipt';
 
 export interface CheckoutContactPayload {
   customer_name?: string;
@@ -32,6 +33,7 @@ interface RetryState {
 
 interface CheckoutResponse {
   data?: { number?: string };
+  receipt?: { token?: string };
   payment?: { redirect_url?: string | null };
 }
 
@@ -74,6 +76,7 @@ export function useCheckoutPaymentFlow(options?: { items: ReadonlyArray<Checkout
     try {
       const response = await operation();
       if (!response.data?.number) throw new Error(t('checkout.orderFailed'));
+      if (response.receipt?.token) saveOrderReceipt(response.data.number, response.receipt.token);
 
       // Clearing the external cart store can render CheckoutPage before router navigation.
       // Keep its empty-cart redirect from preempting this successful order transition.
@@ -92,7 +95,8 @@ export function useCheckoutPaymentFlow(options?: { items: ReadonlyArray<Checkout
       window.scrollTo({ top: 0, behavior: 'auto' });
     } catch (requestError) {
       if (requestError instanceof ApiError) {
-        const body = requestError.payload as { checkout_rejected?: boolean; payment_retry?: { token?: string }; data?: { number?: string }; message?: string } | undefined;
+        const body = requestError.payload as { checkout_rejected?: boolean; payment_retry?: { token?: string }; receipt?: { token?: string }; data?: { number?: string }; message?: string } | undefined;
+        if (body?.data?.number && body.receipt?.token) saveOrderReceipt(body.data.number, body.receipt.token);
         if (body?.payment_retry?.token) {
           setPaymentRetry({ token: body.payment_retry.token, orderNumber: body.data?.number });
           setError(undefined);
