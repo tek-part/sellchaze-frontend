@@ -56,7 +56,7 @@ export function CartDrawer(props: CartDrawerProps): ReactElement {
                       <div className="tk-qty" role="group" aria-label={t('product.quantity')}>
                         <button type="button" className="tk-qty__btn" aria-label={t('product.decreaseQuantity')} onClick={() => updateQuantity(line.id, Math.max(1, line.quantity - 1))} disabled={line.quantity <= 1}><IconMinus /></button>
                         <span className="tk-qty__value" aria-live="polite">{line.quantity}</span>
-                        <button type="button" className="tk-qty__btn" aria-label={t('product.increaseQuantity')} onClick={() => updateQuantity(line.id, line.quantity + 1)}><IconPlus /></button>
+                        <button type="button" className="tk-qty__btn" aria-label={t('product.increaseQuantity')} onClick={() => updateQuantity(line.id, line.quantity + 1)} disabled={line.maxQuantity !== undefined && line.quantity >= line.maxQuantity}><IconPlus /></button>
                       </div>
                       <button type="button" className="tk-cart__remove" aria-label={t('common.remove')} onClick={() => remove(line.id)}><IconTrash /></button>
                     </div>

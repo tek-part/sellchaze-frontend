@@ -133,6 +133,8 @@ function toVariant(variant: ApiVariant, multiplier = 1): ProductVariantModel {
   const available = variant.is_active !== false && (variant.stock == null || variant.stock > 0);
   const price = variant.price != null ? toNumber(variant.price) * multiplier : undefined;
   return { id: String(variant.id), label, available, ...(price !== undefined ? { price } : {}),
+    ...(variant.image_url && /^(https?:\/\/|\/(?!\/))/i.test(variant.image_url) ? { image: { src: variant.image_url, alt: label } } : {}),
+    ...(variant.options ? { options: variant.options } : {}),
     ...(variant.compare_price != null ? { compareAtPrice: toNumber(variant.compare_price) * multiplier } : {}),
     ...(variant.stock != null ? { availableStock: variant.stock } : {}),
   };
@@ -157,6 +159,7 @@ export function toProductDetail(product: ApiProduct, currency: string, multiplie
     ...base,
     images: images.length > 0 ? images : base.image ? [base.image] : [],
     media: productMedia(product),
+    optionDisplay: product.option_display ?? [],
     ...(product.sku ? { sku: product.sku } : {}),
     ...(descriptionHtml ? { descriptionHtml } : {}),
     ...(variants && variants.length > 0 ? { variants } : {}),

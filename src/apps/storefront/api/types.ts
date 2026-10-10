@@ -5,6 +5,7 @@
  */
 
 export interface ApiVariant {
+  image_url?: string | null;
   id: number;
   name?: string;
   sku?: string | null;
@@ -16,6 +17,7 @@ export interface ApiVariant {
 }
 
 export interface ApiProduct {
+  option_display?: ReadonlyArray<import('../types/product-options').OptionDisplay> | null;
   id: number;
   name: string;
   slug: string;
