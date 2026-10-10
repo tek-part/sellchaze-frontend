@@ -6,8 +6,8 @@ import api from '../api/client';
 import useStoreScope from '../hooks/useStoreScope';
 
 const copy = {
-    ar: { title: 'مسارات البيع', subtitle: 'حوّل منتجك إلى صفحة بيع قابلة للتخصيص والمعاينة والنشر.', create: 'إنشاء مسار بيع', templates: 'اختر قالب البداية', details: 'بيانات مسار البيع', name: 'اسم المسار', slug: 'الرابط', product: 'المنتج', productSearch: 'ابحث عن منتج المتجر', locale: 'لغة الصفحة', submit: 'إنشاء وفتح المحرر', cancel: 'إلغاء', back: 'السابق', next: 'التالي', search: 'البحث في المسارات', all: 'كل الحالات', draft: 'مسودة', published: 'منشور', scheduled: 'مجدول', empty: 'لا توجد مسارات مطابقة', hint: 'أنشئ مسارًا جديدًا أو غيّر البحث لعرض المسارات.', edit: 'تحرير', duplicate: 'نسخ كمسودة', previous: 'الصفحة السابقة', nextPage: 'الصفحة التالية', choose: 'اختر المنتج', loading: 'جارٍ التحميل…', missing: 'المنتج غير متاح', selected: 'محدد', retry: 'إعادة المحاولة', note: 'يبدأ المسار كمسودة. راجع المحتوى والمنتج في المحرر قبل النشر.', noProducts: 'لا توجد منتجات مطابقة. أضف منتجًا إلى كتالوج المتجر أو غيّر البحث.' },
-    en: { title: 'Sales funnels', subtitle: 'Turn a product into an editable sales page with preview and publishing.', create: 'Create funnel', templates: 'Choose a starting template', details: 'Funnel details', name: 'Funnel name', slug: 'URL slug', product: 'Product', productSearch: 'Search store products', locale: 'Page language', submit: 'Create and open editor', cancel: 'Cancel', back: 'Back', next: 'Next', search: 'Search funnels', all: 'All statuses', draft: 'Draft', published: 'Published', scheduled: 'Scheduled', empty: 'No matching funnels', hint: 'Create a funnel or change your search to find one.', edit: 'Edit', duplicate: 'Duplicate as draft', previous: 'Previous page', nextPage: 'Next page', choose: 'Choose product', loading: 'Loading…', missing: 'Product unavailable', selected: 'Selected', retry: 'Retry', note: 'Funnels start as drafts. Review the content and linked product in the editor before publishing.', noProducts: 'No matching products. Add a product to the store catalog or change your search.' },
+    ar: { mode: 'طريقة الإنشاء', manual: 'إنشاء يدوي', ai: 'الإنشاء بالذكاء الاصطناعي', aiUnavailable: 'التوليد بالذكاء الاصطناعي غير مفعّل حاليًا. يمكنك الإنشاء يدويًا.', language: 'لغة المحتوى', dialect: 'الأسلوب أو اللهجة', productName: 'اسم المنتج في المحتوى', description: 'وصف المنتج ومميزاته', aiNote: 'سيُرسل الاسم والوصف واللغة واللهجة إلى OpenAI لكتابة محتوى المسودة. راجع دقة النص قبل النشر.', generate: 'توليد المسودة وفتح المحرر', generating: 'جارٍ كتابة محتوى المسار… قد يستغرق ذلك دقيقة.', aiFailed: 'تعذّر توليد المحتوى. لم تُنشأ مسودة. حاول لاحقًا أو اختر الإنشاء اليدوي.', aiLimit: 'بلغ المتجر حد التوليد أو يوجد طلب قيد التنفيذ. حاول لاحقًا.', title: 'مسارات البيع', subtitle: 'حوّل منتجك إلى صفحة بيع قابلة للتخصيص والمعاينة والنشر.', create: 'إنشاء مسار بيع', templates: 'اختر قالب البداية', details: 'بيانات مسار البيع', name: 'اسم المسار', slug: 'الرابط', product: 'المنتج', productSearch: 'ابحث عن منتج المتجر', locale: 'لغة الصفحة', submit: 'إنشاء وفتح المحرر', cancel: 'إلغاء', back: 'السابق', next: 'التالي', search: 'البحث في المسارات', all: 'كل الحالات', draft: 'مسودة', published: 'منشور', scheduled: 'مجدول', empty: 'لا توجد مسارات مطابقة', hint: 'أنشئ مسارًا جديدًا أو غيّر البحث لعرض المسارات.', edit: 'تحرير', duplicate: 'نسخ كمسودة', previous: 'الصفحة السابقة', nextPage: 'الصفحة التالية', choose: 'اختر المنتج', loading: 'جارٍ التحميل…', missing: 'المنتج غير متاح', selected: 'محدد', retry: 'إعادة المحاولة', note: 'يبدأ المسار كمسودة. راجع المحتوى والمنتج في المحرر قبل النشر.', noProducts: 'لا توجد منتجات مطابقة. أضف منتجًا إلى كتالوج المتجر أو غيّر البحث.' },
+    en: { mode: 'Creation method', manual: 'Create manually', ai: 'Create with AI', aiUnavailable: 'AI generation is not enabled yet. You can create a funnel manually.', language: 'Content language', dialect: 'Style or dialect', productName: 'Product name for the content', description: 'Product description and features', aiNote: 'The name, description, language and dialect are sent to OpenAI to write the draft. Review factual accuracy before publishing.', generate: 'Generate draft and open editor', generating: 'Writing your funnel content… This can take a minute.', aiFailed: 'Content generation failed. No draft was created. Try later or choose manual creation.', aiLimit: 'The store generation limit was reached or a request is already running. Try later.', title: 'Sales funnels', subtitle: 'Turn a product into an editable sales page with preview and publishing.', create: 'Create funnel', templates: 'Choose a starting template', details: 'Funnel details', name: 'Funnel name', slug: 'URL slug', product: 'Product', productSearch: 'Search store products', locale: 'Page language', submit: 'Create and open editor', cancel: 'Cancel', back: 'Back', next: 'Next', search: 'Search funnels', all: 'All statuses', draft: 'Draft', published: 'Published', scheduled: 'Scheduled', empty: 'No matching funnels', hint: 'Create a funnel or change your search to find one.', edit: 'Edit', duplicate: 'Duplicate as draft', previous: 'Previous page', nextPage: 'Next page', choose: 'Choose product', loading: 'Loading…', missing: 'Product unavailable', selected: 'Selected', retry: 'Retry', note: 'Funnels start as drafts. Review the content and linked product in the editor before publishing.', noProducts: 'No matching products. Add a product to the store catalog or change your search.' },
 };
 const field = 'w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/20';
 const button = 'rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50';
@@ -20,6 +20,9 @@ function CreateFunnel({ c, lang, apiBase, uiBase, locales, onClose }) {
     const navigate = useNavigate();
     const [templates, setTemplates] = useState([]);
     const [template, setTemplate] = useState('');
+    const [mode, setMode] = useState('manual');
+    const [aiAvailable, setAiAvailable] = useState(false);
+    const [generation, setGeneration] = useState({ language: locales?.default === 'ar' ? 'العربية' : 'English', dialect: '', product_name: '', description: '' });
     const [step, setStep] = useState(1);
     const [query, setQuery] = useState('');
     const [products, setProducts] = useState([]);
@@ -29,7 +32,7 @@ function CreateFunnel({ c, lang, apiBase, uiBase, locales, onClose }) {
     const [form, setForm] = useState({ title: '', slug: '', product_id: '', locale: locales?.default || 'en' });
     useEffect(() => {
         let active = true;
-        api.get(`${apiBase}/funnels/templates`).then(({ data }) => { if (active) setTemplates(data.data || []); }).catch((e) => { if (active) setError(errorText(e)); }).finally(() => { if (active) setLoading(false); });
+        api.get(`${apiBase}/funnels/templates`).then(({ data }) => { if (active) { setTemplates(data.data || []); setAiAvailable(Boolean(data.ai?.available)); } }).catch((e) => { if (active) setError(errorText(e)); }).finally(() => { if (active) setLoading(false); });
         return () => { active = false; };
     }, [apiBase]);
     useEffect(() => {
@@ -46,16 +49,29 @@ function CreateFunnel({ c, lang, apiBase, uiBase, locales, onClose }) {
     }, [apiBase, query, step]);
     async function submit(event) {
         event.preventDefault();
+        if (saving) return;
         setError(''); setSaving(true);
         try {
-            const { data } = await api.post(`${apiBase}/funnels`, { ...form, product_id: Number(form.product_id), template_key: template });
+            const { data } = await api.post(`${apiBase}/funnels${mode === 'ai' ? '/generate' : ''}`, { ...form, product_id: Number(form.product_id), template_key: template, ...(mode === 'ai' ? { generation } : {}) }, { timeout: 90000 });
             navigate(`${uiBase}/pages/${data.data.page_id}/builder`);
-        } catch (e) { setError(errorText(e)); } finally { setSaving(false); }
+        } catch (e) {
+            const status = e.response?.status;
+            setError(mode === 'ai' && status === 429 ? c.aiLimit : mode === 'ai' && [502, 503, 504].includes(status) ? c.aiFailed : errorText(e));
+        } finally { setSaving(false); }
     }
     return <section aria-label={c.create} className="space-y-5 rounded-2xl border border-slate-200 bg-white p-5">
         <div className="flex items-center justify-between gap-3"><h2 className="text-lg font-semibold">{step === 1 ? c.templates : c.details}</h2><button type="button" disabled={saving} onClick={onClose} className={button}>{c.cancel}</button></div>
         {error && <p role="alert" className="rounded-lg bg-red-50 p-3 text-sm text-red-700">{error}</p>}
+        {saving && <p role="status" className="rounded-lg bg-brand-light p-3 text-sm text-brand-dark">{mode === 'ai' ? c.generating : c.loading}</p>}
         {step === 1 ? <>
+            <fieldset className="space-y-2" disabled={loading}>
+                <legend className="mb-2 text-sm font-semibold">{c.mode}</legend>
+                <div className="flex flex-wrap gap-4">
+                    <label className="flex items-center gap-2 text-sm"><input type="radio" name="funnel-mode" checked={mode === 'manual'} onChange={() => setMode('manual')} />{c.manual}</label>
+                    <label className={`flex items-center gap-2 text-sm ${!aiAvailable ? 'text-slate-400' : ''}`}><input type="radio" name="funnel-mode" disabled={!aiAvailable} checked={mode === 'ai'} onChange={() => setMode('ai')} />{c.ai}</label>
+                </div>
+                {!loading && !aiAvailable && <p className="text-sm text-slate-500">{c.aiUnavailable}</p>}
+            </fieldset>
             {loading ? <p role="status">{c.loading}</p> : <div className="grid gap-3 md:grid-cols-3" role="radiogroup" aria-label={c.templates}>
                 {templates.map((item) => <label key={item.key} className={`cursor-pointer rounded-xl border p-4 ${template === item.key ? 'border-brand bg-brand-light' : 'border-slate-200'}`}>
                     <div className="mb-4 flex h-24 items-center justify-center rounded-lg" style={{ backgroundColor: item.color }}><HiOutlineSparkles className="h-9 w-9 text-white" aria-hidden /></div>
@@ -64,16 +80,23 @@ function CreateFunnel({ c, lang, apiBase, uiBase, locales, onClose }) {
                 </label>)}
             </div>}
             <button type="button" disabled={!template} onClick={() => setStep(2)} className={`${button} bg-brand text-white hover:bg-brand-dark`}>{c.next}</button>
-        </> : <form className="grid gap-4 sm:grid-cols-2" onSubmit={submit}>
+        </> : <form onSubmit={submit}><fieldset disabled={saving} className="grid gap-4 sm:grid-cols-2">
             <label className="space-y-1 text-sm">{c.name}<input required maxLength={255} value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} className={field} /></label>
             <label className="space-y-1 text-sm">{c.slug}<input required dir="ltr" maxLength={180} pattern="[a-z0-9]+(-[a-z0-9]+)*" value={form.slug} onChange={(e) => setForm({ ...form, slug: e.target.value })} className={field} /></label>
             <label className="space-y-1 text-sm">{c.productSearch}<input type="search" value={query} onChange={(e) => { setQuery(e.target.value); setForm({ ...form, product_id: '' }); }} className={field} /></label>
-            <label className="space-y-1 text-sm">{c.product}<select required disabled={loading} value={form.product_id} onChange={(e) => setForm({ ...form, product_id: e.target.value })} className={field}><option value="">{loading ? c.loading : c.choose}</option>{products.map((product) => <option key={product.id} value={product.id}>{product.name}</option>)}</select></label>
+            <label className="space-y-1 text-sm">{c.product}<select required disabled={loading} value={form.product_id} onChange={(e) => { setForm({ ...form, product_id: e.target.value }); setGeneration({ ...generation, product_name: products.find((p) => String(p.id) === e.target.value)?.name || '' }); }} className={field}><option value="">{loading ? c.loading : c.choose}</option>{products.map((product) => <option key={product.id} value={product.id}>{product.name}</option>)}</select></label>
             {!loading && products.length === 0 && <p className="text-sm text-slate-500 sm:col-span-2">{c.noProducts}</p>}
             <label className="space-y-1 text-sm">{c.locale}<select value={form.locale} onChange={(e) => setForm({ ...form, locale: e.target.value })} className={field}>{(locales?.supported || ['en']).map((locale) => <option key={locale} value={locale}>{locale.toUpperCase()}</option>)}</select></label>
+            {mode === 'ai' && <>
+                <label className="space-y-1 text-sm">{c.language}<input required maxLength={80} value={generation.language} onChange={(e) => setGeneration({ ...generation, language: e.target.value })} className={field} /></label>
+                <label className="space-y-1 text-sm">{c.dialect}<input required maxLength={120} value={generation.dialect} onChange={(e) => setGeneration({ ...generation, dialect: e.target.value })} className={field} /></label>
+                <label className="space-y-1 text-sm">{c.productName}<input required maxLength={255} value={generation.product_name} onChange={(e) => setGeneration({ ...generation, product_name: e.target.value })} className={field} /></label>
+                <label className="space-y-1 text-sm sm:col-span-2">{c.description}<textarea required minLength={20} maxLength={6000} rows={5} value={generation.description} onChange={(e) => setGeneration({ ...generation, description: e.target.value })} className={field} /></label>
+                <p className="text-sm text-slate-500 sm:col-span-2">{c.aiNote}</p>
+            </>}
             <p className="text-sm text-slate-500 sm:col-span-2">{c.note}</p>
-            <div className="flex gap-2 sm:col-span-2"><button type="button" disabled={saving} onClick={() => setStep(1)} className={button}>{c.back}</button><button disabled={saving || loading || !form.product_id} className="rounded-lg bg-brand px-4 py-2 text-sm font-semibold text-white hover:bg-brand-dark disabled:opacity-50">{saving ? c.loading : c.submit}</button></div>
-        </form>}
+            <div className="flex gap-2 sm:col-span-2"><button type="button" disabled={saving} onClick={() => setStep(1)} className={button}>{c.back}</button><button disabled={saving || loading || !form.product_id} className="rounded-lg bg-brand px-4 py-2 text-sm font-semibold text-white hover:bg-brand-dark disabled:opacity-50">{saving ? c.loading : mode === 'ai' ? c.generate : c.submit}</button></div>
+        </fieldset></form>}
     </section>;
 }
 

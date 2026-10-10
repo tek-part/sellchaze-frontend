@@ -78,7 +78,7 @@ export function buildStoreNav(t, access = {}) {
         },
         {
             key: 'settings',
-            label: t('store_nav_group_settings', 'Settings'),
+            label: t('nav_store_settings', 'Store settings'),
             items: [
                 { key: 'general', to: 'settings/general', label: t('store_nav_general', 'General'), Icon: HiOutlineCog6Tooth, show: access.canStoreSettings },
                 { key: 'localization', to: 'settings/localization', label: t('store_nav_localization', 'Language & currency'), Icon: HiOutlineLanguage, show: access.canStoreSettings },

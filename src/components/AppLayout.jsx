@@ -606,6 +606,7 @@ export default function AppLayout() {
                                 isAdmin,
                                 isSupplier,
                                 permissions,
+                                unifiedStoreNavigation: !isAdminOnly,
                             }}
                         />
                     </div>
