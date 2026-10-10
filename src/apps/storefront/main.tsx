@@ -24,6 +24,7 @@ import { loadStorefrontBootstrap } from './api/bootstrap';
 import type { ThemeSettingValue } from './theme-engine/types';
 import { applyLegacyThemeAlias, resolveStorefrontThemeId } from './theme-resolution';
 import { setActiveThemeMatch } from './active-theme-match';
+import { loadIdentityFonts } from './store-identity';
 import './styles/index.css';
 // Editorial layout for the journal/brands pages. App-level, not theme-level: these render the
 // shared `.sf-*` library, so a theme stylesheet would leave three themes unstyled. Every value
@@ -111,6 +112,12 @@ async function bootstrap(): Promise<void> {
     // The store context exposes the normal unresolved-host state; preview/local mode still renders.
   }
 
+  // Resolve the selected font before first paint. A failed optional catalog must
+  // not prevent the store from rendering with its inherited typography.
+  if (params.get('defaults') !== '1') {
+    await loadIdentityFonts(initialData?.store.identity?.font_family).catch(() => undefined);
+  }
+
   // Resolve the theme id BEFORE mounting so the ThemeProvider loads the right package on first
   // paint (no default-theme → active-theme flash). Registering the catalog here is idempotent — the theme root
   // calls it again — and is what lets the resolver fail closed on a key the registry does not know.
@@ -158,6 +165,7 @@ async function bootstrap(): Promise<void> {
     */}
     <I18nextProvider i18n={i18n}>
     <StorefrontThemeRoot
+      {...(initialData?.store.identity && params.get('defaults') !== '1' ? { identity: initialData.store.identity } : {})}
       themeId={themeId}
       {...(initialData?.theme?.bundle_url ? { bundleUrl: initialData.theme.bundle_url } : {})}
       {...(initialData?.theme?.bundle_integrity ? { bundleIntegrity: initialData.theme.bundle_integrity } : {})}

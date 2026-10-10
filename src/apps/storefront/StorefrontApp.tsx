@@ -25,6 +25,7 @@ import { RouteAnnouncer } from './pages/RouteAnnouncer';
 import { CustomizeBridge } from './customize/CustomizeBridge';
 import { isCustomizeMode } from './customize/customizer-state';
 import { shippingThreshold } from './utils/shipping';
+import { StoreIdentityHead } from './seo/StoreIdentityHead';
 
 type PreviewData = typeof import('./dev/sampleData');
 
@@ -235,6 +236,7 @@ export function StorefrontApp(): ReactElement {
           </select>
         </label>
       ) : null}
+      <StoreIdentityHead />
       <NavigationInterceptor />
       <RouteAnnouncer />
       {isCustomizeMode() ? <CustomizeBridge /> : null}

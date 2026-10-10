@@ -13,6 +13,7 @@ import { useAsync } from '../api/useAsync';
 import { selectionAutomatic } from './variant-selection';
 
 export interface StoreInfo {
+  identity?: import('../store-identity').StoreIdentity;
   autoSelectVariants?: boolean;
   shipping?: import('../types/shipping').ShippingOffer;
   id: string;
@@ -82,6 +83,7 @@ export function StoreProvider(props: { children: ReactNode; initialData?: ApiSto
       id: String(s.id),
       ...(s.auto_select_variants !== undefined ? { autoSelectVariants: s.auto_select_variants } : {}),
       name: s.name,
+      ...(s.identity ? { identity: s.identity } : {}),
       slug: s.slug,
       currency,
       baseCurrency,

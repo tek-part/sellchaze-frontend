@@ -8,6 +8,7 @@
 import { useEffect, useState, type ReactElement, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { StorefrontEngineProvider, ThemeProvider } from './theme-engine';
+import type { StoreIdentity } from './store-identity';
 import type {
   ColorSchemePreference,
   Direction,
@@ -19,6 +20,7 @@ import { registerThemes } from './themes/registry';
 import { registerRemoteTheme } from './themes/remote-loader';
 
 export interface StorefrontThemeRootProps {
+  identity?: StoreIdentity;
   /** Merchant's active theme id. Defaults to the configured default. */
   themeId?: string;
   /** Published, platform-hosted single-file ThemeModule bundle. */
@@ -77,6 +79,7 @@ export function StorefrontThemeRoot(props: StorefrontThemeRootProps): ReactEleme
   return (
     <StorefrontEngineProvider {...(plugins ? { plugins } : {})}>
       <ThemeProvider
+        {...(props.identity ? { identity: props.identity } : {})}
         themeId={runtimeThemeId}
         fallbackId={storefrontConfig.fallbackThemeId}
         {...(settings ? { settings } : {})}
