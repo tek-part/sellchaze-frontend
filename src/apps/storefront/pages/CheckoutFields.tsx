@@ -9,16 +9,21 @@ import { resolveShipping } from '../utils/shipping';
 import type { ShippingConfiguration, ShippingSelection } from '../types/shipping';
 import { checkoutContact, type CheckoutField, type Values } from './checkout-contact';
 
-export function useCheckoutFields(paymentMethod: string) {
+export function useCheckoutFields(paymentMethod: string, productIds: ReadonlyArray<number>) {
   const { locale } = useLocale();
   const [values, setValues] = useState<Values>({});
   const [chosenShipping, setChosenShipping] = useState<ShippingSelection>({});
-  const query = useAsync(async () => ({ paymentMethod, ...(await apiGet<{ data: CheckoutField[]; shipping: ShippingConfiguration }>(`/checkout/fields?payment_method=${encodeURIComponent(paymentMethod)}`)) }), [paymentMethod]);
-  const ready = !query.loading && !query.error && query.data?.paymentMethod === paymentMethod;
+  const basketKey = JSON.stringify([...new Set(productIds)].sort((a, b) => a - b));
+  const query = useAsync(async () => {
+    const params = new URLSearchParams({ payment_method: paymentMethod });
+    (JSON.parse(basketKey) as number[]).forEach((id) => params.append('product_ids[]', String(id)));
+    return { paymentMethod, basketKey, ...(await apiGet<{ data: CheckoutField[]; shipping: ShippingConfiguration; requires_shipping: boolean; has_digital: boolean }>(`/checkout/fields?${params.toString()}`)) };
+  }, [paymentMethod, basketKey]);
+  const ready = !query.loading && !query.error && query.data?.paymentMethod === paymentMethod && query.data?.basketKey === basketKey;
   const fields = ready ? query.data?.data ?? [] : [];
   const shipping = ready ? query.data?.shipping : undefined;
   const resolved = resolveShipping(shipping, chosenShipping);
-  return { fields, ready, query, values, setValues, locale, shipping, shippingReady: ready && resolved.ready,
+  return { fields, ready, query, values, setValues, locale, shipping, requiresShipping: ready ? query.data?.requires_shipping : undefined, hasDigital: ready && query.data?.has_digital, shippingReady: ready && resolved.ready,
     shippingSelection: resolved.selection, setChosenShipping, payload: () => ({ ...checkoutContact(fields, values), ...resolved.selection }) };
 }
 
@@ -30,7 +35,7 @@ export function CheckoutFieldsForm({ model }: { model: ReturnType<typeof useChec
   if (!ready) return <Spinner label={lang === 'ar' ? 'جارٍ تحميل النموذج…' : 'Loading checkout fields…'} />;
   return <>{fields.filter((field) => field.enabled).map((field) => {
     const label = `${field.label[lang]}${field.required ? ' *' : ''}`;
-    const hint = [field.hint[lang], field.payment_required ? (lang === 'ar' ? 'مطلوب لطريقة الدفع المحددة.' : 'Required for the selected payment method.') : ''].filter(Boolean).join(' ');
+    const hint = [field.hint[lang], field.payment_required ? (lang === 'ar' ? 'مطلوب لطريقة الدفع المحددة.' : 'Required for the selected payment method.') : '', field.digital_required ? (lang === 'ar' ? 'مطلوب لاستلام المنتج الرقمي بعد تأكيد الدفع.' : 'Required to receive the digital product after payment confirmation.') : ''].filter(Boolean).join(' ');
     const change = (event: { target: { value: string } }): void => setValues((current) => ({ ...current, [field.key]: event.target.value }));
     if (field.shipping_region) return <Select key={field.key} label={label} hint={hint} required value={model.shippingSelection.shipping_region_id ?? ''}
       onChange={(event) => model.setChosenShipping((current) => ({ ...current, shipping_region_id: event.target.value }))}

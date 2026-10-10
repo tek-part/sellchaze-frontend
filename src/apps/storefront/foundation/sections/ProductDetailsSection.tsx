@@ -75,6 +75,7 @@ export function ProductDetailsSection(props: SectionRenderProps): ReactElement |
     cart.add({
       id: lineId,
       productId: product.id,
+      digitalType: product.digitalType ?? 'physical',
       ...(variantId ? { variantId } : {}),
       title: product.title,
       url: product.url,

@@ -7,6 +7,7 @@ import { useTranslation } from 'react-i18next';
 import { Drawer } from '../../../foundation/components/Drawer';
 import { formatMoney } from '../../../utils/format';
 import { useCart } from '../../../state/cart';
+import { cartRequiresShipping } from '../../../utils/shipping';
 import { cartLineLimit } from '../../../state/cart-quantity';
 import { PersonalizationSummary } from '../../../foundation/components/PersonalizationSummary';
 import { useLocale } from '../../../i18n/useLocale';
@@ -40,7 +41,7 @@ export function CartDrawer(props: CartDrawerProps): ReactElement {
       ) : (
         <>
           <div className="sf-overlay__body fr-cart">
-            {freeShippingThreshold ? (
+            {freeShippingThreshold && cartRequiresShipping(lines) ? (
               <div className="fr-cart__ship">
                 <span>{remaining > 0 ? t('cart.freeShippingProgress', { amount: formatMoney(remaining, totals.currency, locale) }) : t('cart.freeShippingReached')}</span>
                 <div className="fr-cart__track" aria-hidden><div className="fr-cart__fill" style={{ width: `${pct}%` }} /></div>

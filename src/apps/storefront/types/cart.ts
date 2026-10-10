@@ -6,6 +6,7 @@ export interface CartLine {
   /** Stable line id including normalized personalization, when present. */
   id: string;
   productId: string;
+  digitalType?: 'physical' | 'link' | 'codes';
   variantId?: string;
   title: string;
   url: string;

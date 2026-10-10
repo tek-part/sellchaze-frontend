@@ -31,7 +31,7 @@ export function FunnelCheckout({ productSlug }: { productSlug: string | null }):
   const customKey = JSON.stringify(custom.values);
   const items = useMemo<ReadonlyArray<CheckoutItem>>(() => selectionReady && product ? [{ product_id: product.id, quantity, personalization: normalizedPersonalization(JSON.parse(customKey) as Record<string, string>), ...(variantId ? { variant_id: Number(variantId) } : {}) }] : [], [product, selectionReady, quantity, variantId, customKey]);
   const payment = useCheckoutPaymentFlow({ items, preserveCart: true });
-  const contact = useCheckoutFields(payment.paymentMethod);
+  const contact = useCheckoutFields(payment.paymentMethod, product ? [product.id] : []);
   const quoteKey = JSON.stringify([items, appliedCoupon, contact.shippingSelection, contact.shippingReady]);
   const quoteQ = useAsync(async () => items.length && contact.shippingReady ? { key: quoteKey, quote: (await quoteCheckout(items, appliedCoupon, contact.shippingSelection)).data } : null, [quoteKey, locale]);
   const quote = !quoteQ.loading && !quoteQ.error && quoteQ.data?.key === quoteKey ? quoteQ.data.quote : null;
@@ -43,7 +43,7 @@ export function FunnelCheckout({ productSlug }: { productSlug: string | null }):
 
   return <Section id="funnel-checkout" className="sf-funnel-checkout"><Container narrow>
     <h2>{label('أكمل طلبك', 'Complete your order')}</h2>
-    <p>{label('اختر الكمية وأدخل بيانات التوصيل.', 'Choose your quantity and enter your delivery details.')}</p>
+    <p>{contact.requiresShipping === false ? label('اختر الكمية وأدخل بيانات التواصل لاستلام المنتج الرقمي بعد تأكيد الدفع.', 'Choose your quantity and enter your contact details to receive the digital product after payment confirmation.') : label('اختر الكمية وأدخل بيانات التوصيل.', 'Choose your quantity and enter your delivery details.')}</p>
     <CheckoutRecovery flow={payment} />
     {productQ.loading ? <Spinner label={label('جارٍ تحميل المنتج…', 'Loading product…')} /> : productQ.error ? <ErrorState
       title={label('تعذّر تحميل المنتج', 'Unable to load product')}
@@ -73,7 +73,7 @@ export function FunnelCheckout({ productSlug }: { productSlug: string | null }):
           <legend>{label('طريقة الدفع', 'Payment method')}</legend>
           {payment.paymentMethods.map((method) => <label key={method.slug}>
             <input type="radio" name="funnel-payment" value={method.slug} checked={payment.paymentMethod === method.slug} onChange={() => payment.setPaymentMethod(method.slug)} required />
-            <span>{method.slug === 'cod' ? label('الدفع عند الاستلام', 'Cash on delivery') : method.name}{method.test_mode ? label(' (تجريبي)', ' (Test)') : ''}</span>
+            <span>{method.slug === 'cod' ? label('الدفع عند الاستلام', 'Cash on delivery') : method.slug === 'bank_transfer' ? label('تحويل بنكي', 'Bank transfer') : method.name}{method.test_mode ? label(' (تجريبي)', ' (Test)') : ''}</span>
           </label>)}
           {!payment.paymentMethods.length ? <p>{label('لا توجد طريقة دفع متاحة حاليًا.', 'No payment method is currently available.')}</p> : null}
         </fieldset>
@@ -84,7 +84,7 @@ export function FunnelCheckout({ productSlug }: { productSlug: string | null }):
         {quote ? <dl>
           <div><dt>{label('المنتجات', 'Products')}</dt><dd>{formatMoney(Number(quote.totals.subtotal), quote.currency, locale)}</dd></div>
           {Number(quote.totals.discount_total) > 0 ? <div><dt>{label('الخصم', 'Discount')}</dt><dd>−{formatMoney(Number(quote.totals.discount_total), quote.currency, locale)}</dd></div> : null}
-          <div><dt>{label('الشحن', 'Shipping')}</dt><dd>{formatMoney(Number(quote.totals.shipping_total), quote.currency, locale)}</dd></div>
+          {quote.requires_shipping ? <div><dt>{label('الشحن', 'Shipping')}</dt><dd>{formatMoney(Number(quote.totals.shipping_total), quote.currency, locale)}</dd></div> : null}
           {Number(quote.totals.tax_total) > 0 ? <div><dt>{label('الضريبة', 'Tax')}</dt><dd>{formatMoney(Number(quote.totals.tax_total), quote.currency, locale)}</dd></div> : null}
           <div className="sf-funnel-checkout__grand"><dt>{label('الإجمالي', 'Total')}</dt><dd>{formatMoney(Number(quote.totals.grand_total), quote.currency, locale)}</dd></div>
         </dl> : null}

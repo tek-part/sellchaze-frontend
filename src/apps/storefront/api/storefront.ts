@@ -174,11 +174,16 @@ export function getProductReviews(slug: string): Promise<ApiPaginated<ApiReview>
 export const applyCoupon = (code: string): Promise<{ data: unknown }> => apiSend('/checkout/coupon/apply', 'POST', { code });
 export const removeCoupon = (): Promise<{ data: unknown }> => apiSend('/checkout/coupon', 'DELETE');
 export interface StorefrontPaymentMethod { slug: string; name: string; test_mode: boolean }
-export const getPaymentMethods = (): Promise<{ data: ReadonlyArray<StorefrontPaymentMethod> }> => apiGet('/payment-methods');
+export const getPaymentMethods = (productIds: ReadonlyArray<number> = []): Promise<{ data: ReadonlyArray<StorefrontPaymentMethod> }> => {
+  const params = new URLSearchParams();
+  [...new Set(productIds)].forEach((id) => params.append('product_ids[]', String(id)));
+  return apiGet(`/payment-methods${params.size ? `?${params.toString()}` : ''}`);
+};
 export const submitCheckout = (body: unknown, key: string): Promise<{ data: unknown }> => apiFetch('/checkout', { method: 'POST', headers: { 'Idempotency-Key': key }, body: JSON.stringify(body) });
 export const recoverCheckout = (key: string): Promise<{ data: unknown }> => apiFetch('/checkout/recover', { method: 'POST', headers: { 'Idempotency-Key': key }, body: '{}' });
 export interface CheckoutItem { product_id: number; variant_id?: number; quantity: number; personalization?: import('../types/personalization').PersonalizationValues }
 export interface CheckoutQuote {
+  requires_shipping: boolean;
   items: ReadonlyArray<{ product_id: number; variant_id: number | null; name: string; unit_price: string; quantity: number; line_total: string; personalization_key?: string; personalization?: ReadonlyArray<import('../types/personalization').PersonalizationEntry> }>;
   currency: string;
   totals: { subtotal: string; discount_total: string; shipping_total: string; tax_total: string; grand_total: string };

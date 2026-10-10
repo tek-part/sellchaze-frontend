@@ -51,7 +51,7 @@ export function HorizontalProductCard(props: HorizontalProductCardProps): ReactE
       <div className="sf-hcard__body">
         <div className="sf-hcard__row">
           <div>
-            <a href={product.url} className="sf-product-card__link sf-hcard__name">
+            <a href={product.url} className="sf-hcard__name">
               {product.title}
             </a>
             {attributes ? <div className="sf-hcard__attrs">{attributes}</div> : null}

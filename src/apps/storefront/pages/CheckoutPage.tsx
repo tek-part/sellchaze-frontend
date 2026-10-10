@@ -25,9 +25,9 @@ export function CheckoutPage(): ReactElement {
   const [coupon, setCoupon] = useState('');
   const [appliedCoupon, setAppliedCoupon] = useState('');
   const checkout = useCheckoutPaymentFlow();
-  const contact = useCheckoutFields(checkout.paymentMethod);
   const tpl = useTemplate('checkout');
   const items = useMemo(() => cart.lines.map((line) => ({ product_id: Number(line.productId), quantity: line.quantity, ...(line.personalization ? { personalization: line.personalization } : {}), ...(line.variantId ? { variant_id: Number(line.variantId) } : {}) })), [cart.lines]);
+  const contact = useCheckoutFields(checkout.paymentMethod, items.map((item) => item.product_id));
   const quoteKey = JSON.stringify([items, appliedCoupon, contact.shippingSelection, contact.shippingReady]);
   const quoteQ = useAsync(async () => items.length && contact.shippingReady ? { key: quoteKey, data: (await quoteCheckout(items, appliedCoupon, contact.shippingSelection)).data } : null, [quoteKey, locale]);
   const quote = !quoteQ.loading && !quoteQ.error && quoteQ.data?.key === quoteKey ? quoteQ.data.data : null;
@@ -50,7 +50,7 @@ export function CheckoutPage(): ReactElement {
               <legend>{t('checkout.payment')}</legend>
               {checkout.paymentMethods.map((method) => <label key={method.slug} className="sf-card-row" style={{ cursor: 'pointer' }}>
                 <input type="radio" name="payment_method" checked={checkout.paymentMethod === method.slug} onChange={() => checkout.setPaymentMethod(method.slug)} required />
-                <span>{method.slug === 'cod' ? (ar ? 'الدفع عند الاستلام' : 'Cash on delivery') : method.name}{method.test_mode ? (ar ? ' (تجريبي)' : ' (Test)') : ''}</span>
+                <span>{method.slug === 'cod' ? (ar ? 'الدفع عند الاستلام' : 'Cash on delivery') : method.slug === 'bank_transfer' ? (ar ? 'تحويل بنكي' : 'Bank transfer') : method.name}{method.test_mode ? (ar ? ' (تجريبي)' : ' (Test)') : ''}</span>
               </label>)}
               {!checkout.paymentMethods.length ? <p className="sf-field__error">{ar ? 'لا توجد طريقة دفع متاحة حاليًا.' : 'No payment method is currently available.'}</p> : null}
             </fieldset>
@@ -74,7 +74,7 @@ export function CheckoutPage(): ReactElement {
             {quote ? <>
               <div className="sf-cart-summary__row"><span>{ar ? 'المنتجات' : 'Products'}</span><span>{formatMoney(Number(quote.totals.subtotal), quote.currency, locale)}</span></div>
               {Number(quote.totals.discount_total) > 0 ? <div className="sf-cart-summary__row"><span>{t('checkout.discount')}</span><span>−{formatMoney(Number(quote.totals.discount_total), quote.currency, locale)}</span></div> : null}
-              <div className="sf-cart-summary__row"><span>{t('checkout.shipping')}</span><span>{formatMoney(Number(quote.totals.shipping_total), quote.currency, locale)}</span></div>
+              {quote.requires_shipping ? <div className="sf-cart-summary__row"><span>{t('checkout.shipping')}</span><span>{formatMoney(Number(quote.totals.shipping_total), quote.currency, locale)}</span></div> : null}
               {Number(quote.totals.tax_total) > 0 ? <div className="sf-cart-summary__row"><span>{ar ? 'الضريبة' : 'Tax'}</span><span>{formatMoney(Number(quote.totals.tax_total), quote.currency, locale)}</span></div> : null}
               <div className="sf-cart-summary__total"><span>{t('checkout.total')}</span><span className="sf-cart-summary__total-value">{formatMoney(Number(quote.totals.grand_total), quote.currency, locale)}</span></div>
             </> : null}
