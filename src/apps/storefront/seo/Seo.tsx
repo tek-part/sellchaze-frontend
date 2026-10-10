@@ -4,7 +4,7 @@
  * React 19 compatible). Emits title, description, canonical, Open Graph, Twitter, robots and JSON-LD.
  * Canonical uses the clean route path (production URL form) regardless of the dev hash router.
  */
-import type { ReactElement } from 'react';
+import { useEffect, type ReactElement } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useStore } from '../state/store-context';
 
@@ -48,15 +48,20 @@ export function Seo(props: SeoProps): ReactElement {
   const { store } = useStore();
   const location = useLocation();
 
-  const siteName = store.name;
+  const siteName = store.identity?.site_title || store.name;
   const fullTitle = title ? `${title} · ${siteName}` : siteName;
   const canonical = `${origin()}${path ?? location.pathname}`;
   const desc = description ?? store.description ?? '';
   const ogType = type === 'product' ? 'product' : 'website';
+  useEffect(() => {
+    document.title = fullTitle;
+    const element = document.head.querySelector('title');
+    element?.setAttribute('data-store-page-title', '');
+    return () => { element?.removeAttribute('data-store-page-title'); document.title = siteName; };
+  }, [fullTitle, siteName]);
 
   return (
     <>
-      <title>{fullTitle}</title>
       {desc ? <meta name="description" content={desc} /> : null}
       <link rel="canonical" href={canonical} />
       <meta name="robots" content={noindex ? 'noindex,nofollow' : 'index,follow'} />

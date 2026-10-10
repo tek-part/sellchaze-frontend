@@ -158,6 +158,7 @@ async function bootstrap(): Promise<void> {
     */}
     <I18nextProvider i18n={i18n}>
     <StorefrontThemeRoot
+      {...(initialData?.store.identity && params.get('defaults') !== '1' ? { identity: initialData.store.identity } : {})}
       themeId={themeId}
       {...(initialData?.theme?.bundle_url ? { bundleUrl: initialData.theme.bundle_url } : {})}
       {...(initialData?.theme?.bundle_integrity ? { bundleIntegrity: initialData.theme.bundle_integrity } : {})}

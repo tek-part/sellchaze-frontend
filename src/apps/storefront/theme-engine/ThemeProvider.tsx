@@ -22,6 +22,7 @@ import { ThemeContext } from './context';
 import { loadTheme } from './loader';
 import { ThemeRegistry, themeRegistry as defaultRegistry } from './registry';
 import { resolveSettings } from './settings';
+import { identityFontStack, identitySettings, identityTokens, type StoreIdentity } from '../store-identity';
 import { buildThemeRegistries } from './registries';
 import type {
   ColorScheme,
@@ -34,6 +35,7 @@ import type {
 } from './types';
 
 export interface ThemeProviderProps {
+  identity?: StoreIdentity;
   /** Active theme id (e.g. the merchant's selected theme). */
   themeId: string;
   /** Registry to resolve from. Defaults to the process-wide registry. */
@@ -120,15 +122,15 @@ export function ThemeProvider(props: ThemeProviderProps): ReactElement | null {
   // Resolve settings (fail-safe) and tokens for the loaded module.
   const settings: ThemeSettings = useMemo(() => {
     if (!module) return Object.freeze({});
-    return resolveSettings(module.manifest.settingsSchema, {
+    return identitySettings(resolveSettings(module.manifest.settingsSchema, {
       ...settingOverrides,
       ...localSettings,
-    }, locale);
-  }, [module, settingOverrides, localSettings, locale]);
+    }, locale), props.identity);
+  }, [module, settingOverrides, localSettings, locale, props.identity]);
 
   const tokens = useMemo(
-    () => (module ? module.createTokens(settings) : null),
-    [module, settings],
+    () => (module ? identityTokens(module.createTokens(settings), props.identity) : null),
+    [module, settings, props.identity],
   );
 
   // Wrap the theme's authoring maps into resolvable registries (registry-driven rendering).
@@ -139,6 +141,9 @@ export function ThemeProvider(props: ThemeProviderProps): ReactElement | null {
     const el = target ?? (typeof document !== 'undefined' ? document.documentElement : null);
     if (!el || !tokens) return;
     applyTokensToElement(el, tokens, colorScheme);
+    const font = identityFontStack(props.identity);
+    if (font) el.style.setProperty('--font-arabic', font);
+    else el.style.removeProperty('--font-arabic');
     el.setAttribute('dir', direction);
 
     let active = true;
@@ -153,7 +158,7 @@ export function ThemeProvider(props: ThemeProviderProps): ReactElement | null {
     return () => {
       active = false;
     };
-  }, [target, tokens, colorScheme, direction]);
+  }, [target, tokens, colorScheme, direction, props.identity]);
 
   const updateSettings = useCallback((patch: Partial<Record<string, ThemeSettingValue>>) => {
     setLocalSettings((prev) => ({ ...prev, ...patch }));
