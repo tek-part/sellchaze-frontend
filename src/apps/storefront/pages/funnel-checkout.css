@@ -1,19 +1,19 @@
-.sf-funnel-checkout { scroll-margin-top: 100px; background: var(--sf-color-surface, #f7f8f7); }
+.sf-funnel-checkout { scroll-margin-top: 100px; background: var(--bg); color: var(--text); }
 .sf-funnel-checkout h2 { margin-block: 0 12px; font-size: clamp(1.5rem, 4vw, 2.1rem); }
 .sf-funnel-checkout > .sf-container > p { margin-block-end: 28px; }
-.sf-funnel-checkout form { background: var(--sf-color-background, #fff); border: 1px solid #dfe5df; border-radius: 18px; padding: clamp(18px, 4vw, 36px); }
+.sf-funnel-checkout form { background: var(--surface); border: 1px solid var(--border); border-radius: 18px; padding: clamp(18px, 4vw, 36px); }
 .sf-funnel-checkout__fields { border: 0; padding: 0; margin: 0; display: grid; gap: 18px; min-inline-size: 0; }
 .sf-funnel-checkout__product { font-size: 1.25rem; font-weight: 700; padding-block-end: 22px; }
 .sf-funnel-checkout__selection { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; align-items: end; }
 .sf-funnel-checkout__option { display: grid; gap: 8px; }
-.sf-funnel-checkout__option select { width: 100%; min-height: 52px; border: 1px solid #cdd6ce; border-radius: 8px; padding: 10px; background: #fff; color: #17221a; font: inherit; }
+.sf-funnel-checkout__option select { width: 100%; min-height: 52px; border: 1px solid var(--border); border-radius: 8px; padding: 10px; background: var(--surface-2); color: var(--text); font: inherit; }
 .sf-funnel-checkout__coupon { display: flex; align-items: end; gap: 10px; flex-wrap: wrap; }
 .sf-funnel-checkout__coupon .sf-field { flex: 1; min-width: 140px; }
-.sf-funnel-checkout__payment { border: 1px solid #dfe5df; border-radius: 10px; padding: 16px; margin: 0; display: grid; gap: 12px; }
+.sf-funnel-checkout__payment { border: 1px solid var(--border); border-radius: 10px; padding: 16px; margin: 0; display: grid; gap: 12px; }
 .sf-funnel-checkout__payment label { display: flex; align-items: center; gap: 10px; }
 .sf-funnel-checkout__totals { margin-block: 22px; }
 .sf-funnel-checkout__totals dl { display: grid; gap: 12px; margin: 0; }
 .sf-funnel-checkout__totals dl > div { display: flex; justify-content: space-between; gap: 18px; }
 .sf-funnel-checkout__totals dd { margin: 0; }
-.sf-funnel-checkout__grand { border-top: 1px solid #dfe5df; padding-block-start: 16px; font-weight: 700; font-size: 1.2rem; }
+.sf-funnel-checkout__grand { border-top: 1px solid var(--border); padding-block-start: 16px; font-weight: 700; font-size: 1.2rem; }
 @media (max-width: 560px) { .sf-funnel-checkout__selection { grid-template-columns: minmax(0, 1fr); } }

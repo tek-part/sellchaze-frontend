@@ -20,10 +20,12 @@ import { useStore } from '../state/store-context';
 import { formatMoney } from '../utils/format';
 import { ThemeRenderer, useTemplate } from '../theme-engine';
 import { flowContext } from './flow-context';
+import { cartRequiresShipping } from '../utils/shipping';
 
 function lineToProduct(line: CartLine): ProductCardModel {
   return {
     id: line.productId,
+    digitalType: line.digitalType,
     handle: '',
     title: line.title,
     url: line.url,
@@ -83,10 +85,10 @@ export function CartPage(): ReactElement {
               <span>{t('cart.subtotal')}</span>
               <span>{formatMoney(cart.totals.subtotal, cart.totals.currency || store.currency)}</span>
             </div>
-            <div className="sf-cart-summary__row">
+            {cartRequiresShipping(cart.lines) ? <div className="sf-cart-summary__row">
               <span>{t('checkout.shipping')}</span>
               <span>{t('checkout.calculatedAtCheckout')}</span>
-            </div>
+            </div> : null}
             <div className="sf-cart-summary__total">
               <span>{t('checkout.total')}</span>
               <span className="sf-cart-summary__total-value">

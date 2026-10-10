@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { resolveShipping } from './shipping';
+import { cartRequiresShipping, resolveShipping } from './shipping';
 import type { ShippingConfiguration } from '../types/shipping';
 
 const config = (): ShippingConfiguration => ({ enabled: true, regions_enabled: true, auto_select_region: true, currency: 'EGP', flat_rate: '25', free_over: null,
@@ -7,6 +7,11 @@ const config = (): ShippingConfiguration => ({ enabled: true, regions_enabled: t
   options: [{ id: 'express', name: { ar: 'سريع', en: 'Express' }, description: { ar: '', en: '' }, enabled: true, is_default: true, priority: 1, rate: '85' }] });
 
 describe('delivery selection', () => {
+  it('hides shipping presentation for digital-only bags and retains it for mixed and legacy bags', () => {
+    expect(cartRequiresShipping([{ digitalType: 'link' }, { digitalType: 'codes' }])).toBe(false);
+    expect(cartRequiresShipping([{ digitalType: 'codes' }, { digitalType: 'physical' }])).toBe(true);
+    expect(cartRequiresShipping([{}])).toBe(true);
+  });
   it('uses ordered regions and the merchant default, preserving valid buyer choices', () => {
     expect(resolveShipping(config(), {})).toEqual({ ready: true, selection: { shipping_region_id: 'cairo', shipping_option_id: 'express' } });
     expect(resolveShipping(config(), { shipping_region_id: 'alex' }).selection.shipping_region_id).toBe('alex');

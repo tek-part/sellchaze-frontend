@@ -49,21 +49,22 @@ export function useCheckoutPaymentFlow(options?: { items: ReadonlyArray<Checkout
   const submitting = useRef(false);
   const completed = useRef(false);
   const items = options?.items;
+  const paymentBasketKey = JSON.stringify([...new Set(items ? items.map((item) => item.product_id) : cart.lines.map((line) => Number(line.productId)))].sort((a, b) => a - b));
   const preserveCart = options?.preserveCart ?? false;
 
   useEffect(() => {
     let active = true;
-    void getPaymentMethods()
+    void getPaymentMethods(JSON.parse(paymentBasketKey) as number[])
       .then(({ data }) => {
         if (!active) return;
         setPaymentMethods(data);
-        setPaymentMethod((current) => current || data[0]?.slug || '');
+        setPaymentMethod((current) => data.some((method) => method.slug === current) ? current : data[0]?.slug || '');
       })
       .catch((requestError: unknown) => {
         if (active) setError(requestError instanceof Error ? requestError.message : t('checkout.orderFailed'));
       });
     return () => { active = false; };
-  }, [t]);
+  }, [t, paymentBasketKey]);
 
   const run = useCallback(async (operation: () => Promise<CheckoutResponse>): Promise<void> => {
     if (submitting.current || completed.current) return;

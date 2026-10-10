@@ -9,6 +9,7 @@ export interface CheckoutField {
   position: number;
   payment_required?: boolean;
   shipping_region?: boolean;
+  digital_required?: boolean;
 }
 
 export type Values = Partial<Record<CheckoutField['key'], string>>;

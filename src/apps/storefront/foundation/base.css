@@ -940,7 +940,7 @@
 .sf-hcard__img { width: 100%; height: 100%; object-fit: cover; }
 .sf-hcard__body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: var(--sp-2); }
 .sf-hcard__row { display: flex; justify-content: space-between; align-items: flex-start; gap: var(--sp-3); }
-.sf-hcard__name { font-family: var(--heading); font-size: var(--fs-md); color: var(--text); }
+.sf-hcard__name { font-family: var(--heading); font-size: var(--fs-md); color: var(--text); text-decoration: none; }
 .sf-hcard__attrs { color: var(--muted); font-family: var(--font); font-size: var(--fs-sm); }
 .sf-hcard__foot { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-3); margin-top: auto; }
 

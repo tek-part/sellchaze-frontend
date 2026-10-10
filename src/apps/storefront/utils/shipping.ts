@@ -1,4 +1,10 @@
 import type { ShippingConfiguration, ShippingSelection } from '../types/shipping';
+import type { CartLine } from '../types/cart';
+
+/** Presentation only; server checkout independently resolves every catalog product. */
+export function cartRequiresShipping(lines: ReadonlyArray<Pick<CartLine, 'digitalType'>>): boolean {
+  return lines.some((line) => !line.digitalType || line.digitalType === 'physical');
+}
 
 /** Defaults come from the current store; removed or disabled selections cannot reach checkout. */
 export function resolveShipping(config: ShippingConfiguration | undefined, chosen: ShippingSelection) {
