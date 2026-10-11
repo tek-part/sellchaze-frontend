@@ -12,14 +12,14 @@ import NotificationsMenu from '../NotificationsMenu';
 import { CHAT_ENABLED } from '../../lib/features';
 import useWorkspaceCopy from './workspaceCopy';
 
-export default function WorkspaceHeader({ me, storeUrl, isSupplier, permissions, appearance, onLanguage, onNavigation, onExpand, collapsed, onSearch, onLogout, chatUnread }) {
+export default function WorkspaceHeader({ me, storeUrl, isSupplier, permissions, appearance, onLanguage, onNavigation, onToggleSidebar, sidebarToggleRef, collapsed, onSearch, onLogout, chatUnread }) {
     const { t, i18n } = useTranslation(); const ws = useWorkspaceCopy();
     const iconButton = 'ws-icon-button'; const menuRow = 'ws-menu-row';
     const publicSlug = me.username || me.profile?.username || `user_${me.id}`;
     return <header className="ws-header">
         <div className="ws-header-start">
             <button type="button" className={`${iconButton} ws-mobile-menu`} onClick={onNavigation} aria-label={t('nav_all', 'All')}><HiOutlineBars3 aria-hidden /></button>
-            {collapsed ? <button type="button" className={`${iconButton} ws-expand`} onClick={onExpand} aria-label={ws('expand')}><HiOutlineBars3 aria-hidden /></button> : null}
+            <button ref={sidebarToggleRef} type="button" className={`${iconButton} ws-expand`} onClick={onToggleSidebar} aria-label={ws(collapsed ? 'expand' : 'collapse')} aria-expanded={!collapsed} aria-controls="workspace-sidebar"><HiOutlineBars3 aria-hidden /></button>
             <button type="button" className="ws-search-trigger" onClick={onSearch} aria-label={ws('searchTitle')} aria-keyshortcuts="Control+K Meta+K">
                 <HiOutlineMagnifyingGlass aria-hidden /><span>{ws('search')}</span><kbd>Ctrl K</kbd>
             </button>

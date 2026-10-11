@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Dialog, DialogBackdrop, DialogPanel, DialogTitle } from '@headlessui/react';
 import { motion, useReducedMotion } from 'framer-motion';
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
@@ -42,6 +42,8 @@ export default function AppLayout() {
     const [logoutOpen, setLogoutOpen] = useState(false);
     const [mobileNavOpen, setMobileNavOpen] = useState(false);
     const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+    const mainRef = useRef(null);
+    const sidebarToggleRef = useRef(null);
     const [impersonationActive, setImpersonationActive] = useState(() => isImpersonating());
     const [impersonationExitLoading, setImpersonationExitLoading] = useState(false);
     const appearance = useWorkspaceAppearance();
@@ -50,6 +52,9 @@ export default function AppLayout() {
     const [searchOpen, setSearchOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
     const [navigationQuery, setNavigationQuery] = useState('');
+    useLayoutEffect(() => {
+        mainRef.current?.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+    }, [location.pathname]);
     useEffect(() => {
         document.body.setAttribute('data-workspace-theme', appearance.theme);
         return () => document.body.removeAttribute('data-workspace-theme');
@@ -199,14 +204,14 @@ export default function AppLayout() {
     return (
         <WorkspaceIconProvider><div className="sc-workspace ws-frame" data-workspace-theme={appearance.theme}>
             <a href="#workspace-content" className="ws-skip-link">{currentLng === 'ar' ? 'انتقل إلى المحتوى' : 'Skip to content'}</a>
-            <motion.div className="ws-sidebar-container" initial={false} animate={{ width: sidebarCollapsed ? 0 : 252 }} transition={{ duration: reducedMotion ? 0 : 0.15, ease: [0.4, 0, 0.2, 1] }} inert={sidebarCollapsed || undefined} aria-hidden={sidebarCollapsed || undefined}><Sidebar me={me} permissions={permissions} storeUrl={storeUrl} onCollapse={() => setSidebarCollapsed(true)} /></motion.div>
+            <motion.div id="workspace-sidebar" className="ws-sidebar-container" initial={false} animate={{ width: sidebarCollapsed ? 64 : 272 }} transition={{ duration: reducedMotion ? 0 : 0.15, ease: [0.4, 0, 0.2, 1] }}><Sidebar me={me} permissions={permissions} storeUrl={storeUrl} collapsed={sidebarCollapsed} onSearch={() => setSearchOpen(true)} onCollapse={() => { setSidebarCollapsed(true); sidebarToggleRef.current?.focus(); }} onExpand={() => { setSidebarCollapsed(false); sidebarToggleRef.current?.focus(); }} /></motion.div>
             <div className="ws-main-column">
                 {impersonationActive ? <div className="ws-impersonation" role="status">
                     <p><HiOutlineArrowUturnLeft aria-hidden />{t('impersonation_banner')}</p>
                     <button type="button" disabled={impersonationExitLoading} onClick={() => void handleExitImpersonation()}>{impersonationExitLoading ? '…' : t('impersonation_exit')}</button>
                 </div> : null}
-                <WorkspaceHeader me={me} permissions={permissions} storeUrl={storeUrl} isSupplier={isSupplier} chatUnread={chatUnread} appearance={appearance} onLanguage={toggleLanguage} onNavigation={() => setMobileNavOpen(true)} onExpand={() => setSidebarCollapsed(false)} collapsed={sidebarCollapsed} onSearch={() => setSearchOpen(true)} onLogout={() => setLogoutOpen(true)} />
-                <main id="workspace-content" tabIndex={-1} className="ws-main-scroll">
+                <WorkspaceHeader me={me} permissions={permissions} storeUrl={storeUrl} isSupplier={isSupplier} chatUnread={chatUnread} appearance={appearance} onLanguage={toggleLanguage} onNavigation={() => setMobileNavOpen(true)} onToggleSidebar={() => setSidebarCollapsed((value) => !value)} sidebarToggleRef={sidebarToggleRef} collapsed={sidebarCollapsed} onSearch={() => setSearchOpen(true)} onLogout={() => setLogoutOpen(true)} />
+                <main ref={mainRef} id="workspace-content" tabIndex={-1} className="ws-main-scroll">
                     <div key={location.pathname} className="ws-page"><Outlet context={{ me, isAdmin, isSupplier, permissions, unifiedStoreNavigation: !isAdminOnly }} /></div>
                 </main>
             </div>

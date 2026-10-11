@@ -94,6 +94,7 @@ function megaSubNavLinkClass({ isActive }) {
  * 'mega' — the wide "All" drawer: sections become cards laid out 3-up on desktop.
  */
 const NavVariantContext = createContext('list');
+const ExpandedGroupContext = createContext('');
 
 // No boxes: sections are open columns of links separated by whitespace only.
 const MEGA_SECTION_CLASS = 'flex flex-col gap-0.5';
@@ -118,9 +119,10 @@ function SectionLabel({ children }) {
 
 function NavGroup({ title, icon: Icon, defaultOpen, groupActive, children }) {
     const mega = useContext(NavVariantContext) === 'mega';
+    const expanded = useContext(ExpandedGroupContext) === title;
     const reducedMotion = useReducedMotion();
     return (
-        <Disclosure key={groupActive ? 'active' : 'idle'} defaultOpen={defaultOpen}>
+        <Disclosure key={`${groupActive ? 'active' : 'idle'}-${expanded}`} defaultOpen={defaultOpen || expanded}>
             {({ open }) => (
                 <div className="flex flex-col overflow-hidden rounded-xl">
                     <DisclosureButton
@@ -161,15 +163,15 @@ function NavGroup({ title, icon: Icon, defaultOpen, groupActive, children }) {
     );
 }
 
-export default function SidebarNav({ variant = 'list', ...props }) {
+export default function SidebarNav({ variant = 'list', expandedGroup = '', ...props }) {
     return (
         <NavVariantContext.Provider value={variant}>
-            <SidebarNavInner {...props} variant={variant} />
+            <ExpandedGroupContext.Provider value={expandedGroup}><SidebarNavInner {...props} variant={variant} /></ExpandedGroupContext.Provider>
         </NavVariantContext.Provider>
     );
 }
 
-function SidebarNavInner({ isAdmin = false, isSupplier = false, roles = [], permissions = [], onNavigate, variant = 'list', query = '', search = false }) {
+function SidebarNavInner({ isAdmin = false, isSupplier = false, roles = [], permissions = [], onNavigate, onExpand, compact = false, variant = 'list', query = '', search = false }) {
     const { t } = useTranslation();
     const mega = variant === 'mega';
     // Link styles follow the variant; the JSX below references these local names.
@@ -229,7 +231,7 @@ function SidebarNavInner({ isAdmin = false, isSupplier = false, roles = [], perm
 
     if (isAdminOnly) {
         return (
-            <NavigationResults query={query} search={search} onNavigate={onNavigate}>
+            <NavigationResults query={query} search={search} onNavigate={onNavigate} compact={compact} onExpand={onExpand}>
             <nav
                 className={navClass}
                 aria-label="Main"
@@ -442,7 +444,7 @@ function SidebarNavInner({ isAdmin = false, isSupplier = false, roles = [], perm
     }
 
     return (
-        <NavigationResults query={query} search={search} onNavigate={onNavigate}>
+        <NavigationResults query={query} search={search} onNavigate={onNavigate} compact={compact} onExpand={onExpand}>
             <nav
             className={navClass}
             aria-label="Main"
