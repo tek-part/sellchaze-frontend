@@ -12,7 +12,7 @@ import ConfirmDialog from '../components/ConfirmDialog';
 import TableIconActions from '../components/table/TableIconActions';
 import PageHeader from '../components/PageHeader';
 import SearchableSelect from '../components/ui/SearchableSelect';
-import { HiOutlinePlus } from 'react-icons/hi2';
+import { HiOutlinePlus } from '../components/workspace/WorkspaceIcons';
 import { exportRowsToExcel } from '../utils/exportExcel';
 import { fetchAllPages } from '../utils/fetchAllPages';
 

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { HiOutlineArrowLeft, HiOutlineChatBubbleOvalLeft } from 'react-icons/hi2';
+import { HiOutlineArrowLeft, HiOutlineChatBubbleOvalLeft } from '../components/workspace/WorkspaceIcons';
 import api from '../api/client';
 import PostCard from '../components/feed/PostCard';
 import CommentThread from '../components/feed/CommentThread';

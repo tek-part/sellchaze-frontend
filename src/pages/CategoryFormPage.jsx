@@ -3,7 +3,7 @@ import { Navigate, useMatch, useNavigate, useParams } from 'react-router-dom';
 import { useOutletContext } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
-import { HiOutlinePhoto, HiOutlineArrowUpTray, HiOutlineXMark } from 'react-icons/hi2';
+import { HiOutlinePhoto, HiOutlineArrowUpTray, HiOutlineXMark } from '../components/workspace/WorkspaceIcons';
 import api from '../api/client';
 import useStoreLocales from '../hooks/useStoreLocales';
 import LocaleTabs, { localeLabel } from '../components/store/LocaleTabs';

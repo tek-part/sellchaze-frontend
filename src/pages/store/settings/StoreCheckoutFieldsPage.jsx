@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { HiOutlineArrowDown, HiOutlineArrowUp, HiOutlineDocumentText } from 'react-icons/hi2';
+import { HiOutlineArrowDown, HiOutlineArrowUp, HiOutlineDocumentText } from '../../../components/workspace/WorkspaceIcons';
 import api from '../../../api/client';
 import PageHeader from '../../../components/PageHeader';
 import FormField, { INPUT_CLASS } from '../../../components/ui/FormField';

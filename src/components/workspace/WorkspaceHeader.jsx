@@ -3,9 +3,9 @@ import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
     HiOutlineArrowPath, HiOutlineBars3, HiOutlineMagnifyingGlass, HiOutlineSun, HiOutlineMoon, HiOutlineComputerDesktop,
-    HiOutlineLanguage, HiOutlineChevronDown, HiOutlineArrowTopRightOnSquare, HiOutlineUserCircle, HiOutlineArrowRightOnRectangle,
+    HiOutlineLanguage, HiOutlineChevronDown, HiOutlineArrowTopRightOnSquare, HiOutlineEye, HiOutlineUserCircle, HiOutlineArrowRightOnRectangle,
     HiOutlineCheck, HiOutlineChatBubbleLeftRight, HiOutlineSignal, HiOutlineClipboardDocumentList,
-} from 'react-icons/hi2';
+} from './WorkspaceIcons';
 import { FaWhatsapp } from 'react-icons/fa';
 import UserAvatar from '../UserAvatar';
 import NotificationsMenu from '../NotificationsMenu';
@@ -25,11 +25,11 @@ export default function WorkspaceHeader({ me, storeUrl, isSupplier, permissions,
             </button>
         </div>
         <div className="ws-header-actions">
-            {storeUrl ? <a href={storeUrl} target="_blank" rel="noopener noreferrer" className={`${iconButton} ws-store-link`} aria-label={t('view_store', 'View store')} title={t('view_store', 'View store')}><HiOutlineArrowTopRightOnSquare aria-hidden /></a> : null}
+            {storeUrl ? <a href={storeUrl} target="_blank" rel="noopener noreferrer" className={`${iconButton} ws-store-link`} aria-label={t('view_store', 'View store')} title={t('view_store', 'View store')}><HiOutlineEye aria-hidden /></a> : null}
             <button type="button" className={`${iconButton} ws-refresh`} onClick={() => window.location.reload()} aria-label={ws('refresh')} title={ws('refresh')}><HiOutlineArrowPath aria-hidden /></button>
             <Menu as="div" className="relative">
                 <MenuButton className={iconButton} aria-label={ws('appearance')} title={ws('appearance')}>{appearance.theme === 'dark' ? <HiOutlineMoon aria-hidden /> : <HiOutlineSun aria-hidden />}</MenuButton>
-                <MenuItems anchor="bottom end" className="ws-menu ws-appearance-menu">
+                <MenuItems transition anchor="bottom end" className="ws-menu ws-appearance-menu">
                     {[[ 'light', HiOutlineSun ],[ 'dark', HiOutlineMoon ],[ 'system', HiOutlineComputerDesktop ]].map(([key, Icon]) => <MenuItem key={key}>
                         <button type="button" className={menuRow} onClick={() => appearance.change(key)} aria-label={ws(key)}><Icon aria-hidden /><span>{ws(key)}</span>{appearance.mode === key ? <HiOutlineCheck aria-hidden className="ws-menu-check" /> : null}</button>
                     </MenuItem>)}
@@ -42,7 +42,7 @@ export default function WorkspaceHeader({ me, storeUrl, isSupplier, permissions,
                 <MenuButton className="ws-account-button" aria-label={t('user_menu_aria', { name: me.name })}>
                     <UserAvatar user={me} alt="" sizeClass="h-8 w-8" /><span className="ws-account-name"><small>{ws('hello')}</small><strong>{me.name}</strong></span><HiOutlineChevronDown aria-hidden className="ws-account-chevron" />
                 </MenuButton>
-                <MenuItems anchor="bottom end" className="ws-menu ws-account-menu">
+                <MenuItems transition anchor="bottom end" className="ws-menu ws-account-menu">
                     <div className="ws-account-summary"><strong>{me.name}</strong><span>{me.email}</span></div>
                     <MenuItem><Link to="/settings/profile" className={menuRow}><HiOutlineUserCircle aria-hidden />{t('nav_profile', 'My profile')}</Link></MenuItem>
                     <MenuItem><Link to={`/u/${publicSlug}`} className={menuRow}><HiOutlineArrowTopRightOnSquare aria-hidden />{t('view_public_profile', 'View public profile')}</Link></MenuItem>

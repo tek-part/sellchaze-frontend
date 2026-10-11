@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { HiOutlinePhoto, HiOutlineXMark } from 'react-icons/hi2';
+import { HiOutlinePhoto, HiOutlineXMark } from '../../../components/workspace/WorkspaceIcons';
 import PageHeader from '../../../components/PageHeader';
 import FormField, { INPUT_CLASS, INPUT_ERROR_CLASS } from '../../../components/ui/FormField';
 import SaveBar from '../../../components/ui/SaveBar';

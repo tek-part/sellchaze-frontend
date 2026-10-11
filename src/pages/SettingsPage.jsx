@@ -1,7 +1,7 @@
 import { Navigate, Link } from 'react-router-dom';
 import { useOutletContext } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { HiOutlineArrowPath, HiOutlineEnvelope, HiOutlineCog6Tooth } from 'react-icons/hi2';
+import { HiOutlineArrowPath, HiOutlineEnvelope, HiOutlineCog6Tooth } from '../components/workspace/WorkspaceIcons';
 import { FaGoogle } from 'react-icons/fa';
 
 export default function SettingsPage() {

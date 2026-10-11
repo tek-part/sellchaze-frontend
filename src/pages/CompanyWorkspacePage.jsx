@@ -10,7 +10,7 @@ import {
     HiOutlineShoppingBag,
     HiOutlineUserGroup,
     HiOutlineXMark,
-} from 'react-icons/hi2';
+} from '../components/workspace/WorkspaceIcons';
 import { v2Request } from '../api/client';
 
 const copy = {

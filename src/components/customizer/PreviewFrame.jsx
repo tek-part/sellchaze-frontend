@@ -1,6 +1,6 @@
 import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { HiOutlineArrowPath, HiOutlineArrowTopRightOnSquare, HiOutlineSignalSlash } from 'react-icons/hi2';
+import { HiOutlineArrowPath, HiOutlineArrowTopRightOnSquare, HiOutlineSignalSlash } from '../workspace/WorkspaceIcons';
 import { isPreviewMessage } from '../../apps/storefront/platform/studio/editor-domain';
 
 const READY_TIMEOUT_MS = 6000;

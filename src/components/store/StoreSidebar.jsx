@@ -5,7 +5,7 @@ import {
     HiOutlineArrowUturnLeft,
     HiOutlineBuildingStorefront,
     HiOutlineRocketLaunch,
-} from 'react-icons/hi2';
+} from '../workspace/WorkspaceIcons';
 import StoreStatusPill from './StoreStatusPill';
 import { relativeStorePath } from './storeNav';
 

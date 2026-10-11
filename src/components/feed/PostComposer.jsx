@@ -13,7 +13,7 @@ import {
     HiOutlineRectangleStack,
     HiOutlineSparkles,
     HiOutlineXMark,
-} from 'react-icons/hi2';
+} from '../workspace/WorkspaceIcons';
 import api, { v2Request } from '../../api/client';
 import { langParam } from '../../api/lang';
 import SearchableSelect from '../ui/SearchableSelect';

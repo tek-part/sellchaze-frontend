@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { HiOutlineSparkles, HiOutlineCheck, HiOutlineCheckBadge } from 'react-icons/hi2';
+import { HiOutlineSparkles, HiOutlineCheck, HiOutlineCheckBadge } from '../components/workspace/WorkspaceIcons';
 import api from '../api/client';
 import { langParam } from '../api/lang';
 

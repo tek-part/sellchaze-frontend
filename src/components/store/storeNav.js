@@ -2,7 +2,9 @@ import {
     HiOutlineAdjustmentsHorizontal,
     HiOutlineBars3BottomLeft,
     HiOutlineChartBar,
-    HiOutlineChatBubbleLeftRight,
+    HiOutlineStar,
+    HiOutlineCube,
+    HiOutlineFunnel,
     HiOutlineCog6Tooth,
     HiOutlineCreditCard,
     HiOutlineDocumentText,
@@ -16,7 +18,7 @@ import {
     HiOutlineSwatch,
     HiOutlineTicket,
     HiOutlineTruck,
-} from 'react-icons/hi2';
+} from '../workspace/WorkspaceIcons';
 
 /**
  * Pure navigation config for the store admin sidebar. Paths are relative to
@@ -40,9 +42,9 @@ export function buildStoreNav(t, access = {}) {
                 { key: 'blocked-phone-numbers', to: 'blocked-phone-numbers', label: t('store_nav_blocked_phones', 'Blocked phones'), Icon: HiOutlineShoppingBag, show: access.canStoreOrders },
                 { key: 'blocked-phones', to: 'blocked-phones', label: t('store_nav_blocked_otp_phones', 'Blocked OTP phones'), Icon: HiOutlineShoppingBag, show: access.canStoreOrders },
                 { key: 'inventory', to: 'inventory', label: t('store_nav_inventory', 'Store inventory'), Icon: HiOutlineSquares2X2, show: access.canStoreInventory },
-                { key: 'products', to: 'products', label: t('products', 'Products'), Icon: HiOutlineShoppingBag, show: access.canStoreProducts },
+                { key: 'products', to: 'products', label: t('products', 'Products'), Icon: HiOutlineCube, show: access.canStoreProducts },
                 { key: 'coupons', to: 'coupons', label: t('store_nav_coupons', 'Coupons'), Icon: HiOutlineTicket, show: access.canStoreCoupons },
-                { key: 'reviews', to: 'reviews', label: t('store_nav_reviews', 'Reviews'), Icon: HiOutlineChatBubbleLeftRight, show: access.canStoreReviews },
+                { key: 'reviews', to: 'reviews', label: t('store_nav_reviews', 'Reviews'), Icon: HiOutlineStar, show: access.canStoreReviews },
                 { key: 'analytics', to: 'analytics', label: t('store_nav_analytics', 'Analytics'), Icon: HiOutlineChartBar, show: access.canStoreAnalytics },
             ],
         },
@@ -50,7 +52,7 @@ export function buildStoreNav(t, access = {}) {
             key: 'design',
             label: t('store_nav_group_design', 'Design'),
             items: [
-                { key: 'funnels', to: 'funnels', label: t('store_nav_funnels', 'Sales funnels'), Icon: HiOutlineRocketLaunch, show: access.canStorePages },
+                { key: 'funnels', to: 'funnels', label: t('store_nav_funnels', 'Sales funnels'), Icon: HiOutlineFunnel, show: access.canStorePages },
                 {
                     key: 'themes',
                     to: 'themes',

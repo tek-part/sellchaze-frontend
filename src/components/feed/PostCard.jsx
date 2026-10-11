@@ -21,7 +21,7 @@ import {
     HiOutlineEllipsisHorizontal,
     HiOutlineMapPin,
     HiOutlineDocumentText,
-} from 'react-icons/hi2';
+} from '../workspace/WorkspaceIcons';
 import api from '../../api/client';
 import { langParam } from '../../api/lang';
 import notify from '../ui/notify';

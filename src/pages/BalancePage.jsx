@@ -1,6 +1,6 @@
 import { Navigate, NavLink, useLocation, useOutletContext } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { HiOutlineArrowDownTray, HiOutlineArrowUpTray, HiOutlineBanknotes } from 'react-icons/hi2';
+import { HiOutlineArrowDownTray, HiOutlineArrowUpTray, HiOutlineBanknotes } from '../components/workspace/WorkspaceIcons';
 
 function subNavClass({ isActive }) {
     return [

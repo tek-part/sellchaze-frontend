@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
-import { HiCheckBadge, HiOutlinePaperAirplane } from 'react-icons/hi2';
+import { HiCheckBadge, HiOutlinePaperAirplane } from '../components/workspace/WorkspaceIcons';
 import api from '../api/client';
 
 const STATUS_COLORS = {

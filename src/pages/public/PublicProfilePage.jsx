@@ -12,7 +12,7 @@ import {
     HiOutlineUsers,
     HiOutlineShoppingBag,
     HiOutlineEnvelope,
-} from 'react-icons/hi2';
+} from '../../components/workspace/WorkspaceIcons';
 import {
     FaFacebookF,
     FaInstagram,

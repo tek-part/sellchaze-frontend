@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Dialog, DialogBackdrop, DialogPanel } from '@headlessui/react';
 import { Link, Navigate, Outlet, useLocation, useOutletContext } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { HiOutlineArrowPath, HiOutlineBars3, HiOutlineXMark } from 'react-icons/hi2';
+import { HiOutlineArrowPath, HiOutlineBars3, HiOutlineXMark } from '../workspace/WorkspaceIcons';
 import api from '../../api/client';
 import useStoreScope from '../../hooks/useStoreScope';
 import { fullStoreAccess, storeAccess } from '../../lib/storeAccess';

@@ -1,7 +1,6 @@
 import { useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { motion } from 'framer-motion';
 import { usePermissions } from '../../hooks/usePermissions';
 import useWorkspaceAppearance from '../workspace/useWorkspaceAppearance';
 import {
@@ -23,7 +22,7 @@ import {
     Tooltip,
 } from 'chart.js';
 import { Bar, Doughnut, Line } from 'react-chartjs-2';
-import { HiOutlineArrowTrendingUp, HiOutlineChartPie, HiOutlineQueueList } from 'react-icons/hi2';
+import { HiOutlineArrowTrendingUp, HiOutlineChartPie, HiOutlineQueueList } from '../workspace/WorkspaceIcons';
 
 ChartJS.register(
     CategoryScale,
@@ -214,10 +213,7 @@ export default function DashboardAnalytics({ stats, counts }) {
     }
 
     return (
-        <motion.section
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, delay: 0.06 }}
+        <section
             className="space-y-8"
         >
             <div>
@@ -336,6 +332,6 @@ export default function DashboardAnalytics({ stats, counts }) {
                     </div>
                 </div>
             ) : null}
-        </motion.section>
+        </section>
     );
 }

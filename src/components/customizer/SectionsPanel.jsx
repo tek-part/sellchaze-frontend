@@ -14,7 +14,7 @@ import {
     HiOutlinePlus,
     HiOutlineSquaresPlus,
     HiOutlineTrash,
-} from 'react-icons/hi2';
+} from '../workspace/WorkspaceIcons';
 import { pickLocalized } from '../../lib/localized';
 import { blockIcon, categoryIcon, sectionIcon } from './sectionIcons';
 import { blockLimits, blockSchemaFor, blockTitle, blockTypes, groupByCategory, hasBlocks, sectionBlocks, variantsOf } from './customizerUtils';

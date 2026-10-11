@@ -59,7 +59,7 @@ import {
     HiOutlineVideoCamera,
     HiOutlineViewColumns,
     HiOutlineWindow,
-} from 'react-icons/hi2';
+} from '../workspace/WorkspaceIcons';
 
 /**
  * Dynamic icon map for section schemas (contract §1 `SectionSchema.icon` = a react-icons/hi2

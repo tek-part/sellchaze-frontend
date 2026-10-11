@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { HiOutlineArrowTopRightOnSquare, HiOutlineCheck, HiOutlineClipboard, HiOutlineGlobeAlt } from 'react-icons/hi2';
+import { HiOutlineArrowTopRightOnSquare, HiOutlineCheck, HiOutlineClipboard, HiOutlineGlobeAlt } from '../../../components/workspace/WorkspaceIcons';
 import CustomDomainsPanel from '../../../components/domains/CustomDomainsPanel';
 import PageHeader from '../../../components/PageHeader';
 import SettingsCard from '../../../components/ui/SettingsCard';

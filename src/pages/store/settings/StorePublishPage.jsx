@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { HiOutlineArrowPath, HiOutlineArrowTopRightOnSquare, HiOutlineRocketLaunch } from 'react-icons/hi2';
+import { HiOutlineArrowPath, HiOutlineArrowTopRightOnSquare, HiOutlineRocketLaunch } from '../../../components/workspace/WorkspaceIcons';
 import api from '../../../api/client';
 import PageHeader from '../../../components/PageHeader';
 import ReadinessChecklist, { useStoreReadiness } from '../../../components/store/ReadinessChecklist';

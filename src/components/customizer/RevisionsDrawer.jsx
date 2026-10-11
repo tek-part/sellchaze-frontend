@@ -1,6 +1,6 @@
 import { Dialog, DialogBackdrop, DialogPanel, DialogTitle } from '@headlessui/react';
 import { useTranslation } from 'react-i18next';
-import { HiOutlineClock, HiOutlineXMark } from 'react-icons/hi2';
+import { HiOutlineClock, HiOutlineXMark } from '../workspace/WorkspaceIcons';
 
 const fmt = (value) => { try { return value ? new Date(value).toLocaleString() : ''; } catch { return ''; } };
 

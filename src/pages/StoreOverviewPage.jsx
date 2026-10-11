@@ -13,7 +13,7 @@ import {
     HiOutlineRocketLaunch,
     HiOutlineShoppingBag,
     HiOutlineSwatch,
-} from 'react-icons/hi2';
+} from '../components/workspace/WorkspaceIcons';
 import api from '../api/client';
 import { notify } from '../components/ui/notify';
 import PageHeader from '../components/PageHeader';

@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { HiOutlineBuildingOffice2, HiOutlineChatBubbleLeftRight, HiOutlineClipboardDocumentList, HiOutlinePaperAirplane } from 'react-icons/hi2';
+import { HiOutlineBuildingOffice2, HiOutlineChatBubbleLeftRight, HiOutlineClipboardDocumentList, HiOutlinePaperAirplane } from '../components/workspace/WorkspaceIcons';
 import api, { v2Request } from '../api/client';
 
 const words = {

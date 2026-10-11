@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { HiOutlineCheckCircle, HiOutlineArrowRight } from 'react-icons/hi2';
+import { HiOutlineCheckCircle, HiOutlineArrowRight } from '../workspace/WorkspaceIcons';
 import api from '../../api/client';
 
 /**

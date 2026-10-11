@@ -10,7 +10,7 @@ import {
     HiOutlinePlus,
     HiOutlineTrash,
     HiOutlineChevronUp,
-} from 'react-icons/hi2';
+} from '../workspace/WorkspaceIcons';
 import SearchableSelect from '../ui/SearchableSelect';
 import Toggle from '../ui/Toggle';
 import { INPUT_CLASS } from '../ui/FormField';

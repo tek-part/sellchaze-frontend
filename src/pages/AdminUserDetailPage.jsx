@@ -10,7 +10,7 @@ import {
     HiOutlineShieldCheck,
     HiOutlineBell,
     HiOutlineUser,
-} from 'react-icons/hi2';
+} from '../components/workspace/WorkspaceIcons';
 import toast from 'react-hot-toast';
 import api from '../api/client';
 import { impersonateUserId } from '../utils/impersonationApi';

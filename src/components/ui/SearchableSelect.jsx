@@ -6,7 +6,7 @@ import {
     ComboboxOptions,
 } from '@headlessui/react';
 import { useTranslation } from 'react-i18next';
-import { HiOutlineChevronUpDown, HiOutlineCheck, HiOutlineMagnifyingGlass } from 'react-icons/hi2';
+import { HiOutlineChevronUpDown, HiOutlineCheck, HiOutlineMagnifyingGlass } from '../workspace/WorkspaceIcons';
 
 /** Max dropdown height (matches max-h-72 = 18rem). Used to decide flip direction. */
 const DROPDOWN_MAX_PX = 288;

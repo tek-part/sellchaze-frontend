@@ -3,7 +3,7 @@ import { Link, useNavigate, useOutletContext } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import toast from 'react-hot-toast';
-import { HiOutlineBell } from 'react-icons/hi2';
+import { HiOutlineBell } from '../components/workspace/WorkspaceIcons';
 import api from '../api/client';
 import PaginationBar from '../components/table/PaginationBar';
 import { followNotificationLink, mapServerNotification } from '../utils/mapServerNotification';

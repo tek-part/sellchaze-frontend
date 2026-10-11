@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link, Navigate, useNavigate, useOutletContext } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
-import { HiOutlineUserGroup, HiOutlineArrowLeft } from 'react-icons/hi2';
+import { HiOutlineUserGroup, HiOutlineArrowLeft } from '../../components/workspace/WorkspaceIcons';
 import api from '../../api/client';
 import { extractApiList, groupIdFrom, groupLabel } from './wavexHelpers';
 import SearchableSelect from '../../components/ui/SearchableSelect';

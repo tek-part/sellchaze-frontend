@@ -8,7 +8,7 @@ import {
     HiOutlineTrash,
     HiOutlineEye,
     HiOutlineEyeSlash,
-} from 'react-icons/hi2';
+} from '../components/workspace/WorkspaceIcons';
 import api from '../api/client';
 import SearchableSelect from '../components/ui/SearchableSelect';
 import { useDebounced } from '../hooks/useDebounced';

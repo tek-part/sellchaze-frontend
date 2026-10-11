@@ -13,7 +13,7 @@ import {
     HiOutlineQrCode,
     HiOutlineServerStack,
     HiOutlineStop,
-} from 'react-icons/hi2';
+} from '../../components/workspace/WorkspaceIcons';
 import { FaWhatsapp } from 'react-icons/fa';
 import toast from 'react-hot-toast';
 import api from '../../api/client';

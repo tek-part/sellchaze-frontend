@@ -9,7 +9,7 @@ import {
     HiOutlinePencilSquare,
     HiOutlinePhoto,
     HiOutlineTrash,
-} from 'react-icons/hi2';
+} from '../components/workspace/WorkspaceIcons';
 import PageHeader from '../components/PageHeader';
 import useStoreMedia from '../components/store/useStoreMedia';
 import { confirmDialog } from '../components/ui/confirmDialog';

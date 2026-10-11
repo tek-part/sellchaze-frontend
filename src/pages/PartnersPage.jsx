@@ -18,7 +18,7 @@ import {
     HiOutlineMapPin,
     HiCheckBadge,
     HiOutlineUsers,
-} from 'react-icons/hi2';
+} from '../components/workspace/WorkspaceIcons';
 import api from '../api/client';
 import SearchableSelect from '../components/ui/SearchableSelect';
 

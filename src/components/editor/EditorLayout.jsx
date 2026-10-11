@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Navigate, Outlet, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { HiOutlineArrowPath } from 'react-icons/hi2';
+import { HiOutlineArrowPath } from '../workspace/WorkspaceIcons';
 import api, { clearTokens } from '../../api/client';
 import useStoreScope from '../../hooks/useStoreScope';
 import { fullStoreAccess, storeAccess } from '../../lib/storeAccess';

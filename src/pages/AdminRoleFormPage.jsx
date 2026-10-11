@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Disclosure, DisclosureButton, DisclosurePanel } from '@headlessui/react';
 import { Navigate, useNavigate, useParams, useOutletContext } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { HiOutlineChevronDown } from 'react-icons/hi2';
+import { HiOutlineChevronDown } from '../components/workspace/WorkspaceIcons';
 import api from '../api/client';
 import { ROLES_OMITTED_FROM_ADMIN_ROLES_INDEX } from '../config/rolesUi';
 

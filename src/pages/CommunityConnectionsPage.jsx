@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { HiOutlineUsers } from 'react-icons/hi2';
+import { HiOutlineUsers } from '../components/workspace/WorkspaceIcons';
 import api from '../api/client';
 import CommunityShell from '../features/community/components/CommunityShell';
 import UserRow from '../features/community/components/UserRow';

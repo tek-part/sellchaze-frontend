@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import { HiOutlineArrowPath, HiOutlineExclamationTriangle, HiOutlinePlus, HiOutlineSquares2X2, HiOutlineSwatch } from 'react-icons/hi2';
+import { HiOutlineArrowPath, HiOutlineExclamationTriangle, HiOutlinePlus, HiOutlineSquares2X2, HiOutlineSwatch } from '../workspace/WorkspaceIcons';
 import { SectionList, SectionPicker } from '../customizer/SectionsPanel';
 import ThemeSettingsPanel from '../customizer/ThemeSettingsPanel';
 

@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import { HiOutlineDocumentDuplicate } from 'react-icons/hi2';
+import { HiOutlineDocumentDuplicate } from '../workspace/WorkspaceIcons';
 
 /** Native labels for the locales the platform ships; anything else falls back to `locale_{code}` or the code. */
 const NATIVE_LABELS = {

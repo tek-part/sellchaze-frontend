@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, Navigate, useNavigate, useOutletContext } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { HiOutlineArrowPath, HiOutlinePlus, HiOutlineSparkles } from 'react-icons/hi2';
+import { HiOutlineArrowPath, HiOutlinePlus, HiOutlineSparkles } from '../components/workspace/WorkspaceIcons';
 import api from '../api/client';
 import useStoreScope from '../hooks/useStoreScope';
 

@@ -11,7 +11,7 @@ import {
     HiOutlineSquares2X2,
     HiOutlineSwatch,
     HiOutlineWindow,
-} from 'react-icons/hi2';
+} from '../workspace/WorkspaceIcons';
 
 const FOCUS = 'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40';
 
