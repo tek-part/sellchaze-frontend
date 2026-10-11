@@ -5,8 +5,8 @@
  */
 export default function PageHeader({ title, subtitle, action, badge }) {
     return (
-        <div className="flex flex-wrap items-start justify-between gap-3">
-            <div className="border-s-4 border-brand ps-4">
+        <div className="ws-page-header flex flex-wrap items-start justify-between gap-3">
+            <div>
                 <div className="flex flex-wrap items-center gap-2.5">
                     <h1 className="text-2xl font-semibold tracking-tight text-slate-900">{title}</h1>
                     {badge ? <span className="shrink-0">{badge}</span> : null}

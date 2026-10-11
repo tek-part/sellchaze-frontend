@@ -91,15 +91,10 @@ export default function StoreLayout() {
     const sidebarProps = { store, groups, uiBase, isAdminScope, loading };
 
     return (
-        <div className="flex items-start gap-6">
-            {/* Desktop rail */}
-            {!unifiedNavigation && <aside className="sticky top-0 hidden w-64 shrink-0 self-start lg:block">
-                <StoreSidebar {...sidebarProps} />
-            </aside>}
-
+        <div className="min-w-0">
             <div className="min-w-0 flex-1">
                 {/* Mobile / tablet: sticky sub-bar + the active group's items as a scroll strip. */}
-                <div className={`mb-4 border-b border-slate-200/80 bg-surface/95 ${unifiedNavigation ? 'pb-3' : 'sticky -top-3 z-30 -mx-3 backdrop-blur md:-top-5 md:-mx-5 lg:hidden'}`}>
+                <div className={`mb-4 border-b border-slate-200/80 bg-surface/95 ${unifiedNavigation ? 'pb-3' : 'sticky -top-3 z-30 -mx-3 backdrop-blur md:-top-5 md:-mx-5'}`}>
                     <div className="flex items-center gap-3 px-3 py-2.5 md:px-5">
                         {!unifiedNavigation && <button
                             type="button"
@@ -161,7 +156,7 @@ export default function StoreLayout() {
             </div>
 
             {/* Mobile drawer */}
-            <Dialog open={!unifiedNavigation && drawerOpen} onClose={() => setDrawerOpen(false)} className="relative z-60 lg:hidden">
+            <Dialog open={!unifiedNavigation && drawerOpen} onClose={() => setDrawerOpen(false)} className="relative z-60">
                 <DialogBackdrop
                     transition
                     className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs transition duration-200 data-closed:opacity-0"

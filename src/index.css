@@ -3,6 +3,14 @@ layer(base);
 
 @import 'tailwindcss';
 
+/* Explicit workspace preference; public pages keep their system preference. */
+@custom-variant dark {
+  &:where([data-workspace-theme='dark'], [data-workspace-theme='dark'] *) { @slot; }
+  @media (prefers-color-scheme: dark) {
+    &:not(:where([data-workspace-theme='light'], [data-workspace-theme='light'] *)) { @slot; }
+  }
+}
+
 /* Merchant workspace: logical borders preserve the same layout in Arabic and English. */
 .merchant-workspace {
   --color-brand: #168849;

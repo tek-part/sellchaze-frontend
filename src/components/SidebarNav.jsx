@@ -1,3 +1,4 @@
+import NavigationResults from './workspace/NavigationResults';
 import { Disclosure, DisclosureButton, DisclosurePanel } from '@headlessui/react';
 import { createContext, useContext } from 'react';
 import { motion } from 'framer-motion';
@@ -117,7 +118,7 @@ function SectionLabel({ children }) {
 function NavGroup({ title, icon: Icon, defaultOpen, groupActive, children }) {
     const mega = useContext(NavVariantContext) === 'mega';
     return (
-        <Disclosure defaultOpen={defaultOpen}>
+        <Disclosure key={groupActive ? 'active' : 'idle'} defaultOpen={defaultOpen}>
             {({ open }) => (
                 <div className="flex flex-col overflow-hidden rounded-xl">
                     <DisclosureButton
@@ -165,7 +166,7 @@ export default function SidebarNav({ variant = 'list', ...props }) {
     );
 }
 
-function SidebarNavInner({ isAdmin = false, isSupplier = false, roles = [], permissions = [], onNavigate, variant = 'list' }) {
+function SidebarNavInner({ isAdmin = false, isSupplier = false, roles = [], permissions = [], onNavigate, variant = 'list', query = '', search = false }) {
     const { t } = useTranslation();
     const mega = variant === 'mega';
     // Link styles follow the variant; the JSX below references these local names.
@@ -225,6 +226,7 @@ function SidebarNavInner({ isAdmin = false, isSupplier = false, roles = [], perm
 
     if (isAdminOnly) {
         return (
+            <NavigationResults query={query} search={search} onNavigate={onNavigate}>
             <motion.nav
                 initial={{ opacity: 0, x: -12 }}
                 animate={{ opacity: 1, x: 0 }}
@@ -435,11 +437,13 @@ function SidebarNavInner({ isAdmin = false, isSupplier = false, roles = [], perm
                     </NavGroup>
                 </div>
             </motion.nav>
+            </NavigationResults>
         );
     }
 
     return (
-        <motion.nav
+        <NavigationResults query={query} search={search} onNavigate={onNavigate}>
+            <motion.nav
             initial={{ opacity: 0, x: -12 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.35, ease: 'easeOut' }}
@@ -851,5 +855,6 @@ function SidebarNavInner({ isAdmin = false, isSupplier = false, roles = [], perm
                 </NavGroup>
             </div>
         </motion.nav>
+            </NavigationResults>
     );
 }
