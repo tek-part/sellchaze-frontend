@@ -1,4 +1,5 @@
 import { UiBlocksProvider } from './ui-blocks/UiBlocks';
+import { DesignAssetsHead } from './design-assets/DesignAssetsHead';
 /**
  * StorefrontApp — resolves the active theme's `default` layout (global chrome) and renders the
  * router inside it, so the header/footer/cart persist across navigations while the page content
@@ -243,6 +244,7 @@ export function StorefrontApp(): ReactElement {
         </label>
       ) : null}
       <StoreIdentityHead />
+      <DesignAssetsHead />
       <NavigationInterceptor />
       <RouteAnnouncer />
       {isCustomizeMode() ? <CustomizeBridge /> : null}

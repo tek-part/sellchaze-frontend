@@ -124,6 +124,7 @@ const StoreBlockedPhonesPage = lazy(() => import('./pages/store/StoreBlockedPhon
 const StorePhoneVerificationPage = lazy(() => import('./pages/store/settings/StorePhoneVerificationPage'));
 const StoreFunnelsPage = lazy(() => import('./pages/StoreFunnelsPage'));
 const StoreMediaPage = lazy(() => import('./pages/StoreMediaPage'));
+const StoreDesignAssetsPage = lazy(() => import('./pages/StoreDesignAssetsPage'));
 const StoreGeneralSettingsPage = lazy(() => import('./pages/store/settings/StoreGeneralSettingsPage'));
 const StoreBotProtectionPage = lazy(() => import('./pages/store/settings/StoreBotProtectionPage'));
 const StoreShoppingPreferencesPage = lazy(() => import('./pages/store/settings/StoreShoppingPreferencesPage'));
@@ -233,6 +234,7 @@ const STORE_ROUTES = [
     { path: 'content/:key', element: <StoreContentPageEditor /> },
     { path: 'menus', element: <StoreMenusPage /> },
     { path: 'media', element: <StoreMediaPage /> },
+    { path: 'upload-assets', element: <StoreDesignAssetsPage /> },
     { path: 'settings/general', element: <StoreGeneralSettingsPage /> },
     { path: 'settings/bot-protection', element: <StoreBotProtectionPage /> },
     { path: 'settings/shopping-preferences', element: <StoreShoppingPreferencesPage /> },
