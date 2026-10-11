@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import { usePermissions } from '../../hooks/usePermissions';
+import useWorkspaceAppearance from '../workspace/useWorkspaceAppearance';
 import {
     PIPELINE_LABEL_KEYS,
     SUPPLIER_PIPELINE_LABEL_KEYS,
@@ -36,8 +37,8 @@ ChartJS.register(
     Filler,
 );
 
-const BRAND = '#0D7382';
-const STATUS_COLORS = ['#0D7382', '#76F0D5', '#f59e0b', '#6366f1', '#ec4899', '#38bdf8', '#64748b'];
+const BRAND = '#198754';
+const STATUS_COLORS = ['#198754', '#6acb9f', '#d49a25', '#7470cf', '#d05c9e', '#368ecc', '#64748b'];
 
 /**
  * @param {object} props
@@ -47,6 +48,8 @@ const STATUS_COLORS = ['#0D7382', '#76F0D5', '#f59e0b', '#6366f1', '#ec4899', '#
 export default function DashboardAnalytics({ stats, counts }) {
     const { t, i18n } = useTranslation();
     const { can } = usePermissions();
+    const { theme } = useWorkspaceAppearance();
+    const chartText = theme === 'dark' ? '#aebdb7' : '#65756d';
     const locale = i18n.language;
     const isRtl = i18n.dir() === 'rtl';
     const isSupplierMode = stats?.dashboard_mode === 'supplier';
@@ -142,22 +145,22 @@ export default function DashboardAnalytics({ stats, counts }) {
                     display: true,
                     position: 'bottom',
                     rtl: isRtl,
-                    labels: { boxWidth: 12, padding: 14, usePointStyle: true },
+                    labels: { color: chartText, boxWidth: 12, padding: 14, usePointStyle: true },
                 },
             },
             scales: {
                 x: {
                     grid: { display: false },
-                    ticks: { maxRotation: 0, autoSkip: true },
+                    ticks: { color: chartText, maxRotation: 0, autoSkip: true },
                 },
                 y: {
                     beginAtZero: true,
-                    ticks: { precision: 0 },
+                    ticks: { color: chartText, precision: 0 },
                     grid: { color: 'rgba(148, 163, 184, 0.12)' },
                 },
             },
         }),
-        [isRtl],
+        [isRtl, chartText],
     );
 
     const doughnutOpts = useMemo(
@@ -168,11 +171,11 @@ export default function DashboardAnalytics({ stats, counts }) {
                 legend: {
                     position: 'bottom',
                     rtl: isRtl,
-                    labels: { boxWidth: 10, padding: 8, usePointStyle: true },
+                    labels: { color: chartText, boxWidth: 10, padding: 8, usePointStyle: true },
                 },
             },
         }),
-        [isRtl],
+        [isRtl, chartText],
     );
 
     const barOpts = useMemo(
@@ -186,16 +189,16 @@ export default function DashboardAnalytics({ stats, counts }) {
             scales: {
                 x: {
                     beginAtZero: true,
-                    ticks: { precision: 0 },
+                    ticks: { color: chartText, precision: 0 },
                     grid: { color: 'rgba(148, 163, 184, 0.12)' },
                 },
                 y: {
                     grid: { display: false },
-                    ticks: { font: { size: 11 } },
+                    ticks: { color: chartText, font: { size: 11 } },
                 },
             },
         }),
-        [],
+        [chartText],
     );
 
     const hasLineData = ordersChart.length > 0 && ordersChart.some((r) => r.orders > 0);
