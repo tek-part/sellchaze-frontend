@@ -147,8 +147,32 @@ jobs:
           API_SHELL_DIR=/home/sellchaze/public_html/api.sellchaze.com/storage/app/storefront
           mkdir -p "$API_SHELL_DIR"
           cp "$RELEASE/storefront.html" "$API_SHELL_DIR/shell.html.tmp" && mv -f "$API_SHELL_DIR/shell.html.tmp" "$API_SHELL_DIR/shell.html"
-          # Keep the three most recent releases for a quick rollback.
-          ls -1dt /home/sellchaze/releases/*/ 2>/dev/null | tail -n +4 | xargs -r rm -rf --
+          # Retain manual/historical folders and releases owned by another user.
+          # Only expire our own complete SHA releases, keeping the active SHA.
+          python3 - <<'PY'
+          import os, re, shutil
+          from pathlib import Path
+          root = Path('/home/sellchaze/releases').resolve()
+          active = os.environ['DEPLOY_SHA']
+          releases = sorted((p for p in root.iterdir() if re.fullmatch(r'[0-9a-f]{40}', p.name) and p.is_dir() and not p.is_symlink()), key=lambda p: p.stat().st_mtime, reverse=True)
+          for release in releases[3:]:
+              if release.name == active or release.resolve().parent != root:
+                  continue
+              owned = release.stat().st_uid == os.geteuid()
+              for folder, dirs, files in os.walk(str(release), followlinks=False):
+                  if any(os.lstat(os.path.join(folder, name)).st_uid != os.geteuid() for name in dirs + files):
+                      owned = False
+                      break
+              if not owned:
+                  print('Preserved protected historical release: ' + release.name)
+                  continue
+              try:
+                  shutil.rmtree(str(release))
+              except OSError as error:
+                  # Retention is housekeeping; activation/file verification has
+                  # already succeeded. Preserve this folder on permission errors.
+                  print('Release retention deferred: ' + release.name + ' (' + type(error).__name__ + ')')
+          PY
           echo "Deployed $DEPLOY_SHA"
           REMOTE
           OPTS="-i $HOME/.ssh/deploy_key -o BatchMode=yes -o StrictHostKeyChecking=accept-new -o ConnectTimeout=25 -o ServerAliveInterval=15"
