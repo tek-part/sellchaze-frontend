@@ -24,6 +24,16 @@ jobs:
       - run: npm run typecheck
       - run: npm run test -- --reporter=dot
       - run: npm run build
+      # The rebuilt application can be released only by explicit dispatch for
+      # its exact successful Quality SHA. Keep the historical capture separate.
+      - uses: actions/upload-artifact@v4
+        if: github.event_name == 'push'
+        with:
+          name: source-release-${{ github.sha }}
+          path: dist
+          retention-days: 7
+          if-no-files-found: error
+          include-hidden-files: true
       # The editable source is older than production. Validate it above, but preserve the
       # captured live release for deployment until source reconciliation is complete.
       - name: Verify and restore the production baseline

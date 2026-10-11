@@ -21,10 +21,21 @@ python scripts/production_baseline.py
 
 The second command restores to a new, ignored `production-site` directory. It refuses to overwrite an existing directory. Supply `--output another-new-directory` for another copy. Verification checks the archive, each member's size and SHA-256, exact file inventory, and safe paths before extraction.
 
-`npm run build` continues to build the source checkout; it must not be treated as a reproduction of this production baseline. CI still builds and tests that editable source, but verifies and restores the production archive separately. Only the restored site is uploaded as `production-baseline-<commit>`, and deployment accepts only that artifact name. Older workflow runs cannot silently supply an older source build. All existing quality and security gates remain required by the automatic deployment workflow.
+`npm run build` builds the source checkout; it must not be treated as a reproduction of this production baseline. CI builds and tests that editable source, and verifies and restores the production archive separately. The restored site is uploaded as `production-baseline-<commit>`. It remains the default deployment artifact; a rebuilt application release requires the explicit source selection described below. Older workflow runs without the selected exact artifact fail closed. All existing quality and security gates remain required.
 
 The captured `storefront.html` is byte-identical to `production/storefront-shell.html`, so the deployment's existing copy into Laravel storage preserves the captured shell. This deployment mode deliberately keeps the captured production release stable; future source edits do not become live until the source is reconciled and the artifact selection is explicitly changed.
 
 ## Remaining source reconciliation
 
 Find the source or original patch scripts for the September 23–24 and October 3 releases, port those changes to `src`, and test the resulting build against this captured version. Do not mark `sourceParity` as verified based only on a successful Vite build or passing tests on the old source. The archive is a recovery artifact, not a substitute for editable source.
+
+## Explicit rebuilt application release — 2026-10-11
+
+The owner has requested publication of the full rebuilt application. Quality now
+uploads an additional `source-release-<sha>` artifact. Manual deployment defaults
+to the historical capture; an operator must explicitly select `source-release`
+and an exact SHA with a successful main Quality run to publish the rebuild.
+The audit gate and all existing functional gates remain in force. This opt-in
+publishes the new application; it does not assert that it reproduces every
+historical production patch. The captured baseline remains immutable and usable
+for recovery. Back up the current web root and API shell before first activation.

@@ -9,6 +9,13 @@ on:
         description: Commit to deploy (defaults to the latest main that passed Quality)
         required: false
         default: ''
+      release_mode:
+        description: Explicitly release the rebuilt source or restore the historical capture
+        type: choice
+        options:
+          - production-baseline
+          - source-release
+        default: production-baseline
 
 permissions:
   contents: read
@@ -55,12 +62,12 @@ jobs:
           echo "sha=$(echo "$row" | jq -r .headSha)" >> "$GITHUB_OUTPUT"
       - name: Pin DEPLOY_SHA
         run: echo "DEPLOY_SHA=${{ steps.resolve.outputs.sha }}" >> "$GITHUB_ENV"
-      # Only the verified production capture is deployable until editable-source parity
-      # is established. Older Quality runs have no artifact with this name and fail closed.
-      - name: Download the verified production baseline from the Quality run
+      # Baseline remains the default recovery mode. Source release is an explicit
+      # operator choice and is not a claim of historical editable-source parity.
+      - name: Download the selected release from the exact successful Quality run
         uses: actions/download-artifact@v4
         with:
-          name: production-baseline-${{ steps.resolve.outputs.sha }}
+          name: ${{ inputs.release_mode || 'production-baseline' }}-${{ steps.resolve.outputs.sha }}
           path: dist
           run-id: ${{ steps.resolve.outputs.run_id }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
