@@ -119,10 +119,12 @@ const StoreCheckoutFieldsPage = lazy(() => import('./pages/store/settings/StoreC
 const StoreDigitalDeliveryPage = lazy(() => import('./pages/store/settings/StoreDigitalDeliveryPage'));
 const StoreOrderLimitsPage = lazy(() => import('./pages/store/settings/StoreOrderLimitsPage'));
 const StoreThankYouPage = lazy(() => import('./pages/store/settings/StoreThankYouPage'));
+const StoreUiBlocksPage = lazy(() => import('./pages/StoreUiBlocksPage'));
 const StoreBlockedPhonesPage = lazy(() => import('./pages/store/StoreBlockedPhonesPage'));
 const StorePhoneVerificationPage = lazy(() => import('./pages/store/settings/StorePhoneVerificationPage'));
 const StoreFunnelsPage = lazy(() => import('./pages/StoreFunnelsPage'));
 const StoreMediaPage = lazy(() => import('./pages/StoreMediaPage'));
+const StoreDesignAssetsPage = lazy(() => import('./pages/StoreDesignAssetsPage'));
 const StoreGeneralSettingsPage = lazy(() => import('./pages/store/settings/StoreGeneralSettingsPage'));
 const StoreBotProtectionPage = lazy(() => import('./pages/store/settings/StoreBotProtectionPage'));
 const StoreShoppingPreferencesPage = lazy(() => import('./pages/store/settings/StoreShoppingPreferencesPage'));
@@ -221,6 +223,7 @@ const STORE_ROUTES = [
     { path: 'simple-pages/:pageId', element: <StoreSimplePageEditor /> },
     { path: 'checkout-fields', element: <StoreCheckoutFieldsPage /> },
     { path: 'thanks-edit', element: <StoreThankYouPage /> },
+    { path: 'ui-blocks', element: <StoreUiBlocksPage /> },
     { path: 'settings/digital-delivery', element: <StoreDigitalDeliveryPage /> },
     { path: 'settings/order-limits', element: <StoreOrderLimitsPage /> },
     { path: 'blocked-phone-numbers', element: <StoreBlockedPhonesPage /> },
@@ -231,6 +234,7 @@ const STORE_ROUTES = [
     { path: 'content/:key', element: <StoreContentPageEditor /> },
     { path: 'menus', element: <StoreMenusPage /> },
     { path: 'media', element: <StoreMediaPage /> },
+    { path: 'upload-assets', element: <StoreDesignAssetsPage /> },
     { path: 'settings/general', element: <StoreGeneralSettingsPage /> },
     { path: 'settings/bot-protection', element: <StoreBotProtectionPage /> },
     { path: 'settings/shopping-preferences', element: <StoreShoppingPreferencesPage /> },

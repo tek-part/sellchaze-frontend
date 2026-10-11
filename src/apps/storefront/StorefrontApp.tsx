@@ -1,3 +1,5 @@
+import { UiBlocksProvider } from './ui-blocks/UiBlocks';
+import { DesignAssetsHead } from './design-assets/DesignAssetsHead';
 /**
  * StorefrontApp — resolves the active theme's `default` layout (global chrome) and renders the
  * router inside it, so the header/footer/cart persist across navigations while the page content
@@ -232,7 +234,7 @@ export function StorefrontApp(): ReactElement {
   }, [categoriesQ.data, navigation, store.name, store.currency, store.currencyMultipliers, store.shipping, store.description, store.defaultLocale, manifest.id, t, locale, previewData]);
 
   return (
-    <div className="sf-root" data-theme-id={manifest.id}>
+    <UiBlocksProvider><div className="sf-root" data-theme-id={manifest.id}>
       {store.supportedCurrencies.length > 1 ? (
         <label className="fixed bottom-4 end-4 z-[var(--z-toast,9999)] rounded-full border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 text-xs shadow-lg">
           <span className="sr-only">Display currency</span>
@@ -242,6 +244,7 @@ export function StorefrontApp(): ReactElement {
         </label>
       ) : null}
       <StoreIdentityHead />
+      <DesignAssetsHead />
       <NavigationInterceptor />
       <RouteAnnouncer />
       {isCustomizeMode() ? <CustomizeBridge /> : null}
@@ -274,6 +277,6 @@ export function StorefrontApp(): ReactElement {
           </AppErrorBoundary>
         </main>
       )}
-    </div>
+    </div></UiBlocksProvider>
   );
 }

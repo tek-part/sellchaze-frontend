@@ -1,3 +1,4 @@
+import { UiBlock } from '../ui-blocks/UiBlocks';
 import { useEffect, useMemo, useState, type FormEvent, type ReactElement } from 'react';
 import { Navigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -47,6 +48,7 @@ export function CheckoutPage(): ReactElement {
     <Section><Container>
       <div className="sf-page-head" style={{ textAlign: 'start' }}><h1 className="sf-page-head__title">{t('checkout.title')}</h1></div>
       <div className="sf-cart-page">
+        <div style={{ minWidth: 0 }}><UiBlock slot="before_checkout" />
         <form className="sf-account__panel" onSubmit={(event) => void placeOrder(event)}>
           <CheckoutRecovery flow={checkout} />
           <fieldset disabled={checkout.busy || checkout.unresolved} style={{ display: 'grid', gap: '1rem', border: 0, padding: 0, margin: 0 }}>
@@ -67,6 +69,7 @@ export function CheckoutPage(): ReactElement {
             {`${t('checkout.placeOrder')}${quote ? ` · ${formatMoney(Number(quote.totals.grand_total), quote.currency, locale)}` : ''}`}
           </Button> : null}
         </form>
+        <UiBlock slot="after_checkout" /></div>
         <aside className="sf-cart-summary">
           {quote ? quote.items.map((line) => <div key={`${line.product_id}:${line.variant_id}:${line.personalization_key ?? ''}`}><div className="sf-cart-summary__row"><span>{line.name} × {line.quantity}</span><span>{formatMoney(Number(line.line_total), quote.currency, locale)}</span></div><PersonalizationSummary entries={line.personalization} /></div>) : cart.lines.map((line) => <div key={line.id}><div className="sf-cart-summary__row"><span>{line.title} × {line.quantity}</span></div><PersonalizationSummary entries={line.personalizationEntries} /></div>)}
           <fieldset disabled={checkout.busy || checkout.unresolved} style={{ border: 0, padding: 0, margin: 0 }}>

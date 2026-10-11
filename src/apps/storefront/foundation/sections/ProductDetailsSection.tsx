@@ -1,3 +1,4 @@
+import { UiBlock } from '../../ui-blocks/UiBlocks';
 /**
  * product-details — the PDP buy box (convert). Gallery + price + variant selection + quantity +
  * add-to-cart (optimistic via the cart store, single toast) + wishlist/share + description/shipping
@@ -104,7 +105,9 @@ export function ProductDetailsSection(props: SectionRenderProps): ReactElement |
     <section className="sf-section">
       <Container>
         <div className="sf-pdp">
+          <UiBlock slot="before_product_gallery" />
           <ProductGallery key={`${product.id}:${variantId ?? 'default'}:${selectedImage ?? ''}`} images={product.images} media={variantGallery(product, selectedImage)} {...(selectedImage ? { initialSrc: selectedImage } : {})} title={product.title} />
+          <UiBlock slot="after_product_gallery" />
 
           <div className="sf-pdp__buybox">
             {product.vendor ? <span className="sf-pdp__vendor">{product.vendor}</span> : null}
