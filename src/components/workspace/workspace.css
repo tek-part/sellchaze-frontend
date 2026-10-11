@@ -41,6 +41,7 @@ body[data-workspace-theme] #root .max-h-dvh { max-height:100dvh; }
 .ws-icon-button:hover,.ws-icon-button[aria-expanded='true'] { background:var(--ws-panel-soft); color:var(--ws-green-ink); }
 .ws-icon-button:focus-visible,.ws-search-trigger:focus-visible,.ws-account-button:focus-visible,.ws-primary-button:focus-visible,.ws-secondary-button:focus-visible { outline:2px solid var(--ws-green); outline-offset:3px; }
 .ws-mobile-menu { display:none; }
+@media (max-width:1023px) { .ws-expand { display:none; } }
 .ws-search-trigger { display:flex; align-items:center; gap:10px; width:min(100%,300px); padding:8px 10px; border:1px solid var(--ws-border); border-radius:7px; background:var(--ws-panel-soft); color:var(--ws-muted); font-size:13px; cursor:pointer; }
 .ws-search-trigger > svg { width:18px; height:18px; flex-shrink:0; }
 .ws-search-trigger kbd { margin-inline-start:auto; padding:1px 5px; border:1px solid var(--ws-border); border-radius:4px; white-space:nowrap; font-size:10px; font-family:inherit; }

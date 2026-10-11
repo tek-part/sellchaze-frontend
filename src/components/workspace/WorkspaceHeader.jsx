@@ -47,6 +47,7 @@ export default function WorkspaceHeader({ me, storeUrl, isSupplier, permissions,
                     <MenuItem><Link to="/settings/profile" className={menuRow}><HiOutlineUserCircle aria-hidden />{t('nav_profile', 'My profile')}</Link></MenuItem>
                     <MenuItem><Link to={`/u/${publicSlug}`} className={menuRow}><HiOutlineArrowTopRightOnSquare aria-hidden />{t('view_public_profile', 'View public profile')}</Link></MenuItem>
                     <MenuItem><Link to="/" className={menuRow}><HiOutlineArrowTopRightOnSquare aria-hidden />{t('nav_visit_website', 'Visit website')}</Link></MenuItem>
+                    {storeUrl ? <MenuItem><a href={storeUrl} target="_blank" rel="noopener noreferrer" className={menuRow}><HiOutlineArrowTopRightOnSquare aria-hidden />{t('view_store', 'View store')}</a></MenuItem> : null}
                     {permissions.includes('wavex-access') ? <MenuItem><Link to="/wavex/chats" className={menuRow}><FaWhatsapp aria-hidden />{t('wavex_nav_chats')}</Link></MenuItem> : null}
                     {permissions.includes('monitoring-live-view') ? <MenuItem><Link to="/admin/monitoring/live" className={menuRow}><HiOutlineSignal aria-hidden />{t('monitoring_live_title', 'Live monitoring')}</Link></MenuItem> : null}
                     {permissions.includes('activity-logs-list') ? <MenuItem><Link to="/admin/activity" className={menuRow}><HiOutlineClipboardDocumentList aria-hidden />{t('activity_logs', 'Activity logs')}</Link></MenuItem> : null}

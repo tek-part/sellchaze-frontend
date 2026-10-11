@@ -215,6 +215,7 @@ export default function AppLayout() {
                         <div className="ws-sidebar-brand"><Link to={isAdminOnly ? '/admin/dashboard' : '/dashboard'}><img src="/icon.png" alt="" /><DialogTitle as="strong">Sellchaze</DialogTitle></Link><button type="button" className="ws-icon-button" onClick={() => setMobileNavOpen(false)} aria-label={t('close')}><HiOutlineXMark aria-hidden /></button></div>
                         <div className="ws-sidebar-tools"><label className="ws-sidebar-search"><HiOutlineMagnifyingGlass aria-hidden /><input value={navigationQuery} onChange={(e) => setNavigationQuery(e.target.value)} placeholder={ws('search')} aria-label={ws('search')} /></label></div>
                         <div className="ws-sidebar-scroll"><SidebarNav {...navigationProps} query={navigationQuery} onNavigate={() => setMobileNavOpen(false)} /></div>
+                        <div className="ws-sidebar-footer"><Link to="/contact" onClick={() => setMobileNavOpen(false)}>{ws('help')}</Link></div>
                     </DialogPanel>
                 </div>
             </Dialog>
