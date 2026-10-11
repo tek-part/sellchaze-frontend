@@ -12,7 +12,7 @@ import ConfirmDialog from '../components/ConfirmDialog';
 import { exportRowsToExcel } from '../utils/exportExcel';
 import { fetchAllPages } from '../utils/fetchAllPages';
 import { impersonateUserId } from '../utils/impersonationApi';
-import { HiOutlineClock, HiOutlineSignal, HiOutlinePlus } from 'react-icons/hi2';
+import { HiOutlineClock, HiOutlineSignal, HiOutlinePlus } from '../components/workspace/WorkspaceIcons';
 
 function unwrapUser(payload) {
     if (!payload) {

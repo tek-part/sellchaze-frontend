@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react';
 import { Dialog, DialogBackdrop, DialogPanel, DialogTitle } from '@headlessui/react';
-import { motion } from 'framer-motion';
+import { motion, useReducedMotion } from 'framer-motion';
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
-import { HiOutlineArrowUturnLeft, HiOutlineXMark, HiOutlineMagnifyingGlass } from 'react-icons/hi2';
+import { HiOutlineArrowUturnLeft, HiOutlineXMark, HiOutlineMagnifyingGlass } from './workspace/WorkspaceIcons';
 import api, { clearTokens } from '../api/client';
 import { endImpersonation, isImpersonating } from '../utils/impersonation';
 import { useChatUnread } from '../lib/useChatUnread';
@@ -15,6 +15,7 @@ import WorkspaceHeader from './workspace/WorkspaceHeader';
 import useWorkspaceAppearance from './workspace/useWorkspaceAppearance';
 import useWorkspaceCopy from './workspace/workspaceCopy';
 import './workspace/workspace.css';
+import { WorkspaceIconProvider } from './workspace/WorkspaceIcons';
 
 function unwrapUser(payload) {
     if (!payload) {
@@ -44,6 +45,7 @@ export default function AppLayout() {
     const [impersonationActive, setImpersonationActive] = useState(() => isImpersonating());
     const [impersonationExitLoading, setImpersonationExitLoading] = useState(false);
     const appearance = useWorkspaceAppearance();
+    const reducedMotion = useReducedMotion();
     const ws = useWorkspaceCopy();
     const [searchOpen, setSearchOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
@@ -195,9 +197,9 @@ export default function AppLayout() {
     const navigationProps = { isAdmin, isSupplier, roles: me.roles ?? [], permissions };
     const Sidebar = isAdminOnly ? AdminSidebar : MerchantSidebar;
     return (
-        <div className="sc-workspace ws-frame" data-workspace-theme={appearance.theme}>
+        <WorkspaceIconProvider><div className="sc-workspace ws-frame" data-workspace-theme={appearance.theme}>
             <a href="#workspace-content" className="ws-skip-link">{currentLng === 'ar' ? 'انتقل إلى المحتوى' : 'Skip to content'}</a>
-            {!sidebarCollapsed ? <Sidebar me={me} permissions={permissions} storeUrl={storeUrl} onCollapse={() => setSidebarCollapsed(true)} /> : null}
+            <motion.div className="ws-sidebar-container" initial={false} animate={{ width: sidebarCollapsed ? 0 : 252 }} transition={{ duration: reducedMotion ? 0 : 0.15, ease: [0.4, 0, 0.2, 1] }} inert={sidebarCollapsed || undefined} aria-hidden={sidebarCollapsed || undefined}><Sidebar me={me} permissions={permissions} storeUrl={storeUrl} onCollapse={() => setSidebarCollapsed(true)} /></motion.div>
             <div className="ws-main-column">
                 {impersonationActive ? <div className="ws-impersonation" role="status">
                     <p><HiOutlineArrowUturnLeft aria-hidden />{t('impersonation_banner')}</p>
@@ -209,9 +211,9 @@ export default function AppLayout() {
                 </main>
             </div>
             <Dialog open={mobileNavOpen} onClose={() => setMobileNavOpen(false)} className="ws-dialog-layer">
-                <DialogBackdrop className="ws-backdrop" />
+                <DialogBackdrop transition className="ws-backdrop" />
                 <div className="ws-drawer-position" dir={currentLng === 'ar' ? 'rtl' : 'ltr'}>
-                    <DialogPanel className="ws-sidebar ws-drawer" data-workspace-theme={appearance.theme}>
+                    <DialogPanel transition className="ws-sidebar ws-drawer" data-workspace-theme={appearance.theme}>
                         <div className="ws-sidebar-brand"><Link to={isAdminOnly ? '/admin/dashboard' : '/dashboard'}><img src="/icon.png" alt="" /><DialogTitle as="strong">Sellchaze</DialogTitle></Link><button type="button" className="ws-icon-button" onClick={() => setMobileNavOpen(false)} aria-label={t('close')}><HiOutlineXMark aria-hidden /></button></div>
                         <div className="ws-sidebar-tools"><label className="ws-sidebar-search"><HiOutlineMagnifyingGlass aria-hidden /><input value={navigationQuery} onChange={(e) => setNavigationQuery(e.target.value)} placeholder={ws('search')} aria-label={ws('search')} /></label></div>
                         <div className="ws-sidebar-scroll"><SidebarNav {...navigationProps} query={navigationQuery} onNavigate={() => setMobileNavOpen(false)} /></div>
@@ -220,20 +222,20 @@ export default function AppLayout() {
                 </div>
             </Dialog>
             <Dialog open={searchOpen} onClose={() => setSearchOpen(false)} className="ws-dialog-layer">
-                <DialogBackdrop className="ws-backdrop" />
-                <div className="ws-search-position"><DialogPanel className="ws-search-dialog" data-workspace-theme={appearance.theme}>
+                <DialogBackdrop transition className="ws-backdrop" />
+                <div className="ws-search-position"><DialogPanel transition className="ws-search-dialog" data-workspace-theme={appearance.theme}>
                     <div className="ws-search-dialog-header"><div><DialogTitle>{ws('searchTitle')}</DialogTitle><p>{ws('searchHint')}</p></div><button type="button" className="ws-icon-button" onClick={() => setSearchOpen(false)} aria-label={t('close')}><HiOutlineXMark aria-hidden /></button></div>
                     <label className="ws-command-input"><HiOutlineMagnifyingGlass aria-hidden /><input data-autofocus value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder={ws('search')} aria-label={ws('search')} /></label>
                     <div className="ws-command-results"><SidebarNav {...navigationProps} query={searchQuery} search onNavigate={() => setSearchOpen(false)} /></div>
                 </DialogPanel></div>
             </Dialog>
             <Dialog open={logoutOpen} onClose={() => setLogoutOpen(false)} className="ws-dialog-layer">
-                <DialogBackdrop className="ws-backdrop" />
-                <div className="ws-confirm-position"><DialogPanel className="ws-confirm-dialog">
+                <DialogBackdrop transition className="ws-backdrop" />
+                <div className="ws-confirm-position"><DialogPanel transition className="ws-confirm-dialog">
                     <DialogTitle>{t('logout_confirm_title')}</DialogTitle><p>{t('logout_confirm_body')}</p>
                     <div className="ws-confirm-actions"><button type="button" className="ws-secondary-button" onClick={() => setLogoutOpen(false)}>{t('cancel')}</button><button type="button" className="ws-primary-button" onClick={() => void confirmLogout()}>{t('logout')}</button></div>
                 </DialogPanel></div>
             </Dialog>
-        </div>
+        </div></WorkspaceIconProvider>
     );
 }

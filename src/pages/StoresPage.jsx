@@ -11,7 +11,7 @@ import ConfirmDialog from '../components/ConfirmDialog';
 import TableIconActions from '../components/table/TableIconActions';
 import SearchableSelect from '../components/ui/SearchableSelect';
 import PageHeader from '../components/PageHeader';
-import { HiOutlinePlus } from 'react-icons/hi2';
+import { HiOutlinePlus } from '../components/workspace/WorkspaceIcons';
 
 const STATUS_STYLES = {
     active: 'bg-emerald-50 text-emerald-700 border-emerald-100',

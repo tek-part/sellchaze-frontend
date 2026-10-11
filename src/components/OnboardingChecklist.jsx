@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { HiOutlineCheckCircle, HiXMark } from 'react-icons/hi2';
+import { HiOutlineCheckCircle, HiXMark } from './workspace/WorkspaceIcons';
 import useWorkspaceCopy from './workspace/workspaceCopy';
 import api from '../api/client';
 

@@ -22,7 +22,7 @@ import {
     HiOutlineXMark,
     HiOutlineSwatch,
     HiOutlineSquares2X2,
-} from 'react-icons/hi2';
+} from '../components/workspace/WorkspaceIcons';
 import useStoreScope from '../hooks/useStoreScope';
 import api from '../api/client';
 

@@ -10,7 +10,7 @@ import {
     HiOutlinePaintBrush,
     HiOutlineTrash,
     HiOutlineXMark,
-} from 'react-icons/hi2';
+} from '../workspace/WorkspaceIcons';
 import { pickLocalized } from '../../lib/localized';
 import { blockIcon, sectionIcon, variantIcon } from './sectionIcons';
 import SettingsForm from './SettingsForm';

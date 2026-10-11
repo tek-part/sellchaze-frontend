@@ -20,7 +20,7 @@ import {
     HiOutlinePlus,
     HiOutlineRocketLaunch,
     HiOutlineSwatch,
-} from 'react-icons/hi2';
+} from '../workspace/WorkspaceIcons';
 import { localeLabel } from '../store/LocaleTabs';
 import { VIEWPORTS } from '../customizer/customizerUtils';
 

@@ -9,7 +9,7 @@ import {
     HiOutlineEye,
     HiOutlinePencilSquare,
     HiOutlineTrash,
-} from 'react-icons/hi2';
+} from '../../components/workspace/WorkspaceIcons';
 import api from '../../api/client';
 
 function getPaginatedRows(data) {

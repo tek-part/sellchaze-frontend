@@ -3,7 +3,7 @@ import { Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/react';
 import { useTranslation } from 'react-i18next';
 import { Link, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { HiOutlineBell } from 'react-icons/hi2';
+import { HiOutlineBell } from './workspace/WorkspaceIcons';
 import api from '../api/client';
 import { useBrowserNotificationPermission } from '../hooks/useBrowserNotificationPermission';
 import { followNotificationLink, mapServerNotification } from '../utils/mapServerNotification';

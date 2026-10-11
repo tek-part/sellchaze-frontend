@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Dialog, DialogBackdrop, DialogPanel, DialogTitle } from '@headlessui/react';
 import { useTranslation } from 'react-i18next';
-import { HiOutlineTrash, HiOutlineExclamationTriangle, HiOutlineQuestionMarkCircle } from 'react-icons/hi2';
+import { HiOutlineTrash, HiOutlineExclamationTriangle, HiOutlineQuestionMarkCircle } from '../workspace/WorkspaceIcons';
 
 /**
  * SweetAlert-style confirmation, callable imperatively like `window.confirm`.

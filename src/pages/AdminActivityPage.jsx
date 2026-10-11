@@ -1,7 +1,7 @@
 import { Fragment, useCallback, useEffect, useState } from 'react';
 import { Navigate, useOutletContext } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { HiOutlineChevronDown } from 'react-icons/hi2';
+import { HiOutlineChevronDown } from '../components/workspace/WorkspaceIcons';
 import toast from 'react-hot-toast';
 import api from '../api/client';
 import SearchableSelect from '../components/ui/SearchableSelect';

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { HiOutlineTrash, HiOutlineArrowUturnLeft, HiOutlineFlag, HiOutlinePaperAirplane, HiOutlinePencilSquare } from 'react-icons/hi2';
+import { HiOutlineTrash, HiOutlineArrowUturnLeft, HiOutlineFlag, HiOutlinePaperAirplane, HiOutlinePencilSquare } from '../workspace/WorkspaceIcons';
 import api from '../../api/client';
 import { langParam } from '../../api/lang';
 import { initials, relativeTime } from './helpers';

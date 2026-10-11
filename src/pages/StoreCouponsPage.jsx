@@ -11,7 +11,7 @@ import TableLoadingOverlay from '../components/table/TableLoadingOverlay';
 import TableIconActions from '../components/table/TableIconActions';
 import ConfirmDialog from '../components/ConfirmDialog';
 import StatusBadge from '../components/StatusBadge';
-import { HiOutlinePlus } from 'react-icons/hi2';
+import { HiOutlinePlus } from '../components/workspace/WorkspaceIcons';
 
 export default function StoreCouponsPage() {
     const { id, apiBase, uiBase } = useStoreScope();

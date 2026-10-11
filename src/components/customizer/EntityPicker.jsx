@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { HiOutlineMagnifyingGlass, HiOutlineXMark, HiOutlineCube, HiOutlineSquares2X2 } from 'react-icons/hi2';
+import { HiOutlineMagnifyingGlass, HiOutlineXMark, HiOutlineCube, HiOutlineSquares2X2 } from '../workspace/WorkspaceIcons';
 import api from '../../api/client';
 import { INPUT_CLASS } from '../ui/FormField';
 import { useDebounced } from '../../hooks/useDebounced';

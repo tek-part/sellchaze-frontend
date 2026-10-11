@@ -5,7 +5,7 @@ import {
     HiOutlineMapPin,
     HiOutlineCheckBadge,
     HiOutlineArrowRight,
-} from 'react-icons/hi2';
+} from '../../components/workspace/WorkspaceIcons';
 
 function initials(name) { return (name || '?').trim().charAt(0).toUpperCase(); }
 

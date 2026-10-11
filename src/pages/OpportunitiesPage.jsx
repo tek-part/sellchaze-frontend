@@ -6,7 +6,7 @@ import {
     HiOutlineUsers,
     HiOutlineMapPin,
     HiOutlineCheckBadge,
-} from 'react-icons/hi2';
+} from '../components/workspace/WorkspaceIcons';
 import api from '../api/client';
 
 const KINDS = ['investment', 'partnership'];

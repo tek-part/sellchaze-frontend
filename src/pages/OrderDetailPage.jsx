@@ -26,7 +26,7 @@ import {
     HiOutlineUserGroup,
     HiOutlineWallet,
     HiXMark,
-} from 'react-icons/hi2';
+} from '../components/workspace/WorkspaceIcons';
 import api from '../api/client';
 import ConfirmDialog from '../components/ConfirmDialog';
 import OrderSourceBadge from '../components/orders/OrderSourceBadge';

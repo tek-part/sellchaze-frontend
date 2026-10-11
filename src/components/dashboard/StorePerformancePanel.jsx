@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { HiOutlineBanknotes, HiOutlineShoppingBag, HiOutlineCheckCircle, HiOutlineUsers, HiOutlineCube, HiOutlineArrowPath, HiOutlineReceiptPercent, HiOutlineClock } from 'react-icons/hi2';
+import { HiOutlineBanknotes, HiOutlineShoppingBag, HiOutlineCheckCircle, HiOutlineUsers, HiOutlineCube, HiOutlineArrowPath, HiOutlineReceiptPercent, HiOutlineClock } from '../workspace/WorkspaceIcons';
 import api from '../../api/client';
 import useWorkspaceCopy from '../workspace/workspaceCopy';
 

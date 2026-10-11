@@ -11,7 +11,7 @@ import TableLoadingOverlay from '../components/table/TableLoadingOverlay';
 import ConfirmDialog from '../components/ConfirmDialog';
 import TableIconActions from '../components/table/TableIconActions';
 import PageHeader from '../components/PageHeader';
-import { HiOutlinePlus, HiOutlinePhoto } from 'react-icons/hi2';
+import { HiOutlinePlus, HiOutlinePhoto } from '../components/workspace/WorkspaceIcons';
 import { exportRowsToExcel } from '../utils/exportExcel';
 import { fetchAllPages } from '../utils/fetchAllPages';
 

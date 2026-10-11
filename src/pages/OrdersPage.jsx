@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useOutletContext, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
-import { HiOutlinePlus, HiOutlineUserPlus, HiXMark } from 'react-icons/hi2';
+import { HiOutlinePlus, HiOutlineUserPlus, HiXMark } from '../components/workspace/WorkspaceIcons';
 import CreateOrderDialog from '../components/orders/CreateOrderDialog';
 import OrderSourceBadge, { ORDER_SOURCES } from '../components/orders/OrderSourceBadge';
 import OrderSourceTabs from '../components/orders/OrderSourceTabs';

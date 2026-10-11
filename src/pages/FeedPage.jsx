@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
-import { HiOutlineArrowPath, HiOutlineChevronDown, HiOutlineFunnel, HiOutlinePencilSquare, HiOutlineUsers } from 'react-icons/hi2';
+import { HiOutlineArrowPath, HiOutlineChevronDown, HiOutlineFunnel, HiOutlinePencilSquare, HiOutlineUsers } from '../components/workspace/WorkspaceIcons';
 import api from '../api/client';
 import { langParam } from '../api/lang';
 import PostCard from '../components/feed/PostCard';

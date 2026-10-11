@@ -1,7 +1,7 @@
 import NavigationResults from './workspace/NavigationResults';
 import { Disclosure, DisclosureButton, DisclosurePanel } from '@headlessui/react';
 import { createContext, useContext } from 'react';
-import { motion } from 'framer-motion';
+import { motion, useReducedMotion } from 'framer-motion';
 import { Link, NavLink, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useChatUnread } from '../lib/useChatUnread';
@@ -43,8 +43,9 @@ import {
     HiOutlineChartBar,
     HiOutlineNewspaper,
     HiOutlinePresentationChartLine,
+    HiOutlinePencilSquare,
     HiOutlineSparkles,
-} from 'react-icons/hi2';
+} from './workspace/WorkspaceIcons';
 
 function usePathPrefix(prefix) {
     const { pathname } = useLocation();
@@ -117,6 +118,7 @@ function SectionLabel({ children }) {
 
 function NavGroup({ title, icon: Icon, defaultOpen, groupActive, children }) {
     const mega = useContext(NavVariantContext) === 'mega';
+    const reducedMotion = useReducedMotion();
     return (
         <Disclosure key={groupActive ? 'active' : 'idle'} defaultOpen={defaultOpen}>
             {({ open }) => (
@@ -141,16 +143,17 @@ function NavGroup({ title, icon: Icon, defaultOpen, groupActive, children }) {
                         </span>
                         <motion.span
                             animate={{ rotate: open ? 180 : 0 }}
-                            transition={{ duration: 0.2 }}
+                            transition={{ duration: reducedMotion ? 0 : 0.2, ease: [0.4, 0, 0.2, 1] }}
                             className={`shrink-0 ${groupActive ? 'text-brand' : 'text-slate-400'}`}
                         >
                             <HiOutlineChevronDown className="h-4 w-4" />
                         </motion.span>
                     </DisclosureButton>
                     <DisclosurePanel
-                        className={mega ? 'ms-5 space-y-0.5 border-s-2 border-brand/15 ps-2 py-1.5' : 'space-y-0.5 px-0 py-1.5'}
+                        transition
+                        className={`ws-nav-panel ${mega ? 'ms-5 border-s-2 border-brand/15 ps-2 py-1.5' : 'px-0 py-1.5'}`}
                     >
-                        {children}
+                        <div className="ws-nav-panel-inner space-y-0.5">{children}</div>
                     </DisclosurePanel>
                 </div>
             )}
@@ -227,10 +230,7 @@ function SidebarNavInner({ isAdmin = false, isSupplier = false, roles = [], perm
     if (isAdminOnly) {
         return (
             <NavigationResults query={query} search={search} onNavigate={onNavigate}>
-            <motion.nav
-                initial={{ opacity: 0, x: -12 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.35, ease: 'easeOut' }}
+            <nav
                 className={navClass}
                 aria-label="Main"
                 onClick={(event) => {
@@ -436,17 +436,14 @@ function SidebarNavInner({ isAdmin = false, isSupplier = false, roles = [], perm
                         </NavLink>
                     </NavGroup>
                 </div>
-            </motion.nav>
+            </nav>
             </NavigationResults>
         );
     }
 
     return (
         <NavigationResults query={query} search={search} onNavigate={onNavigate}>
-            <motion.nav
-            initial={{ opacity: 0, x: -12 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.35, ease: 'easeOut' }}
+            <nav
             className={navClass}
             aria-label="Main"
             onClick={(event) => {
@@ -478,7 +475,7 @@ function SidebarNavInner({ isAdmin = false, isSupplier = false, roles = [], perm
                     ) : null}
                     {can('categories-list') ? (
                         <NavLink to="/categories" className={navLinkClass}>
-                            <HiOutlineRectangleStack className="h-5 w-5 shrink-0 opacity-95" aria-hidden />
+                            <HiOutlineSquares2X2 className="h-5 w-5 shrink-0 opacity-95" aria-hidden />
                             {t('categories')}
                         </NavLink>
                     ) : null}
@@ -530,7 +527,7 @@ function SidebarNavInner({ isAdmin = false, isSupplier = false, roles = [], perm
                         return <NavGroup
                             key={`${group.key}-${active}`}
                             title={group.label}
-                            icon={group.items[0].Icon}
+                            icon={group.key === 'design' ? HiOutlinePencilSquare : group.key === 'settings' ? HiOutlineCog6Tooth : HiOutlineBuildingStorefront}
                             defaultOpen={active}
                             groupActive={active}
                         >
@@ -854,7 +851,7 @@ function SidebarNavInner({ isAdmin = false, isSupplier = false, roles = [], perm
                     ) : null}
                 </NavGroup>
             </div>
-        </motion.nav>
+        </nav>
             </NavigationResults>
     );
 }

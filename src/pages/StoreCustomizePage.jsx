@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Navigate, useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { HiOutlineAdjustmentsHorizontal, HiOutlineEye, HiOutlineSquares2X2 } from 'react-icons/hi2';
+import { HiOutlineAdjustmentsHorizontal, HiOutlineEye, HiOutlineSquares2X2 } from '../components/workspace/WorkspaceIcons';
 import api from '../api/client';
 import useStoreContext from '../hooks/useStoreContext';
 import useStoreLocales from '../hooks/useStoreLocales';

@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import { HiOutlineArrowPath, HiOutlineExclamationCircle } from 'react-icons/hi2';
+import { HiOutlineArrowPath, HiOutlineExclamationCircle } from '../workspace/WorkspaceIcons';
 
 /**
  * Sticky "unsaved changes" bar. Renders nothing until `dirty` is true, then

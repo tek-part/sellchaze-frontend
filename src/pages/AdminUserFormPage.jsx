@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Navigate, useNavigate, useParams, useOutletContext } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { HiOutlineBell, HiOutlineEnvelope, HiOutlineKey, HiOutlineUser } from 'react-icons/hi2';
+import { HiOutlineBell, HiOutlineEnvelope, HiOutlineKey, HiOutlineUser } from '../components/workspace/WorkspaceIcons';
 import toast from 'react-hot-toast';
 import api from '../api/client';
 import { ROLES_OMITTED_FROM_STAFF_USER_ROLE_PICKER } from '../config/rolesUi';

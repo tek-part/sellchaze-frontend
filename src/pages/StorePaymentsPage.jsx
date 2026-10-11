@@ -9,7 +9,7 @@ import {
     HiOutlineClipboard,
     HiOutlineEye,
     HiOutlineEyeSlash,
-} from 'react-icons/hi2';
+} from '../components/workspace/WorkspaceIcons';
 import api from '../api/client';
 import PageHeader from '../components/PageHeader';
 import FormField, { INPUT_CLASS } from '../components/ui/FormField';

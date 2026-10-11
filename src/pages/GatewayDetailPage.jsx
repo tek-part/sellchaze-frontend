@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { Link, Navigate, useParams } from 'react-router-dom';
 import { useOutletContext } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { HiOutlineArrowLeft, HiOutlineWallet } from 'react-icons/hi2';
+import { HiOutlineArrowLeft, HiOutlineWallet } from '../components/workspace/WorkspaceIcons';
 import api from '../api/client';
 import PaginationBar from '../components/table/PaginationBar';
 import TableLoadingOverlay from '../components/table/TableLoadingOverlay';

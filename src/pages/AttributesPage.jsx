@@ -3,7 +3,7 @@ import { useOutletContext, Navigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
 import { Dialog, DialogBackdrop, DialogPanel, DialogTitle } from '@headlessui/react';
-import { HiOutlinePlus, HiOutlineTrash, HiOutlinePencil, HiOutlineXMark, HiOutlineCheck } from 'react-icons/hi2';
+import { HiOutlinePlus, HiOutlineTrash, HiOutlinePencil, HiOutlineXMark, HiOutlineCheck } from '../components/workspace/WorkspaceIcons';
 import api from '../api/client';
 import SearchableSelect from '../components/ui/SearchableSelect';
 import { confirmDialog } from '../components/ui/confirmDialog';

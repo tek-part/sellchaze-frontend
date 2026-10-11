@@ -3,7 +3,7 @@ import { Navigate } from 'react-router-dom';
 import { useOutletContext } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
-import { HiOutlineClipboardDocument, HiOutlineInformationCircle } from 'react-icons/hi2';
+import { HiOutlineClipboardDocument, HiOutlineInformationCircle } from '../components/workspace/WorkspaceIcons';
 import api from '../api/client';
 
 function CopyRow({ label, value, hint, t }) {

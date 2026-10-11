@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
-import { HiOutlineBanknotes, HiOutlinePlusCircle, HiOutlineUsers } from 'react-icons/hi2';
+import { HiOutlineBanknotes, HiOutlinePlusCircle, HiOutlineUsers } from '../components/workspace/WorkspaceIcons';
 import api from '../api/client';
 import SearchableSelect from '../components/ui/SearchableSelect';
 

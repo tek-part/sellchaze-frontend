@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { HiOutlineArrowPath, HiOutlinePlus, HiOutlineSquares2X2, HiOutlineTrash } from 'react-icons/hi2';
+import { HiOutlineArrowPath, HiOutlinePlus, HiOutlineSquares2X2, HiOutlineTrash } from '../components/workspace/WorkspaceIcons';
 import api from '../api/client';
 import PageHeader from '../components/PageHeader';
 import { confirmDialog } from '../components/ui/confirmDialog';

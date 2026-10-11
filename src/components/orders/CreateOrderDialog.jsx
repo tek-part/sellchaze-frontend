@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
-import { HiXMark } from 'react-icons/hi2';
+import { HiXMark } from '../workspace/WorkspaceIcons';
 import api from '../../api/client';
 import SearchableSelect from '../ui/SearchableSelect';
 

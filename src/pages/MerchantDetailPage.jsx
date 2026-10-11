@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useOutletContext, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { HiOutlineCalendarDays, HiOutlineEnvelope, HiOutlinePhone, HiOutlineShieldCheck, HiOutlineUser } from 'react-icons/hi2';
+import { HiOutlineCalendarDays, HiOutlineEnvelope, HiOutlinePhone, HiOutlineShieldCheck, HiOutlineUser } from '../components/workspace/WorkspaceIcons';
 import api from '../api/client';
 
 export default function MerchantDetailPage() {

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { HiOutlineCheckBadge, HiOutlinePlus, HiOutlineCheck } from 'react-icons/hi2';
+import { HiOutlineCheckBadge, HiOutlinePlus, HiOutlineCheck } from '../workspace/WorkspaceIcons';
 import api from '../../api/client';
 import notify from '../ui/notify';
 

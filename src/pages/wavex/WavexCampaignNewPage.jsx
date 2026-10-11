@@ -7,7 +7,7 @@ import {
     HiOutlineDocumentDuplicate,
     HiOutlineRocketLaunch,
     HiOutlineUserGroup,
-} from 'react-icons/hi2';
+} from '../../components/workspace/WorkspaceIcons';
 import api from '../../api/client';
 import { getPaginatedRows } from '../../utils/apiPagination';
 import WavexTemplateBodyEditor from '../../components/wavex/WavexTemplateBodyEditor';

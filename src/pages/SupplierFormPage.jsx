@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { HiOutlineEnvelope, HiOutlineKey, HiOutlineSquares2X2, HiOutlineUser } from 'react-icons/hi2';
+import { HiOutlineEnvelope, HiOutlineKey, HiOutlineSquares2X2, HiOutlineUser } from '../components/workspace/WorkspaceIcons';
 import api from '../api/client';
 
 export default function SupplierFormPage() {

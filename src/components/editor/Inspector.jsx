@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import { HiOutlineCursorArrowRays, HiOutlineSwatch } from 'react-icons/hi2';
+import { HiOutlineCursorArrowRays, HiOutlineSwatch } from '../workspace/WorkspaceIcons';
 import SectionSettingsPanel from '../customizer/SectionSettingsPanel';
 import SettingsForm from '../customizer/SettingsForm';
 import { groupIcon } from '../customizer/ThemeSettingsPanel';

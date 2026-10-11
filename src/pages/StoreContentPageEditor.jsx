@@ -12,7 +12,7 @@ import {
     HiOutlineRectangleStack,
     HiOutlineCheck,
     HiOutlineXMark,
-} from 'react-icons/hi2';
+} from '../components/workspace/WorkspaceIcons';
 import ReactQuill from 'react-quill-new';
 import 'react-quill-new/dist/quill.snow.css';
 import api from '../api/client';

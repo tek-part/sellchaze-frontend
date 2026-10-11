@@ -1,5 +1,5 @@
 import toast, { resolveValue } from 'react-hot-toast';
-import { HiCheckCircle, HiExclamationTriangle, HiInformationCircle, HiOutlineXMark, HiXCircle } from 'react-icons/hi2';
+import { HiCheckCircle, HiExclamationTriangle, HiInformationCircle, HiOutlineXMark, HiXCircle } from '../workspace/WorkspaceIcons';
 
 /**
  * The platform's action-state notifications.

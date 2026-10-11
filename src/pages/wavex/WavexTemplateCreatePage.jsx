@@ -6,7 +6,7 @@ import {
     HiOutlineArrowLeft,
     HiOutlineDocumentDuplicate,
     HiOutlineDocumentText,
-} from 'react-icons/hi2';
+} from '../../components/workspace/WorkspaceIcons';
 import api from '../../api/client';
 import WavexTemplateBodyEditor from '../../components/wavex/WavexTemplateBodyEditor';
 

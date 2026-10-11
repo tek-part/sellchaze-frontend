@@ -14,7 +14,7 @@ import {
     HiOutlinePlus,
     HiOutlineUsers,
     HiOutlineXMark,
-} from 'react-icons/hi2';
+} from '../components/workspace/WorkspaceIcons';
 import api from '../api/client';
 import { langParam } from '../api/lang';
 import FeedSkeleton from '../features/community/components/FeedSkeleton';

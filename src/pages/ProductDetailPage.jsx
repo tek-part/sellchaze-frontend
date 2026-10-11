@@ -11,7 +11,7 @@ import {
     HiOutlineIdentification,
     HiOutlinePhoto,
     HiOutlineTrash,
-} from 'react-icons/hi2';
+} from '../components/workspace/WorkspaceIcons';
 import toast from 'react-hot-toast';
 import api from '../api/client';
 import { confirmDialog } from '../components/ui/confirmDialog';

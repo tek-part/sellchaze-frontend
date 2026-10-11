@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Dialog, DialogBackdrop, DialogPanel, DialogTitle } from '@headlessui/react';
-import { HiOutlineSparkles, HiOutlineCheck } from 'react-icons/hi2';
+import { HiOutlineSparkles, HiOutlineCheck } from '../workspace/WorkspaceIcons';
 import api from '../../api/client';
 
 /**

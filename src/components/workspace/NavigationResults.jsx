@@ -1,6 +1,6 @@
 import { Children, isValidElement } from 'react';
 import { Link, NavLink } from 'react-router-dom';
-import { HiOutlineArrowUpRight, HiOutlineMagnifyingGlass } from 'react-icons/hi2';
+import { HiOutlineArrowUpRight, HiOutlineMagnifyingGlass } from './WorkspaceIcons';
 import useWorkspaceCopy from './workspaceCopy';
 
 export function navigationText(node) {

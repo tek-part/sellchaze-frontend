@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { HiOutlineMagnifyingGlass } from 'react-icons/hi2';
+import { HiOutlineMagnifyingGlass } from '../../components/workspace/WorkspaceIcons';
 import api from '../../api/client';
 import { langParam } from '../../api/lang';
 import SEO from '../../components/SEO';

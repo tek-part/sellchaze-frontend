@@ -17,7 +17,7 @@ import {
     HiOutlineClipboardDocumentList,
     HiSquares2X2,
     HiUsers,
-} from 'react-icons/hi2';
+} from '../components/workspace/WorkspaceIcons';
 import api from '../api/client';
 import DashboardAnalytics from '../components/dashboard/DashboardAnalytics';
 import OnboardingChecklist from '../components/OnboardingChecklist';

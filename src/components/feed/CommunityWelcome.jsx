@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { HiOutlineSparkles, HiXMark } from 'react-icons/hi2';
+import { HiOutlineSparkles, HiXMark } from '../workspace/WorkspaceIcons';
 import api from '../../api/client';
 
 const DISMISS_KEY = 'sellchase_community_welcome_dismissed';

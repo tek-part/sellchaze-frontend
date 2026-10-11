@@ -7,7 +7,7 @@ import {
     HiOutlineArrowLeft,
     HiOutlineArrowPath,
     HiOutlineTrash,
-} from 'react-icons/hi2';
+} from '../../components/workspace/WorkspaceIcons';
 import api from '../../api/client';
 
 function parseMemberLines(block) {

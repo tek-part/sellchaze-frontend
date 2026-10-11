@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { Link, useOutletContext } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
-import { HiOutlineCheckBadge, HiOutlineCheckCircle, HiOutlineGlobeAlt, HiOutlineNoSymbol } from 'react-icons/hi2';
+import { HiOutlineCheckBadge, HiOutlineCheckCircle, HiOutlineGlobeAlt, HiOutlineNoSymbol } from '../components/workspace/WorkspaceIcons';
 import api from '../api/client';
 import { useDebounced } from '../hooks/useDebounced';
 import ListToolbar from '../components/table/ListToolbar';

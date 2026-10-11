@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { HiOutlineArrowLeft, HiOutlineChevronDown, HiOutlineChevronUp, HiOutlinePlayCircle, HiOutlinePlus } from 'react-icons/hi2';
+import { HiOutlineArrowLeft, HiOutlineChevronDown, HiOutlineChevronUp, HiOutlinePlayCircle, HiOutlinePlus } from '../components/workspace/WorkspaceIcons';
 import api from '../api/client';
 import { langParam } from '../api/lang';
 import Reel from '../features/community/components/Reel';

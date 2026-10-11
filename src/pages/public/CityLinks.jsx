@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { HiOutlineMapPin } from 'react-icons/hi2';
+import { HiOutlineMapPin } from '../../components/workspace/WorkspaceIcons';
 import api from '../../api/client';
 
 /**

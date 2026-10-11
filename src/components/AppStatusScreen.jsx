@@ -9,7 +9,7 @@ import {
     HiOutlineNoSymbol,
     HiOutlineSignalSlash,
     HiOutlineWrenchScrewdriver,
-} from 'react-icons/hi2';
+} from './workspace/WorkspaceIcons';
 import LanguageSwitcher from './LanguageSwitcher';
 
 const VARIANT_META = {

@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { HiOutlineBuildingOffice2, HiOutlineArrowRight } from 'react-icons/hi2';
+import { HiOutlineBuildingOffice2, HiOutlineArrowRight } from '../../components/workspace/WorkspaceIcons';
 
 /**
  * Call-to-action card inviting factory/supplier owners to add their factory.

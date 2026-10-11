@@ -1,6 +1,6 @@
 import { Disclosure, DisclosureButton, DisclosurePanel } from '@headlessui/react';
 import { useTranslation } from 'react-i18next';
-import { HiOutlineChevronDown, HiOutlineFunnel } from 'react-icons/hi2';
+import { HiOutlineChevronDown, HiOutlineFunnel } from '../workspace/WorkspaceIcons';
 import SearchableSelect from '../ui/SearchableSelect';
 
 export default function ListToolbar({

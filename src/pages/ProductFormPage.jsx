@@ -13,7 +13,7 @@ import {
     HiOutlineCheckCircle,
     HiOutlineDocumentText,
     HiOutlineInformationCircle,
-} from 'react-icons/hi2';
+} from '../components/workspace/WorkspaceIcons';
 import api from '../api/client';
 import SearchableSelect from '../components/ui/SearchableSelect';
 import useStoreLocales from '../hooks/useStoreLocales';

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { HiOutlineLockClosed, HiOutlineUserGroup } from 'react-icons/hi2';
+import { HiOutlineLockClosed, HiOutlineUserGroup } from '../components/workspace/WorkspaceIcons';
 import api from '../api/client';
 import CommunityShell from '../features/community/components/CommunityShell';
 

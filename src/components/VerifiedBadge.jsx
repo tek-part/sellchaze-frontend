@@ -1,4 +1,4 @@
-import { HiCheckBadge } from 'react-icons/hi2';
+import { HiCheckBadge } from './workspace/WorkspaceIcons';
 import { useTranslation } from 'react-i18next';
 
 /**
