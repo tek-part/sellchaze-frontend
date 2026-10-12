@@ -6,7 +6,7 @@ export default defineConfig({
   esbuild: { jsx: 'automatic' },
   test: {
     environment: 'node',
-    include: ['src/apps/storefront/**/*.test.ts', 'src/shared/**/*.test.ts', 'src/features/**/*.test.ts', 'src/lib/**/*.test.{js,ts}', 'src/components/customizer/**/*.test.{js,ts}'],
+    include: ['src/apps/storefront/**/*.test.ts', 'src/shared/**/*.test.ts', 'src/features/**/*.test.ts', 'src/lib/**/*.test.{js,ts}', 'src/components/customizer/**/*.test.{js,ts}', 'src/pages/services/**/*.test.{js,ts}'],
     css: false,
   },
 });

@@ -75,8 +75,11 @@ export default function AppLayout() {
     }, [location.pathname]);
     useEffect(() => {
         document.body.setAttribute('data-workspace-theme', appearance.theme);
-        return () => document.body.removeAttribute('data-workspace-theme');
-    }, [appearance.theme]);
+        const roles = me?.roles || [];
+        const operator = roles.includes('Admin') && !roles.some((role) => ['Merchant', 'Supplier', 'Customer', 'Employee'].includes(role));
+        document.body.setAttribute('data-workspace-merchant', String(Boolean(me) && !operator));
+        return () => { document.body.removeAttribute('data-workspace-theme'); document.body.removeAttribute('data-workspace-merchant'); };
+    }, [appearance.theme, me]);
     useEffect(() => {
         setMobileNavOpen(false); setSearchOpen(false); setNavigationQuery(''); setSearchQuery('');
     }, [location.pathname]);
@@ -224,7 +227,7 @@ export default function AppLayout() {
     const navigationProps = { isAdmin, isSupplier, roles: me.roles ?? [], permissions };
     const Sidebar = isAdminOnly ? AdminSidebar : MerchantSidebar;
     return (
-        <WorkspaceIconProvider><div className="sc-workspace ws-frame" data-workspace-theme={appearance.theme}>
+        <WorkspaceIconProvider><div className="sc-workspace ws-frame" data-workspace-theme={appearance.theme} data-merchant-workspace={merchantWorkspace || undefined}>
             <a href="#workspace-content" className="ws-skip-link">{currentLng === 'ar' ? 'انتقل إلى المحتوى' : 'Skip to content'}</a>
             <motion.div id="workspace-sidebar" className="ws-sidebar-container" data-collapsed={sidebarCollapsed || undefined} initial={false} animate={{ width: sidebarCollapsed ? 64 : 272 }} transition={{ duration: reducedMotion ? 0 : 0.15, ease: [0.4, 0, 0.2, 1] }}><Sidebar me={me} permissions={permissions} storeUrl={storeUrl} collapsed={sidebarCollapsed} onSearch={() => setSearchOpen(true)} onCollapse={() => { setSidebarCollapsed(true); sidebarToggleRef.current?.focus(); }} onExpand={() => { setSidebarCollapsed(false); sidebarToggleRef.current?.focus(); }} /></motion.div>
             <div className="ws-main-column">
