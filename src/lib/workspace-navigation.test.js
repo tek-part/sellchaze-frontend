@@ -39,9 +39,30 @@ describe('Workspace search uses the authorized sidebar', () => {
         const routes = links({ roles: ['Merchant'], permissions: [], query: 'analytics' });
         expect(routes).toEqual(['/store/analytics']);
     });
+    it('searches secondary store settings while respecting employee access', () => {
+        expect(links({ roles: ['Merchant'], permissions: [], query: 'phone verification' })).toEqual(['/store/settings/phone-verification']);
+        expect(links({ roles: ['Employee'], permissions: ['store.analytics.view'], query: 'phone verification' })).toEqual([]);
+    });
     it('normalizes Arabic diacritics and hamza for navigation search', () => {
         expect(normalizeNavigationText('إِحْصَاءات')).toBe(normalizeNavigationText('احصاءات'));
         expect(normalizeNavigationText('Orders')).toBe('orders');
+    });
+    it('retains authorized business inventory and catalog routes after reorganizing store tools', () => {
+        const routes = links({ roles: ['Merchant'], permissions: ['products-list', 'categories-list', 'stores-list'] });
+        expect(routes).toContain('/store/products');
+        expect(routes).toContain('/products');
+        expect(routes).toContain('/inventory/transfers');
+        expect(routes).toContain('/stores');
+        expect(routes).toContain('/categories');
+    });
+    it('keeps independent group identities even when two sections have the same title', () => {
+        const Icon = () => React.createElement('svg');
+        const Group = () => null;
+        const rows = collectCompactNavigation([
+            React.createElement(Group, { key: 'store', title: 'Orders', groupKey: 'store-orders', icon: Icon }),
+            React.createElement(Group, { key: 'business', title: 'Orders', groupKey: 'business-orders', icon: Icon }),
+        ]);
+        expect(rows.map(({ groupKey }) => groupKey)).toEqual(['store-orders', 'business-orders']);
     });
     it('keeps compact links permission-filtered and named for assistive technology', () => {
         const routes = links({ compact: true, roles: ['Customer'], permissions: [] });

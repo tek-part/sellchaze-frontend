@@ -67,6 +67,7 @@ export default function StoreLayout() {
     const groups = useMemo(() => buildStoreNav(t, access), [t, access]);
     const rel = relativeStorePath(location.pathname, uiBase);
     const activeGroup = useMemo(() => findActiveGroup(groups, rel), [groups, rel]);
+    const settingsNavigation = unifiedNavigation && activeGroup?.key === 'settings';
 
     const context = useMemo(() => ({
         ...parent,
@@ -94,7 +95,7 @@ export default function StoreLayout() {
         <div className="min-w-0">
             <div className="ws-store-content min-w-0 flex-1">
                 {/* Mobile / tablet: sticky sub-bar + the active group's items as a scroll strip. */}
-                <div className={`mb-4 border-b border-slate-200/80 bg-surface/95 ${unifiedNavigation ? 'pb-3' : 'sticky -top-3 z-30 -mx-3 backdrop-blur md:-top-5 md:-mx-5'}`}>
+                {!unifiedNavigation ? <div className="mb-4 border-b border-slate-200/80 bg-surface/95 sticky -top-3 z-30 -mx-3 backdrop-blur md:-top-5 md:-mx-5">
                     <div className="flex items-center gap-3 px-3 py-2.5 md:px-5">
                         {!unifiedNavigation && <button
                             type="button"
@@ -132,7 +133,7 @@ export default function StoreLayout() {
                             })}
                         </div>
                     ) : null}
-                </div>
+                </div> : null}
 
                 {loading && !store ? (
                     <div className="flex items-center justify-center rounded-2xl border border-slate-200/80 bg-white py-20 shadow-card">
@@ -151,7 +152,12 @@ export default function StoreLayout() {
                         </button>
                     </div>
                 ) : (
-                    <Outlet context={context} />
+                    settingsNavigation ? <div className="ws-settings-layout">
+                        <nav className="ws-settings-navigation" aria-label={activeGroup.label}>
+                            {activeGroup.items.map((item) => <Link key={item.key} to={`${uiBase}/${item.to}`} aria-current={item.isActive(rel) ? 'page' : undefined}><item.Icon aria-hidden /><span>{item.label}</span></Link>)}
+                        </nav>
+                        <div className="ws-settings-content"><Outlet context={context} /></div>
+                    </div> : <Outlet context={context} />
                 )}
             </div>
 

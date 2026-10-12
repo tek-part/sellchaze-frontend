@@ -7,7 +7,8 @@ import { useTranslation } from 'react-i18next';
 import { useChatUnread } from '../lib/useChatUnread';
 import { CHAT_ENABLED } from '../lib/features';
 import { storeAccess } from '../lib/storeAccess';
-import { buildStoreNav, relativeStorePath } from './store/storeNav';
+
+import { buildWorkspaceStoreNav, workspaceStoreItemActive } from './store/workspaceStoreNav';
 import { FaGoogle, FaWhatsapp } from 'react-icons/fa';
 import {
     HiOutlineArrowDownTray,
@@ -43,7 +44,6 @@ import {
     HiOutlineChartBar,
     HiOutlineNewspaper,
     HiOutlinePresentationChartLine,
-    HiOutlinePencilSquare,
     HiOutlineSparkles,
 } from './workspace/WorkspaceIcons';
 
@@ -117,9 +117,9 @@ function SectionLabel({ children }) {
     );
 }
 
-function NavGroup({ title, icon: Icon, defaultOpen, groupActive, children }) {
+function NavGroup({ title, groupKey = title, icon: Icon, defaultOpen, groupActive, children }) {
     const mega = useContext(NavVariantContext) === 'mega';
-    const expanded = useContext(ExpandedGroupContext) === title;
+    const expanded = useContext(ExpandedGroupContext) === groupKey;
     const reducedMotion = useReducedMotion();
     return (
         <Disclosure key={`${groupActive ? 'active' : 'idle'}-${expanded}`} defaultOpen={defaultOpen || expanded}>
@@ -224,8 +224,9 @@ function SidebarNavInner({ isAdmin = false, isSupplier = false, roles = [], perm
     // users need store.* grants) — shared with StoreLayout via lib/storeAccess.
     const access = storeAccess(roles, permissions);
     const { hasStoreAccess } = access;
-    const storeGroups = hasStoreAccess ? buildStoreNav(t, access) : [];
-    const storePath = relativeStorePath(location.pathname, '/store');
+
+    const workspaceStoreGroups = hasStoreAccess ? buildWorkspaceStoreNav(t, access, permissions) : [];
+
     const openReports = usePathPrefix('/admin/reports');
     const openAdminSettings = usePathPrefix('/settings');
 
@@ -443,26 +444,9 @@ function SidebarNavInner({ isAdmin = false, isSupplier = false, roles = [], perm
         );
     }
 
-    return (
-        <NavigationResults query={query} search={search} onNavigate={onNavigate} compact={compact} onExpand={onExpand}>
-            <nav
-            className={navClass}
-            aria-label="Main"
-            onClick={(event) => {
-                if (event.target instanceof Element && event.target.closest('a')) {
-                    onNavigate?.();
-                }
-            }}
-        >
-            <div className={sec('flex flex-col gap-1')}>
-                <SectionLabel>{t('nav_sidebar_section_overview')}</SectionLabel>
-                <NavLink to="/dashboard" className={navLinkClass}>
-                    <HiOutlineHome className="h-5 w-5 shrink-0 opacity-95" aria-hidden />
-                    {t('dashboard')}
-                </NavLink>
-            </div>
-
-            {(hasStoreAccess || canViewCatalogSection) ? (
+    const businessActive = location.pathname !== '/dashboard' && location.pathname !== '/store' && !location.pathname.startsWith('/store/');
+    const businessNavigation = (<>
+            {!hasStoreAccess && canViewCatalogSection ? (
                 <div className={sec('mt-5 flex flex-col gap-1.5 border-t border-slate-200/80 pt-5')}>
                     <SectionLabel>{t('nav_store_section')}</SectionLabel>
 
@@ -524,25 +508,6 @@ function SidebarNavInner({ isAdmin = false, isSupplier = false, roles = [], perm
                         </NavGroup>
                     ) : null}
 
-                    {storeGroups.map((group) => {
-                        const active = group.items.some((item) => item.isActive(storePath));
-                        return <NavGroup
-                            key={`${group.key}-${active}`}
-                            title={group.label}
-                            icon={group.key === 'design' ? HiOutlinePencilSquare : group.key === 'settings' ? HiOutlineCog6Tooth : HiOutlineBuildingStorefront}
-                            defaultOpen={active}
-                            groupActive={active}
-                        >
-                            {group.items.map((item) => {
-                                const selected = item.isActive(storePath);
-                                return <Link key={item.key} to={`/store/${item.to}`} aria-current={selected ? 'page' : undefined} className={subNavLinkClass({ isActive: selected })}>
-                                    <item.Icon className="h-4 w-4 shrink-0 opacity-90" aria-hidden />
-                                    {item.label}
-                                </Link>;
-                            })}
-                        </NavGroup>;
-                    })}
-
                     {can('stores-list') ? (
                         <NavLink to="/stores" className={navLinkClass}>
                             <HiOutlineBuildingStorefront className="h-5 w-5 shrink-0 opacity-95" aria-hidden />
@@ -552,11 +517,20 @@ function SidebarNavInner({ isAdmin = false, isSupplier = false, roles = [], perm
                 </div>
             ) : null}
 
+            {hasStoreAccess && canViewCatalogSection ? <div className={sec('mt-5 flex flex-col gap-1.5')}>
+                <SectionLabel>{t('workspace_business_catalog', 'Business catalog')}</SectionLabel>
+                {can('products-list') ? <>
+                    <NavLink to="/products" className={navLinkClass}><HiOutlineCube className="h-5 w-5" aria-hidden />{t('workspace_business_products', 'Business products')}</NavLink>
+                    <NavLink to="/inventory" end className={navLinkClass}><HiOutlineBuildingOffice2 className="h-5 w-5" aria-hidden />{t('inventory_title')}</NavLink>
+                    <NavLink to="/inventory/transfers" className={navLinkClass}><HiOutlineArrowsRightLeft className="h-5 w-5" aria-hidden />{t('inventory_transfers')}</NavLink>
+                </> : null}
+                {can('stores-list') ? <NavLink to="/stores" className={navLinkClass}><HiOutlineBuildingStorefront className="h-5 w-5" aria-hidden />{t('nav_stores')}</NavLink> : null}
+            </div> : null}
             {canViewPipelineSection ? (
                 <div className={sec('mt-5 flex flex-col gap-2 border-t border-slate-200/80 pt-5')}>
                     <SectionLabel>{t('nav_sidebar_section_pipeline')}</SectionLabel>
                     {canViewOrdersGroup ? (
-                        <NavGroup title={t('nav_group_orders')} icon={HiOutlineShoppingBag} defaultOpen={openOrders} groupActive={openOrders}>
+                        <NavGroup title={hasStoreAccess ? t('workspace_business_orders', 'Business orders') : t('nav_group_orders')} icon={HiOutlineShoppingBag} defaultOpen={openOrders} groupActive={openOrders}>
                     {!isSupplierOnly ? (
                         <NavLink to="/orders/in" className={subNavLinkClass}>
                             <span className="text-xs opacity-80" aria-hidden>
@@ -853,6 +827,46 @@ function SidebarNavInner({ isAdmin = false, isSupplier = false, roles = [], perm
                     ) : null}
                 </NavGroup>
             </div>
+    </>);
+    return (
+        <NavigationResults query={query} search={search} onNavigate={onNavigate} compact={compact} onExpand={onExpand} additionalItems={(workspaceStoreGroups.find((group) => group.key === 'settings')?.items ?? []).map((item) => ({ ...item, group: t('nav_store_settings', 'Store settings') }))}>
+            <nav
+            className={navClass}
+            aria-label="Main"
+            onClick={(event) => {
+                if (event.target instanceof Element && event.target.closest('a')) {
+                    onNavigate?.();
+                }
+            }}
+        >
+            <div className={sec('flex flex-col gap-1')}>
+                <SectionLabel>{hasStoreAccess ? t('workspace_nav_main', 'Main') : t('nav_sidebar_section_overview')}</SectionLabel>
+                <NavLink to="/dashboard" className={navLinkClass}>
+                    <HiOutlineHome className="h-5 w-5 shrink-0 opacity-95" aria-hidden />
+                    {t('dashboard')}
+                </NavLink>
+                {workspaceStoreGroups.filter((group) => group.key !== 'settings').map((group) => {
+                    if (group.single) {
+                        const active = group.items ? group.items.some((item) => workspaceStoreItemActive(item, location.pathname)) : workspaceStoreItemActive(group, location.pathname);
+                        return <Link key={group.key} to={group.to} aria-current={active ? 'page' : undefined} className={navLinkClass({ isActive: active })}><group.Icon className="h-5 w-5 shrink-0" aria-hidden />{group.label}</Link>;
+                    }
+                    const active = group.items.some((item) => workspaceStoreItemActive(item, location.pathname));
+                    return <NavGroup key={group.key} groupKey={`store-${group.key}`} title={group.label} icon={group.Icon} defaultOpen={active} groupActive={active}>
+                        {group.items.map((item) => <Link key={item.key} to={item.to} aria-current={workspaceStoreItemActive(item, location.pathname) ? 'page' : undefined} className={subNavLinkClass({ isActive: workspaceStoreItemActive(item, location.pathname) })}>{item.label}</Link>)}
+                    </NavGroup>;
+                })}
+            </div>
+
+            {hasStoreAccess ? <div className={sec('mt-5 flex flex-col gap-1.5')}>
+                <SectionLabel>{t('workspace_nav_other', 'Other')}</SectionLabel>
+                {workspaceStoreGroups.filter((group) => group.key === 'settings').map((group) => {
+                    const active = group.items.some((item) => workspaceStoreItemActive(item, location.pathname));
+                    return <Link key={group.key} to={group.to} aria-current={active ? 'page' : undefined} className={navLinkClass({ isActive: active })}><group.Icon className="h-5 w-5" aria-hidden />{group.label}</Link>;
+                })}
+                <NavGroup groupKey="business" title={t('workspace_business_tools', 'Business & administration')} icon={HiOutlineBuildingOffice2} defaultOpen={businessActive} groupActive={businessActive}>
+                    <div className="ws-business-navigation">{businessNavigation}</div>
+                </NavGroup>
+            </div> : businessNavigation}
         </nav>
             </NavigationResults>
     );

@@ -29,7 +29,7 @@ export function collectCompactNavigation(node, rows = []) {
     Children.forEach(node, (element) => {
         if (!isValidElement(element)) return;
         if (element.props.title && element.props.icon) {
-            rows.push({ label: element.props.title, Icon: element.props.icon });
+            rows.push({ label: element.props.title, groupKey: element.props.groupKey || element.props.title, Icon: element.props.icon });
         } else if (element.type === Link || element.type === NavLink) {
             const label = navigationText(element.props.children).replace(/\s+/g, ' ').trim();
             const icon = Children.toArray(element.props.children).find(isValidElement);
@@ -38,16 +38,18 @@ export function collectCompactNavigation(node, rows = []) {
     });
     return rows;
 }
-export default function NavigationResults({ query = '', search = false, compact = false, children, onNavigate, onExpand }) {
+export default function NavigationResults({ query = '', search = false, compact = false, additionalItems = [], children, onNavigate, onExpand }) {
     const ws = useWorkspaceCopy();
     if (compact) return <nav aria-label={ws('navigation')} className="ws-compact-nav">
-        {collectCompactNavigation(children).map(({ label, Icon, element, icon }, index) => Icon
-            ? <button key={`${label}-${index}`} type="button" title={label} aria-label={label} onClick={() => onExpand?.(label)}><Icon aria-hidden /></button>
+        {collectCompactNavigation(children).map(({ label, groupKey, Icon, element, icon }, index) => Icon
+            ? <button key={`${label}-${index}`} type="button" title={label} aria-label={label} onClick={() => onExpand?.(groupKey)}><Icon aria-hidden /></button>
             : cloneElement(element, { key: `${element.props.to}-${index}`, title: label, 'aria-label': label, onClick: onNavigate }, <>{icon}<span className="sr-only">{label}</span></>))}
     </nav>;
     if (!search && !query.trim()) return children;
     const needle = normalizeNavigationText(query);
-    const rows = collectNavigation(children).filter((row) => normalizeNavigationText(`${row.label} ${row.group} ${row.to}`).includes(needle));
+    const indexed = new Map(additionalItems.map((item) => [item.to, item]));
+    collectNavigation(children, '', indexed);
+    const rows = [...indexed.values()].filter((row) => normalizeNavigationText(`${row.label} ${row.group} ${row.to}`).includes(needle));
     return <nav aria-label={ws('navigation')} className="ws-search-results">
         {rows.length ? rows.map((row) => <Link key={row.to} to={row.to} onClick={onNavigate} className="ws-search-result">
             <HiOutlineMagnifyingGlass aria-hidden /><span><strong>{row.label}</strong>{row.group ? <small>{row.group}</small> : null}</span><HiOutlineArrowUpRight aria-hidden className="ws-search-arrow" />

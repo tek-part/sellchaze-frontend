@@ -4,7 +4,7 @@ import { motion, useReducedMotion } from 'framer-motion';
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
-import { HiOutlineArrowUturnLeft, HiOutlineXMark, HiOutlineMagnifyingGlass } from './workspace/WorkspaceIcons';
+import { HiOutlineArrowUturnLeft, HiOutlineXMark, HiOutlineMagnifyingGlass, HiOutlineLanguage } from './workspace/WorkspaceIcons';
 import api, { clearTokens } from '../api/client';
 import { endImpersonation, isImpersonating } from '../utils/impersonation';
 import { useChatUnread } from '../lib/useChatUnread';
@@ -12,6 +12,7 @@ import SidebarNav from './SidebarNav';
 import AdminSidebar from './admin/AdminSidebar';
 import MerchantSidebar from './MerchantSidebar';
 import WorkspaceHeader from './workspace/WorkspaceHeader';
+import WorkspaceAppearanceControl from './workspace/WorkspaceAppearanceControl';
 import useWorkspaceAppearance from './workspace/useWorkspaceAppearance';
 import useWorkspaceCopy from './workspace/workspaceCopy';
 import './workspace/workspace.css';
@@ -41,8 +42,9 @@ export default function AppLayout() {
     const [storeUrl, setStoreUrl] = useState(null);
     const [logoutOpen, setLogoutOpen] = useState(false);
     const [mobileNavOpen, setMobileNavOpen] = useState(false);
+    const [mobileDrawerWidth, setMobileDrawerWidth] = useState(null);
+    const frameRef = useRef(null);
     const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-    const mainRef = useRef(null);
     const sidebarToggleRef = useRef(null);
     const [impersonationActive, setImpersonationActive] = useState(() => isImpersonating());
     const [impersonationExitLoading, setImpersonationExitLoading] = useState(false);
@@ -52,8 +54,22 @@ export default function AppLayout() {
     const [searchOpen, setSearchOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
     const [navigationQuery, setNavigationQuery] = useState('');
+    const openMobileNavigation = () => {
+        setMobileDrawerWidth(Math.min(384, (frameRef.current?.clientWidth || document.documentElement.clientWidth) * 0.75));
+        setMobileNavOpen(true);
+    };
+    useEffect(() => {
+        if (!mobileNavOpen) return;
+        const resize = () => {
+            if (window.matchMedia('(min-width: 768px)').matches) setMobileNavOpen(false);
+            else setMobileDrawerWidth(Math.min(384, (frameRef.current?.clientWidth || document.documentElement.clientWidth) * 0.75));
+        };
+        window.addEventListener('resize', resize);
+        return () => window.removeEventListener('resize', resize);
+    }, [mobileNavOpen]);
     useLayoutEffect(() => {
-        mainRef.current?.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+        window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+        return () => window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
     }, [location.pathname]);
     useEffect(() => {
         document.body.setAttribute('data-workspace-theme', appearance.theme);
@@ -202,27 +218,29 @@ export default function AppLayout() {
     const navigationProps = { isAdmin, isSupplier, roles: me.roles ?? [], permissions };
     const Sidebar = isAdminOnly ? AdminSidebar : MerchantSidebar;
     return (
-        <WorkspaceIconProvider><div className="sc-workspace ws-frame" data-workspace-theme={appearance.theme}>
+        <WorkspaceIconProvider><div ref={frameRef} className="sc-workspace ws-frame" data-workspace-theme={appearance.theme}>
             <a href="#workspace-content" className="ws-skip-link">{currentLng === 'ar' ? 'انتقل إلى المحتوى' : 'Skip to content'}</a>
-            <motion.div id="workspace-sidebar" className="ws-sidebar-container" initial={false} animate={{ width: sidebarCollapsed ? 64 : 272 }} transition={{ duration: reducedMotion ? 0 : 0.15, ease: [0.4, 0, 0.2, 1] }}><Sidebar me={me} permissions={permissions} storeUrl={storeUrl} collapsed={sidebarCollapsed} onSearch={() => setSearchOpen(true)} onCollapse={() => { setSidebarCollapsed(true); sidebarToggleRef.current?.focus(); }} onExpand={() => { setSidebarCollapsed(false); sidebarToggleRef.current?.focus(); }} /></motion.div>
+            <motion.div id="workspace-sidebar" className="ws-sidebar-container" data-collapsed={sidebarCollapsed || undefined} initial={false} animate={{ width: sidebarCollapsed ? 64 : 272 }} transition={{ duration: reducedMotion ? 0 : 0.15, ease: [0.4, 0, 0.2, 1] }}><Sidebar me={me} permissions={permissions} storeUrl={storeUrl} collapsed={sidebarCollapsed} onSearch={() => setSearchOpen(true)} onCollapse={() => { setSidebarCollapsed(true); sidebarToggleRef.current?.focus(); }} onExpand={() => { setSidebarCollapsed(false); sidebarToggleRef.current?.focus(); }} /></motion.div>
             <div className="ws-main-column">
+                <div className="ws-header-container">
                 {impersonationActive ? <div className="ws-impersonation" role="status">
                     <p><HiOutlineArrowUturnLeft aria-hidden />{t('impersonation_banner')}</p>
                     <button type="button" disabled={impersonationExitLoading} onClick={() => void handleExitImpersonation()}>{impersonationExitLoading ? '…' : t('impersonation_exit')}</button>
                 </div> : null}
-                <WorkspaceHeader me={me} permissions={permissions} storeUrl={storeUrl} isSupplier={isSupplier} chatUnread={chatUnread} appearance={appearance} onLanguage={toggleLanguage} onNavigation={() => setMobileNavOpen(true)} onToggleSidebar={() => setSidebarCollapsed((value) => !value)} sidebarToggleRef={sidebarToggleRef} collapsed={sidebarCollapsed} onSearch={() => setSearchOpen(true)} onLogout={() => setLogoutOpen(true)} />
-                <main ref={mainRef} id="workspace-content" tabIndex={-1} className="ws-main-scroll">
+                <WorkspaceHeader me={me} permissions={permissions} storeUrl={storeUrl} isSupplier={isSupplier} chatUnread={chatUnread} appearance={appearance} onLanguage={toggleLanguage} onNavigation={openMobileNavigation} onToggleSidebar={() => setSidebarCollapsed((value) => !value)} sidebarToggleRef={sidebarToggleRef} collapsed={sidebarCollapsed} onSearch={() => setSearchOpen(true)} onLogout={() => setLogoutOpen(true)} />
+                </div>
+                <main id="workspace-content" tabIndex={-1} className="ws-main-scroll">
                     <div key={location.pathname} className="ws-page"><Outlet context={{ me, isAdmin, isSupplier, permissions, unifiedStoreNavigation: !isAdminOnly }} /></div>
                 </main>
             </div>
             <Dialog open={mobileNavOpen} onClose={() => setMobileNavOpen(false)} className="ws-dialog-layer">
                 <DialogBackdrop transition className="ws-backdrop" />
                 <div className="ws-drawer-position" dir={currentLng === 'ar' ? 'rtl' : 'ltr'}>
-                    <DialogPanel transition className="ws-sidebar ws-drawer" data-workspace-theme={appearance.theme}>
+                    <DialogPanel transition className="ws-sidebar ws-drawer" style={{ width: mobileDrawerWidth ?? undefined }} data-workspace-theme={appearance.theme}>
                         <div className="ws-sidebar-brand"><Link to={isAdminOnly ? '/admin/dashboard' : '/dashboard'}><img src="/icon.png" alt="" /><DialogTitle as="strong">Sellchaze</DialogTitle></Link><button type="button" className="ws-icon-button" onClick={() => setMobileNavOpen(false)} aria-label={t('close')}><HiOutlineXMark aria-hidden /></button></div>
                         <div className="ws-sidebar-tools"><label className="ws-sidebar-search"><HiOutlineMagnifyingGlass aria-hidden /><input value={navigationQuery} onChange={(e) => setNavigationQuery(e.target.value)} placeholder={ws('search')} aria-label={ws('search')} /></label></div>
                         <div className="ws-sidebar-scroll"><SidebarNav {...navigationProps} query={navigationQuery} onNavigate={() => setMobileNavOpen(false)} /></div>
-                        <div className="ws-sidebar-footer"><Link to="/contact" onClick={() => setMobileNavOpen(false)}>{ws('help')}</Link></div>
+                        <div className="ws-sidebar-footer"><div className="ws-drawer-preferences"><WorkspaceAppearanceControl appearance={appearance} inDrawer /><button type="button" className="ws-icon-button" onClick={toggleLanguage} aria-label={ws('language')}><HiOutlineLanguage aria-hidden /></button></div><Link to="/contact" onClick={() => setMobileNavOpen(false)}>{ws('help')}</Link></div>
                     </DialogPanel>
                 </div>
             </Dialog>

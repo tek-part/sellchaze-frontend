@@ -6,6 +6,7 @@ const copy = {
     searchHint: ['ابحث عن صفحة أو إعداد وانتقل إليه مباشرة.', 'Find a page or setting and jump straight to it.'],
     noResults: ['لا توجد أقسام مطابقة. جرّب كلمة أخرى.', 'No matching sections. Try another word.'],
     navigation: ['التنقل الرئيسي', 'Main navigation'], appearance: ['المظهر', 'Appearance'],
+    openNavigation: ['افتح القائمة', 'Open navigation'],
     light: ['فاتح', 'Light'], dark: ['داكن', 'Dark'], system: ['حسب الجهاز', 'System'],
     refresh: ['إعادة تحميل الصفحة', 'Reload page'], help: ['المساعدة والدعم', 'Help & support'],
     workspace: ['مساحة العمل', 'Workspace'], admin: ['إدارة المنصة', 'Platform administration'],
