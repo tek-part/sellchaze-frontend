@@ -52,6 +52,7 @@ export function CheckoutFieldsForm({ model }: { model: ReturnType<typeof useChec
       type={field.key === 'email' ? 'email' : field.key === 'phone' || field.key === 'phone_alt' ? 'tel' : 'text'} autoComplete={autoComplete}
       maxLength={field.key === 'notes' ? 2000 : field.key === 'phone' || field.key === 'phone_alt' ? 50 : field.key === 'postal_code' ? 32 : field.key === 'city' ? 120 : 255} />;
   })}
+    {fields.some((field) => field.enabled && ['phone', 'email'].includes(field.key)) ? <p className="sf-field__hint">{lang === 'ar' ? 'يستخدم المتجر بيانات التواصل لمساعدتك إذا لم يكتمل الطلب.' : 'The store may use your contact details to help you complete an unfinished order.'}</p> : null}
     <CheckoutPhoneVerification model={model.phoneVerification} locale={locale} />
     <CheckoutBotProtection model={model.botProtection} locale={locale} />
     {model.shipping?.enabled && model.shipping.options.length ? <fieldset style={{ display: 'grid', gap: '.75rem', border: 0, padding: 0, margin: 0 }}>
