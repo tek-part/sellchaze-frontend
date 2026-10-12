@@ -1,0 +1,11 @@
+import type { ReactElement, SVGProps } from 'react';
+type Props = SVGProps<SVGSVGElement>;
+const base = (props: Props): Props => ({ width: 24, height: 24, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 1.5, strokeLinecap: 'round', strokeLinejoin: 'round', 'aria-hidden': true, ...props });
+export const SearchIcon = (p: Props): ReactElement => <svg {...base(p)}><circle cx="10.5" cy="10.5" r="7" /><path d="m16 16 4.5 4.5" /></svg>;
+export const BagIcon = (p: Props): ReactElement => <svg {...base(p)}><path d="M5 9h14l-1 10a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 9Z" /><path d="M9 11V7a3 3 0 0 1 6 0v4" /></svg>;
+export const HomeIcon = (p: Props): ReactElement => <svg {...base(p)}><path d="m3 10 9-7 9 7v10H3V10Z" /><path d="M9 20v-6h6v6" /></svg>;
+export const GridIcon = (p: Props): ReactElement => <svg {...base(p)}><rect x="3" y="3" width="7" height="7" rx="2" /><rect x="14" y="3" width="7" height="7" rx="2" /><rect x="3" y="14" width="7" height="7" rx="2" /><rect x="14" y="14" width="7" height="7" rx="2" /></svg>;
+export const MoreIcon = (p: Props): ReactElement => <svg {...base(p)}><circle cx="5" cy="12" r="1" /><circle cx="12" cy="12" r="1" /><circle cx="19" cy="12" r="1" /></svg>;
+export const MinusIcon = (p: Props): ReactElement => <svg {...base(p)}><path d="M5 12h14" /></svg>;
+export const PlusIcon = (p: Props): ReactElement => <svg {...base(p)}><path d="M12 5v14M5 12h14" /></svg>;
+export const TrashIcon = (p: Props): ReactElement => <svg {...base(p)}><path d="M4 7h16M6 7l1 14h10l1-14M9 7V4h6v3M10 11v6M14 11v6" /></svg>;

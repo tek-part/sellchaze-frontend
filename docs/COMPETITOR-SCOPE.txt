@@ -24,11 +24,18 @@ This inventory is complete for that observed gallery, not a claim that themes ar
 The existing5 Sellchaze themes are not evidence of these152 implementations. Every
 preview needs desktop/mobile home/product/category/cart/checkout inspection, actual
 corresponding layouts/sections/settings, and functional validation. Sphinx V3 home has
-been observed; its implementation is still pending. Home-builder/funnel/page template
-libraries still require separate inventory and implementation. Do not create gallery
+been observed; the first Sphinx implementation now has its own desktop/mobile chrome,
+category mosaic, product shelves, editable settings/templates, search/cart and phone
+newsletter capture with a private merchant subscriber list/export. Product quantity
+offers, direct buy flow, complete category server sorting, reference checkout fidelity
+and newsletter popup/coupon/settings parity remain unfinished. This is not full Sphinx
+parity. The other151 observed themes still require actual implementations.
+docs/reference/easyorders-funnel-template-catalog-20261012.json records84 funnel
+templates separately; these are an inventory, not84 implemented templates.
+Home-builder/page template libraries still require inventory and implementation. Do not create gallery
 cards or aliases suggesting an unavailable theme can be activated.
 
-Remaining merchant sections: missed orders/newsletter, Product Feed/Easy Catalog/A-B
+Remaining merchant sections: missed orders/complete newsletter settings, Product Feed/Easy Catalog/A-B
 tests, complete orders states/actions, Shater AI, tracking, marketing, wallet, apps,
 service gallery/referrals/marketing services; complete page/layout/feature fidelity.
 Existing categories/orders/dashboard/design functionality is incremental, not full parity.

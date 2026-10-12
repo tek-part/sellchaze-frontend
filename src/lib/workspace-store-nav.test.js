@@ -8,7 +8,7 @@ describe('Store workspace navigation', () => {
     it('puts store orders, products and design first, with funnels as a direct link', () => {
         const groups = buildWorkspaceStoreNav(t, storeAccess(['Merchant'], ['products-list', 'categories-list']), ['products-list', 'categories-list']);
         expect(groups.slice(0, 4).map((group) => group.key)).toEqual(['orders', 'products', 'design', 'funnels']);
-        expect(groups[0].items.map((item) => item.to)).toEqual(['/store/orders', '/store/blocked-phone-numbers', '/store/blocked-phones']);
+        expect(groups[0].items.map((item) => item.to)).toEqual(['/store/orders', '/store/blocked-phone-numbers', '/store/blocked-phones', '/store/newsletter']);
         expect(groups[1].items[0].to).toBe('/store/products');
         expect(groups[1].items.map((item) => item.to)).toContain('/store/categories');
         expect(groups[3].to).toBe('/store/funnels');

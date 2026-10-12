@@ -224,6 +224,17 @@ export function StorefrontApp(): ReactElement {
       navigation: { header, footer },
       data: {
         announcements,
+        categoryNavigation: dev && previewData && !categoryNav.length
+          ? previewData.sampleCategories(manifest.id, locale).map((category) => ({ label: category.title, url: category.url }))
+          : headerCategoryNav,
+        allCategoryNavigation: dev && previewData && !categoryNav.length
+          ? previewData.sampleCategories(manifest.id, locale).map((category) => ({ label: category.title, url: category.url }))
+          : categoryNav,
+        headerPageNavigation: toNavItems(navigation.header.filter((item) => item.automatic_page), locale, store.defaultLocale),
+        managedHeaderNavigation: menuHeader,
+        sphinxFooterNavigation: menuFooter ?? (navigation.footer.some((item) => item.automatic_page)
+          ? [{ title: t('footer.links'), links: toNavItems(navigation.footer.filter((item) => item.automatic_page), locale, store.defaultLocale) }]
+          : []),
         freeShippingThreshold: shippingThreshold(store.shipping, store.currency, store.currencyMultipliers),
         // Resolved once here, at the app boundary, so rendered chrome carries no request-time clock
         // (engine invariant I4) while never going stale in source.

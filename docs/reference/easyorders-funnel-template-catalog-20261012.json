@@ -1,0 +1,429 @@
+{
+  "source": "https://app.easy-orders.net/#/funnels/create",
+  "capturedAt": "2026-10-12T04:03:57.435Z",
+  "cards": [
+    {
+      "image": "https://easyorders.fra1.digitaloceanspaces.com/1754295970494233203.png",
+      "name": "Glasses EN",
+      "preview": "https://m-a-m.myeasyorders.com/funnels/glasses-en"
+    },
+    {
+      "image": "https://easyorders.fra1.digitaloceanspaces.com/1754296017109874573.png",
+      "name": "Glasses AR",
+      "preview": "https://m-a-m.myeasyorders.com/funnels/glasses"
+    },
+    {
+      "image": "https://easyorders.fra1.digitaloceanspaces.com/1754296046861018547.png",
+      "name": "Hair Revive EN",
+      "preview": "https://m-a-m.myeasyorders.com/funnels/nutrafol-en"
+    },
+    {
+      "image": "https://easyorders.fra1.digitaloceanspaces.com/1754296103059897833.png",
+      "name": "Hair Revive AR",
+      "preview": "https://m-a-m.myeasyorders.com/funnels/nutrafol"
+    },
+    {
+      "image": "https://easyorders.fra1.digitaloceanspaces.com/1754296130551991320.png",
+      "name": "Litter Robot EN",
+      "preview": "https://m-a-m.myeasyorders.com/funnels/Litter-Robot-en"
+    },
+    {
+      "image": "https://easyorders.fra1.digitaloceanspaces.com/1754296244778181184.png",
+      "name": "Litter Robot AR",
+      "preview": "https://m-a-m.myeasyorders.com/funnels/Litter-Robot"
+    },
+    {
+      "image": "https://easyorders.fra1.digitaloceanspaces.com/1754296325052621849.png",
+      "name": "Electric Biker EN",
+      "preview": "https://m-a-m.myeasyorders.com/funnels/electric-biker-en"
+    },
+    {
+      "image": "https://easyorders.fra1.digitaloceanspaces.com/1754296353051694036.png",
+      "name": "Electric Biker AR",
+      "preview": "https://m-a-m.myeasyorders.com/funnels/electric-biker"
+    },
+    {
+      "image": "https://easyorders.fra1.digitaloceanspaces.com/1754296382650961638.png",
+      "name": "Hair Care EN",
+      "preview": "https://m-a-m.myeasyorders.com/funnels/sikha-en"
+    },
+    {
+      "image": "https://easyorders.fra1.digitaloceanspaces.com/1754296408522350559.png",
+      "name": "Hair Care AR",
+      "preview": "https://m-a-m.myeasyorders.com/funnels/sikha"
+    },
+    {
+      "image": "https://easyorders.fra1.digitaloceanspaces.com/1754296435805166515.png",
+      "name": "Skin Care EN",
+      "preview": "https://m-a-m.myeasyorders.com/funnels/twyg-cream-en"
+    },
+    {
+      "image": "https://easyorders.fra1.digitaloceanspaces.com/1754296467049286313.png",
+      "name": "Skin Care AR",
+      "preview": "https://m-a-m.myeasyorders.com/funnels/twyg-cream"
+    },
+    {
+      "image": "https://easyorders.fra1.digitaloceanspaces.com/1754296530699281623.png",
+      "name": "Writing Board EN",
+      "preview": "https://m-a-m.myeasyorders.com/funnels/writing-board-en"
+    },
+    {
+      "image": "https://easyorders.fra1.digitaloceanspaces.com/1754296553347210781.png",
+      "name": "Writing Board AR",
+      "preview": "https://m-a-m.myeasyorders.com/funnels/writing-board"
+    },
+    {
+      "image": "https://easyorders.fra1.digitaloceanspaces.com/1754296588125032246.png",
+      "name": "HABIT EN",
+      "preview": "https://m-a-m.myeasyorders.com/funnels/HABIT-en"
+    },
+    {
+      "image": "https://easyorders.fra1.digitaloceanspaces.com/1754296615499435874.png",
+      "name": "HABIT AR",
+      "preview": "https://m-a-m.myeasyorders.com/funnels/HABIT"
+    },
+    {
+      "image": "https://easyorders.fra1.digitaloceanspaces.com/1754296643859958731.png",
+      "name": "CareMedik EN",
+      "preview": "https://m-a-m.myeasyorders.com/funnels/Medik-en"
+    },
+    {
+      "image": "https://easyorders.fra1.digitaloceanspaces.com/1754296674957296243.png",
+      "name": "CareMedik AR",
+      "preview": "https://m-a-m.myeasyorders.com/funnels/Medik"
+    },
+    {
+      "image": "https://easyorders.fra1.digitaloceanspaces.com/1754296700728368391.png",
+      "name": "AuravFlow EN",
+      "preview": "https://m-a-m.myeasyorders.com/funnels/Aurav-en"
+    },
+    {
+      "image": "https://easyorders.fra1.digitaloceanspaces.com/1754296729279455821.png",
+      "name": "AuravFlow AR",
+      "preview": "https://m-a-m.myeasyorders.com/funnels/Aurav"
+    },
+    {
+      "image": "https://easyorders.fra1.digitaloceanspaces.com/1754296755065985735.png",
+      "name": "Draga EN",
+      "preview": "https://m-a-m.myeasyorders.com/funnels/draga-en"
+    },
+    {
+      "image": "https://easyorders.fra1.digitaloceanspaces.com/1754296777618779330.png",
+      "name": "Draga AR",
+      "preview": "https://m-a-m.myeasyorders.com/funnels/draga"
+    },
+    {
+      "image": "https://easyorders.fra1.digitaloceanspaces.com/1754296805630557366.png",
+      "name": "My Watch EN",
+      "preview": "https://m-a-m.myeasyorders.com/funnels/my-watch-en"
+    },
+    {
+      "image": "https://easyorders.fra1.digitaloceanspaces.com/1754296828291816418.png",
+      "name": "My Watch AR",
+      "preview": "https://m-a-m.myeasyorders.com/funnels/my-watch"
+    },
+    {
+      "image": "https://easyorders.fra1.digitaloceanspaces.com/1754296858756190503.png",
+      "name": "Bike EN",
+      "preview": "https://m-a-m.myeasyorders.com/funnels/Bike-en"
+    },
+    {
+      "image": "https://easyorders.fra1.digitaloceanspaces.com/1754296887366362223.png",
+      "name": "Bike AR",
+      "preview": "https://m-a-m.myeasyorders.com/funnels/Bike"
+    },
+    {
+      "image": "https://easyorders.fra1.digitaloceanspaces.com/1754296910314344882.png",
+      "name": "Scooter EN",
+      "preview": "https://m-a-m.myeasyorders.com/funnels/Scooter-en"
+    },
+    {
+      "image": "https://easyorders.fra1.digitaloceanspaces.com/1754296931834485730.png",
+      "name": "Scooter AR",
+      "preview": "https://m-a-m.myeasyorders.com/funnels/Scooter"
+    },
+    {
+      "image": "https://easyorders.fra1.digitaloceanspaces.com/1754296957226015324.png",
+      "name": "Heeadphone EN",
+      "preview": "https://m-a-m.myeasyorders.com/funnels/heeadphone-en"
+    },
+    {
+      "image": "https://easyorders.fra1.digitaloceanspaces.com/1754296989174956827.png",
+      "name": "Heeadphone AR",
+      "preview": "https://m-a-m.myeasyorders.com/funnels/heeadphone"
+    },
+    {
+      "image": "https://easyorders.fra1.digitaloceanspaces.com/1754297011862451928.png",
+      "name": "Air Pods EN",
+      "preview": "https://m-a-m.myeasyorders.com/funnels/air-pods-en"
+    },
+    {
+      "image": "https://easyorders.fra1.digitaloceanspaces.com/1754297031821364078.png",
+      "name": "Air Pods AR",
+      "preview": "https://m-a-m.myeasyorders.com/funnels/air-pods"
+    },
+    {
+      "image": "https://easyorders.fra1.digitaloceanspaces.com/1754297055188980011.png",
+      "name": "Spor Shoes EN",
+      "preview": "https://m-a-m.myeasyorders.com/funnels/spor-shoes-en"
+    },
+    {
+      "image": "https://easyorders.fra1.digitaloceanspaces.com/1754297086341755272.png",
+      "name": "Spor Shoes AR",
+      "preview": "https://m-a-m.myeasyorders.com/funnels/spor-shoes"
+    },
+    {
+      "image": "https://easyorders.fra1.digitaloceanspaces.com/1754297111635615829.png",
+      "name": "Red Watch EN",
+      "preview": "https://m-a-m.myeasyorders.com/funnels/red-watch-en"
+    },
+    {
+      "image": "https://easyorders.fra1.digitaloceanspaces.com/1754297204564935326.png",
+      "name": "Red Watch AR",
+      "preview": "https://m-a-m.myeasyorders.com/funnels/red-watch"
+    },
+    {
+      "image": "https://easyorders.fra1.digitaloceanspaces.com/1754297260403598457.png",
+      "name": "Vitamins EN",
+      "preview": "https://m-a-m.myeasyorders.com/funnels/Vitamins-en"
+    },
+    {
+      "image": "https://files.easy-orders.net/1738829076401296365.png",
+      "name": "Vitamins AR",
+      "preview": "https://m-a-m.myeasyorders.com/funnels/Vitamins"
+    },
+    {
+      "image": "https://easyorders.fra1.digitaloceanspaces.com/1754297343849111508.png",
+      "name": "Protein EN",
+      "preview": "https://m-a-m.myeasyorders.com/funnels/protein-en"
+    },
+    {
+      "image": "https://easyorders.fra1.digitaloceanspaces.com/1754297371945558093.png",
+      "name": "protein AR",
+      "preview": "https://m-a-m.myeasyorders.com/funnels/protein"
+    },
+    {
+      "image": "https://easyorders.fra1.digitaloceanspaces.com/1754297671324215950.png",
+      "name": "Smart Watch EN",
+      "preview": "https://m-a-m.myeasyorders.com/funnels/smart-watch-en"
+    },
+    {
+      "image": "https://easyorders.fra1.digitaloceanspaces.com/1754297720653395341.png",
+      "name": "Smart Watch AR",
+      "preview": "https://m-a-m.myeasyorders.com/funnels/smart-watch"
+    },
+    {
+      "image": "https://easyorders.fra1.digitaloceanspaces.com/1754297793219227589.png",
+      "name": "HoverBag EN",
+      "preview": "https://m-a-m.myeasyorders.com/funnels/hover-bag-en"
+    },
+    {
+      "image": "https://easyorders.fra1.digitaloceanspaces.com/1754297870397151713.png",
+      "name": "HoverBag AR",
+      "preview": "https://m-a-m.myeasyorders.com/funnels/hover-bag"
+    },
+    {
+      "image": "https://easyorders.fra1.digitaloceanspaces.com/1754297903469895978.png",
+      "name": "SkinRoller EN",
+      "preview": "https://m-a-m.myeasyorders.com/funnels/SkinRoller-en"
+    },
+    {
+      "image": "https://easyorders.fra1.digitaloceanspaces.com/1754297939918039209.png",
+      "name": "SkinRoller AR",
+      "preview": "https://m-a-m.myeasyorders.com/funnels/SkinRoller"
+    },
+    {
+      "image": "https://easyorders.fra1.digitaloceanspaces.com/1754298016580256440.png",
+      "name": "Oversize Tshirt EN",
+      "preview": "https://m-a-m.myeasyorders.com/funnels/oversize-Tshirt-en"
+    },
+    {
+      "image": "https://easyorders.fra1.digitaloceanspaces.com/1754298104748563928.png",
+      "name": "Oversize Tshirt AR",
+      "preview": "https://m-a-m.myeasyorders.com/funnels/oversize-Tshirt"
+    },
+    {
+      "image": "https://easyorders.fra1.digitaloceanspaces.com/1754298219065848569.png",
+      "name": "Medical Shoes EN",
+      "preview": "https://m-a-m.myeasyorders.com/funnels/Medical-shoes-en"
+    },
+    {
+      "image": "https://easyorders.fra1.digitaloceanspaces.com/1754298262535536710.png",
+      "name": "Medical Shoes AR",
+      "preview": "https://m-a-m.myeasyorders.com/funnels/Medical-shoes"
+    },
+    {
+      "image": "https://easyorders.fra1.digitaloceanspaces.com/1754298289360737615.png",
+      "name": "Premium MoonNight",
+      "preview": "https://m-a-m.myeasyorders.com/funnels/mokamelat"
+    },
+    {
+      "image": "https://easyorders.fra1.digitaloceanspaces.com/1754298329355608019.png",
+      "name": "Premium Dark EN",
+      "preview": "https://m-a-m.myeasyorders.com/funnels/E-reader-en"
+    },
+    {
+      "image": "https://easyorders.fra1.digitaloceanspaces.com/1754298354282086135.png",
+      "name": "Premium Dark AR",
+      "preview": "https://m-a-m.myeasyorders.com/funnels/E-reader"
+    },
+    {
+      "image": "https://easyorders.fra1.digitaloceanspaces.com/1754298382138782139.png",
+      "name": "Premium Elegant",
+      "preview": "https://m-a-m.myeasyorders.com/funnels/ugmonk"
+    },
+    {
+      "image": "https://easyorders.fra1.digitaloceanspaces.com/1754298569588887500.png",
+      "name": "Premium Pet Lovers EN",
+      "preview": "https://m-a-m.myeasyorders.com/funnels/cat-lovers-en"
+    },
+    {
+      "image": "https://easyorders.fra1.digitaloceanspaces.com/1754298619794121905.png",
+      "name": "Premium Pet Lovers AR",
+      "preview": "https://m-a-m.myeasyorders.com/funnels/cat-lovers"
+    },
+    {
+      "image": "https://easyorders.fra1.digitaloceanspaces.com/1754298654918242609.png",
+      "name": "Premium Techy AR",
+      "preview": "https://m-a-m.myeasyorders.com/funnels/techy-ar"
+    },
+    {
+      "image": "https://easyorders.fra1.digitaloceanspaces.com/1754298700654937334.png",
+      "name": "Premium Techy EN",
+      "preview": "https://m-a-m.myeasyorders.com/funnels/techy"
+    },
+    {
+      "image": "https://easyorders.fra1.digitaloceanspaces.com/1754298735110847276.png",
+      "name": "Cozy Comfort AR",
+      "preview": "https://m-a-m.myeasyorders.com/funnels/Cozy-Comfort-ar"
+    },
+    {
+      "image": "https://easyorders.fra1.digitaloceanspaces.com/1754298818771628438.png",
+      "name": "Cozy Comfort EN",
+      "preview": "https://m-a-m.myeasyorders.com/funnels/Cozy-Comfort"
+    },
+    {
+      "image": "https://easyorders.fra1.digitaloceanspaces.com/1754298853406849607.png",
+      "name": "Premium Bleame AR",
+      "preview": "https://m-a-m.myeasyorders.com/funnels/bleame-ar"
+    },
+    {
+      "image": "https://easyorders.fra1.digitaloceanspaces.com/1754299076155387748.png",
+      "name": "Premium Bleame EN",
+      "preview": "https://m-a-m.myeasyorders.com/funnels/bleame"
+    },
+    {
+      "image": "https://easyorders.fra1.digitaloceanspaces.com/1754299117730127288.png",
+      "name": "Premium Toys AR",
+      "preview": "https://m-a-m.myeasyorders.com/funnels/Toys-arabic"
+    },
+    {
+      "image": "https://easyorders.fra1.digitaloceanspaces.com/1754299144416809672.png",
+      "name": "Premium Toys EN",
+      "preview": "https://m-a-m.myeasyorders.com/funnels/Toys"
+    },
+    {
+      "image": "https://easyorders.fra1.digitaloceanspaces.com/1754299174844126824.png",
+      "name": "FastBuy",
+      "preview": "https://m-a-m.myeasyorders.com/funnels/tamareen"
+    },
+    {
+      "image": "https://easyorders.fra1.digitaloceanspaces.com/1754299199265475683.png",
+      "name": "Blue",
+      "preview": "https://m-a-m.myeasyorders.com/funnels/easyshop1"
+    },
+    {
+      "image": "https://easyorders.fra1.digitaloceanspaces.com/1754299224334400350.png",
+      "name": "Greens",
+      "preview": "https://m-a-m.myeasyorders.com/funnels/1995"
+    },
+    {
+      "image": "https://easyorders.fra1.digitaloceanspaces.com/1754299252246187893.png",
+      "name": "Minimalist",
+      "preview": "https://m-a-m.myeasyorders.com/funnels/simple-shoes"
+    },
+    {
+      "image": "https://easyorders.fra1.digitaloceanspaces.com/1754295602664488904.png",
+      "name": "Helal",
+      "preview": "https://m-a-m.myeasyorders.com/funnels/Ramadan-old"
+    },
+    {
+      "image": "https://easyorders.fra1.digitaloceanspaces.com/1754294989380692385.png",
+      "name": "Late Fajr",
+      "preview": "https://m-a-m.myeasyorders.com/funnels/zahra-new"
+    },
+    {
+      "image": "https://easyorders.fra1.digitaloceanspaces.com/1754295527792011090.png",
+      "name": "Bluish Amber",
+      "preview": "https://m-a-m.myeasyorders.com/funnels/souq-changed"
+    },
+    {
+      "image": "https://easyorders.fra1.digitaloceanspaces.com/1754295258424530033.png",
+      "name": "Kids",
+      "preview": "https://m-a-m.myeasyorders.com/funnels/for-kids"
+    },
+    {
+      "image": "https://easyorders.fra1.digitaloceanspaces.com/1754294749012318404.png",
+      "name": "Horizon",
+      "preview": "https://m-a-m.myeasyorders.com/funnels/simple-old"
+    },
+    {
+      "image": "https://easyorders.fra1.digitaloceanspaces.com/1754295433835569032.png",
+      "name": "Emerald",
+      "preview": "https://m-a-m.myeasyorders.com/funnels/blover-finished"
+    },
+    {
+      "image": "https://easyorders.fra1.digitaloceanspaces.com/1754295349058750511.png",
+      "name": "Cool Fashion",
+      "preview": "https://m-a-m.myeasyorders.com/funnels/azwaky"
+    },
+    {
+      "image": "https://easyorders.fra1.digitaloceanspaces.com/1754295461953603923.png",
+      "name": "Violet",
+      "preview": "https://m-a-m.myeasyorders.com/funnels/dropy-old"
+    },
+    {
+      "image": "https://easyorders.fra1.digitaloceanspaces.com/1754295106902975415.png",
+      "name": "Converty",
+      "preview": "https://m-a-m.myeasyorders.com/funnels/marokit-old"
+    },
+    {
+      "image": "https://easyorders.fra1.digitaloceanspaces.com/1754295651614271847.png",
+      "name": "Thunder",
+      "preview": "https://m-a-m.myeasyorders.com/funnels/Matjari-old"
+    },
+    {
+      "image": "https://easyorders.fra1.digitaloceanspaces.com/1754295310859586174.png",
+      "name": "Fajr",
+      "preview": "https://m-a-m.myeasyorders.com/funnels/zahra-old"
+    },
+    {
+      "image": "https://easyorders.fra1.digitaloceanspaces.com/1754295218558017812.png",
+      "name": "Orchid",
+      "preview": "https://m-a-m.myeasyorders.com/funnels/dropy-new"
+    },
+    {
+      "image": "https://easyorders.fra1.digitaloceanspaces.com/1754295393919101478.png",
+      "name": "Amber",
+      "preview": "https://m-a-m.myeasyorders.com/funnels/souq-old"
+    },
+    {
+      "image": "https://easyorders.fra1.digitaloceanspaces.com/1754295571915887022.png",
+      "name": "Stylish",
+      "preview": "https://m-a-m.myeasyorders.com/funnels/homowwo"
+    },
+    {
+      "image": "https://files.easy-orders.net/1732116351132833413.png",
+      "name": "Voltage",
+      "preview": "https://m-a-m.myeasyorders.com/funnels/Matjari-new"
+    },
+    {
+      "image": "https://easyorders.fra1.digitaloceanspaces.com/1754295059050550825.png",
+      "name": "Roze Horizon",
+      "preview": "https://m-a-m.myeasyorders.com/funnels/simple-changed"
+    }
+  ],
+  "count": 84,
+  "inventoryScope": "All cards rendered by the manual creation gallery; no template selected or funnel saved",
+  "implementationComplete": false
+}

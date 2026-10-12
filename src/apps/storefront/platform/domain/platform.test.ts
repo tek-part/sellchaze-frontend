@@ -386,11 +386,11 @@ describe('updates', () => {
 
 /* -------------------------------------------------------------- catalog + bridge */
 describe('catalog + registry bridge', () => {
-  it('the real catalog lists exactly the five library-built themes, all unique', () => {
-    expect(THEME_CATALOG).toHaveLength(5);
+  it('the real catalog lists the independently implemented Sphinx and five original themes, all unique', () => {
+    expect(THEME_CATALOG).toHaveLength(6);
     const ids = THEME_CATALOG.map((e) => e.id);
     expect(new Set(ids).size).toBe(ids.length);
-    expect(ids).toEqual(['naseem', 'bazaar', 'sahra', 'fresh', 'techno']);
+    expect(ids).toEqual(['sphinx-v3', 'naseem', 'bazaar', 'sahra', 'fresh', 'techno']);
   });
   it('registers every catalogued theme into a fresh registry', () => {
     const registry = new ThemeRegistry();
