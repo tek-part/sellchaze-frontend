@@ -18,3 +18,35 @@
 @media(max-width:1023px) { .ws-app-detail-layout { grid-template-columns:minmax(0,1fr);gap:24px; }.ws-apps-content.is-discovery { grid-template-columns:160px minmax(0,1fr); } }
 @media(max-width:767px) { .ws-apps-main-tabs { margin-top:40.390625px; }.ws-apps-content { margin-top:26px; }.ws-apps-main-tabs button { font-size:20px;line-height:32px;padding:12px 24px;min-height:56px; }.ws-apps-content.is-discovery { grid-template-columns:minmax(0,1fr);gap:26.5px; }.ws-apps-categories { padding:0;flex-direction:row;overflow:auto;scrollbar-width:none; }.ws-apps-categories button { min-height:45.5px;margin-bottom:0;border-radius:24px;flex-shrink:0; }.ws-apps-grid { grid-template-columns:minmax(0,1fr); }.ws-app-card.is-installed { min-height:0; }.ws-sheets-toolbar { flex-wrap:wrap;align-items:start; }.ws-sheets-rows article { flex-wrap:wrap; }.ws-apps-dialog-position { padding:16px; }.ws-apps-dialog-panel { max-height:calc(100dvh - 32px);padding:24px; } }
 @media(prefers-reduced-motion:reduce) { .ws-apps-check input::after { transition:none; } }
+.ws-app-detail .ws-apps-breadcrumb { min-height:24px;margin-bottom:20px;gap:12px;font-size:14px;line-height:24px;flex-wrap:wrap; }
+.ws-app-detail-layout { grid-template-columns:minmax(0,1fr) minmax(0,3fr);grid-template-areas:'summary visuals' 'summary description';column-gap:28px;row-gap:16px; }
+.ws-app-detail-panel { grid-area:summary;padding:0;border:0;border-radius:0; }
+.ws-app-detail-visuals { grid-area:visuals;min-width:0; }
+.ws-app-detail-description { grid-area:description;min-width:0; }
+.ws-app-detail-title { display:flex;align-items:center;gap:8px; }
+.ws-app-detail-title .ws-app-image,.ws-app-detail-title .ws-app-image-fallback { width:48px;height:48px; }
+.sc-workspace .ws-page .ws-app-detail-panel h1 { font-size:20px;line-height:32px;font-weight:500; }
+.ws-app-detail-price { display:block;border-block:0;border-top:1px solid var(--ws-border);padding:17px 0 0;margin:16px 0; }
+.ws-app-detail-panel h2 { font-size:16px;line-height:16px;font-weight:400;margin:0; }
+.ws-app-detail-price > p { font-size:14px;line-height:20.02px;color:var(--ws-muted);margin-top:16px; }
+.ws-app-feature-list { margin-top:16px;padding-bottom:8px; }
+.ws-app-feature-list li { display:flex;align-items:start;gap:8px;padding-bottom:8px; }
+.ws-app-feature-list li > svg { width:16px;height:16px;color:#0abb45;flex-shrink:0;margin-top:10px; }
+.ws-app-feature-list li > p { margin-top:8px;font-size:14px;line-height:20.02px;color:var(--ws-muted); }
+.ws-app-preview-gallery { display:grid;grid-template-columns:minmax(0,3fr) minmax(0,1fr);align-items:start;gap:16px; }
+.ws-app-preview-main { overflow:hidden;aspect-ratio:3/2;border-radius:8px;background:#bfeecb; }
+.ws-app-preview-main > img,.ws-app-preview-main > svg { display:block;width:100%;height:100%;object-fit:cover; }
+.ws-app-preview-thumbnails { display:flex;flex-direction:column;gap:16px;min-width:0; }
+.ws-app-preview-thumbnails button { overflow:hidden;aspect-ratio:3/2;border:2px solid transparent;border-radius:8px;padding:0;cursor:pointer;transition:border-color .15s; }
+.ws-app-preview-thumbnails button[aria-pressed='true'] { border-color:#0abb45; }
+.ws-app-preview-thumbnails button:focus-visible { outline:2px solid var(--ws-green-ink);outline-offset:3px; }
+.ws-app-preview-thumbnails :is(img,svg) { display:block;width:100%;height:100%;object-fit:cover; }
+.ws-app-concept { font-family:inherit; }
+.ws-app-detail-description > p { margin-top:0;font-size:16px;line-height:24px;color:var(--ws-text); }
+.ws-app-detail-description > p + p { margin-top:12px; }
+.ws-app-related { margin-top:16px; }
+.sc-workspace .ws-page .ws-app-related > h2 { font-size:20px;line-height:32px;font-weight:500;margin:0 0 16px; }
+.sc-workspace .ws-page .ws-app-related .ws-app-card-heading h3 { font-size:16px;line-height:24px;font-weight:500;margin:0; }
+@media(max-width:1023px) { .ws-app-detail-layout { grid-template-columns:minmax(0,1fr);grid-template-areas:'visuals' 'summary' 'description';gap:16px; } }
+@media(max-width:767px) { .ws-app-preview-gallery { grid-template-columns:minmax(0,1fr); }.ws-app-preview-thumbnails { flex-direction:row;gap:16px;overflow:auto;scrollbar-width:none; }.ws-app-preview-thumbnails button { width:225px;height:150px;flex-shrink:0; }.ws-app-detail-title h1 { min-width:0; }.ws-app-related { margin-top:16px; } }
+@media(prefers-reduced-motion:reduce) { .ws-app-preview-thumbnails button { transition:none; } }
