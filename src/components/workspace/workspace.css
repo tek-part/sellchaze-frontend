@@ -31,6 +31,7 @@ body[data-workspace-theme] #root .max-h-dvh { max-height:100dvh; }
 body[data-workspace-merchant='true'][data-workspace-theme='light'],body[data-workspace-merchant='true'][data-workspace-theme='light'] [data-workspace-theme='light'] { --ws-canvas:#f5f7f9;--ws-text:#171717;--ws-muted:#737373;--ws-border:#d6d6d6;--ws-green:#0abb45;--ws-green-ink:#0abb45;--ws-green-soft:rgb(10 187 69 / .1);--color-brand:#0abb45;--color-brand-dark:#099b39;--color-brand-light:rgb(10 187 69 / .1);--color-accent:#0abb45;--color-accent-dark:#099b39;--color-accent-light:rgb(10 187 69 / .1); }
 body[data-workspace-merchant='true'] .ws-sidebar { border-inline-start:1px solid var(--ws-border); }
 body[data-workspace-merchant='true'] .ws-sidebar:not(.ws-sidebar-compact) .ws-sidebar-scroll { padding-inline:20px; }
+body[data-workspace-merchant='true'] .ws-sidebar-compact .ws-sidebar-scroll { padding-inline:7.5px; }
 body[data-workspace-merchant='true'] .ws-sidebar-scroll nav > div { margin-block-start:0;padding-block-start:0;padding-block-end:8px; }
 body[data-workspace-merchant='true'] .ws-sidebar-scroll nav:not(.ws-compact-nav) :is(a,button) { height:36px;min-height:36px;padding:8px 12px;gap:8px;border-inline-start:0;border-radius:8px;line-height:20px; }
 body[data-workspace-merchant='true'] .ws-sidebar-scroll nav a[aria-current='page'] { color:var(--ws-text); }
