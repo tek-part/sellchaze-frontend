@@ -141,12 +141,14 @@ const StoreCouponsPage = lazy(() => import('./pages/StoreCouponsPage'));
 const StoreInventoryPage = lazy(() => import('./pages/StoreInventoryPage'));
 const StoreProductsPage = lazy(() => import('./pages/StoreProductsPage'));
 const StoreProductEditorPage = lazy(() => import('./pages/StoreProductEditorPage'));
+const StoreCategoriesPage = lazy(() => import('./pages/StoreCategoriesPage'));
+const StoreCategoryEditorPage = lazy(() => import('./pages/StoreCategoryEditorPage'));
 const StoreCouponFormPage = lazy(() => import('./pages/StoreCouponFormPage'));
 const StoreOrdersPage = lazy(() => import('./pages/StoreOrdersPage'));
 const StoreOrderDetailPage = lazy(() => import('./pages/StoreOrderDetailPage'));
 const StoreAnalyticsPage = lazy(() => import('./pages/StoreAnalyticsPage'));
 const StoreReviewsPage = lazy(() => import('./pages/StoreReviewsPage'));
-// StoreProduct*/StoreCategory* pages removed: catalog is unified onto /products & /categories.
+// Merchant catalog pages use the store-scoped API; the operator console retains its taxonomy.
 const WavexSettingsPage = lazy(() => import('./pages/wavex/WavexSettingsPage'));
 const WavexConnectPage = lazy(() => import('./pages/wavex/WavexConnectPage'));
 const WavexChatsPage = lazy(() => import('./pages/wavex/WavexChatsPage'));
@@ -246,7 +248,9 @@ const STORE_ROUTES = [
     { path: 'products', element: <StoreProductsPage /> },
     { path: 'products/new', element: <StoreProductEditorPage /> },
     { path: 'products/:productId/edit', element: <StoreProductEditorPage /> },
-    { path: 'categories/*', element: <Navigate to="/categories" replace /> },
+    { path: 'categories', element: <StoreCategoriesPage /> },
+    { path: 'categories/new', element: <StoreCategoryEditorPage /> },
+    { path: 'categories/:categoryId/edit', element: <StoreCategoryEditorPage /> },
 ];
 
 export default function App() {

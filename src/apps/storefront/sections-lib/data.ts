@@ -108,6 +108,8 @@ export function hasError(context: StorefrontContext): boolean {
 }
 
 export interface PageHeaderData {
+  descriptionHtml?: string;
+  children?: ReadonlyArray<{ label: string; url: string }>;
   title?: string;
   description?: string;
   image?: string;

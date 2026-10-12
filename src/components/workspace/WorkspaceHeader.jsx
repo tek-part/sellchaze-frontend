@@ -10,6 +10,7 @@ import {
 import { FaWhatsapp } from 'react-icons/fa';
 import UserAvatar from '../UserAvatar';
 import NotificationsMenu from '../NotificationsMenu';
+import NotificationBell from './NotificationBell';
 import { CHAT_ENABLED } from '../../lib/features';
 import useWorkspaceCopy from './workspaceCopy';
 import WorkspaceAppearanceControl from './WorkspaceAppearanceControl';
@@ -21,7 +22,7 @@ const subscribeMobile = (listener) => {
 };
 const getMobile = () => window.matchMedia('(max-width: 767px)').matches;
 
-export default function WorkspaceHeader({ me, storeUrl, isSupplier, permissions, appearance, onLanguage, onNavigation, onToggleSidebar, sidebarToggleRef, collapsed, onSearch, onLogout, chatUnread }) {
+export default function WorkspaceHeader({ me, storeUrl, isSupplier, permissions, appearance, onLanguage, onNavigation, onToggleSidebar, sidebarToggleRef, collapsed, onSearch, onLogout, chatUnread, merchantWorkspace = false }) {
     const { t, i18n } = useTranslation(); const ws = useWorkspaceCopy();
     const mobile = useSyncExternalStore(subscribeMobile, getMobile, () => false);
     const iconButton = 'ws-icon-button'; const menuRow = 'ws-menu-row';
@@ -37,8 +38,8 @@ export default function WorkspaceHeader({ me, storeUrl, isSupplier, permissions,
             <button type="button" className={`${iconButton} ws-refresh`} onClick={() => window.location.reload()} aria-label={ws('refresh')} title={ws('refresh')}><HiOutlineArrowPath aria-hidden /></button>
             {!mobile ? <WorkspaceAppearanceControl appearance={appearance} /> : null}
             {!mobile ? <button type="button" onClick={onLanguage} className={iconButton} aria-label={ws('language')} title={i18n.language.startsWith('ar') ? 'English' : 'العربية'}><HiOutlineLanguage aria-hidden /></button> : null}
-            <NotificationsMenu isSupplier={isSupplier} />
-            {CHAT_ENABLED ? <Link to="/chat" className={`${iconButton} ws-chat-link`} aria-label={t('nav_messages', 'Messages')}><HiOutlineChatBubbleLeftRight aria-hidden />{chatUnread > 0 ? <span className="ws-notification-dot">{chatUnread > 99 ? '99+' : chatUnread}</span> : null}</Link> : null}
+            {merchantWorkspace ? <NotificationBell /> : <NotificationsMenu isSupplier={isSupplier} />}
+            {!merchantWorkspace && CHAT_ENABLED ? <Link to="/chat" className={`${iconButton} ws-chat-link`} aria-label={t('nav_messages', 'Messages')}><HiOutlineChatBubbleLeftRight aria-hidden />{chatUnread > 0 ? <span className="ws-notification-dot">{chatUnread > 99 ? '99+' : chatUnread}</span> : null}</Link> : null}
             <Menu as="div" className="relative">
                 <MenuButton className="ws-account-button" aria-label={t('user_menu_aria', { name: me.name })}>
                     <UserAvatar user={me} alt="" sizeClass="h-8 w-8" /><span className="ws-account-name"><small>{ws('hello')}</small><strong>{me.name}</strong></span><HiOutlineChevronDown aria-hidden className="ws-account-chevron" />
@@ -48,11 +49,11 @@ export default function WorkspaceHeader({ me, storeUrl, isSupplier, permissions,
                     <MenuItem><button type="button" onClick={onSearch} className={menuRow} aria-keyshortcuts="Control+K Meta+K"><HiOutlineMagnifyingGlass aria-hidden />{ws('searchTitle')}<kbd className="ws-menu-shortcut">Ctrl K</kbd></button></MenuItem>
                     <MenuItem><Link to="/settings/profile" className={menuRow}><HiOutlineUserCircle aria-hidden />{t('nav_profile', 'My profile')}</Link></MenuItem>
                     <MenuItem><Link to={`/u/${publicSlug}`} className={menuRow}><HiOutlineArrowTopRightOnSquare aria-hidden />{t('view_public_profile', 'View public profile')}</Link></MenuItem>
-                    <MenuItem><Link to="/" className={menuRow}><HiOutlineArrowTopRightOnSquare aria-hidden />{t('nav_visit_website', 'Visit website')}</Link></MenuItem>
+                    {!merchantWorkspace ? <MenuItem><Link to="/" className={menuRow}><HiOutlineArrowTopRightOnSquare aria-hidden />{t('nav_visit_website', 'Visit website')}</Link></MenuItem> : null}
                     {storeUrl ? <MenuItem><a href={storeUrl} target="_blank" rel="noopener noreferrer" className={menuRow}><HiOutlineArrowTopRightOnSquare aria-hidden />{t('view_store', 'View store')}</a></MenuItem> : null}
-                    {permissions.includes('wavex-access') ? <MenuItem><Link to="/wavex/chats" className={menuRow}><FaWhatsapp aria-hidden />{t('wavex_nav_chats')}</Link></MenuItem> : null}
-                    {permissions.includes('monitoring-live-view') ? <MenuItem><Link to="/admin/monitoring/live" className={menuRow}><HiOutlineSignal aria-hidden />{t('monitoring_live_title', 'Live monitoring')}</Link></MenuItem> : null}
-                    {permissions.includes('activity-logs-list') ? <MenuItem><Link to="/admin/activity" className={menuRow}><HiOutlineClipboardDocumentList aria-hidden />{t('activity_logs', 'Activity logs')}</Link></MenuItem> : null}
+                    {!merchantWorkspace && permissions.includes('wavex-access') ? <MenuItem><Link to="/wavex/chats" className={menuRow}><FaWhatsapp aria-hidden />{t('wavex_nav_chats')}</Link></MenuItem> : null}
+                    {!merchantWorkspace && permissions.includes('monitoring-live-view') ? <MenuItem><Link to="/admin/monitoring/live" className={menuRow}><HiOutlineSignal aria-hidden />{t('monitoring_live_title', 'Live monitoring')}</Link></MenuItem> : null}
+                    {!merchantWorkspace && permissions.includes('activity-logs-list') ? <MenuItem><Link to="/admin/activity" className={menuRow}><HiOutlineClipboardDocumentList aria-hidden />{t('activity_logs', 'Activity logs')}</Link></MenuItem> : null}
                     <MenuSeparator className="ws-menu-separator" />
                     {!mobile ? <MenuItem><button type="button" onClick={onLanguage} className={menuRow}><HiOutlineLanguage aria-hidden />{i18n.language.startsWith('ar') ? 'English' : 'العربية'}</button></MenuItem> : null}
                     <MenuItem><button type="button" onClick={onLogout} className={`${menuRow} ws-menu-danger`}><HiOutlineArrowRightOnRectangle aria-hidden />{t('logout')}</button></MenuItem>

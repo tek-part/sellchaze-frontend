@@ -35,7 +35,7 @@ export default function StorePerformancePanel() {
             });
         return () => { active = false; };
     }, [attempt]);
-    if (error) return <section className="ws-panel"><p role="alert" className="ws-note">{ws('storeUnavailable')}</p><div className="mt-4 flex gap-2"><button type="button" className="ws-secondary-button" onClick={() => setAttempt((value) => value + 1)}>{ws('retry')}</button>{missingStore && <Link className="ws-primary-button" to="/store">{ws('setupStore')}</Link>}</div></section>;
+    if (error) return <section className="ws-panel"><p role="alert" className="ws-note">{ws('storeUnavailable')}</p><div className="mt-4 flex gap-2"><button type="button" className="ws-secondary-button" onClick={() => setAttempt((value) => value + 1)}>{ws('retry')}</button>{missingStore && <Link className="ws-primary-button" to="/store/settings/general">{ws('setupStore')}</Link>}</div></section>;
     if (!overview) return <section aria-busy="true" aria-label={ws('loading')}><p role="status" className="ws-note mb-3">{ws('loading')}</p><div className="ws-kpi-grid">{Array.from({ length: 8 }, (_, index) => <div key={index} className="ws-skeleton" aria-hidden="true" />)}</div></section>;
     const number = (value) => value == null ? '—' : new Intl.NumberFormat(i18n.language).format(Number(value));
     const money = (value) => {
@@ -57,7 +57,7 @@ export default function StorePerformancePanel() {
     const products = overview.top_products ?? [];
     const maxStatus = Math.max(1, ...statuses.map((key) => overview.orders?.[`${key}_orders`] ?? 0));
     return <div className="ws-commerce-content">
-        <div className="ws-commerce-heading"><div><h2>{ws('commerce')}</h2><p>{store?.name}</p></div><div className="ws-commerce-tools"><select aria-label={ws('storeRevenue')} value={period} onChange={(event) => setPeriod(event.target.value)}>{Object.keys(periods).map((key) => <option key={key} value={key}>{ws(key)}</option>)}</select><Link className="ws-secondary-button" to="/store/analytics">{ws('openAnalytics')}</Link></div></div>
+        <div className="ws-commerce-heading"><div><h2>{ws('commerce')}</h2><p>{store?.name}</p></div><div className="ws-commerce-tools"><select aria-label={ws('storeRevenue')} value={period} onChange={(event) => setPeriod(event.target.value)}>{Object.keys(periods).map((key) => <option key={key} value={key}>{ws(key)}</option>)}</select></div></div>
         <div className="ws-kpi-grid">{cards.map(([key, value, Icon, hint]) => <article className="ws-kpi" key={key}><div className="ws-kpi-top"><span>{ws(key)}</span><div className="ws-kpi-icon"><Icon aria-hidden="true" /></div></div><strong className="ws-kpi-value">{value}</strong><span className="ws-kpi-hint">{hint || ws('allTime')}</span></article>)}</div>
         <p className="ws-note">{ws('salesHint')}</p>
         <div className="ws-commerce-grid">

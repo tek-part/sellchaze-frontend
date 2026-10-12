@@ -172,7 +172,7 @@ export function getContent(key: string): Promise<{ data: Record<string, unknown>
   return apiGet(`/content/${encodeURIComponent(key)}`);
 }
 
-export function getCategory(slug: string): Promise<{ data: ApiCategory; products?: ApiPaginated<ApiProduct> }> {
+export function getCategory(slug: string): Promise<{ data: ApiCategory; children?: ReadonlyArray<ApiCategory>; products?: ApiPaginated<ApiProduct> }> {
   return apiGet(`/categories/${encodeURIComponent(slug)}`);
 }
 

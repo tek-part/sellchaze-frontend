@@ -314,7 +314,7 @@ export default function Reel({ post, index, active, near, muted, onToggleMute, l
 
                     {post.product ? (
                         <Link
-                            to={`/products/${post.product.id}`}
+                            to={`/community/post/${post.id}`}
                             className="sc-press mt-3 inline-flex max-w-full items-center gap-2 rounded-xl bg-white/15 px-3 py-2 text-xs font-bold backdrop-blur transition hover:bg-white/25"
                         >
                             <HiOutlineShoppingBag className="h-4 w-4 shrink-0" aria-hidden />

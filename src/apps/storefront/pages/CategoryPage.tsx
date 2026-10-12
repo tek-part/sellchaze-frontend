@@ -68,9 +68,10 @@ export function CategoryPage(): ReactElement | null {
           ...(curated
             ? { description: t(curated.descriptionKey) }
             : c?.description
-              ? { description: c.description }
+              ? { descriptionHtml: c.description }
               : {}),
           ...(headerImage ? { image: headerImage } : {}),
+          children: (category.data?.children ?? []).map((child) => ({ label: child.name, url: `/collections/${child.slug}` })),
           breadcrumbs: [
             { label: t('nav.home'), url: '/' },
             { label: title, url: `/collections/${slug}` },
@@ -85,9 +86,9 @@ export function CategoryPage(): ReactElement | null {
   return (
     <>
       <Seo
-        title={title}
+        title={c?.seo_title || title}
         path={`/collections/${slug}`}
-        {...(c?.description ? { description: c.description } : {})}
+        {...(c?.seo_description || c?.description ? { description: c.seo_description || c.description?.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim() } : {})}
         jsonLd={[
           breadcrumbSchema(
             [
