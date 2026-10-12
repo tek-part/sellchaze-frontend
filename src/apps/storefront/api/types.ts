@@ -65,6 +65,11 @@ export interface ApiProduct {
 }
 
 export interface ApiCategory {
+  parent_id?: number | null;
+  show_in_header?: boolean;
+  is_hidden?: boolean;
+  seo_title?: string | null;
+  seo_description?: string | null;
   id: number;
   name: string;
   slug: string;

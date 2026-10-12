@@ -56,6 +56,19 @@ export function mapServerNotification(row, t, opts = {}) {
     const read = Boolean(r.read_at);
     const at = r.created_at ? new Date(r.created_at).getTime() : Date.now();
 
+    if (d.type === 'store_order') {
+        return {
+            id: String(r.id), read, at,
+            title: d.event === 'created' ? t('notification_store_order_created', 'New store order') : t('notification_store_order_updated', 'Store order status updated'),
+            body: t('notification_store_order_body', { defaultValue: 'Order {{number}} · {{status}}', number: d.order_number ?? '—', status: t(`store_order_status_${d.status}`, String(d.status ?? '')) }),
+            ...(Number.isSafeInteger(Number(d.order_id)) && Number(d.order_id) > 0 ? { link: `/store/orders/${Number(d.order_id)}` } : {}),
+        };
+    }
+
+    if (d.type === 'domain') {
+        return { id: String(r.id), read, at, title: String(d.title || t('notification_domain_title', 'Store domain alert')), body: String(d.message || ''), link: '/store/settings/domains' };
+    }
+
     if (typeof d.title === 'string' && typeof d.message === 'string') {
         const url = typeof d.url === 'string' ? d.url.trim() : '';
         return {
@@ -185,10 +198,7 @@ export function mapServerNotification(row, t, opts = {}) {
     }
 
     const urlFallback = typeof d.url === 'string' && d.url.trim() ? d.url.trim() : undefined;
-    const fallbackBody =
-        d && Object.keys(d).length > 0
-            ? JSON.stringify(d).slice(0, 200)
-            : t('notif_type_generic_body');
+    const fallbackBody = [d.message, d.body, d.preview].find((value) => typeof value === 'string' && value.trim()) || t('notif_type_generic_body');
     return {
         id: String(r.id),
         title: t('notif_type_generic_title'),

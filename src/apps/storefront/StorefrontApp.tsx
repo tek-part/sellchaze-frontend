@@ -190,6 +190,9 @@ export function StorefrontApp(): ReactElement {
     const categoryNav: NavItem[] = categoriesQ.data
       ? categoriesQ.data.data.map((c) => ({ label: c.name, url: `/collections/${c.slug}` }))
       : [];
+    const headerCategoryNav: NavItem[] = categoriesQ.data
+      ? categoriesQ.data.data.filter((c) => c.show_in_header !== false).map((c) => ({ label: c.name, url: `/collections/${c.slug}` }))
+      : [];
     // A merchant-managed menu wins when it has items; otherwise fall back to the generated chrome
     // (categories + the routes AppRoutes registers) so a store without menus still navigates.
     const managedHeader = navigation.header.filter((item) => !item.automatic_page);
@@ -197,7 +200,7 @@ export function StorefrontApp(): ReactElement {
     const headerBase: NavItem[] = menuHeader
       ?? (dev && previewData && categoryNav.length === 0
         ? previewData.sampleNav(manifest.id, t, locale)
-        : buildHeaderNav(categoryNav, t));
+        : buildHeaderNav(headerCategoryNav, t));
     // Production previously rendered an EMPTY footer (`[]`), so every live storefront shipped a
     // footer with no links. Build real groups from the store's own categories plus the routes that
     // actually exist in AppRoutes — never links to routes we do not serve.

@@ -1,0 +1,38 @@
+EasyOrders workspace and theme rebuild — scope, 2026-10-12
+
+User requirements: recreate every competitor merchant section, page, capability,
+modern/classic theme and template; preserve Community as the requested exception;
+use the same reference font/icon family/motion/full-screen and responsive layout.
+Publish tested changes to GitHub and production. This is an active, incomplete scope.
+
+Merchant shell: removed non-reference B2B navigation, shortcuts and dashboard tabs.
+Old merchant routes redirect to the store dashboard or Community. No stored business
+records are deleted. The platform operator admin console remains separate.
+
+Current source phase: dedicated store category list/editor, hierarchy, header visibility,
+hidden/direct-link behavior, safe rich content, SEO, sorting/export and atomic selected
+category deletion. New notification feed/read filters, synchronized bell count, account
+read state, localized order events and real event links. Keep Community navigation.
+
+Reference notification feed was empty during inspection: only title/subtitle/empty-state
+geometry could be verified against live EasyOrders. Populated-feed visual parity remains
+unverified. Local scenarios use the named disposable SQLite review fixture only.
+
+Theme inventory: docs/reference/easyorders-theme-catalog-20261012.json records all
+144 modern cards across24 pages and8 classic cards=152 distinct public preview URLs.
+This inventory is complete for that observed gallery, not a claim that themes are built.
+The existing5 Sellchaze themes are not evidence of these152 implementations. Every
+preview needs desktop/mobile home/product/category/cart/checkout inspection, actual
+corresponding layouts/sections/settings, and functional validation. Sphinx V3 home has
+been observed; its implementation is still pending. Home-builder/funnel/page template
+libraries still require separate inventory and implementation. Do not create gallery
+cards or aliases suggesting an unavailable theme can be activated.
+
+Remaining merchant sections: missed orders/newsletter, Product Feed/Easy Catalog/A-B
+tests, complete orders states/actions, Shater AI, tracking, marketing, wallet, apps,
+service gallery/referrals/marketing services; complete page/layout/feature fidelity.
+Existing categories/orders/dashboard/design functionality is incremental, not full parity.
+
+Production status lives in the workspace audit reports. A passed source build or CI job
+does not prove server activation. Verify exact frontend/backend release SHA, files,
+storefront shell, prior entry assets, schema, environment, data preservation and health.

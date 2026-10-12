@@ -24,20 +24,22 @@ describe('Workspace search uses the authorized sidebar', () => {
     });
     it('includes closed store groups for an owner', () => {
         const routes = links({ roles: ['Merchant'], permissions: [] });
-        expect(routes).toContain('/store/analytics');
+        expect(routes).not.toContain('/store/analytics');
+        expect(routes).toContain('/community');
         expect(routes).toContain('/store/orders');
         expect(routes).toContain('/store/settings/general');
         expect(routes).not.toContain('/admin/users');
     });
     it('retains granular employee permission filtering', () => {
         const routes = links({ roles: ['Employee'], permissions: ['store.analytics.view'] });
-        expect(routes).toContain('/store/analytics');
+        expect(routes).not.toContain('/store/analytics');
+        expect(routes).toContain('/community');
         expect(routes).not.toContain('/store/orders');
         expect(routes).not.toContain('/store/settings/general');
     });
     it('finds a route inside a closed group without exposing unrelated routes', () => {
-        const routes = links({ roles: ['Merchant'], permissions: [], query: 'analytics' });
-        expect(routes).toEqual(['/store/analytics']);
+        const routes = links({ roles: ['Merchant'], permissions: [], query: 'all orders' });
+        expect(routes).toEqual(['/store/orders']);
     });
     it('searches secondary store settings while respecting employee access', () => {
         expect(links({ roles: ['Merchant'], permissions: [], query: 'phone verification' })).toEqual(['/store/settings/phone-verification']);
@@ -47,13 +49,15 @@ describe('Workspace search uses the authorized sidebar', () => {
         expect(normalizeNavigationText('إِحْصَاءات')).toBe(normalizeNavigationText('احصاءات'));
         expect(normalizeNavigationText('Orders')).toBe('orders');
     });
-    it('retains authorized business inventory and catalog routes after reorganizing store tools', () => {
+    it('removes non-reference business sections from merchant search even with legacy grants', () => {
         const routes = links({ roles: ['Merchant'], permissions: ['products-list', 'categories-list', 'stores-list'] });
         expect(routes).toContain('/store/products');
-        expect(routes).toContain('/products');
-        expect(routes).toContain('/inventory/transfers');
-        expect(routes).toContain('/stores');
-        expect(routes).toContain('/categories');
+        expect(routes).not.toContain('/products');
+        expect(routes).not.toContain('/inventory/transfers');
+        expect(routes).not.toContain('/stores');
+        expect(routes).not.toContain('/categories');
+        expect(routes).toContain('/store/categories');
+        expect(routes).toContain('/community');
     });
     it('keeps independent group identities even when two sections have the same title', () => {
         const Icon = () => React.createElement('svg');
@@ -66,7 +70,7 @@ describe('Workspace search uses the authorized sidebar', () => {
     });
     it('keeps compact links permission-filtered and named for assistive technology', () => {
         const routes = links({ compact: true, roles: ['Customer'], permissions: [] });
-        expect(routes).toContain('/dashboard');
+        expect(routes).toContain('/community');
         expect(routes).not.toContain('/products');
         expect(routes).not.toContain('/admin/users');
         expect(routes).not.toContain('/store/analytics');

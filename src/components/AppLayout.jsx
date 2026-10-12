@@ -1,7 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Dialog, DialogBackdrop, DialogPanel, DialogTitle } from '@headlessui/react';
 import { motion, useReducedMotion } from 'framer-motion';
-import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
+import { Link, Navigate, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
 import { HiOutlineArrowUturnLeft, HiOutlineXMark, HiOutlineMagnifyingGlass, HiOutlineLanguage } from './workspace/WorkspaceIcons';
@@ -16,6 +16,8 @@ import WorkspaceAppearanceControl from './workspace/WorkspaceAppearanceControl';
 import useWorkspaceAppearance from './workspace/useWorkspaceAppearance';
 import useWorkspaceCopy from './workspace/workspaceCopy';
 import './workspace/workspace.css';
+import { storeAccess } from '../lib/storeAccess';
+import { merchantWorkspaceRouteAllowed } from '../lib/merchantWorkspaceRoutes';
 import { WorkspaceIconProvider } from './workspace/WorkspaceIcons';
 
 function unwrapUser(payload) {
@@ -215,6 +217,10 @@ export default function AppLayout() {
         }
     }
 
+    const merchantWorkspace = !isAdminOnly;
+    const hasOwnedWorkspace = storeAccess(me.roles ?? [], permissions).hasStoreAccess;
+    if (merchantWorkspace && (!merchantWorkspaceRouteAllowed(location.pathname) || (!hasOwnedWorkspace && location.pathname === '/dashboard'))) return <Navigate to={hasOwnedWorkspace ? '/dashboard' : '/community'} replace />;
+
     const navigationProps = { isAdmin, isSupplier, roles: me.roles ?? [], permissions };
     const Sidebar = isAdminOnly ? AdminSidebar : MerchantSidebar;
     return (
@@ -227,7 +233,7 @@ export default function AppLayout() {
                     <p><HiOutlineArrowUturnLeft aria-hidden />{t('impersonation_banner')}</p>
                     <button type="button" disabled={impersonationExitLoading} onClick={() => void handleExitImpersonation()}>{impersonationExitLoading ? '…' : t('impersonation_exit')}</button>
                 </div> : null}
-                <WorkspaceHeader me={me} permissions={permissions} storeUrl={storeUrl} isSupplier={isSupplier} chatUnread={chatUnread} appearance={appearance} onLanguage={toggleLanguage} onNavigation={openMobileNavigation} onToggleSidebar={() => setSidebarCollapsed((value) => !value)} sidebarToggleRef={sidebarToggleRef} collapsed={sidebarCollapsed} onSearch={() => setSearchOpen(true)} onLogout={() => setLogoutOpen(true)} />
+                <WorkspaceHeader merchantWorkspace={merchantWorkspace} me={me} permissions={permissions} storeUrl={storeUrl} isSupplier={isSupplier} chatUnread={chatUnread} appearance={appearance} onLanguage={toggleLanguage} onNavigation={openMobileNavigation} onToggleSidebar={() => setSidebarCollapsed((value) => !value)} sidebarToggleRef={sidebarToggleRef} collapsed={sidebarCollapsed} onSearch={() => setSearchOpen(true)} onLogout={() => setLogoutOpen(true)} />
                 </div>
                 <main id="workspace-content" tabIndex={-1} className="ws-main-scroll">
                     <div key={location.pathname} className="ws-page"><Outlet context={{ me, isAdmin, isSupplier, permissions, unifiedStoreNavigation: !isAdminOnly }} /></div>

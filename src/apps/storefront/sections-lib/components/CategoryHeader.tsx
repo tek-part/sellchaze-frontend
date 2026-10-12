@@ -9,6 +9,7 @@ import { defineSection, fields, OPTIONS } from '../schema';
 import { bool, str, useSectionSettings } from '../use-section';
 import { useSectionData } from '../data';
 import { LibImage } from '../primitives';
+import { sanitizeHtml } from '../../../../shared/utils/sanitizeHtml';
 
 export const categoryHeaderSchema = defineSection({
   type: 'category-header',
@@ -60,7 +61,8 @@ export function CategoryHeader(props: SectionRenderProps): ReactElement | null {
       <div className="lib-container lib-cat-header__inner">
         {trail}
         <h1 className="lib-cat-header__title">{title}</h1>
-        {bool(s, 'show_description', true) && header.description ? <p className="lib-cat-header__desc">{header.description}</p> : null}
+        {bool(s, 'show_description', true) && header.descriptionHtml ? <div className="lib-cat-header__desc lib-rich-text" dangerouslySetInnerHTML={{ __html: sanitizeHtml(header.descriptionHtml) }} /> : bool(s, 'show_description', true) && header.description ? <p className="lib-cat-header__desc">{header.description}</p> : null}
+        {header.children?.length ? <nav aria-label="Subcategories" className="lib-cat-header__children">{header.children.map((child) => <a href={child.url} key={child.url}>{child.label}</a>)}</nav> : null}
       </div>
     </section>
   );
