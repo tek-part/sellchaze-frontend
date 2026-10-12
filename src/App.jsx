@@ -134,6 +134,10 @@ const StoreGoogleMerchantPage = lazy(() => import('./pages/store/StoreGoogleMerc
 const StoreCampaignBuilderPage = lazy(() => import('./pages/store/StoreCampaignBuilderPage'));
 const StoreReferralBuilderPage = lazy(() => import('./pages/store/StoreReferralBuilderPage'));
 const PlatformWalletPage = lazy(() => import('./pages/account/PlatformWalletPage'));
+const ServiceMarketplacePage = lazy(() => import('./pages/services/ServiceMarketplacePage'));
+const ServiceMarketplaceDetailPage = lazy(() => import('./pages/services/ServiceMarketplaceDetailPage'));
+const ServiceMarketplaceManagePage = lazy(() => import('./pages/services/ServiceMarketplaceManagePage'));
+const ServiceMarketplaceProviderPage = lazy(() => import('./pages/services/ServiceMarketplaceProviderPage'));
 const StoreRetargetingPage = lazy(() => import('./pages/store/StoreRetargetingPage'));
 const StoreMarketingServicesPage = lazy(() => import('./pages/store/StoreMarketingServicesPage'));
 const StoreShoppingPreferencesPage = lazy(() => import('./pages/store/settings/StoreShoppingPreferencesPage'));
@@ -429,6 +433,10 @@ export default function App() {
                 <Route path="/top-up" element={<PlatformWalletPage key="wallet" />} />
                 <Route path="/transactions" element={<PlatformWalletPage key="transactions" mode="transactions" />} />
                 <Route path="/referral" element={<PlatformWalletPage key="referral" mode="referral" />} />
+                <Route path="/services" element={<ServiceMarketplacePage key="all-services" />} />
+                <Route path="/services/manage" element={<ServiceMarketplaceManagePage />} />
+                <Route path="/services/service-provider/:provider" element={<ServiceMarketplaceProviderPage />} />
+                <Route path="/services/:service" element={<ServiceMarketplaceDetailPage />} />
                 <Route path="/wavex/settings" element={<WavexSettingsPage />} />
                 <Route path="/wavex/connect" element={<WavexConnectPage />} />
                 <Route path="/wavex/chats" element={<WavexChatsPage />} />

@@ -474,7 +474,7 @@ function SidebarNavInner({ isAdmin = false, isSupplier = false, roles = [], perm
                 <SectionLabel>{t('workspace_nav_other', 'Other')}</SectionLabel>
                 {workspaceStoreGroups.filter((group) => group.section === 'other').map((group) => {
                     const active = group.items ? group.items.some((item) => workspaceStoreItemActive(item, location.pathname)) : workspaceStoreItemActive(group, location.pathname);
-                    return <Link key={group.key} to={group.to} aria-current={active ? 'page' : undefined} className={navLinkClass({ isActive: active })}><group.Icon className="h-5 w-5" aria-hidden />{group.label}</Link>;
+                    return <Link key={group.key} to={group.to} aria-current={active ? 'page' : undefined} className={navLinkClass({ isActive: active })}><group.Icon className="h-5 w-5" aria-hidden /><span className="ws-nav-label">{group.label}</span>{group.badge ? <span className="ws-nav-badge">{group.badge}</span> : null}</Link>;
                 })}
             </div> : null}
         </nav>

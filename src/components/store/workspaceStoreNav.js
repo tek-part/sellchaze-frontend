@@ -1,6 +1,6 @@
 import { buildStoreNav } from './storeNav';
 import { HiOutlineCube, HiOutlineUserGroup, HiOutlineCog6Tooth } from '../workspace/WorkspaceIcons';
-import { OrdersIcon, ProductsIcon, DesignIcon, TrackingIcon, MarketingIcon, FunnelsIcon, MarketingServicesIcon, WalletReferenceIcon, AffiliateReferenceIcon } from '../workspace/SidebarReferenceIcons';
+import { OrdersIcon, ProductsIcon, DesignIcon, TrackingIcon, MarketingIcon, FunnelsIcon, MarketingServicesIcon, WalletReferenceIcon, AffiliateReferenceIcon, ServiceMarketplaceIcon } from '../workspace/SidebarReferenceIcons';
 
 /** Merchant navigation follows the shopping workflow, using existing authorized routes. */
 export function buildWorkspaceStoreNav(t, access, permissions = []) {
@@ -28,6 +28,7 @@ export function buildWorkspaceStoreNav(t, access, permissions = []) {
         group('marketing', t('workspace_marketing_tools', 'Marketing tools'), MarketingIcon, ['coupons', 'retargeting', 'utm-builder', 'google-merchant', 'create-referral-link'].map((key) => absolute(item(key)))),
         group('wallet', t('platform_wallet_nav', 'Your wallet'), WalletReferenceIcon, [route('top-up', '/top-up', t('platform_wallet_balance', 'Your balance'), WalletReferenceIcon, access.isStoreOwner), route('transactions', '/transactions', t('platform_wallet_transactions', 'Transactions'), WalletReferenceIcon, access.isStoreOwner)]),
         { key: 'community', label: t('feed_title', 'Community'), to: '/community', Icon: HiOutlineUserGroup, single: true },
+        { ...route('service-marketplace', '/services', t('service_marketplace_nav', 'Service marketplace'), ServiceMarketplaceIcon, access.isStoreOwner), badge: t('workspace_new', 'New'), single: true, section: 'other' },
         { ...route('platform-referral', '/referral', t('platform_referral_nav', 'Affiliate program'), AffiliateReferenceIcon, access.isStoreOwner), single: true, section: 'other' },
         { ...absolute(item('marketing-services')), Icon: MarketingServicesIcon, single: true, section: 'other' },
         { ...group('settings', t('nav_store_settings', 'Store settings'), HiOutlineCog6Tooth, settingsItems), single: true, section: 'other', to: settingsItems[0]?.to },

@@ -28,6 +28,15 @@ body[data-workspace-theme] #root .max-h-dvh { max-height:100dvh; }
   --shadow-card: none; --shadow-soft: 0 8px 32px rgb(0 0 0 / .18); color-scheme: dark;
 }
 .ws-frame { display:flex; width:100%; min-height:100dvh; background:var(--ws-canvas); color:var(--ws-text); font-size:14px; line-height:1.55; }
+body[data-workspace-merchant='true'][data-workspace-theme='light'],body[data-workspace-merchant='true'][data-workspace-theme='light'] [data-workspace-theme='light'] { --ws-canvas:#f5f7f9;--ws-text:#171717;--ws-muted:#737373;--ws-border:#d6d6d6;--ws-green:#0abb45;--ws-green-ink:#0abb45;--ws-green-soft:rgb(10 187 69 / .1);--color-brand:#0abb45;--color-brand-dark:#099b39;--color-brand-light:rgb(10 187 69 / .1);--color-accent:#0abb45;--color-accent-dark:#099b39;--color-accent-light:rgb(10 187 69 / .1); }
+body[data-workspace-merchant='true'] .ws-sidebar { border-inline-start:1px solid var(--ws-border); }
+body[data-workspace-merchant='true'] .ws-sidebar:not(.ws-sidebar-compact) .ws-sidebar-scroll { padding-inline:20px; }
+body[data-workspace-merchant='true'] .ws-sidebar-compact .ws-sidebar-scroll { padding-inline:7.5px; }
+body[data-workspace-merchant='true'] .ws-sidebar-scroll nav > div { margin-block-start:0;padding-block-start:0;padding-block-end:8px; }
+body[data-workspace-merchant='true'] .ws-sidebar-scroll nav:not(.ws-compact-nav) :is(a,button) { height:36px;min-height:36px;padding:8px 12px;gap:8px;border-inline-start:0;border-radius:8px;line-height:20px; }
+body[data-workspace-merchant='true'] .ws-sidebar-scroll nav a[aria-current='page'] { color:var(--ws-text); }
+.ws-nav-label { flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap; }
+.ws-nav-badge { flex-shrink:0;padding:2px 8px;border-radius:6px;background:rgb(10 187 69 / .2);font-size:10px;line-height:14.28px; }
 .ws-sidebar-container { display:flex; flex-shrink:0; height:100dvh; min-height:0; overflow:hidden; position:sticky; top:0; align-self:flex-start; transition:margin-inline-end .15s cubic-bezier(.4,0,.2,1); }
 .ws-sidebar-container[data-collapsed] { margin-inline-end:16px; }
 @media (max-width:767px) { .ws-sidebar-container { display:none; } }
