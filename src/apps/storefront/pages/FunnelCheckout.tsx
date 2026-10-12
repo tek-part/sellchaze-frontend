@@ -18,6 +18,7 @@ import { toVariant } from '../api/mappers';
 import { useVariantSelectionAutomatic } from '../state/store-context';
 import { CheckoutMinimum } from './CheckoutMinimum';
 import { minimumOrderAllows } from './minimum-order';
+import { useCheckoutLead } from './useCheckoutLead';
 
 /** Product-specific checkout: leaves the visitor's ordinary shopping cart intact. */
 export function FunnelCheckout({ productSlug }: { productSlug: string | null }): ReactElement {
@@ -44,13 +45,14 @@ export function FunnelCheckout({ productSlug }: { productSlug: string | null }):
   const items = useMemo<ReadonlyArray<CheckoutItem>>(() => selectionReady && product ? [{ product_id: product.id, quantity, personalization: normalizedPersonalization(JSON.parse(customKey) as Record<string, string>), ...(variantId ? { variant_id: Number(variantId) } : {}) }] : [], [product, selectionReady, quantity, variantId, customKey]);
   const payment = useCheckoutPaymentFlow({ items, preserveCart: true });
   const contact = useCheckoutFields(payment.paymentMethod, product ? [product.id] : []);
+  const lead = useCheckoutLead({ contact: { ...contact.payload(), coupon_code: appliedCoupon }, items, source: 'funnel', paymentMethod: payment.paymentMethod, kind: `funnel:${productSlug ?? ''}`, enabled: contact.ready && !payment.busy && !payment.completed && !payment.unresolved && !payment.paymentRetry });
   const quoteKey = JSON.stringify([items, appliedCoupon, contact.shippingSelection, contact.shippingReady]);
   const quoteQ = useAsync(async () => items.length && contact.shippingReady ? { key: quoteKey, quote: (await quoteCheckout(items, appliedCoupon, contact.shippingSelection)).data } : null, [quoteKey, locale]);
   const quote = !quoteQ.loading && !quoteQ.error && quoteQ.data?.key === quoteKey ? quoteQ.data.quote : null;
   const submit = async (event: FormEvent): Promise<void> => {
     event.preventDefault();
     if (!payment.paymentRetry && (!minimumOrderAllows(quote) || !selectionReady || !contact.shippingReady || !contact.phoneVerification.ready || !contact.botProtection.ready)) return;
-    await payment.submit({ ...contact.payload(), coupon_code: appliedCoupon });
+    await payment.submit({ ...contact.payload(), coupon_code: appliedCoupon, lead_token: lead.submitToken() });
   };
 
   return <Section id="funnel-checkout" className="sf-funnel-checkout"><Container narrow>

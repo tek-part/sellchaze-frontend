@@ -21,6 +21,7 @@ import { CheckoutMinimum } from './CheckoutMinimum';
 import { minimumOrderAllows } from './minimum-order';
 import { ThankYouContent, ThankYouProducts } from './ThankYouContent';
 import { currentThankYou } from './thank-you';
+import { useCheckoutLead } from './useCheckoutLead';
 
 export function CheckoutPage(): ReactElement {
   const { t } = useTranslation();
@@ -34,13 +35,14 @@ export function CheckoutPage(): ReactElement {
   const tpl = useTemplate('checkout');
   const items = useMemo(() => cart.lines.map((line) => ({ product_id: Number(line.productId), quantity: line.quantity, ...(line.personalization ? { personalization: line.personalization } : {}), ...(line.variantId ? { variant_id: Number(line.variantId) } : {}) })), [cart.lines]);
   const contact = useCheckoutFields(checkout.paymentMethod, items.map((item) => item.product_id));
+  const lead = useCheckoutLead({ contact: { ...contact.payload(), coupon_code: appliedCoupon }, items, source: 'storefront', kind: 'cart', paymentMethod: checkout.paymentMethod, enabled: contact.ready && !checkout.busy && !checkout.completed && !checkout.unresolved && !checkout.paymentRetry });
   const quoteKey = JSON.stringify([items, appliedCoupon, contact.shippingSelection, contact.shippingReady]);
   const quoteQ = useAsync(async () => items.length && contact.shippingReady ? { key: quoteKey, data: (await quoteCheckout(items, appliedCoupon, contact.shippingSelection)).data } : null, [quoteKey, locale]);
   const quote = !quoteQ.loading && !quoteQ.error && quoteQ.data?.key === quoteKey ? quoteQ.data.data : null;
   const placeOrder = async (event: FormEvent): Promise<void> => {
     event.preventDefault();
     if (!checkout.paymentRetry && (!minimumOrderAllows(quote) || !contact.shippingReady || !contact.phoneVerification.ready || !contact.botProtection.ready)) return;
-    await checkout.submit({ ...contact.payload(), coupon_code: appliedCoupon });
+    await checkout.submit({ ...contact.payload(), coupon_code: appliedCoupon, lead_token: lead.submitToken() });
   };
   if (!cart.lines.length && !checkout.completed && !checkout.busy && !checkout.unresolved) return <Navigate to="/cart" replace />;
   return <>

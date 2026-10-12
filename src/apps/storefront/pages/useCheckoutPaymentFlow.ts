@@ -14,11 +14,13 @@ import { useCart } from '../state/cart';
 import { withSessionParams } from './NavigationInterceptor';
 import { clearCheckoutAttempt, readCheckoutAttempt, resumeCheckoutAttempt, saveCheckoutAttempt, type CheckoutAttempt } from './checkout-attempt';
 import { saveOrderReceipt } from './order-receipt';
+import { retireLeadToken } from './checkout-lead-session';
 
 export interface CheckoutContactPayload {
   customer_name?: string;
   customer_email?: string;
   customer_phone?: string;
+  lead_token?: string;
   phone_verification?: string;
   bot_proof?: string;
   notes?: string;
@@ -84,6 +86,7 @@ export function useCheckoutPaymentFlow(options?: { items: ReadonlyArray<Checkout
       // Keep its empty-cart redirect from preempting this successful order transition.
       completed.current = true;
       const saved = readCheckoutAttempt(scope);
+      try { retireLeadToken(window.sessionStorage, saved?.body.lead_token); } catch { /* optional browser persistence */ }
       if ((saved ? saved.body.cart_mode !== 'direct' : !preserveCart)) cart.clear();
       if (response.payment?.redirect_url) {
         if (saved) saveCheckoutAttempt(scope, { ...saved, orderNumber: response.data.number });
@@ -98,7 +101,10 @@ export function useCheckoutPaymentFlow(options?: { items: ReadonlyArray<Checkout
     } catch (requestError) {
       if (requestError instanceof ApiError) {
         const body = requestError.payload as { checkout_rejected?: boolean; payment_retry?: { token?: string }; receipt?: { token?: string }; data?: { number?: string }; message?: string } | undefined;
-        if (body?.data?.number && body.receipt?.token) saveOrderReceipt(body.data.number, body.receipt.token);
+        if (body?.data?.number && body.receipt?.token) {
+          saveOrderReceipt(body.data.number, body.receipt.token);
+          try { retireLeadToken(window.sessionStorage, readCheckoutAttempt(scope)?.body.lead_token); } catch { /* server already converted the lead */ }
+        }
         if (body?.payment_retry?.token) {
           setPaymentRetry({ token: body.payment_retry.token, orderNumber: body.data?.number });
           setError(undefined);
