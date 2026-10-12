@@ -25,7 +25,7 @@ export function buildWorkspaceStoreNav(t, access, permissions = []) {
         { key: 'funnels', ...absolute(item('funnels')), Icon: FunnelsIcon, single: true },
         group('tracking', t('workspace_tracking_tools', 'Tracking tools'), TrackingIcon,
             ['pixels-settings', 'pixel-conversion', 'ga'].map((key) => absolute(item(key)))),
-        group('marketing', t('workspace_marketing_tools', 'Marketing tools'), MarketingIcon, [absolute(item('coupons')), absolute(item('google-merchant'))]),
+        group('marketing', t('workspace_marketing_tools', 'Marketing tools'), MarketingIcon, [absolute(item('coupons')), absolute(item('utm-builder')), absolute(item('google-merchant'))]),
         { key: 'community', label: t('feed_title', 'Community'), to: '/community', Icon: HiOutlineUserGroup, single: true },
         { ...group('settings', t('nav_store_settings', 'Store settings'), HiOutlineCog6Tooth, settingsItems), single: true, to: settingsItems[0]?.to },
     ].filter((row) => row.single ? Boolean(row.to) : row.items.length > 0);

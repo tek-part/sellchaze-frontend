@@ -1,12 +1,12 @@
 import { ApiError, apiFetch } from '../api/client';
-import type { CheckoutItem } from '../api/storefront';
+import { campaignFromSearch, cleanCampaign, type CampaignAttribution } from '../../../shared/marketing/campaign';
 
 const uuid = /^[a-f0-9]{8}-[a-f0-9]{4}-[1-8][a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/i;
 const lifetime = 30 * 60 * 1000;
 type EventKind = 'visit' | 'add_to_cart' | 'checkout_started';
 type EventSource = 'storefront' | 'funnel' | 'cross_sell';
 interface Event { event_id: string; kind: EventKind; source: EventSource; product_id?: number; quantity?: number }
-interface Session { id: string; expires: number; pending: Event[]; starts: string[] }
+interface Session { id: string; expires: number; pending: Event[]; starts: string[]; campaign?: CampaignAttribution }
 const sessions = new Map<string, Session>();
 const busy = new Set<string>();
 const prefix = 'sf:metrics:v1:';
@@ -23,10 +23,6 @@ export function metricsEventId(): string | undefined {
   if (!allowed()) return undefined;
   try { return crypto.randomUUID(); } catch { return undefined; }
 }
-export function checkoutMetricsKey(items: ReadonlyArray<CheckoutItem>, source: 'storefront' | 'funnel'): string {
-  // Deliberately excludes all personalization, contact, notes, proof, prices and URLs.
-  return JSON.stringify([source, items.map((item) => [item.product_id, item.variant_id ?? null, item.quantity, item.quantity_offer_id ?? null, item.quantity_offer_version ?? null]).sort((a, b) => JSON.stringify(a).localeCompare(JSON.stringify(b)))]);
-}
 export function restoredMetricsSession(value: unknown, now: number): Session | undefined {
   if (!value || typeof value !== 'object') return undefined;
   const row = value as Partial<Session>;
@@ -39,13 +35,14 @@ export function restoredMetricsSession(value: unknown, now: number): Session | u
     pending.push({ event_id: event.event_id, kind: event.kind, source: event.source,
       ...(event.kind !== 'visit' ? { product_id: event.product_id! } : {}), ...(event.kind === 'add_to_cart' ? { quantity: event.quantity! } : {}) });
   }
-  return { id: row.id, expires: row.expires, pending, starts: row.starts };
+  const campaign = cleanCampaign(row.campaign);
+  return { id: row.id, expires: row.expires, pending, starts: row.starts, ...(campaign ? { campaign } : {}) };
 }
-function save(storeId: string, session: Session): void {
+export function saveMetricsSession(storeId: string, session: Session): void {
   sessions.set(storeId, session);
   try { sessionStorage.setItem(prefix + storeId, JSON.stringify(session)); } catch { /* In-memory counters remain usable. */ }
 }
-function current(storeId: string): Session | undefined {
+export function metricsSession(storeId: string): Session | undefined {
   if (!allowed() || !/^[1-9]\d*$/.test(storeId)) return undefined;
   let session = sessions.get(storeId);
   if (!session) {
@@ -56,12 +53,11 @@ function current(storeId: string): Session | undefined {
     if (!id || !event) return undefined;
     session = { id, expires: Date.now() + lifetime, pending: [{ event_id: event, kind: 'visit', source: 'storefront' }], starts: [] };
   }
-  session.expires = Date.now() + lifetime; save(storeId, session); return session;
+  const campaign = campaignFromSearch(window.location.search);
+  if (campaign) session.campaign = campaign;
+  session.expires = Date.now() + lifetime; saveMetricsSession(storeId, session); return session;
 }
-export function analyticsSessionId(storeId: string): string | undefined {
-  return current(storeId)?.id;
-}
-async function flush(storeId: string): Promise<void> {
+export async function flushMetricsSession(storeId: string): Promise<void> {
   if (!allowed() || busy.has(storeId)) return;
   const session = sessions.get(storeId); if (!session) return;
   busy.add(storeId);
@@ -71,36 +67,24 @@ async function flush(storeId: string): Promise<void> {
       const controller = new AbortController(); const timer = window.setTimeout(() => controller.abort(), 5000);
       try {
         await apiFetch('/events', { method: 'POST', body: JSON.stringify({ ...event, session_id: session.id }), keepalive: true, signal: controller.signal });
-        session.pending.shift(); save(storeId, session);
+        session.pending.shift(); saveMetricsSession(storeId, session);
       } catch (error) {
-        if (error instanceof ApiError && error.status === 422) { session.pending.shift(); save(storeId, session); }
+        if (error instanceof ApiError && error.status === 422) { session.pending.shift(); saveMetricsSession(storeId, session); }
         else break;
       } finally { window.clearTimeout(timer); }
     }
   } finally { busy.delete(storeId); }
 }
 export function recordVisit(storeId: string): void {
-  if (current(storeId)) void flush(storeId);
+  if (metricsSession(storeId)) void flushMetricsSession(storeId);
 }
 export function recordCartEvent(storeId: string, event: { id: string; productId: string; quantity: number; source?: 'cross_sell' }): void {
-  const session = current(storeId); if (!session || !uuid.test(event.id) || !/^[1-9]\d*$/.test(event.productId) || !Number.isSafeInteger(event.quantity) || event.quantity < 1 || event.quantity > 999) return;
+  const session = metricsSession(storeId); if (!session || !uuid.test(event.id) || !/^[1-9]\d*$/.test(event.productId) || !Number.isSafeInteger(event.quantity) || event.quantity < 1 || event.quantity > 999) return;
   if (!session.pending.some((row) => row.event_id === event.id)) {
     // Keep the visit ahead of its cart/checkout events when recovering from offline use.
     if (session.pending.length >= 50) session.pending.splice(1, 1);
     session.pending.push({ event_id: event.id, kind: 'add_to_cart', source: event.source ?? 'storefront', product_id: Number(event.productId), quantity: event.quantity });
-    save(storeId, session);
+    saveMetricsSession(storeId, session);
   }
-  void flush(storeId);
-}
-export function recordCheckoutStart(storeId: string, productId: number, key: string, source: 'storefront' | 'funnel'): void {
-  if (!Number.isSafeInteger(productId) || productId < 1 || key.length > 20000) return;
-  const session = current(storeId); if (!session) return;
-  if (!session.starts.includes(key)) {
-    const id = metricsEventId(); if (!id) return;
-    session.starts = [...session.starts.slice(-49), key];
-    if (session.pending.length >= 50) session.pending.splice(1, 1);
-    session.pending.push({ event_id: id, kind: 'checkout_started', source, product_id: productId });
-    save(storeId, session);
-  }
-  void flush(storeId);
+  void flushMetricsSession(storeId);
 }

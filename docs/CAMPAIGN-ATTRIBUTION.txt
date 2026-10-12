@@ -1,0 +1,46 @@
+The merchant marketing group now includes Track advertising campaigns before
+Google Merchant, in the observed order. /store/utm-builder is a working scoped
+merchant route: URL, source and campaign name, create, copy and the observed help
+video. It resets stale generated results when inputs change and rejects malformed
+URLs, credentials, non-http(s) destinations, controls, markup and oversized labels.
+URLSearchParams preserves existing product selections/query parameters/fragments
+and replaces duplicate tags. The authenticated reference currently appends tags
+after# on some URLs; this implementation retains the intended actual query.
+
+Only source/campaign are persisted in the existing per-store metrics session.
+Valid tagged entries update the last campaign, untagged navigation retains it,
+and30 minutes of inactivity expires it with the session. Duplicate/incomplete or
+invalid tags do not replace a valid campaign. Restore strips arbitrary fields.
+Preview, Do Not Track and Global Privacy Control prevent capture/submission. The
+checkout body explicitly copies only session ID and the two labels. Existing
+saved-attempt replay freezes the original body. Merchant order details show the
+server snapshot; the customer receipt never displays the campaign labels.
+
+Checkout metrics hooks/key/start functions load with checkout routes rather than
+initial storefront rendering, keeping the existing150KiB initial gzip gate. The
+first-party queue, deduplication, session scope, privacy guards and advertising
+checkout behavior remain intact. Receipt copy describes order receipt instead of
+premature merchant confirmation and hides digital COD instructions on physical
+orders; mixed digital orders retain their payment requirement.
+
+Two neutral20px help/24px create vectors were captured from the rendered reference
+and converted to static React paths. Branding excluded. Desktop reference at1920
+matches three800x43.78125 frames y290.8125/423.890625/556.96875, with16px/23px IBM
+Plex Sans Arabic and a84.453125x40.5 create button y624.65625. Header24px/32.016,
+field titles20px/32. Help button142.546875x42.5; outlined fields radius10, neutral
+labels#171717 and focus#115f2b. Floating labels use scale.75, RTL translate(-14,-9)
+and200ms cubic-bezier(0,0,.2,1), matching the rendered reference. Empty labels
+translate(-14,9). Responsive CSS and reduced motion are present; actual current
+390px acceptance/full visual parity remain unverified because the browser viewport
+override targets its selected production tab, not the claimed local tab. Existing
+ten missing Linux visual snapshots remain nonblocking, not evidence of parity.
+
+Local tests519/79, ESLint/types passed after final receipt wording changes; final
+CSS build/sitemap/budgets passed (149.95/84.62/155.33KiB). Exact release CI must
+follow. Browser create/copy succeeded and the generated URL
+was visited; local COD order persisted the campaign across untagged navigation.
+Private merchant display/public receipt exclusion/reload idempotence verified.
+All174 original tables preserved after owned review cleanup. No broad browser
+storage clear was performed. Original old disposable recents remain an independent
+open issue. All152 requested themes/84 funnels and remaining competitor features
+are still incomplete; reference paid plugin screens require enabled access.

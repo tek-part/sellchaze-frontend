@@ -23,7 +23,7 @@ import { ThankYouContent, ThankYouProducts } from './ThankYouContent';
 import { currentThankYou } from './thank-you';
 import { useCheckoutLead } from './useCheckoutLead';
 import { checkoutCartItems } from './checkout-cart-items';
-import { useCheckoutMetrics } from '../analytics/hooks';
+import { useCheckoutMetrics } from '../analytics/checkout-hooks';
 
 export function CheckoutPage(): ReactElement {
   const { t } = useTranslation();

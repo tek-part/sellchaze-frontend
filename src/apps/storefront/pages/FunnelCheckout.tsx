@@ -21,7 +21,7 @@ import { useStore, useVariantSelectionAutomatic } from '../state/store-context';
 import { CheckoutMinimum } from './CheckoutMinimum';
 import { minimumOrderAllows } from './minimum-order';
 import { useCheckoutLead } from './useCheckoutLead';
-import { useCheckoutMetrics } from '../analytics/hooks';
+import { useCheckoutMetrics } from '../analytics/checkout-hooks';
 
 /** Product-specific checkout: leaves the visitor's ordinary shopping cart intact. */
 export function FunnelCheckout({ productSlug }: { productSlug: string | null }): ReactElement {
