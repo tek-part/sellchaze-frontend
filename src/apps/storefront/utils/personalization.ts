@@ -7,8 +7,8 @@ export function normalizedPersonalization(values: PersonalizationValues): Person
   }));
 }
 /** Exact canonical identity keeps distinct text/images on separate cart lines without hash collisions. */
-export function personalizedLineId(productId: string, variantId: string | undefined, values: PersonalizationValues): string {
-  const base = `${productId}:${variantId ?? 'default'}`;
+export function personalizedLineId(productId: string, variantId: string | undefined, values: PersonalizationValues, offerId?: string): string {
+  const base = `${productId}:${variantId ?? 'default'}${offerId ? `:offer:${offerId.toLowerCase()}` : ''}`;
   const normalized = normalizedPersonalization(values);
   return Object.keys(normalized).length ? `${base}:${JSON.stringify(normalized)}` : base;
 }

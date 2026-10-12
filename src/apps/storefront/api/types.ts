@@ -16,7 +16,18 @@ export interface ApiVariant {
   options?: Record<string, string> | null;
 }
 
+export interface ApiQuantityOffer {
+  id: string;
+  quantity: number;
+  unit_price: string | number;
+  version: number;
+  free_shipping: boolean;
+  title: string;
+  subtitle: string;
+}
+
 export interface ApiProduct {
+  quantity_offers?: ReadonlyArray<ApiQuantityOffer> | null;
   auto_select_variant?: boolean;
   digital_pool_stock?: number | null;
   order_quantity_limit?: number | null;

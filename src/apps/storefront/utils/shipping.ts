@@ -16,6 +16,10 @@ export function cartRequiresShipping(lines: ReadonlyArray<Pick<CartLine, 'digita
   return lines.some((line) => !line.digitalType || line.digitalType === 'physical');
 }
 
+export function cartHasFreeShippingOffer(lines: ReadonlyArray<Pick<CartLine, 'digitalType' | 'quantityOffer'>>): boolean {
+  return lines.some((line) => (!line.digitalType || line.digitalType === 'physical') && line.quantityOffer?.freeShipping === true);
+}
+
 /** Defaults come from the current store; removed or disabled selections cannot reach checkout. */
 export function resolveShipping(config: ShippingConfiguration | undefined, chosen: ShippingSelection): { selection: ShippingSelection; ready: boolean; stale?: boolean } {
   if (!config?.enabled) return { selection: {} as ShippingSelection, ready: !!config };

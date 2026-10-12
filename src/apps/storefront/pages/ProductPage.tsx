@@ -52,6 +52,7 @@ export function ProductPage(): ReactElement | null {
     const reviews: ReviewModel[] = reviewsQ.data ? reviewsQ.data.data.map(toReview) : [];
     let related: ProductCardModel[] = relatedQ.data ? relatedQ.data.data.map((p) => toProductCard(p, currency, multiplier)) : [];
     if (dev && !relatedQ.data) related = sampleNewest(manifest.id, locale).slice(0, 6);
+    related = related.filter((product) => product.id !== detail?.id);
 
     return {
       store: { name: store.name, currency },

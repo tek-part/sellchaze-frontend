@@ -13,6 +13,8 @@ export function reconcileCartCatalog(lines: ReadonlyArray<CartLine>, requestedId
     if (!product || product.soldOut) return [];
     const variant = product.variants?.find((item) => item.id === line.variantId);
     if (line.variantId ? !variant?.available : !!product.variants?.length) return [];
+    const offer = line.quantityOffer ? product.quantityOffers?.find((candidate) => candidate.id === line.quantityOffer?.id) : undefined;
+    if (line.quantityOffer && (!offer || offer.unitPrice > (variant?.price ?? product.price))) return [];
     const fields = product.personalizationFields ?? [];
     const values = normalizedPersonalization(Object.fromEntries(Object.entries(line.personalization ?? {}).filter(([key]) => fields.some((field) => field.key === key))));
     if (!personalizationReady(fields, values)) return [];
@@ -24,8 +26,9 @@ export function reconcileCartCatalog(lines: ReadonlyArray<CartLine>, requestedId
     const stock = variant ? variant.availableStock : product.availableStock;
     const image = variant?.image ?? product.image;
     return [{
-      id: personalizedLineId(product.id, variant?.id, values), productId: product.id,
-      title: product.title, url: product.url, price: variant?.price ?? product.price,
+      id: personalizedLineId(product.id, variant?.id, values, offer?.id), productId: product.id,
+      title: product.title, url: product.url, price: offer?.unitPrice ?? variant?.price ?? product.price,
+      ...(offer ? { quantityOffer: offer } : {}),
       currency: product.currency, quantity: line.quantity, digitalType: product.digitalType ?? 'physical',
       ...(variant ? { variantId: variant.id, attributes: variant.label } : {}),
       ...(image ? { image: image.src } : {}),
@@ -46,5 +49,5 @@ export function reconcileCartCatalog(lines: ReadonlyArray<CartLine>, requestedId
 }
 
 export function cartPurchaseSummary(lines: ReadonlyArray<CartLine>): string {
-  return JSON.stringify(lines.map((line) => [line.id, line.quantity, line.price, line.currency]));
+  return JSON.stringify(lines.map((line) => [line.id, line.quantity, line.price, line.currency, line.quantityOffer?.version, line.quantityOffer?.freeShipping]));
 }

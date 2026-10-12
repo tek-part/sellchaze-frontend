@@ -90,6 +90,7 @@ export interface ProductSpec {
 
 /** The full product for a PDP — a superset of the card model. */
 export interface ProductDetailModel extends ProductCardModel {
+  quantityOffers?: ReadonlyArray<import('./quantity-offers').QuantityOffer>;
   personalizationFields?: ReadonlyArray<import('./personalization').PersonalizationField>;
   optionDisplay?: ReadonlyArray<import('./product-options').OptionDisplay>;
   sku?: string;

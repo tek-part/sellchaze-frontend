@@ -7,8 +7,8 @@ import { useTranslation } from 'react-i18next';
 import { Drawer } from '../../../foundation/components/Drawer';
 import { formatMoney } from '../../../utils/format';
 import { useCart } from '../../../state/cart';
-import { cartRequiresShipping } from '../../../utils/shipping';
-import { cartLineLimit } from '../../../state/cart-quantity';
+import { cartRequiresShipping, cartHasFreeShippingOffer } from '../../../utils/shipping';
+import { cartLineLimit, quantityStep } from '../../../state/cart-quantity';
 import { PersonalizationSummary } from '../../../foundation/components/PersonalizationSummary';
 import { useLocale } from '../../../i18n/useLocale';
 import { frText } from './text';
@@ -25,8 +25,9 @@ export function CartDrawer(props: CartDrawerProps): ReactElement {
   const { t } = useTranslation();
   const { locale } = useLocale();
   const { lines, totals, updateQuantity, remove } = useCart();
-  const remaining = freeShippingThreshold !== undefined ? Math.max(0, Math.round((freeShippingThreshold - totals.subtotal) * 100) / 100) : 0;
-  const pct = freeShippingThreshold !== undefined ? freeShippingThreshold > 0 ? Math.min(100, (totals.subtotal / freeShippingThreshold) * 100) : 100 : 0;
+  const offerShipping = cartHasFreeShippingOffer(lines);
+  const remaining = offerShipping ? 0 : freeShippingThreshold !== undefined ? Math.max(0, Math.round((freeShippingThreshold - totals.subtotal) * 100) / 100) : 0;
+  const pct = offerShipping ? 100 : freeShippingThreshold !== undefined ? freeShippingThreshold > 0 ? Math.min(100, (totals.subtotal / freeShippingThreshold) * 100) : 100 : 0;
   const preview = typeof window !== 'undefined' && window.location.search.includes('preview=1') ? '?preview=1' : '';
 
   return (
@@ -41,9 +42,9 @@ export function CartDrawer(props: CartDrawerProps): ReactElement {
       ) : (
         <>
           <div className="sf-overlay__body fr-cart">
-            {freeShippingThreshold !== undefined && cartRequiresShipping(lines) ? (
+            {(offerShipping || freeShippingThreshold !== undefined) && cartRequiresShipping(lines) ? (
               <div className="fr-cart__ship">
-                <span>{remaining > 0 ? t('cart.freeShippingProgress', { amount: formatMoney(remaining, totals.currency, locale) }) : t('cart.freeShippingReached')}</span>
+                <span>{offerShipping ? (locale === 'ar' ? 'شحن مجاني مع عرض الكمية المختار؛ يُؤكد عند الدفع' : 'Free shipping with the selected quantity offer; confirmed at checkout') : remaining > 0 ? t('cart.freeShippingProgress', { amount: formatMoney(remaining, totals.currency, locale) }) : t('cart.freeShippingReached')}</span>
                 <div className="fr-cart__track" aria-hidden><div className="fr-cart__fill" style={{ width: `${pct}%` }} /></div>
               </div>
             ) : null}
@@ -60,9 +61,9 @@ export function CartDrawer(props: CartDrawerProps): ReactElement {
                     <span className="fr-cart__price">{formatMoney(line.price * line.quantity, line.currency, locale)}</span>
                     <div className="fr-cart__controls">
                       <div className="fr-qty" role="group" aria-label={frText(locale, 'quantity')}>
-                        <button type="button" className="fr-qty__btn" aria-label={frText(locale, 'decrease')} onClick={() => updateQuantity(line.id, Math.max(1, line.quantity - 1))} disabled={line.quantity <= 1}><IconMinus /></button>
+                        <button type="button" className="fr-qty__btn" aria-label={frText(locale, 'decrease')} onClick={() => updateQuantity(line.id, Math.max(quantityStep(line), line.quantity - quantityStep(line)))} disabled={line.quantity <= quantityStep(line)}><IconMinus /></button>
                         <span className="fr-qty__value" aria-live="polite">{line.quantity}</span>
-                        <button type="button" className="fr-qty__btn" aria-label={frText(locale, 'increase')} onClick={() => updateQuantity(line.id, line.quantity + 1)} disabled={line.quantity >= cartLineLimit(lines, line)}><IconPlus /></button>
+                        <button type="button" className="fr-qty__btn" aria-label={frText(locale, 'increase')} onClick={() => updateQuantity(line.id, line.quantity + quantityStep(line))} disabled={line.quantity >= cartLineLimit(lines, line)}><IconPlus /></button>
                       </div>
                       <button type="button" className="fr-cart__remove" aria-label={t('common.remove')} onClick={() => remove(line.id)}><IconTrash /></button>
                     </div>

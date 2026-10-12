@@ -1,6 +1,7 @@
 import type { CartLine } from '../types/cart';
 
 export type CartAddition = Omit<CartLine, 'quantity'> & { quantity?: number };
+export function quantityStep(line: Pick<CartLine, 'quantityOffer'>): number { return line.quantityOffer?.quantity ?? 1; }
 export function sameSku(a: Pick<CartLine, 'productId' | 'variantId'>, b: Pick<CartLine, 'productId' | 'variantId'>): boolean {
   return a.productId === b.productId && a.variantId === b.variantId;
 }
@@ -8,10 +9,10 @@ export function skuQuantity(lines: ReadonlyArray<CartLine>, selection: Pick<Cart
   return lines.filter((line) => sameSku(line, selection)).reduce((sum, line) => sum + line.quantity, 0);
 }
 export function cartLineLimit(lines: ReadonlyArray<CartLine>, line: CartLine): number {
-  return cartAdditionLimit(lines.filter((item) => item.id !== line.id), line);
+  return boundedQuantity(cartAdditionLimit(lines.filter((item) => item.id !== line.id), line), undefined, line.quantityOffer?.quantity);
 }
 export function cartAdditionLimit(lines: ReadonlyArray<CartLine>, line: Pick<CartLine, 'productId' | 'variantId' | 'digitalType' | 'maxQuantity' | 'sharedMaxQuantity' | 'orderMaxQuantity'>): number {
-  const skuRemaining = stockCap(line.maxQuantity) - skuQuantity(lines, line);
+  const skuRemaining = Math.min(999, stockCap(line.maxQuantity)) - skuQuantity(lines, line);
   const productLines = lines.filter((item) => item.productId === line.productId);
   const sharedCaps = [line, ...productLines].filter((item) => item.digitalType === 'codes' && item.sharedMaxQuantity !== undefined).map((item) => stockCap(item.sharedMaxQuantity));
   const sharedCap = line.digitalType === 'codes' && line.sharedMaxQuantity !== undefined ? stockCap(line.sharedMaxQuantity) : sharedCaps.length ? Math.min(...sharedCaps) : Number.MAX_SAFE_INTEGER;
@@ -33,7 +34,7 @@ export function normalizeCartLines(lines: ReadonlyArray<CartLine>): CartLine[] {
     const skuCaps = lines.filter((item) => sameSku(item, line) && item.maxQuantity !== undefined).map((item) => stockCap(item.maxQuantity));
     const orderCaps = lines.filter((item) => item.productId === line.productId && item.orderMaxQuantity !== undefined).map((item) => stockCap(item.orderMaxQuantity));
     const candidate = { ...line, ...(orderCaps.length ? { orderMaxQuantity: Math.min(...orderCaps) } : {}), ...(skuCaps.length ? { maxQuantity: Math.min(...skuCaps) } : {}), ...(sharedCaps.length ? { digitalType: 'codes' as const, sharedMaxQuantity: Math.min(...sharedCaps) } : {}) };
-    const quantity = boundedQuantity(candidate.quantity, cartAdditionLimit(accepted, candidate));
+    const quantity = boundedQuantity(candidate.quantity, cartAdditionLimit(accepted, candidate), candidate.quantityOffer?.quantity);
     if (quantity > 0) accepted.push({ ...candidate, quantity });
   }
   return accepted;
@@ -41,11 +42,12 @@ export function normalizeCartLines(lines: ReadonlyArray<CartLine>): CartLine[] {
 export function stockCap(max?: number): number {
   return max === undefined ? Number.MAX_SAFE_INTEGER : Number.isFinite(max) ? Math.max(0, Math.floor(max)) : 0;
 }
-export function boundedQuantity(quantity: number, max?: number): number {
-  return Number.isFinite(quantity) ? Math.min(stockCap(max), Math.max(0, Math.floor(quantity))) : 0;
+export function boundedQuantity(quantity: number, max?: number, step = 1): number {
+  if (!Number.isFinite(quantity) || !Number.isInteger(step) || step < 1) return 0;
+  return Math.floor(Math.min(stockCap(max), Math.max(0, Math.floor(quantity))) / step) * step;
 }
 export function addCartLine(lines: ReadonlyArray<CartLine>, line: CartAddition): CartLine[] {
-  const requested = boundedQuantity(line.quantity ?? 1);
+  const requested = boundedQuantity(line.quantity ?? line.quantityOffer?.quantity ?? 1, undefined, line.quantityOffer?.quantity);
   if (requested === 0) return [...lines];
   const existing = lines.find((item) => item.id === line.id);
   const quantity = (existing?.quantity ?? 0) + requested;
@@ -72,7 +74,7 @@ export function changeCartQuantity(lines: ReadonlyArray<CartLine>, id: string, q
   if (!Number.isFinite(quantity)) return [...lines];
   return lines.flatMap((line) => {
     if (line.id !== id) return [line];
-    const next = boundedQuantity(quantity, cartLineLimit(lines, line));
+    const next = boundedQuantity(quantity, cartLineLimit(lines, line), line.quantityOffer?.quantity);
     return next > 0 ? [{ ...line, quantity: next }] : [];
   });
 }

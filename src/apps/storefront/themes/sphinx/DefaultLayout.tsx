@@ -1,5 +1,6 @@
 import { useEffect, useState, type CSSProperties, type ReactElement } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useInRouterContext, useLocation } from 'react-router-dom';
 import type { LayoutRenderProps } from '../../theme-engine/rendering';
 import type { NavItem, FooterGroup } from '../../types/navigation';
 import { useThemeSettings, useThemeTokens } from '../../theme-engine/context';
@@ -23,7 +24,17 @@ interface SphinxLayoutData {
   year?: number;
 }
 
-function Chrome({ context, children }: LayoutRenderProps): ReactElement {
+function RoutedChrome(props: LayoutRenderProps): ReactElement {
+  const { pathname } = useLocation();
+  return <Chrome {...props} checkout={pathname === '/checkout'} />;
+}
+
+function ChromeBridge(props: LayoutRenderProps): ReactElement {
+  const routed = useInRouterContext();
+  return routed ? <RoutedChrome {...props} /> : <Chrome {...props} />;
+}
+
+function Chrome({ context, children, checkout = false }: LayoutRenderProps & { checkout?: boolean }): ReactElement {
   const settings = useThemeSettings();
   const tokens = useThemeTokens();
   const { store } = useStore();
@@ -51,6 +62,11 @@ function Chrome({ context, children }: LayoutRenderProps): ReactElement {
   }, [fonts]);
 
   const brand = <a href="/" className="sph-brand" aria-label={store.name}>{store.logoUrl ? <img src={store.logoUrl} alt="" /> : <span>{store.name}</span>}</a>;
+  if (checkout) return <div className="sph-root sph-checkout" style={{ '--font': tokens.typography.fontSans, '--heading': tokens.typography.fontSerif, '--font-arabic': tokens.typography.fontSerif } as CSSProperties}>
+    <header className="sph-checkout__header sph-container">{brand}</header>
+    <main id="sf-main">{children}</main>
+    <footer className="sph-checkout__footer sph-container"><nav aria-label={text('صفحات المتجر', 'Store pages')}>{footerGroups.flatMap((group) => group.links).map((link) => <a key={link.url} href={link.url}>{link.label}</a>)}</nav></footer>
+  </div>;
   return <div className="sph-root" style={{ '--font': tokens.typography.fontSans, '--heading': tokens.typography.fontSerif, '--font-arabic': tokens.typography.fontSerif } as CSSProperties}>
     {settings['show_announcement'] !== false && settings['announcement_text'] ? <div className="sph-announcement">{String(settings['announcement_text'])}</div> : null}
     <UiBlock slot="before_header" />
@@ -60,7 +76,7 @@ function Chrome({ context, children }: LayoutRenderProps): ReactElement {
         <form className="sph-search" action="/search" role="search" onSubmit={(event) => { event.preventDefault(); if (query.trim()) window.location.assign(withSessionParams(`/search?q=${encodeURIComponent(query.trim())}`, window.location.search)); }}><label className="lib-sr-only" htmlFor="sph-search">{t('header.search')}</label><input id="sph-search" name="q" type="search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder={text('ابحث عن المنتجات', 'Search for products')} /><button type="submit" aria-label={t('header.search')}><SearchIcon /></button></form>
         <button type="button" className="sph-bag" onClick={() => setCartOpen(true)} aria-label={`${t('cart.title')} (${totals.count})`}><BagIcon /><span>{totals.count}</span></button>
       </div>
-      {navigation.length ? <nav className="sph-header__nav sph-container" aria-label={text('القائمة الرئيسية', 'Main navigation')}><ul>{navigation.map((item) => <li key={`${item.url}-${item.label}`}><a href={item.url}>{item.label}</a>{item.children?.length ? <ul>{item.children.map((child) => <li key={child.url}><a href={child.url}>{child.label}</a></li>)}</ul> : null}</li>)}</ul></nav> : <div className="sph-header__nav" />}
+      <div className="sph-header__navigation">{navigation.length ? <nav className="sph-header__nav sph-container" aria-label={text('القائمة الرئيسية', 'Main navigation')}><ul>{navigation.map((item) => <li key={`${item.url}-${item.label}`}><a href={item.url}>{item.label}</a>{item.children?.length ? <ul>{item.children.map((child) => <li key={child.url}><a href={child.url}>{child.label}</a></li>)}</ul> : null}</li>)}</ul></nav> : <div className="sph-header__nav" />}</div>
     </header>
     <UiBlock slot="after_header" />
     <main id="sf-main">{children}</main>
@@ -78,6 +94,6 @@ function Chrome({ context, children }: LayoutRenderProps): ReactElement {
 }
 
 export function SphinxLayout(props: LayoutRenderProps): ReactElement {
-  return <ToastProvider><CartProvider><Chrome {...props} /></CartProvider></ToastProvider>;
+  return <ToastProvider><CartProvider><ChromeBridge {...props} /></CartProvider></ToastProvider>;
 }
 

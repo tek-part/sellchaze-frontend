@@ -22,6 +22,9 @@ export const productDetailsSchema = defineSection({
   settings: [
     fields.toggle('show_share', 'Show share button', true),
     fields.toggle('show_sku', 'Show SKU', false),
+    fields.toggle('show_quantity_offers', 'Show quantity offers', true),
+    fields.toggle('show_buy_now', 'Show buy now button', false),
+    fields.toggle('show_wishlist', 'Show wishlist', true),
   ],
 });
 

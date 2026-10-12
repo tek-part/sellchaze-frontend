@@ -8,7 +8,7 @@ import { ensureLeadSession, leadSessionKey, nextLeadSequence, type LeadStorage }
 interface LeadInput { contact: CheckoutContactPayload; items: ReadonlyArray<CheckoutItem>; enabled: boolean; source: 'storefront' | 'funnel'; kind: string; paymentMethod: string }
 interface LeadBody {
   source: LeadInput['source']; source_path?: string; customer_name?: string; customer_email?: string; customer_phone?: string;
-  shipping_address?: Record<string, unknown>; notes?: string; items?: ReadonlyArray<{ product_id: number; variant_id?: number; quantity: number }>; clear?: boolean;
+  shipping_address?: Record<string, unknown>; notes?: string; items?: ReadonlyArray<Pick<CheckoutItem, 'product_id' | 'variant_id' | 'quantity' | 'quantity_offer_id' | 'quantity_offer_version'>>; clear?: boolean;
   shipping_region_id?: string; shipping_option_id?: string; coupon_code?: string;
   payment_method?: string;
 }
@@ -33,7 +33,7 @@ export function useCheckoutLead(input: LeadInput) {
     ...(input.contact.shipping_option_id ? { shipping_option_id: input.contact.shipping_option_id } : {}),
     ...(input.contact.coupon_code ? { coupon_code: input.contact.coupon_code } : {}),
     ...(/^\/(?:checkout|(?:funnels|pages|products|p)\/[a-z0-9-]+)?$/i.test(path) ? { source_path: path } : {}),
-    items: input.items.map((item) => ({ product_id: item.product_id, quantity: item.quantity, ...(item.variant_id ? { variant_id: item.variant_id } : {}) })) };
+    items: input.items.map((item) => ({ product_id: item.product_id, quantity: item.quantity, ...(item.quantity_offer_id ? { quantity_offer_id: item.quantity_offer_id, quantity_offer_version: item.quantity_offer_version } : {}), ...(item.variant_id ? { variant_id: item.variant_id } : {}) })) };
   const serialized = JSON.stringify(body);
   const allowed = input.enabled && apiOk && !!store.id && input.items.length > 0;
   const current = useRef({ key, session: undefined as ReturnType<typeof ensureLeadSession> | undefined, saved: '', acknowledged: 0, sentContact: false });
