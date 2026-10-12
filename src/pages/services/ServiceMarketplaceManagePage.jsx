@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, Navigate, useOutletContext } from 'react-router-dom';
 import api from '../../api/client';
-import { confirmDialog } from '../../components/ui/ConfirmDialog';
+import { confirmDialog } from '../../components/ui/confirmDialog';
 import { CATEGORIES, CURRENCIES, currencyDigits, servicePrice, useServiceCopy } from './ServiceMarketplaceCommon';
 import { parseServicePrice } from './service-marketplace-money';
 
