@@ -121,12 +121,15 @@ export interface ApiCoupon {
   expires_at?: string | null;
 }
 
+export interface ApiMerchantInformation { email: string; phone: string; address: string; policies: ReadonlyArray<{ kind: 'shipping' | 'returns' | 'cod'; title: string; content_html: string; url: string }> }
+
 export interface ApiStoreSummary {
   email?: string | null;
   phone?: string | null;
   identity?: import('../store-identity').StoreIdentity;
   auto_select_variants?: boolean;
   tracking_enabled?: boolean;
+  merchant_information?: ApiMerchantInformation | null;
   shipping?: import('../types/shipping').ShippingOffer;
   id: number;
   name: string;

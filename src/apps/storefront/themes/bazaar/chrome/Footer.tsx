@@ -1,3 +1,4 @@
+import { MerchantContact } from '../../../shared-ui/MerchantContact';
 /**
  * Bazaar Footer — a marketplace footer: brand + blurb + social, a "Top categories" column, the
  * link columns from `navigation.footer`, a newsletter form (POST /storefront/newsletter), then the
@@ -110,6 +111,7 @@ export function Footer(props: FooterProps): ReactElement {
           ) : null}
         </div>
       </div>
+    <MerchantContact />
     </footer>
   );
 }

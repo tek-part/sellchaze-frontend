@@ -1,0 +1,33 @@
+import { useEffect, useRef, useState } from 'react';
+import { Navigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
+import api from '../../api/client';
+import useStoreContext from '../../hooks/useStoreContext';
+import { useDirty } from '../../hooks/useStoreSettings';
+import ProductRichText from '../../components/store/ProductRichText';
+import { downloadProductFeed, FeedResult, feedError } from './StoreProductFeedPage';
+import './merchant-catalog.css';
+
+export default function StoreGoogleMerchantPage() { const context = useStoreContext(); return <MerchantEditor key={context.apiBase} context={context} />; }
+function MerchantEditor({ context: { apiBase, uiBase, access, unifiedStoreNavigation } }) {
+    const { i18n } = useTranslation(); const ar = i18n.language.startsWith('ar'); const text = (a, e) => ar ? a : e;
+    const [settings, setSettings] = useState(null); const [draft, setDraft] = useState(null); const [error, setError] = useState(''); const [saved, setSaved] = useState(false);
+    const [busy, setBusy] = useState(false); const [exporting, setExporting] = useState(false); const [feed, setFeed] = useState(null); const [conflict, setConflict] = useState(false); const [reload, setReload] = useState(0); const working = useRef(false);
+    const dirty = useDirty(settings, draft);
+    useEffect(() => { let active = true; if (access.canStoreSettings) api.get(`${apiBase}/google-merchant`).then(({ data }) => { if (active) { setSettings(data.data); setDraft(data.data); setError(''); setConflict(false); } }).catch((failure) => { if (active) setError(feedError(failure)); }); return () => { active = false; }; }, [apiBase, access.canStoreSettings, reload]);
+    if (!access.canStoreSettings) return <Navigate to={`${uiBase}/overview`} replace />;
+    const change = (key, value) => { setSaved(false); setDraft((old) => ({ ...old, [key]: value })); };
+    const policy = (kind, key, value) => { setSaved(false); setDraft((old) => ({ ...old, policies: { ...old.policies, [kind]: { ...old.policies[kind], [key]: value } } })); };
+    const field = (key, label, type = 'text') => <label className={`ws-merchant-field ${draft[key] ? 'has-value' : ''}`}><span>{label}</span><input aria-label={label} type={type} value={draft[key] || ''} disabled={busy} maxLength={key === 'address' ? 1000 : key === 'phone' ? 60 : 255} onChange={(event) => change(key, event.target.value)} /></label>;
+    return <div className={`ws-google-merchant ${unifiedStoreNavigation ? 'is-unified' : ''}`} dir={ar ? 'rtl' : 'ltr'}><header className="ws-catalog-header"><div><h1>{text('توافق متجرك مع Google Merchant', 'Google Merchant store compatibility')}</h1><p>{text('يمكنك من هنا اضافة المعلومات اللازمة لتوافق متجرك مع Google Merchant', 'Add your business information and store policies here')}</p></div></header>
+        {error ? <div className="ws-catalog-error" role="alert">{error}{conflict || !settings ? <button type="button" onClick={() => { setDraft(null); setSettings(null); setReload((n) => n + 1); }}>{text('إعادة تحميل الإعدادات', 'Reload settings')}</button> : null}</div> : null}{saved ? <p className="ws-merchant-saved" role="status">{text('تم حفظ الإعدادات', 'Settings saved')}</p> : null}
+        {!draft ? <p role="status">{text('جارٍ تحميل الإعدادات…', 'Loading settings…')}</p> : <form onSubmit={async (event) => { event.preventDefault(); if (working.current) return; working.current = true; setBusy(true); setSaved(false); setError(''); setConflict(false); try { const { data } = await api.put(`${apiBase}/google-merchant`, draft); setSettings(data.data); setDraft(data.data); setSaved(true); } catch (failure) { setError(feedError(failure)); setConflict(failure.response?.status === 409); } finally { working.current = false; setBusy(false); } }}>
+            <div className="ws-merchant-body"><label className="ws-merchant-toggle"><input type="checkbox" role="switch" checked={draft.enabled} disabled={busy} onChange={(event) => change('enabled', event.target.checked)} /><span>{text('تفعيل التوافق مع Google Merchant', 'Enable Google Merchant compatibility')}</span></label>
+                <button className="ws-merchant-export" type="button" disabled={exporting || busy} onClick={async () => { if (exporting) return; setExporting(true); setError(''); try { setFeed(await downloadProductFeed(apiBase, 'google')); } catch (failure) { setError(feedError(failure)); } finally { setExporting(false); } }}><img src="/google-merchant.png" alt="Google Merchant" width="512" height="512" /><span>{exporting ? text('جارٍ التصدير…', 'Exporting…') : text('تصدير المنتجات الي Google Merchant', 'Export products to Google Merchant')}</span></button>
+                {feed ? <FeedResult result={feed} ar={ar} /> : null}
+                <section className="ws-merchant-section ws-merchant-contact"><h2>{text('المعلومات الاساسية', 'Basic information')}</h2>{field('email', text('البريد الالكتروني للمتجر', 'Store email'), 'email')}{field('phone', text('رقم الهاتف للمتجر', 'Store phone'), 'tel')}{field('address', text('عنوان الشركة', 'Business address'))}</section>
+                {['shipping', 'returns', 'cod'].map((kind) => <section className="ws-merchant-section" key={kind}><h2>{text({ shipping: 'سياسة الشحن', returns: 'سياسة الاسترجاع', cod: 'سياسة الدفع عند الاستلام' }[kind], { shipping: 'Shipping policy', returns: 'Return policy', cod: 'Cash on delivery policy' }[kind])}</h2>{kind === 'cod' ? <label className="ws-merchant-toggle"><input type="checkbox" role="switch" checked={draft.cod_disabled} disabled={busy} onChange={(event) => change('cod_disabled', event.target.checked)} /><span>{text('تعطيل سياسة الدفع عند الاستلام', 'Disable cash on delivery policy')}</span></label> : null}<label className={`ws-merchant-field ${draft.policies[kind].title ? 'has-value' : ''}`}><span>{text('العنوان', 'Title')}</span><input aria-label={`${text('العنوان', 'Title')} ${kind}`} value={draft.policies[kind].title} maxLength={200} disabled={busy} onChange={(event) => policy(kind, 'title', event.target.value)} /></label><ProductRichText value={draft.policies[kind].content} onChange={(value) => policy(kind, 'content', value)} label={`${text('المحتوى', 'Content')} ${kind}`} locale={ar ? 'ar' : 'en'} ar={ar} disabled={busy} pageContent /></section>)}
+            </div><div className="ws-merchant-save"><button className="ws-primary-button" type="submit" disabled={!dirty || busy}>{busy ? text('جارٍ الحفظ…', 'Saving…') : text('حفظ', 'Save')}</button></div>
+        </form>}
+    </div>;
+}

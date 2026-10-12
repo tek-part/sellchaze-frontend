@@ -1,3 +1,4 @@
+import { MerchantContact } from '../../../shared-ui/MerchantContact';
 /**
  * Techno Footer — navy: brand + blurb + support hotline + social, link columns from
  * `navigation.footer`, a newsletter form (POST /storefront/newsletter), payment marks + legal row.
@@ -111,6 +112,7 @@ export function Footer(props: FooterProps): ReactElement {
           ) : null}
         </div>
       </div>
+    <MerchantContact />
     </footer>
   );
 }

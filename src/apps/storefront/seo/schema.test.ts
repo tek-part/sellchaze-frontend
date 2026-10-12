@@ -69,3 +69,13 @@ describe('breadcrumb / collection schema', () => {
     expect(s.mainEntity.itemListElement).toHaveLength(24);
   });
 });
+
+describe('catalog landing-page structured data', () => {
+  it('uses the selected SKU price, availability and image without modifying the parent catalog record', () => {
+    const product: ProductDetailModel = { id: '13', handle: 'bag', url: '/products/bag', title: 'Bag', price: 250, currency: 'EGP', images: [{ src: 'https://images.example.com/parent.png', alt: 'Bag' }], inStock: true };
+    const result = productSchema(product, 'https://shop.example.com/products/bag?variant=12', { price: 200, inStock: false, sku: 'p13-v12', image: 'https://images.example.com/blue.png' });
+    expect(result).toMatchObject({ sku: 'p13-v12', image: ['https://images.example.com/blue.png'], offers: { price: '200.00', priceCurrency: 'EGP', availability: 'https://schema.org/OutOfStock', url: 'https://shop.example.com/products/bag?variant=12' } });
+    expect(product.price).toBe(250); expect(product.images[0]?.src).toContain('parent');
+    expect(productSchema(product, 'https://shop.example.com/products/bag')).toMatchObject({ offers: { price: '250.00', availability: 'https://schema.org/InStock' } });
+  });
+});

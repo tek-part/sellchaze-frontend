@@ -1,3 +1,4 @@
+import { MerchantContact } from '../../../shared-ui/MerchantContact';
 /**
  * Fresh Footer — brand + blurb, link columns from `navigation.footer`, a newsletter form
  * (POST /storefront/newsletter), social pills, payment marks and the legal row.
@@ -103,6 +104,7 @@ export function Footer(props: FooterProps): ReactElement {
           ) : null}
         </div>
       </div>
+    <MerchantContact />
     </footer>
   );
 }

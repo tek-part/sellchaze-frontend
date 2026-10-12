@@ -19,6 +19,7 @@ export interface StoreInfo {
   identity?: import('../store-identity').StoreIdentity;
   autoSelectVariants?: boolean;
   trackingEnabled?: boolean;
+  merchantInformation?: import('../api/types').ApiMerchantInformation;
   shipping?: import('../types/shipping').ShippingOffer;
   id: string;
   name: string;
@@ -87,6 +88,7 @@ export function StoreProvider(props: { children: ReactNode; initialData?: ApiSto
       id: String(s.id),
       ...(s.auto_select_variants !== undefined ? { autoSelectVariants: s.auto_select_variants } : {}),
       ...(s.tracking_enabled !== undefined ? { trackingEnabled: s.tracking_enabled } : {}),
+      ...(s.merchant_information ? { merchantInformation: s.merchant_information } : {}),
       name: s.name,
       ...(s.identity ? { identity: s.identity } : {}),
       slug: s.slug,
@@ -101,6 +103,7 @@ export function StoreProvider(props: { children: ReactNode; initialData?: ApiSto
       ...(s.banner_url ? { bannerUrl: s.banner_url } : {}),
       ...(s.email ? { email: s.email } : {}),
       ...(s.phone ? { phone: s.phone } : {}),
+      ...(s.merchant_information ? { email: s.merchant_information.email, phone: s.merchant_information.phone } : {}),
       ...(s.description ? { description: s.description } : {}),
     };
   } else if (previewOrDev()) {
@@ -119,6 +122,8 @@ export function StoreProvider(props: { children: ReactNode; initialData?: ApiSto
 
   return <StoreContext.Provider value={{ store, loading, apiOk, navigation, setCurrency: setSelectedCurrency }}>{props.children}</StoreContext.Provider>;
 }
+
+export function useOptionalStore(): StoreContextValue | null { return useContext(StoreContext); }
 
 export function useStore(): StoreContextValue {
   const context = useContext(StoreContext);

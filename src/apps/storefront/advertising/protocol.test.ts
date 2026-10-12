@@ -5,6 +5,16 @@ const example: TrackingEnvelope = { configuration: { version: 2, facebook: ['123
   event: { event: 'purchase', event_id: 'a'.repeat(64), currency: 'EGP', value: '500.00', gross_value: '525.00', shipping: '25.00', tax: '0.00', transaction_id: 'OWN-ORDER', items: [{ item_id: '12', item_name: 'Bag', quantity: 2, price: '250.00' }], page_location: 'https://own-store.example/checkout' } };
 
 describe('advertising provider contract', () => {
+  it('matches variant catalog IDs and uses group matching only for a parent product view', () => {
+    const parsed = trackingEnvelope({ ...example, event: { ...example.event, items: [{ ...example.event.items[0], item_id: 'p12-v5' }] } });
+    expect(parsed).toBeDefined(); expect(trackingCommands(parsed!)[0]?.data.content_ids).toEqual(['p12-v5']);
+    for (const item_id of ['p0-v5', 'p12-v0', 'p12-v5-private', '<script>']) expect(trackingEnvelope({ ...example, event: { ...example.event, items: [{ ...example.event.items[0], item_id }] } })).toBeUndefined();
+    const group = trackingEnvelope({ ...example, event: { ...example.event, event: 'view_item', content_type: 'product_group' } });
+    expect(trackingCommands(group!)[0]?.data.content_type).toBe('product_group');
+    expect(trackingCommands(group!)[3]?.data.item_category).toBe('12');
+    const purchase = trackingEnvelope({ ...example, event: { ...example.event, content_type: 'product_group' } });
+    expect(purchase?.event.content_type).toBeUndefined();
+  });
   it('maps all configured pixels with shared dedup IDs and separates GA merchandise value from gross order value', () => {
     const commands = trackingCommands(example);
     expect(commands).toHaveLength(5); expect(commands.map((row) => row.eventId)).toEqual(Array(5).fill('a'.repeat(64)));

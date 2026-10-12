@@ -39,6 +39,7 @@ const BuilderPage = lazy(() => import('./BuilderPage').then((m) => ({ default: m
 const CategoriesPage = lazy(() => import('./BrowsePages').then((m) => ({ default: m.CategoriesPage })));
 const CollectionsPage = lazy(() => import('./BrowsePages').then((m) => ({ default: m.CollectionsPage })));
 const BrandsPage = lazy(() => import('./BrowsePages').then((m) => ({ default: m.BrandsPage })));
+const MerchantPolicyPage = lazy(() => import('./MerchantPolicyPage').then((m) => ({ default: m.MerchantPolicyPage })));
 
 function PageFallback(): ReactElement {
   const { t } = useTranslation();
@@ -97,6 +98,7 @@ export function AppRoutes(): ReactElement {
         <Route path="/blog/:slug" element={<BlogDetailPage />} />
         {/* Published custom pages (sections from the layout API); falls back to the policy pages. */}
         <Route path="/pages/:slug" element={<BuilderPage key="page" />} />
+        <Route path="/policies/:kind" element={<MerchantPolicyPage />} />
         <Route path="/funnels/:slug" element={<BuilderPage key="funnel" funnel />} />
 
         <Route path="*" element={<NotFoundPage />} />

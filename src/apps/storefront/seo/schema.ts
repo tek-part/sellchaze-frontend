@@ -28,19 +28,20 @@ export function websiteSchema(name: string, url: string): Record<string, unknown
   };
 }
 
-export function productSchema(product: ProductDetailModel, url: string): Record<string, unknown> {
-  const inStock = product.inStock !== false;
+export function productSchema(product: ProductDetailModel, url: string, selection?: { price: number; inStock: boolean; sku?: string; image?: string }): Record<string, unknown> {
+  const inStock = selection?.inStock ?? product.inStock !== false;
+  const sku = selection?.sku ?? product.sku;
   return {
     '@context': 'https://schema.org',
     '@type': 'Product',
     name: product.title,
-    ...(product.images.length > 0 ? { image: product.images.map((i) => i.src) } : {}),
+    ...(selection?.image ? { image: [selection.image] } : product.images.length > 0 ? { image: product.images.map((i) => i.src) } : {}),
     ...(product.descriptionHtml ? { description: product.descriptionHtml.replace(/<[^>]+>/g, '').trim() } : {}),
-    ...(product.sku ? { sku: product.sku } : {}),
+    ...(sku ? { sku } : {}),
     ...(product.vendor ? { brand: { '@type': 'Brand', name: product.vendor } } : {}),
     offers: {
       '@type': 'Offer',
-      price: product.price.toFixed(2),
+      price: (selection?.price ?? product.price).toFixed(2),
       priceCurrency: product.currency,
       availability: inStock ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
       url,

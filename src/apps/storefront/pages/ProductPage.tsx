@@ -4,7 +4,7 @@
  */
 import { previewOrDev } from '../preview';
 import { useEffect, useMemo, type ReactElement } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useSearchParams } from 'react-router-dom';
 import { ThemeRenderer, useTemplate, type StorefrontContext, useThemeManifest } from '../theme-engine';
 import { Button, Container, ErrorState, Section, Spinner } from '../foundation/components';
 import { useStore } from '../state/store-context';
@@ -19,12 +19,15 @@ import { breadcrumbSchema, productSchema } from '../seo/schema';
 import { useRecentlyViewed } from '../state/recently-viewed';
 import { sampleNewest, sampleProductDetail } from '../dev/sampleData';
 import { useProductAdvertising } from '../advertising/hooks';
+import { catalogVariantSelection, resolveVariant, selectionAutomatic, variantAvailable } from '../state/variant-selection';
+import { variantImage } from '../utils/variant-image';
 
 export function ProductPage(): ReactElement | null {
   const manifest = useThemeManifest();
   const { locale } = useLocale();
   const { t } = useTranslation();
   const { slug = '' } = useParams();
+  const [searchParams] = useSearchParams(); const catalogVariantId = searchParams.get('variant');
   const { store } = useStore();
   const currency = store.currency;
   const template = useTemplate('product');
@@ -41,7 +44,7 @@ export function ProductPage(): ReactElement | null {
 
   // Record the view (client-side history) once the product resolves.
   const viewedId = detail?.id;
-  useProductAdvertising(productQ.data ? viewedId : undefined);
+  useProductAdvertising(productQ.data ? viewedId : undefined, detail?.variants?.find((row) => row.id === catalogVariantId)?.id);
   useEffect(() => {
     if (detail && viewedId) {
       const { images: _images, media: _media, variants: _variants, descriptionHtml: _d, ...card } = detail;
@@ -63,15 +66,22 @@ export function ProductPage(): ReactElement | null {
       data: {
         loading: dev ? false : productQ.loading,
         product: detail,
+        catalogVariantId,
         reviews,
         collections: { related },
       },
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [productQ.data, productQ.loading, reviewsQ.data, relatedQ.data, currency, slug, store.name]);
+  }, [productQ.data, productQ.loading, reviewsQ.data, relatedQ.data, currency, slug, store.name, catalogVariantId]);
 
   const site = typeof window !== 'undefined' ? window.location.origin : '';
   const productUrl = `${site}/products/${slug}`;
+  const metadataVariant = detail ? resolveVariant(detail.variants ?? [], catalogVariantSelection(detail.variants ?? [], catalogVariantId), selectionAutomatic(store.autoSelectVariants, detail.autoSelectVariants)) : undefined;
+  const metadataBasePrice = metadataVariant?.price ?? detail?.price ?? 0;
+  const metadataOffer = detail?.quantityOffers?.find((row) => row.quantity === 1 && row.unitPrice <= metadataBasePrice);
+  const metadataImage = detail ? variantImage(detail, metadataVariant) : undefined;
+  const metadataSelection = { price: metadataOffer?.unitPrice ?? metadataBasePrice, inStock: detail?.inStock !== false && (!metadataVariant || variantAvailable(metadataVariant)),
+    ...(metadataVariant && detail ? { sku: `p${detail.id}-v${metadataVariant.id}` } : {}), ...(metadataImage ? { image: metadataImage } : {}) };
 
   // Hard load failure (no product to show) → recoverable error state.
   if (!detail && productQ.error) {
@@ -109,7 +119,7 @@ export function ProductPage(): ReactElement | null {
           {...(detail.image ? { image: detail.image.src } : {})}
           {...(detail.descriptionHtml ? { description: detail.descriptionHtml.replace(/<[^>]+>/g, '').slice(0, 160) } : {})}
           jsonLd={[
-            productSchema(detail, productUrl),
+            productSchema(detail, productUrl + (catalogVariantId && metadataVariant ? `?variant=${metadataVariant.id}` : ''), metadataSelection),
             breadcrumbSchema(
               [
                 { label: t('nav.home'), url: '/' },
