@@ -1,0 +1,14 @@
+.sf-downsell{width:min(440px,calc(100vw - 32px));max-width:440px;max-height:calc(100dvh - 32px);overflow:auto;border:0;padding:0;border-radius:18px;background:transparent;color:inherit;margin:auto}
+.sf-downsell::backdrop{background:rgba(0,0,0,.5)}
+.sf-downsell__content{position:relative}
+.sf-downsell__content h2{margin:0;font-size:24px;line-height:1.4;padding-inline:16px;overflow-wrap:anywhere}
+.sf-downsell__close{position:absolute;top:6px;inset-inline-end:8px;width:40px;height:40px;border:0;background:transparent;color:inherit;font-size:26px;cursor:pointer}
+.sf-downsell__content{background:var(--offer-bg);color:var(--offer-ink);border:2px solid var(--offer-border);border-radius:18px;padding:24px;text-align:center;display:grid;gap:18px}
+.sf-downsell__content p{margin:0;line-height:1.65}
+.sf-downsell__discount{background:var(--offer-accent);color:var(--offer-ink);border-radius:999px;padding:6px 20px;justify-self:center;font-size:24px;font-weight:700}
+.sf-downsell__code{display:flex;align-items:center;justify-content:space-between;border:1px dashed var(--offer-border);border-radius:10px;padding:14px 18px;gap:16px;background:transparent;color:inherit;font:inherit;cursor:pointer}
+.sf-downsell__code strong{font-size:24px;letter-spacing:2px;overflow-wrap:anywhere;min-width:0}
+.sf-downsell__minimum{font-size:13px}
+.sf-downsell__action{background:var(--offer-button);color:var(--offer-button-ink);border:0;border-radius:10px;min-height:48px;padding:12px 16px;font:inherit;font-weight:600;cursor:pointer}
+.sf-downsell__content button:focus-visible{outline:3px solid var(--offer-accent);outline-offset:3px}
+@media(max-width:480px){.sf-downsell__content{padding:20px;gap:16px}}
