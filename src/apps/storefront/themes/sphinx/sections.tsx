@@ -7,6 +7,15 @@ import { LibCategoryCard, LibProductCard, LibSection, LibEmpty } from '../../sec
 import { useLibT } from '../../sections-lib/i18n';
 import { FeaturedProducts } from '../../sections-lib/components/FeaturedProducts';
 import type { ProductCardModel } from '../../types/catalog';
+import { ProductDetailsSection } from '../../foundation/sections/ProductDetailsSection';
+import { productDetailsSchema } from '../../sections-lib/components/ProductDetails';
+
+export const sphinxProductSchema = defineSection({ ...productDetailsSchema, settings: productDetailsSchema.settings.map((field) => field.type === 'toggle' && ['show_buy_now', 'show_wishlist', 'show_share'].includes(field.id) ? { ...field, default: field.id === 'show_buy_now' } : field) });
+
+export function SphinxProductDetails(props: SectionRenderProps): ReactElement | null {
+  const settings = useSectionSettings(sphinxProductSchema, props.settings);
+  return <ProductDetailsSection {...props} settings={{ ...settings, sphinx_layout: true }} />;
+}
 
 export function withSphinxCollections(props: SectionRenderProps): SectionRenderProps {
   const authoritative = props.context.data['merchandisingCollections'];

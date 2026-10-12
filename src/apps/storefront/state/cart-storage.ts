@@ -1,5 +1,6 @@
 import type { CartLine } from '../types/cart';
 import { normalizeCartLines } from './cart-quantity';
+import { validQuantityOffer } from '../types/quantity-offers';
 
 export const cartStorageKey = (storeId: string, currency: string): string =>
   `sf-cart-v2:${encodeURIComponent(storeId)}:${encodeURIComponent(currency)}`;
@@ -9,6 +10,7 @@ function validLine(value: unknown, currency: string): value is CartLine {
   const line = value as Partial<CartLine>;
   const safeUrl = (url: unknown): boolean => typeof url === 'string' && /^(https?:\/\/|\/(?!\/))/i.test(url);
   return typeof line.id === 'string' && line.id.length > 0 &&
+    (line.quantityOffer === undefined || validQuantityOffer(line.quantityOffer)) &&
     typeof line.productId === 'string' && line.productId.length > 0 &&
     (line.variantId === undefined || typeof line.variantId === 'string') &&
     typeof line.title === 'string' && typeof line.url === 'string' && /^\/products\/[a-z0-9-]+$/.test(line.url) &&

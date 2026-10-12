@@ -18,6 +18,7 @@ import type {
 } from '../types/catalog';
 import type { ApiBrand, ApiCategory, ApiCollection, ApiCoupon, ApiProduct, ApiReview, ApiVariant } from './types';
 import { sanitizeHtml } from '../../../shared/utils/sanitizeHtml';
+import { validQuantityOffer } from '../types/quantity-offers';
 
 function toNumber(value: string | number | null | undefined): number {
   if (typeof value === 'number') return value;
@@ -45,6 +46,7 @@ export function toProductCard(product: ApiProduct, currency: string, multiplier 
     hasPersonalization: product.has_personalization === true || !!product.personalization_fields?.length,
     handle: product.slug,
     title: product.name,
+    ...(product.short_description ? { description: product.short_description.replace(/<[^>]*>/g, '') } : {}),
     url: `/products/${product.slug}`,
     price,
     currency,
@@ -166,6 +168,9 @@ export function toProductDetail(product: ApiProduct, currency: string, multiplie
     media: productMedia(product),
     optionDisplay: product.option_display ?? [],
     personalizationFields: product.personalization_fields ?? [],
+    quantityOffers: (product.quantity_offers ?? []).map((offer) => ({ id: typeof offer.id === 'string' ? offer.id.toLowerCase() : '', quantity: offer.quantity,
+      unitPrice: toNumber(offer.unit_price) * multiplier, version: offer.version, freeShipping: offer.free_shipping,
+      title: offer.title, subtitle: offer.subtitle })).filter(validQuantityOffer),
     ...(product.sku ? { sku: product.sku } : {}),
     ...(descriptionHtml ? { descriptionHtml } : {}),
     ...(variants && variants.length > 0 ? { variants } : {}),

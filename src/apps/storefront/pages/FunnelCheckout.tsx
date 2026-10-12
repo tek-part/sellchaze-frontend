@@ -12,10 +12,12 @@ import './funnel-checkout.css';
 import { ProductPersonalizationFields } from '../foundation/components/ProductPersonalizationFields';
 import type { PersonalizationChoice } from '../types/personalization';
 import { personalizationReady, normalizedPersonalization } from '../utils/personalization';
-import { cartAdditionLimit } from '../state/cart-quantity';
+import { boundedQuantity, cartAdditionLimit } from '../state/cart-quantity';
 import { resolveCardVariant } from '../state/variant-selection';
-import { toVariant } from '../api/mappers';
-import { useVariantSelectionAutomatic } from '../state/store-context';
+import { toProductDetail, toVariant } from '../api/mappers';
+import { QuantityOfferPicker } from '../foundation/components/QuantityOfferPicker';
+import type { QuantityOffer } from '../types/quantity-offers';
+import { useStore, useVariantSelectionAutomatic } from '../state/store-context';
 import { CheckoutMinimum } from './CheckoutMinimum';
 import { minimumOrderAllows } from './minimum-order';
 import { useCheckoutLead } from './useCheckoutLead';
@@ -23,12 +25,14 @@ import { useCheckoutLead } from './useCheckoutLead';
 /** Product-specific checkout: leaves the visitor's ordinary shopping cart intact. */
 export function FunnelCheckout({ productSlug }: { productSlug: string | null }): ReactElement {
   const { locale } = useLocale();
+  const { store } = useStore();
   const ar = locale === 'ar';
   const label = (arabic: string, english: string): string => ar ? arabic : english;
   const productQ = useAsync(() => productSlug ? getProduct(productSlug) : Promise.resolve(null), [productSlug, locale]);
   const product = productQ.data?.data;
   const [selection, setSelection] = useState<{ productId: number; id: string }>();
-  const [quantity, setQuantity] = useState(1);
+  const [quantityChoice, setQuantityChoice] = useState<{ productId: number; value: number }>();
+  const [offerChoice, setOfferChoice] = useState<{ productId: number; id: string | null; version?: number }>();
   const [coupon, setCoupon] = useState('');
   const [appliedCoupon, setAppliedCoupon] = useState('');
   const [customChoice, setCustomChoice] = useState<{ productId: number; choice: PersonalizationChoice }>();
@@ -40,9 +44,22 @@ export function FunnelCheckout({ productSlug }: { productSlug: string | null }):
   const variantId = selectedVariant?.id ?? '';
   const selectedStock = variants.length ? variants.find((v) => String(v.id) === variantId)?.stock : product?.stock;
   const purchaseLimit = Math.min(999, cartAdditionLimit([], { productId: String(product?.id), digitalType: product?.digital_type ?? 'physical', maxQuantity: selectedStock ?? undefined, orderMaxQuantity: product?.order_quantity_limit || undefined, sharedMaxQuantity: product?.digital_pool_stock ?? undefined }));
-  const selectionReady = !!product && product.is_active !== false && !custom.busy && personalizationReady(product.personalization_fields ?? [], custom.values) && quantity >= 1 && quantity <= purchaseLimit && (!variants.length || selectedVariant?.available === true);
+  const offers = product ? toProductDetail(product, store.baseCurrency, 1).quantityOffers ?? [] : [];
+  const basePrice = selectedVariant?.price ?? Number(product?.price ?? 0);
+  const explicitOffer = offerChoice?.productId === product?.id ? offerChoice : undefined;
+  const activeOffer = explicitOffer ? offers.find((offer) => offer.id === explicitOffer.id) : offers.find((offer) => offer.quantity === 1 && offer.unitPrice <= basePrice);
+  const staleOffer = !!explicitOffer?.id && (!activeOffer || activeOffer.version !== explicitOffer.version);
+  const step = activeOffer?.quantity ?? 1;
+  const quantity = quantityChoice?.productId === product?.id ? quantityChoice?.value ?? step : step;
+  const chooseOffer = (offer: QuantityOffer | undefined): void => {
+    if (!product) return;
+    setOfferChoice({ productId: product.id, id: offer?.id ?? null, ...(offer ? { version: offer.version } : {}) });
+    setQuantityChoice({ productId: product.id, value: offer?.quantity ?? 1 });
+  };
+  const offerId = activeOffer?.id; const offerVersion = activeOffer?.version;
+  const selectionReady = !!product && product.is_active !== false && !custom.busy && personalizationReady(product.personalization_fields ?? [], custom.values) && !staleOffer && (activeOffer?.unitPrice ?? basePrice) <= basePrice && quantity >= step && quantity % step === 0 && quantity <= purchaseLimit && (!variants.length || selectedVariant?.available === true);
   const customKey = JSON.stringify(custom.values);
-  const items = useMemo<ReadonlyArray<CheckoutItem>>(() => selectionReady && product ? [{ product_id: product.id, quantity, personalization: normalizedPersonalization(JSON.parse(customKey) as Record<string, string>), ...(variantId ? { variant_id: Number(variantId) } : {}) }] : [], [product, selectionReady, quantity, variantId, customKey]);
+  const items = useMemo<ReadonlyArray<CheckoutItem>>(() => selectionReady && product ? [{ product_id: product.id, quantity, personalization: normalizedPersonalization(JSON.parse(customKey) as Record<string, string>), ...(variantId ? { variant_id: Number(variantId) } : {}), ...(offerId ? { quantity_offer_id: offerId, quantity_offer_version: offerVersion } : {}) }] : [], [product, selectionReady, quantity, variantId, customKey, offerId, offerVersion]);
   const payment = useCheckoutPaymentFlow({ items, preserveCart: true });
   const contact = useCheckoutFields(payment.paymentMethod, product ? [product.id] : []);
   const lead = useCheckoutLead({ contact: { ...contact.payload(), coupon_code: appliedCoupon }, items, source: 'funnel', paymentMethod: payment.paymentMethod, kind: `funnel:${productSlug ?? ''}`, enabled: contact.ready && !payment.busy && !payment.completed && !payment.unresolved && !payment.paymentRetry });
@@ -67,14 +84,16 @@ export function FunnelCheckout({ productSlug }: { productSlug: string | null }):
         <div className="sf-funnel-checkout__selection">
           {variants.length > 0 ? <label className="sf-funnel-checkout__option">
             <span>{label('اختر اللون أو المقاس', 'Choose an option')}</span>
-            <select value={variantId} onChange={(event) => setSelection({ productId: product.id, id: event.target.value })} required>
+            <select value={variantId} onChange={(event) => { setSelection({ productId: product.id, id: event.target.value }); setQuantityChoice(undefined); setOfferChoice(undefined); }} required>
               <option value="">{label('اختر…', 'Choose…')}</option>
               {variants.filter((variant) => variant.is_active !== false).map((variant) => <option key={variant.id} value={variant.id} disabled={variant.stock != null && variant.stock <= 0}>{variant.name || Object.values(variant.options ?? {}).join(' / ')}{variant.stock != null && variant.stock <= 0 ? label(' — نفدت الكمية', ' — Sold out') : ''}</option>)}
             </select>
           </label> : null}
-          <Input label={label('الكمية', 'Quantity')} type="number" min={1} max={purchaseLimit} step={1} value={quantity} required
-            onChange={(event) => setQuantity(Math.max(1, Math.min(purchaseLimit, Math.trunc(Number(event.target.value) || 1))))} />
+          <Input label={label('الكمية', 'Quantity')} type="number" min={step} max={Math.floor(purchaseLimit / step) * step} step={step} value={quantity} required
+            onChange={(event) => setQuantityChoice({ productId: product.id, value: Math.max(step, boundedQuantity(Number(event.target.value) || step, purchaseLimit, step)) })} />
         </div>
+        <QuantityOfferPicker offers={offers} selectedId={staleOffer ? '__stale__' : offerId ?? null} basePrice={basePrice} currency={store.baseCurrency} remaining={purchaseLimit} disabled={!!variants.length && !selectedVariant?.available} onChange={chooseOffer} />
+        {staleOffer ? <p role="status">{label('تغيّر العرض. اختر عرضًا مرة أخرى قبل الشراء.', 'This offer changed. Choose an offer again before buying.')}{!offers.length ? <Button type="button" variant="ghost" onClick={() => chooseOffer(undefined)}>{label('استخدام السعر العادي', 'Use regular price')}</Button> : null}</p> : null}
         {selectedStock != null && selectedStock < quantity ? <p role="status">{label('الكمية المتاحة', 'Available quantity')}: {Math.max(0, selectedStock)}</p> : null}
         {product.order_quantity_limit ? <p>{label('أقصى عدد قطع من هذا المنتج في الطلب', 'Maximum units of this product per order')}: {product.order_quantity_limit}</p> : null}
         <ProductPersonalizationFields key={product.id} productId={String(product.id)} fields={product.personalization_fields ?? []} choice={custom} onChange={(next) => setCustomChoice({ productId: product.id, choice: next })} />
@@ -96,6 +115,7 @@ export function FunnelCheckout({ productSlug }: { productSlug: string | null }):
       <div aria-live="polite" className="sf-funnel-checkout__totals">
         {quoteQ.loading && selectionReady ? <Spinner label={label('جارٍ حساب الإجمالي…', 'Calculating total…')} /> : null}
         {quoteQ.error ? <div role="alert"><p>{quoteQ.error.message}</p><Button type="button" variant="secondary" onClick={() => { contact.query.reload(); quoteQ.reload(); }}>{label('إعادة الحساب', 'Recalculate')}</Button></div> : null}
+        {quote?.offer_free_shipping ? <p>{label('شحن مجاني مع عرض الكمية المختار.', 'Free shipping with the selected quantity offer.')}</p> : null}
         {quote ? <dl>
           <div><dt>{label('المنتجات', 'Products')}</dt><dd>{formatMoney(Number(quote.totals.subtotal), quote.currency, locale)}</dd></div>
           {Number(quote.totals.discount_total) > 0 ? <div><dt>{label('الخصم', 'Discount')}</dt><dd>−{formatMoney(Number(quote.totals.discount_total), quote.currency, locale)}</dd></div> : null}

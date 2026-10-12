@@ -1,0 +1,19 @@
+.sf-quantity-offers { min-width:0; margin:20px 0; padding:20px; border:1px solid var(--border); border-radius:16px; }
+.sf-quantity-offers legend { display:flex; align-items:center; gap:8px; width:100%; float:inline-start; margin-bottom:24px; padding:18px 24px; border-radius:14px; background:var(--primary-soft,#e4f0e9); color:var(--text); font-size:24px; font-weight:700; }
+.sf-quantity-offers legend svg { width:24px; height:24px; color:var(--primary); }
+.sf-quantity-offers__list { clear:both; display:grid; gap:20px; }
+.sf-quantity-offer { position:relative; display:flex; align-items:center; gap:16px; padding:24px 22px; border:2px dashed var(--border); border-radius:16px; cursor:pointer; min-width:0; }
+.sf-quantity-offer.is-selected { border-color:var(--primary); }
+.sf-quantity-offer:has(input:focus-visible) { outline:2px solid var(--primary); outline-offset:4px; }
+.sf-quantity-offer input { position:absolute; width:1px; height:1px; opacity:0; }
+.sf-quantity-offer__mark { flex-shrink:0; display:grid; place-items:center; width:28px; height:28px; border:2px solid var(--border); border-radius:50%; font-size:16px; }
+.sf-quantity-offer.is-selected .sf-quantity-offer__mark { color:var(--on-primary); border-color:var(--primary); background:var(--primary); }
+.sf-quantity-offer__body { display:flex; align-items:flex-start; flex-direction:column; gap:8px; min-width:0; flex:1; }
+.sf-quantity-offer__body strong { font-size:20px; font-weight:600; line-height:1.4; }
+.sf-quantity-offer small { color:var(--muted); font-size:13px; }
+.sf-quantity-offer__saving { display:inline-block; padding:6px 15px; border-radius:30px; background:#ffe641; color:#151515; font-size:12px; font-weight:700; }
+.sf-quantity-offer__prices { display:flex; gap:10px; flex-shrink:0; font-size:14px; }
+.sf-quantity-offer__prices > span { display:flex; flex-direction:column; }
+.sf-quantity-offer__prices del { color:var(--muted); }
+.sf-quantity-offer.is-unavailable { opacity:.55; cursor:default; }
+@media(max-width:767px) { .sf-quantity-offers { padding:16px; }.sf-quantity-offer { flex-wrap:wrap; padding:18px 16px; gap:12px; }.sf-quantity-offer__body strong { font-size:18px; }.sf-quantity-offer__prices { margin-inline-start:40px; }.sf-quantity-offers legend { padding:16px; font-size:22px; } }

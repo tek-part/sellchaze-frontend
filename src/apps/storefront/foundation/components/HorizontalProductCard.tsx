@@ -21,6 +21,7 @@ export interface HorizontalProductCardProps {
   quantity?: number;
   onQuantityChange?: (next: number) => void;
   maxQuantity?: number;
+  quantityStep?: number;
   onRemove?: () => void;
   removeLabel?: string;
   /** Extra action (e.g. wishlist "Move to cart"). */
@@ -37,6 +38,7 @@ export function HorizontalProductCard(props: HorizontalProductCardProps): ReactE
     quantity,
     onQuantityChange,
     maxQuantity,
+    quantityStep = 1,
     onRemove,
     removeLabel = t('common.remove'),
     action,
@@ -68,6 +70,8 @@ export function HorizontalProductCard(props: HorizontalProductCardProps): ReactE
               value={quantity}
               onChange={onQuantityChange}
               max={maxQuantity}
+              min={quantityStep}
+              step={quantityStep}
               compact
               label={t('pdp.quantityFor', { title: product.title })}
             />

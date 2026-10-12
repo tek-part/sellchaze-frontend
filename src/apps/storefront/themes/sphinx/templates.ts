@@ -13,6 +13,6 @@ export const sphinxHome: ReadonlyArray<SectionInstance> = [
   { type: 'features', id: 'features', settings: { title: tr('مزايا المتجر', 'Store features'), style: 'plain', items: [] } },
   { type: 'faq', id: 'faq', settings: { title: tr('الأسئلة الشائعة', 'Frequently asked questions'), items: [] } },
 ];
-export const sphinxTemplates = baseTemplates({ home: sphinxHome, product: [{ type: 'product-details', id: 'pdp', settings: { show_share: false, show_sku: false } }, { type: 'related-products', id: 'related', settings: { show_wishlist: false } }], category: [{ type: 'category-header', id: 'head', settings: { banner_mode: 'none', show_breadcrumbs: false } }, { type: 'product-grid', id: 'grid', settings: { columns: '4', limit: 24, show_wishlist: false, show_ratings: false } }] });
+export const sphinxTemplates = baseTemplates({ home: sphinxHome, product: [{ type: 'product-details', id: 'pdp', settings: { show_share: false, show_sku: false, show_buy_now: true, show_wishlist: false, show_quantity_offers: true } }, { type: 'related-products', id: 'related', settings: { show_wishlist: false } }], category: [{ type: 'category-header', id: 'head', settings: { banner_mode: 'none', show_breadcrumbs: false } }, { type: 'product-grid', id: 'grid', settings: { columns: '4', limit: 24, show_wishlist: false, show_ratings: false } }] });
 
 

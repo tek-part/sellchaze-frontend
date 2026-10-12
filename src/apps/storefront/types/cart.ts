@@ -3,6 +3,7 @@
  * supplies price/availability observations. A line is a product+variant+personalization.
  */
 export interface CartLine {
+  quantityOffer?: import('./quantity-offers').QuantityOffer;
   /** Stable line id including normalized personalization, when present. */
   id: string;
   productId: string;

@@ -33,7 +33,7 @@ export function CheckoutPage(): ReactElement {
   const [appliedCoupon, setAppliedCoupon] = useState('');
   const checkout = useCheckoutPaymentFlow();
   const tpl = useTemplate('checkout');
-  const items = useMemo(() => cart.lines.map((line) => ({ product_id: Number(line.productId), quantity: line.quantity, ...(line.personalization ? { personalization: line.personalization } : {}), ...(line.variantId ? { variant_id: Number(line.variantId) } : {}) })), [cart.lines]);
+  const items = useMemo(() => cart.lines.map((line) => ({ product_id: Number(line.productId), quantity: line.quantity, ...(line.quantityOffer ? { quantity_offer_id: line.quantityOffer.id, quantity_offer_version: line.quantityOffer.version } : {}), ...(line.personalization ? { personalization: line.personalization } : {}), ...(line.variantId ? { variant_id: Number(line.variantId) } : {}) })), [cart.lines]);
   const contact = useCheckoutFields(checkout.paymentMethod, items.map((item) => item.product_id));
   const lead = useCheckoutLead({ contact: { ...contact.payload(), coupon_code: appliedCoupon }, items, source: 'storefront', kind: 'cart', paymentMethod: checkout.paymentMethod, enabled: contact.ready && !checkout.busy && !checkout.completed && !checkout.unresolved && !checkout.paymentRetry });
   const quoteKey = JSON.stringify([items, appliedCoupon, contact.shippingSelection, contact.shippingReady]);
@@ -73,7 +73,8 @@ export function CheckoutPage(): ReactElement {
         </form>
         <UiBlock slot="after_checkout" /></div>
         <aside className="sf-cart-summary">
-          {quote ? quote.items.map((line) => <div key={`${line.product_id}:${line.variant_id}:${line.personalization_key ?? ''}`}><div className="sf-cart-summary__row"><span>{line.name} × {line.quantity}</span><span>{formatMoney(Number(line.line_total), quote.currency, locale)}</span></div><PersonalizationSummary entries={line.personalization} /></div>) : cart.lines.map((line) => <div key={line.id}><div className="sf-cart-summary__row"><span>{line.title} × {line.quantity}</span></div><PersonalizationSummary entries={line.personalizationEntries} /></div>)}
+          {quote ? quote.items.map((line) => <div key={`${line.product_id}:${line.variant_id}:${line.personalization_key ?? ''}:${line.quantity_offer?.id ?? ''}`}><div className="sf-cart-summary__row"><span>{line.name} × {line.quantity}</span><span>{formatMoney(Number(line.line_total), quote.currency, locale)}</span></div><PersonalizationSummary entries={line.personalization} /></div>) : cart.lines.map((line) => <div key={line.id}><div className="sf-cart-summary__row"><span>{line.title} × {line.quantity}</span></div><PersonalizationSummary entries={line.personalizationEntries} /></div>)}
+          {quote?.offer_free_shipping ? <p>{ar ? 'العرض يشمل شحن الطلب مجانًا.' : 'Your selected offer includes free shipping for this order.'}</p> : null}
           <fieldset disabled={checkout.busy || checkout.unresolved} style={{ border: 0, padding: 0, margin: 0 }}>
             <div className="sf-pdp__row"><Input label={t('checkout.couponCode')} value={coupon} maxLength={100} onChange={(event) => setCoupon(event.target.value)} />
               <Button type="button" variant="secondary" disabled={quoteQ.loading} onClick={() => { setAppliedCoupon(coupon.trim()); quoteQ.reload(); }}>{t('checkout.apply')}</Button>
