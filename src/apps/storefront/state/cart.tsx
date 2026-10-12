@@ -4,6 +4,8 @@
  * between same-origin tabs of the same store. Checkout independently validates live inventory.
  */
 import {
+  lazy,
+  Suspense,
   createContext,
   useCallback,
   useContext,
@@ -42,6 +44,7 @@ export interface CartApi {
 }
 
 const CartContext = createContext<CartApi | null>(null);
+const DownsellOffer = lazy(() => import('../downsell/DownsellOffer'));
 
 function loadInitial(store: StoreInfo): CartLine[] {
   try { return loadCart(typeof window === 'undefined' ? undefined : window.localStorage, store.id, store.currency); }
@@ -184,7 +187,7 @@ function ScopedCartProvider({ children, store, apiOk }: { children: ReactNode; s
     [lines, totals, add, remove, updateQuantity, clear],
   );
 
-  return <CartContext.Provider value={api}>{children}</CartContext.Provider>;
+  return <CartContext.Provider value={api}>{children}{store.downsellEnabled ? <Suspense fallback={null}><DownsellOffer store={store} apiOk={apiOk} locale={locale} productIds={ids} hasCart={lines.length > 0} /></Suspense> : null}</CartContext.Provider>;
 }
 
 export function useCart(): CartApi {

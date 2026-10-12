@@ -2,7 +2,7 @@
 // The platform operator console lives outside this merchant route boundary.
 const roots = [
     '/dashboard', '/community', '/reels', '/feed', '/chat', '/notifications', '/settings/profile', '/subscription', '/top-up', '/transactions', '/referral', '/services',
-    '/store/products', '/store/categories', '/store/reviews', '/store/funnels', '/store/coupons', '/store/apps', '/store/sheets',
+    '/store/products', '/store/categories', '/store/reviews', '/store/funnels', '/store/coupons', '/store/apps', '/store/sheets', '/store/downsell',
     '/store/orders', '/store/missed-orders', '/store/newsletter',
     '/store/pixels-settings', '/store/pixel-conversion', '/store/ga', '/store/inventory',
     '/store/product-feed', '/store/google-merchant', '/store/utm-builder', '/store/create-referral-link', '/store/retargeting', '/store/marketing-services',

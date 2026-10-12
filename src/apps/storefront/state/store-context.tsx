@@ -19,6 +19,7 @@ export interface StoreInfo {
   identity?: import('../store-identity').StoreIdentity;
   autoSelectVariants?: boolean;
   trackingEnabled?: boolean;
+  downsellEnabled?: boolean;
   merchantInformation?: import('../api/types').ApiMerchantInformation;
   shipping?: import('../types/shipping').ShippingOffer;
   id: string;
@@ -88,6 +89,7 @@ export function StoreProvider(props: { children: ReactNode; initialData?: ApiSto
       id: String(s.id),
       ...(s.auto_select_variants !== undefined ? { autoSelectVariants: s.auto_select_variants } : {}),
       ...(s.tracking_enabled !== undefined ? { trackingEnabled: s.tracking_enabled } : {}),
+      ...(s.downsell_enabled !== undefined ? { downsellEnabled: s.downsell_enabled } : {}),
       ...(s.merchant_information ? { merchantInformation: s.merchant_information } : {}),
       name: s.name,
       ...(s.identity ? { identity: s.identity } : {}),

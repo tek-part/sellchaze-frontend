@@ -24,6 +24,7 @@ import { currentThankYou } from './thank-you';
 import { useCheckoutLead } from './useCheckoutLead';
 import { checkoutCartItems } from './checkout-cart-items';
 import { useCheckoutMetrics } from '../analytics/checkout-hooks';
+import { chosenOfferCoupon, clearOfferCoupon } from '../downsell/offer-session';
 
 export function CheckoutPage(): ReactElement {
   const { t } = useTranslation();
@@ -31,8 +32,8 @@ export function CheckoutPage(): ReactElement {
   const ar = locale === 'ar';
   const cart = useCart();
   const { store } = useStore();
-  const [coupon, setCoupon] = useState('');
-  const [appliedCoupon, setAppliedCoupon] = useState('');
+  const [coupon, setCoupon] = useState(() => chosenOfferCoupon(store));
+  const [appliedCoupon, setAppliedCoupon] = useState(() => chosenOfferCoupon(store));
   const checkout = useCheckoutPaymentFlow();
   const tpl = useTemplate('checkout');
   const items = useMemo(() => checkoutCartItems(cart.lines), [cart.lines]);
@@ -82,7 +83,7 @@ export function CheckoutPage(): ReactElement {
             <div className="sf-pdp__row"><Input label={t('checkout.couponCode')} value={coupon} maxLength={100} onChange={(event) => setCoupon(event.target.value)} />
               <Button type="button" variant="secondary" disabled={quoteQ.loading} onClick={() => { setAppliedCoupon(coupon.trim()); quoteQ.reload(); }}>{t('checkout.apply')}</Button>
             </div>
-            {appliedCoupon ? <Button type="button" variant="ghost" onClick={() => { setAppliedCoupon(''); setCoupon(''); }}>{ar ? 'إزالة الخصم' : 'Remove coupon'}</Button> : null}
+            {appliedCoupon ? <Button type="button" variant="ghost" onClick={() => { clearOfferCoupon(store); setAppliedCoupon(''); setCoupon(''); }}>{ar ? 'إزالة الخصم' : 'Remove coupon'}</Button> : null}
           </fieldset>
           <div aria-live="polite">
             {quoteQ.loading ? <Spinner label={ar ? 'جارٍ حساب الإجمالي…' : 'Calculating total…'} /> : null}

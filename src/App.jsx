@@ -132,6 +132,7 @@ const StoreTrackingPage = lazy(() => import('./pages/store/StoreTrackingPage'));
 const StoreAppsPage = lazy(() => import('./pages/store/StoreAppsPage'));
 const StoreAppDetailPage = lazy(() => import('./pages/store/StoreAppDetailPage'));
 const StoreSheetsPage = lazy(() => import('./pages/store/StoreSheetsPage'));
+const StoreDownsellPage = lazy(() => import('./pages/store/StoreDownsellPage'));
 const StoreProductFeedPage = lazy(() => import('./pages/store/StoreProductFeedPage'));
 const StoreGoogleMerchantPage = lazy(() => import('./pages/store/StoreGoogleMerchantPage'));
 const StoreCampaignBuilderPage = lazy(() => import('./pages/store/StoreCampaignBuilderPage'));
@@ -256,6 +257,7 @@ const STORE_ROUTES = [
     { path: 'apps', element: <StoreAppsPage /> },
     { path: 'apps/:app', element: <StoreAppDetailPage /> },
     { path: 'sheets', element: <StoreSheetsPage /> },
+    { path: 'downsell', element: <StoreDownsellPage /> },
     { path: 'product-feed', element: <StoreProductFeedPage /> },
     { path: 'google-merchant', element: <StoreGoogleMerchantPage /> },
     { path: 'utm-builder', element: <StoreCampaignBuilderPage /> },
