@@ -1,0 +1,11 @@
+.ws-retargeting { width:100%;min-width:0; }
+.ws-retargeting .ws-catalog-header { margin-bottom:40px; }
+.ws-retargeting-body { padding:16px; }
+.ws-retargeting-cards { display:flex;flex-wrap:wrap;gap:24px;padding:8px;margin-top:8px; }
+.ws-retargeting-card { display:flex;flex-direction:column;width:321px;flex:0 0 321px;background:var(--ws-panel); }
+.ws-retargeting-card iframe { display:block;width:321px;height:180.5625px;border:0; }
+.ws-retargeting-copy { padding-top:8px;max-width:300px; }
+.sc-workspace .ws-page .ws-retargeting-copy h2 { margin:0;font-size:16px;line-height:18.672px;font-weight:400;letter-spacing:0; }
+.sc-workspace .ws-page .ws-retargeting-copy p { margin:8px 0 0;font-size:14px;line-height:24.5px;font-weight:400;color:var(--ws-text); }
+@media(max-width:767px) { .ws-retargeting .ws-catalog-header { margin-bottom:56px; } }
+@media(max-width:360px) { .ws-retargeting-body { padding-inline:0; }.ws-retargeting-cards { padding-inline:0; }.ws-retargeting-card { flex-basis:100%;width:100%;min-width:0; }.ws-retargeting-card iframe { width:100%;height:auto;aspect-ratio:16/9; }.ws-retargeting-copy { max-width:100%; } }

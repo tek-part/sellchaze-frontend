@@ -458,7 +458,7 @@ function SidebarNavInner({ isAdmin = false, isSupplier = false, roles = [], perm
                     <DashboardIcon className="h-5 w-5 shrink-0 opacity-95" aria-hidden />
                     {ws('statisticsDashboard')}
                 </NavLink> : <NavLink to="/community" className={navLinkClass}><HiOutlineUsers aria-hidden />{t('feed_title', 'Community')}</NavLink>}
-                {workspaceStoreGroups.filter((group) => group.key !== 'settings').map((group) => {
+                {workspaceStoreGroups.filter((group) => group.section !== 'other').map((group) => {
                     if (group.single) {
                         const active = group.items ? group.items.some((item) => workspaceStoreItemActive(item, location.pathname)) : workspaceStoreItemActive(group, location.pathname);
                         return <Link key={group.key} to={group.to} aria-current={active ? 'page' : undefined} className={navLinkClass({ isActive: active })}><group.Icon className="h-5 w-5 shrink-0" aria-hidden />{group.label}</Link>;
@@ -472,8 +472,8 @@ function SidebarNavInner({ isAdmin = false, isSupplier = false, roles = [], perm
 
             {hasStoreAccess ? <div className={sec('mt-5 flex flex-col gap-1.5')}>
                 <SectionLabel>{t('workspace_nav_other', 'Other')}</SectionLabel>
-                {workspaceStoreGroups.filter((group) => group.key === 'settings').map((group) => {
-                    const active = group.items.some((item) => workspaceStoreItemActive(item, location.pathname));
+                {workspaceStoreGroups.filter((group) => group.section === 'other').map((group) => {
+                    const active = group.items ? group.items.some((item) => workspaceStoreItemActive(item, location.pathname)) : workspaceStoreItemActive(group, location.pathname);
                     return <Link key={group.key} to={group.to} aria-current={active ? 'page' : undefined} className={navLinkClass({ isActive: active })}><group.Icon className="h-5 w-5" aria-hidden />{group.label}</Link>;
                 })}
             </div> : null}

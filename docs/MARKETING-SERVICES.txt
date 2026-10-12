@@ -1,0 +1,26 @@
+Marketing services and merchant navigation
+
+The observed reference has Marketing Services under Other, immediately
+before Settings. Its two-column workflow sends both project owners and
+marketers to https://www.top-mb.com/jobs. The official jobs page was read
+on2026-10-12 and returns the public jobs list/login/registration navigation.
+Reference evidence: audit/easyorders-marketing-services-reference-20261012.
+
+Sellchaze now provides /store/marketing-services and the admin scoped
+/stores/:id/marketing-services under existing store.settings.manage access.
+The merchant sidebar uses an explicit Other section, preserves the working
+Settings destination and retained Community, and matches the observed20px
+neutral service SVG paths and1.5px strokes. Two responsive columns retain
+the source24/36 headings,16/24 body copy and40.5px green actions.
+
+Both actions are real external job-board links with noopener/noreferrer.
+The page clearly identifies the destination as external. Copy and branding
+do not claim the competitor's partnership, verified order counts, free
+pricing, or a Sellchaze Top MB integration. No credentials, account IDs,
+orders, contact data or application referrer URL are added to the links.
+No message is sent or job/account created during browser review.
+
+The source Top MB page exposes an account-ID form, but its actual remote
+verification protocol is not yet established. Its service integration,
+WhatsApp activation, wallet/application/service catalog, full theme and
+template libraries and all other original requirements remain unfinished.

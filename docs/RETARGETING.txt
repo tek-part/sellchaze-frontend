@@ -1,0 +1,37 @@
+Retargeting educational page
+
+Available at /store/retargeting and /stores/:id/retargeting for existing
+store.settings.manage access. The marketing submenu now places Retargeting
+after Coupons and before campaign tracking, matching the observed reference
+order among implemented entries. Operator routes remain separate.
+
+Two educational cards reproduce the observed titles, content and layout:
+push notifications (RelBqfCHBzg) and WhatsApp Marketing (BMpjgRxmvZE).
+Desktop native frame321x180.5625, gap24, text width300 and source font/spacing
+were measured at1920x975 and matched in the live local browser.
+All six text frames and both native video frames also match the source at
+390x844, including its scrollbar gutter and additional16px mobile gap.
+The mobile drawer now uses75% of viewport width, capped at384px, instead
+of the current document frame width that changes when scrolling is locked.
+Reference640px drawer inspection confirms its384px cap; gutter-dependent
+390px pages must retain292.5px width rather than incorrectly shrinking285.
+The reference currently reports both videos private/unavailable. We do not
+claim playback, a connected messaging provider, browser notification
+subscription, commission/payment functionality, or full merchant parity.
+
+Privacy-enhanced YouTube embeds are lazy-loaded with unique descriptive
+titles, no autoplay or player SDK, and strict-origin-when-cross-origin
+referrer policy. Only the application origin is identified to the player;
+store IDs, page query, credentials and customer/order information are not
+included. YouTube requires Referer/client identification to avoid error153:
+https://developers.google.com/youtube/iframe_api_reference#onError
+Provider playback availability remains controlled by the video owner.
+
+The page performs no application API writes, creates no notifications or
+test business rows, and sends no marketing messages. Existing localized
+merchant navigation, permission filtering and RTL/LTR are retained.
+
+Source evidence and responsive browser proof are in the workspace audit
+directory. Current whole-project/theme/template goal remains incomplete;
+WhatsApp activation, Top MB verification, services, applications and wallet
+need their actual full workflows rather than arbitrary navigation stubs.
