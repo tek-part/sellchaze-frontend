@@ -86,7 +86,7 @@ body[data-workspace-theme] #root .max-h-dvh { max-height:100dvh; }
 .ws-missed-status { display:inline-flex; font-size:12px; padding:5px 9px; border-radius:6px; white-space:nowrap; }
 .ws-missed-status--under_review { color:#9a6700; background:#fff4ce; }
 .ws-missed-status--completed { color:var(--ws-green-ink); background:var(--ws-green-soft); }
-@media(max-width:767px) { .ws-missed-tabs { width:100%; }.ws-missed-tabs button { flex:1; padding-inline:8px; font-size:12px; }.ws-missed-filters label { min-width:100%; }.ws-missed-filters { padding:16px; } }
+@media(max-width:767px) { .ws-missed-empty { padding-block:256px; }.ws-missed-tabs { width:100%; }.ws-missed-tabs button { flex:1; padding-inline:8px; font-size:12px; }.ws-missed-filters label { min-width:100%; }.ws-missed-filters { padding:16px; } }
 .ws-catalog-heading { display:flex; justify-content:space-between; align-items:start; gap:16px; }
 .ws-catalog-heading p { margin-top:6px; color:var(--ws-muted); font-size:13px; line-height:1.7; }
 .ws-catalog-button { display:inline-flex; align-items:center; justify-content:center; gap:8px; min-height:40px; padding:8px 16px; border:1px solid var(--ws-border); border-radius:6px; color:var(--ws-text); background:var(--ws-panel); font-size:14px; cursor:pointer; }
