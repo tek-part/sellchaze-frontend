@@ -14,7 +14,7 @@ const STATUSES = ['pending', 'confirmed', 'processing', 'shipped', 'delivered', 
 
 export default function StoreOrdersPage() {
     const { id, apiBase, uiBase } = useStoreScope();
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
     const navigate = useNavigate();
 
     const [rows, setRows] = useState([]);
@@ -59,6 +59,7 @@ export default function StoreOrdersPage() {
                 {id ? <Link to="/stores" className="text-sm text-brand hover:underline">← {t('stores_title', 'Stores')}</Link> : null}
             </div>
             {err && <p className="rounded-lg border border-red-100 bg-red-50 px-3 py-2 text-sm text-red-700">{err}</p>}
+            {meta?.locked_orders > 0 ? <p role="status" className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">{i18n.language.startsWith('ar') ? 'توجد طلبات جديدة محجوبة بسبب مديونية المحفظة. تظل الطلبات القديمة متاحة ويستمر المتجر في استقبال الطلبات.' : 'New orders are hidden because of wallet debt. Existing orders remain available and customers can still place orders.'} <Link to="/top-up" className="font-medium underline">{i18n.language.startsWith('ar') ? 'عرض المحفظة' : 'View wallet'}</Link></p> : null}
 
             <div className="overflow-hidden rounded-2xl border border-slate-200/80 shadow-card">
                 <ListToolbar
