@@ -29,7 +29,10 @@ function AppsDirectory({ context: { apiBase, uiBase, access } }) {
         return () => { current = false;controller.abort(); };
     }, [apiBase, access.canStoreSettings, retry]);
     if (!access.canStoreSettings) return <Navigate to={`${uiBase}/overview`} replace />;
-    const rows = registry?.data.filter((row) => mode === 'installed' ? row.included : row.categories.includes(category)) || [];
+    const categoryOrder = registry?.categories.find((row) => row.key === category)?.app_keys;
+    const rows = mode === 'discover' && categoryOrder
+        ? categoryOrder.map((key) => registry.data.find((row) => row.key === key)).filter(Boolean)
+        : registry?.data.filter((row) => mode === 'installed' ? row.included : row.categories.includes(category)) || [];
     return <div className="ws-merchant-apps" dir={ar ? 'rtl' : 'ltr'}><header className="ws-apps-heading"><h1>{text('التطبيقات', 'Apps')}</h1><p>{text('ستجد هنا التطبيقات التي قد تحتاجها لتحسين متجرك او زيادة المبيعات او تحقيق وظيفة معينة يحتاجها متجرك', 'Find apps to improve your store, increase sales or add a function your store needs.')}</p></header>
         <div className="ws-apps-main-tabs" role="tablist" aria-label={text('التطبيقات', 'Apps')}><button role="tab" aria-selected={mode === 'installed'} onClick={() => setSearchParams({ tab: 'installed' })}><AppsInstalledReferenceIcon aria-hidden /><span>{text('تطبيقات مثبتة', 'Installed apps')}</span></button><button role="tab" aria-selected={mode === 'discover'} onClick={() => setSearchParams({ tab: 'discover', category })}><AppsDiscoverReferenceIcon aria-hidden /><span>{text('اكتشف تطبيقات اكثر', 'Discover more apps')}</span></button></div>
         {error ? <div role="alert" className="ws-apps-error">{error}<button onClick={() => setRetry((value) => value + 1)}>{text('إعادة التحميل', 'Reload')}</button></div> : null}
