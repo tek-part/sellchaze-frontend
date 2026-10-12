@@ -177,6 +177,9 @@
 .sph-checkout .sf-page-head { text-align:center; margin-bottom:32px; }.sph-checkout .sf-page-head__title { font-size:32px; }
 .sph-checkout .sf-cart-page { max-width:1216px; margin-inline:auto; gap:32px; }
 .sph-checkout .sf-account__panel { border-radius:16px; box-shadow:none; }
+.sph-root label.sf-account__panel { flex-direction:row; width:100%; max-width:none; border:1px solid var(--border); }
+.sph-root label.sf-account__panel > input[type='radio'] { flex:0 0 auto; width:16px; height:16px; margin:0; }
+.sph-root label.sf-account__panel > span:last-child { white-space:nowrap; }
 .sph-checkout .sf-cart-summary { border-radius:16px; border:1px solid var(--border); padding:24px; background:var(--bg); }
 .sph-checkout__footer { padding-block:32px; }.sph-checkout__footer nav { display:flex; flex-wrap:wrap; justify-content:center; gap:24px; font-size:14px; color:var(--muted); }
 @media(max-width:767px) { .sph-checkout__header { min-height:88px; }.sph-checkout .sf-cart-page { display:flex; flex-direction:column; gap:24px; }.sph-checkout .sf-cart-summary { order:-1; }.sph-checkout .sf-page-head__title { font-size:24px; }.sph-checkout .sf-cart-summary { padding:20px; } }
