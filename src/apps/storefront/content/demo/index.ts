@@ -18,6 +18,7 @@ import { applyOverlay, type CatalogOverlay } from './localize';
 import { LUXURY_AR } from './luxury.ar';
 import { HEARTH_AR } from './hearth.ar';
 import { VOLTAGE_AR } from './voltage.ar';
+import { SPHINX_CATALOG, SPHINX_AR } from './sphinx';
 
 export type { DemoCatalog, DemoBrand, DemoFaq, DemoTestimonial } from './types';
 
@@ -25,6 +26,7 @@ export type { DemoCatalog, DemoBrand, DemoFaq, DemoTestimonial } from './types';
 const DEFAULT_THEME = 'naseem';
 
 const BY_THEME: Readonly<Record<string, DemoCatalog>> = {
+  'sphinx-v3': SPHINX_CATALOG,
   naseem: HEARTH_CATALOG,
   bazaar: HEARTH_CATALOG,
   fresh: HEARTH_CATALOG,
@@ -37,6 +39,7 @@ const BY_THEME: Readonly<Record<string, DemoCatalog>> = {
  * images, ratings and ids stay canonical, so a fact corrected once is correct in both languages.
  */
 const AR_OVERLAY: Readonly<Record<string, CatalogOverlay>> = {
+  'sphinx-v3': SPHINX_AR,
   naseem: HEARTH_AR,
   bazaar: HEARTH_AR,
   fresh: HEARTH_AR,

@@ -111,6 +111,8 @@ export interface ApiCoupon {
 }
 
 export interface ApiStoreSummary {
+  email?: string | null;
+  phone?: string | null;
   identity?: import('../store-identity').StoreIdentity;
   auto_select_variants?: boolean;
   shipping?: import('../types/shipping').ShippingOffer;

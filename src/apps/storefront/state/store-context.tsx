@@ -13,6 +13,9 @@ import { useAsync } from '../api/useAsync';
 import { selectionAutomatic } from './variant-selection';
 
 export interface StoreInfo {
+  bannerUrl?: string;
+  email?: string;
+  phone?: string;
   identity?: import('../store-identity').StoreIdentity;
   autoSelectVariants?: boolean;
   shipping?: import('../types/shipping').ShippingOffer;
@@ -93,6 +96,9 @@ export function StoreProvider(props: { children: ReactNode; initialData?: ApiSto
       defaultLocale,
       supportedLocales,
       ...(s.logo_url ? { logoUrl: s.logo_url } : {}),
+      ...(s.banner_url ? { bannerUrl: s.banner_url } : {}),
+      ...(s.email ? { email: s.email } : {}),
+      ...(s.phone ? { phone: s.phone } : {}),
       ...(s.description ? { description: s.description } : {}),
     };
   } else if (previewOrDev()) {

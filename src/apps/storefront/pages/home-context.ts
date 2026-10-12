@@ -82,6 +82,7 @@ export function useHomeContext(): HomeContextResult {
         loading: dev ? false : bundle.loading,
         ...(bundle.error ? { error: bundle.error } : {}),
         categories,
+        merchandisingCollections: b ? { bestsellers: best, sale, newest: fresh.length ? fresh : newest } : undefined,
         collections: {
           ...named,
           newest,

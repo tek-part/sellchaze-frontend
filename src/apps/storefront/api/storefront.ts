@@ -151,6 +151,9 @@ export function getCoupons(): Promise<{ data: ReadonlyArray<ApiCoupon> }> {
 export const subscribeNewsletter = (email: string): Promise<{ message: string }> =>
   apiSend('/newsletter', 'POST', { email });
 
+export const subscribePhoneNewsletter = (contact: { name: string; phone: string }): Promise<{ message: string }> =>
+  apiSend('/newsletter', 'POST', contact);
+
 export const submitContact = (body: { name: string; email: string; subject?: string; message: string }): Promise<{ message: string }> =>
   apiSend('/contact', 'POST', body);
 

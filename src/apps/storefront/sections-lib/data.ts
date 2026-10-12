@@ -66,7 +66,8 @@ export function productsFromContext(context: StorefrontContext, key: string): Re
   const wanted = COLLECTION_ALIASES[key] ?? [key];
   for (const k of wanted) {
     const hit = collections[k];
-    if (Array.isArray(hit) && hit.length > 0) return hit as ReadonlyArray<ProductCardModel>;
+    // A present empty collection is authoritative (for example a store with no sale products).
+    if (Array.isArray(hit)) return hit as ReadonlyArray<ProductCardModel>;
   }
   const flat = arr<ProductCardModel>(d.products);
   if (flat.length > 0) return flat;

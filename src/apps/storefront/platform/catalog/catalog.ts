@@ -13,6 +13,15 @@ import type { CatalogEntry, ThemeCatalog } from './types';
 
 export const THEME_CATALOG: ThemeCatalog = [
   {
+    id: 'sphinx-v3', name: 'Sphinx V3', version: '1.0.0', archetype: 'Furniture & Lifestyle',
+    description: 'A green storefront with a category mosaic, featured category shelves, inline search, a cart drawer and mobile bottom navigation.',
+    author: 'Sellchaze', tags: ['furniture', 'green', 'classic', 'rtl'], accent: '#006C35',
+    minEngineVersion: '1.0.0', capabilities: ['rtl', 'dark-mode', 'cart-drawer', 'quick-add', 'newsletter'],
+    license: { type: 'free', sku: 'theme-sphinx-v3' }, featured: true,
+    changelog: [{ version: '1.0.0', date: '2026-10-12', notes: ['Independent Sphinx layout, editable sections and phone newsletter.'] }],
+    load: () => import('../../themes/sphinx').then((module) => module.sphinxTheme),
+  },
+  {
     id: 'naseem',
     name: 'Naseem — نسيم',
     version: '1.0.0',

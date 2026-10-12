@@ -12,7 +12,7 @@ export function buildWorkspaceStoreNav(t, access, permissions = []) {
     const group = (key, label, Icon, rows) => ({ key, label, Icon, items: rows.filter(Boolean) });
     const settingsItems = groups.find((row) => row.key === 'settings')?.items.map(absolute) ?? [];
     return [
-        group('orders', t('orders', 'Orders'), HiOutlineShoppingBag, ['orders', 'blocked-phone-numbers', 'blocked-phones'].map((key) => absolute(item(key)))),
+        group('orders', t('orders', 'Orders'), HiOutlineShoppingBag, ['orders', 'blocked-phone-numbers', 'blocked-phones', 'newsletter'].map((key) => absolute(item(key)))),
         group('products', t('products', 'Products'), HiOutlineCube, [
             absolute(item('products')),
             route('categories', '/store/categories', t('categories', 'Categories'), HiOutlineCube, can('categories-list')),
