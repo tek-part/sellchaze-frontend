@@ -5,6 +5,7 @@
  */
 import { lazy, Suspense, type ReactElement } from 'react';
 import { StorefrontVisit } from '../analytics/hooks';
+import { StorefrontAdvertising } from '../advertising/hooks';
 import { Route, Routes } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Container, Section, Spinner } from '../foundation/components';
@@ -56,6 +57,7 @@ export function AppRoutes(): ReactElement {
   return (
     <Suspense fallback={<PageFallback />}>
       <StorefrontVisit />
+      <StorefrontAdvertising />
       <Routes>
         <Route path="/" element={<HomePage />} />
         {/*

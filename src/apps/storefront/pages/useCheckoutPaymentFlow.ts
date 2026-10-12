@@ -17,6 +17,7 @@ import { saveOrderReceipt } from './order-receipt';
 import { retireLeadToken } from './checkout-lead-session';
 import { checkoutCartItems } from './checkout-cart-items';
 import { analyticsSessionId } from '../analytics/events';
+import { browserAdvertisingAllowed, sendAdvertisingEnvelope } from '../advertising/events';
 import { useStore } from '../state/store-context';
 
 export interface CheckoutContactPayload {
@@ -39,7 +40,7 @@ interface RetryState {
 }
 
 interface CheckoutResponse {
-  data?: { number?: string };
+  data?: { number?: string; tracking?: unknown };
   receipt?: { token?: string };
   payment?: { redirect_url?: string | null };
 }
@@ -84,6 +85,7 @@ export function useCheckoutPaymentFlow(options?: { items: ReadonlyArray<Checkout
     try {
       const response = await operation();
       if (!response.data?.number) throw new Error(t('checkout.orderFailed'));
+      sendAdvertisingEnvelope(store.id, response.data.tracking);
       if (response.receipt?.token) saveOrderReceipt(response.data.number, response.receipt.token);
 
       // Clearing the external cart store can render CheckoutPage before router navigation.
@@ -104,8 +106,9 @@ export function useCheckoutPaymentFlow(options?: { items: ReadonlyArray<Checkout
       window.scrollTo({ top: 0, behavior: 'auto' });
     } catch (requestError) {
       if (requestError instanceof ApiError) {
-        const body = requestError.payload as { checkout_rejected?: boolean; payment_retry?: { token?: string }; receipt?: { token?: string }; data?: { number?: string }; message?: string } | undefined;
+        const body = requestError.payload as { checkout_rejected?: boolean; payment_retry?: { token?: string }; receipt?: { token?: string }; data?: { number?: string; tracking?: unknown }; message?: string } | undefined;
         if (body?.data?.number && body.receipt?.token) {
+          sendAdvertisingEnvelope(store.id, body.data.tracking);
           saveOrderReceipt(body.data.number, body.receipt.token);
           try { retireLeadToken(window.sessionStorage, readCheckoutAttempt(scope)?.body.lead_token); } catch { /* server already converted the lead */ }
         }
@@ -125,7 +128,7 @@ export function useCheckoutPaymentFlow(options?: { items: ReadonlyArray<Checkout
       submitting.current = false;
       setBusy(false);
     }
-  }, [cart, preserveCart, navigate, paymentRetry, scope, t]);
+  }, [cart, preserveCart, navigate, paymentRetry, scope, t, store.id]);
 
   const submit = useCallback(async (payload: CheckoutContactPayload): Promise<void> => {
     if (submitting.current || completed.current) return;
@@ -142,6 +145,7 @@ export function useCheckoutPaymentFlow(options?: { items: ReadonlyArray<Checkout
     const next = { key: crypto.randomUUID(), body: {
       ...payload,
       analytics_session: analyticsSessionId(store.id),
+      advertising_allowed: browserAdvertisingAllowed(),
       payment_method: paymentMethod,
       ...(preserveCart ? { cart_mode: 'direct' } : {}),
       items: items ?? checkoutCartItems(cart.lines),

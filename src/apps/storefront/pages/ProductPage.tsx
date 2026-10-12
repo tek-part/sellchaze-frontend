@@ -18,6 +18,7 @@ import { Seo } from '../seo/Seo';
 import { breadcrumbSchema, productSchema } from '../seo/schema';
 import { useRecentlyViewed } from '../state/recently-viewed';
 import { sampleNewest, sampleProductDetail } from '../dev/sampleData';
+import { useProductAdvertising } from '../advertising/hooks';
 
 export function ProductPage(): ReactElement | null {
   const manifest = useThemeManifest();
@@ -40,6 +41,7 @@ export function ProductPage(): ReactElement | null {
 
   // Record the view (client-side history) once the product resolves.
   const viewedId = detail?.id;
+  useProductAdvertising(productQ.data ? viewedId : undefined);
   useEffect(() => {
     if (detail && viewedId) {
       const { images: _images, media: _media, variants: _variants, descriptionHtml: _d, ...card } = detail;

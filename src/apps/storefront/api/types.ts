@@ -126,6 +126,7 @@ export interface ApiStoreSummary {
   phone?: string | null;
   identity?: import('../store-identity').StoreIdentity;
   auto_select_variants?: boolean;
+  tracking_enabled?: boolean;
   shipping?: import('../types/shipping').ShippingOffer;
   id: number;
   name: string;

@@ -8,15 +8,18 @@ import { useLocale } from '../i18n/useLocale';
 import { formatMoney } from '../utils/format';
 import { readOrderReceipt } from './order-receipt';
 import { withSessionParams } from './NavigationInterceptor';
+import { browserAdvertisingAllowed, sendAdvertisingEnvelope } from '../advertising/events';
+import { useStore } from '../state/store-context';
 
 interface ReceiptResponse {
-  data: ApiOrder & { payment_status: string; payment_method: string };
+  data: ApiOrder & { payment_status: string; payment_method: string; tracking?: unknown };
   bank_transfer: { fields: Record<string, string>; notes: string; test_mode: boolean } | null;
 }
 
 export function OrderReceiptPanel({ number }: { number: string | null }): ReactElement | null {
   const { locale } = useLocale();
   const ar = locale === 'ar';
+  const { store } = useStore();
   const token = readOrderReceipt(number);
   useEffect(() => {
     const fragment = new URLSearchParams(window.location.hash.slice(1));
@@ -27,7 +30,9 @@ export function OrderReceiptPanel({ number }: { number: string | null }): ReactE
     }
   }, [token]);
   const [revision, setRevision] = useState(0);
-  const query = useAsync(() => token ? apiSend<ReceiptResponse>('/checkout/receipt', 'POST', { token }) : Promise.resolve(null), [token, revision]);
+  const query = useAsync(() => token ? apiSend<ReceiptResponse>('/checkout/receipt', 'POST', { token, advertising_allowed: browserAdvertisingAllowed() }) : Promise.resolve(null), [token, revision]);
+  const tracking = query.data?.data.tracking;
+  useEffect(() => { sendAdvertisingEnvelope(store.id, tracking); }, [store.id, tracking]);
   if (!token) return null;
   const order = query.data?.data;
   const bank = query.data?.bank_transfer;

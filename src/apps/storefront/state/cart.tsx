@@ -20,14 +20,16 @@ import { addCartLine, changeCartQuantity } from './cart-quantity';
 import { cartStorageKey, decodeCart, encodeCart, loadCart } from './cart-storage';
 import { cartPurchaseSummary, reconcileCartCatalog } from './cart-catalog';
 import { getCartCatalog } from '../api/storefront';
+import type { CheckoutItem } from '../api/storefront';
 import { toProductDetail } from '../api/mappers';
 import { useToast } from '../foundation/components/toast/useToast';
 import { useTranslation } from 'react-i18next';
 import type { ProductDetailModel } from '../types/catalog';
 import { metricsEventId, recordCartEvent } from '../analytics/events';
+import { recordAdvertising } from '../advertising/events';
 
 export type AddCartInput = Omit<CartLine, 'quantity'> & { quantity?: number; analyticsSource?: 'cross_sell' };
-type CartMetricEvent = Parameters<typeof recordCartEvent>[1];
+type CartMetricEvent = Parameters<typeof recordCartEvent>[1] & { selection: CheckoutItem };
 
 export interface CartApi {
   lines: ReadonlyArray<CartLine>;
@@ -135,16 +137,18 @@ function ScopedCartProvider({ children, store, apiOk }: { children: ReactNode; s
     setState((previous) => {
       const next = addCartLine(previous.lines, input);
       const quantity = (next.find((row) => row.id === line.id)?.quantity ?? 0) - (previous.lines.find((row) => row.id === line.id)?.quantity ?? 0);
-      return { ...previous, lines: next, events: id && quantity > 0 ? [...previous.events, { id, productId: line.productId, quantity, ...(analyticsSource ? { source: analyticsSource } : {}) }] : previous.events };
+      const selection: CheckoutItem = { product_id: Number(line.productId), quantity, ...(line.variantId ? { variant_id: Number(line.variantId) } : {}), ...(line.quantityOffer ? { quantity_offer_id: line.quantityOffer.id, quantity_offer_version: line.quantityOffer.version } : {}) };
+      return { ...previous, lines: next, events: id && quantity > 0 ? [...previous.events, { id, productId: line.productId, quantity, selection, ...(analyticsSource ? { source: analyticsSource } : {}) }] : previous.events };
     });
   }, [apiOk]);
 
   useEffect(() => {
     if (!apiOk || !events.length) return;
     events.forEach((event) => recordCartEvent(store.id, event));
+    if (store.trackingEnabled) events.forEach((event) => recordAdvertising(store.id, 'add_to_cart', [event.selection], event.id));
     const recorded = new Set(events.map((event) => event.id));
     setState((previous) => ({ ...previous, events: previous.events.filter((event) => !recorded.has(event.id)) }));
-  }, [events, apiOk, store.id]);
+  }, [events, apiOk, store.id, store.trackingEnabled]);
 
   const remove = useCallback((id: string) => {
     setState((previous) => ({ ...previous, lines: previous.lines.filter((line) => line.id !== id) }));

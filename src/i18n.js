@@ -5,6 +5,7 @@ const resources = {
     en: {
         translation: {
             app_name: 'Sellchaze',
+            workspace_tracking_tools: 'Tracking tools', store_nav_pixels: 'Pixel settings', store_nav_google_tag: 'Connect Google tag',
             workspace_nav_main: 'Main', workspace_store_design: 'Store design', workspace_marketing_tools: 'Marketing tools',
             workspace_all_products: 'All products', workspace_all_orders: 'All orders',
             workspace_business_catalog: 'Business catalog', workspace_business_products: 'Business products',
@@ -2908,6 +2909,7 @@ stdout_logfile=/path/to/your-app/storage/logs/wavex-worker.log`,
     ar: {
         translation: {
             app_name: 'سيلتشيس',
+            workspace_tracking_tools: 'ادوات التتبع', store_nav_pixels: 'اعدادات البيكسل', store_nav_google_tag: 'الربط مع جوجل تاج',
             workspace_nav_main: 'الرئيسية', workspace_store_design: 'تصميم المتجر', workspace_marketing_tools: 'أدوات التسويق',
             workspace_all_products: 'كل المنتجات', workspace_all_orders: 'كل الطلبات',
             workspace_business_catalog: 'كتالوج الأعمال', workspace_business_products: 'منتجات الأعمال',

@@ -18,6 +18,7 @@ import {
     HiOutlineSwatch,
     HiOutlineTicket,
     HiOutlineTruck,
+    HiOutlineShieldCheck,
 } from '../workspace/WorkspaceIcons';
 
 /**
@@ -86,6 +87,15 @@ export function buildStoreNav(t, access = {}) {
                 { key: 'ui-blocks', to: 'ui-blocks', label: t('store_nav_ui_blocks', 'UI blocks'), Icon: HiOutlineDocumentText, show: access.canStorePages },
                 { key: 'menus', to: 'menus', label: t('store_nav_menus', 'Menus'), Icon: HiOutlineBars3BottomLeft, show: access.canStoreMenus },
                 { key: 'media', to: 'media', label: t('store_nav_media', 'Media'), Icon: HiOutlinePhoto, show: access.canStorePages || access.canStoreThemes },
+            ],
+        },
+        {
+            key: 'tracking',
+            label: t('workspace_tracking_tools', 'Tracking tools'),
+            items: [
+                { key: 'pixels-settings', to: 'pixels-settings', label: t('store_nav_pixels', 'Pixel settings'), Icon: HiOutlineShieldCheck, show: access.canStoreSettings },
+                { key: 'pixel-conversion', to: 'pixel-conversion', label: 'Conversion api', Icon: HiOutlineShieldCheck, show: access.canStoreSettings },
+                { key: 'ga', to: 'ga', label: t('store_nav_google_tag', 'Connect Google tag'), Icon: HiOutlineGlobeAlt, show: access.canStoreSettings },
             ],
         },
         {

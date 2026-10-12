@@ -12,7 +12,11 @@ describe('Store workspace navigation', () => {
         expect(groups[1].items[0].to).toBe('/store/products');
         expect(groups[1].items.map((item) => item.to)).toContain('/store/categories');
         expect(groups[3].to).toBe('/store/funnels');
+        expect(groups.slice(3, 6).map((group) => group.key)).toEqual(['funnels', 'tracking', 'marketing']);
+        expect(groups[4].items.map((item) => item.to)).toEqual(['/store/pixels-settings', '/store/pixel-conversion', '/store/ga']);
         for (const row of groups.flatMap((group) => group.single ? [group] : group.items)) expect(merchantWorkspaceRouteAllowed(row.to)).toBe(true);
+        expect(merchantWorkspaceRouteAllowed('/store/inventory')).toBe(true);
+        expect(merchantWorkspaceRouteAllowed('/admin/settings')).toBe(false);
     });
     it('does not add store editing routes to an employee with analytics alone', () => {
         const permissions = ['store.analytics.view'];
