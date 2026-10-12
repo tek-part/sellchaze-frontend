@@ -21,6 +21,7 @@ import { useStore, useVariantSelectionAutomatic } from '../state/store-context';
 import { CheckoutMinimum } from './CheckoutMinimum';
 import { minimumOrderAllows } from './minimum-order';
 import { useCheckoutLead } from './useCheckoutLead';
+import { useCheckoutMetrics } from '../analytics/hooks';
 
 /** Product-specific checkout: leaves the visitor's ordinary shopping cart intact. */
 export function FunnelCheckout({ productSlug }: { productSlug: string | null }): ReactElement {
@@ -61,6 +62,7 @@ export function FunnelCheckout({ productSlug }: { productSlug: string | null }):
   const customKey = JSON.stringify(custom.values);
   const items = useMemo<ReadonlyArray<CheckoutItem>>(() => selectionReady && product ? [{ product_id: product.id, quantity, personalization: normalizedPersonalization(JSON.parse(customKey) as Record<string, string>), ...(variantId ? { variant_id: Number(variantId) } : {}), ...(offerId ? { quantity_offer_id: offerId, quantity_offer_version: offerVersion } : {}) }] : [], [product, selectionReady, quantity, variantId, customKey, offerId, offerVersion]);
   const payment = useCheckoutPaymentFlow({ items, preserveCart: true });
+  useCheckoutMetrics(items, 'funnel');
   const contact = useCheckoutFields(payment.paymentMethod, product ? [product.id] : []);
   const lead = useCheckoutLead({ contact: { ...contact.payload(), coupon_code: appliedCoupon }, items, source: 'funnel', paymentMethod: payment.paymentMethod, kind: `funnel:${productSlug ?? ''}`, enabled: contact.ready && !payment.busy && !payment.completed && !payment.unresolved && !payment.paymentRetry });
   const quoteKey = JSON.stringify([items, appliedCoupon, contact.shippingSelection, contact.shippingReady]);

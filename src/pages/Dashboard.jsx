@@ -12,7 +12,6 @@ export default function Dashboard() {
     if (!access.hasStoreAccess) return <Navigate to="/community" replace />;
     const ar = i18n.language.startsWith('ar');
     return <div className="space-y-6">
-        <div className="ws-dashboard-heading"><div><h1>{ar ? 'لوحة الإحصائيات' : 'Statistics dashboard'}</h1><p>{ar ? 'تابع أداء متجرك وطلباتك ومبيعاتك.' : 'Follow your store performance, orders and sales.'}</p></div></div>
-        {access.canStoreAnalytics ? <StorePerformancePanel /> : <p className="ws-note">{ar ? 'استخدم القائمة لإدارة أقسام المتجر المتاحة لحسابك.' : 'Use the navigation to manage the store sections available to your account.'}</p>}
+        {access.canStoreAnalytics ? <StorePerformancePanel canOrders={access.canStoreOrders} canInventory={access.canStoreInventory} /> : <><div className="ws-dashboard-heading"><h1>{ar ? 'لوحة الإحصائيات' : 'Statistics dashboard'}</h1></div><p className="ws-note">{ar ? 'استخدم القائمة لإدارة أقسام المتجر المتاحة لحسابك.' : 'Use the navigation to manage the store sections available to your account.'}</p></>}
     </div>;
 }

@@ -4,6 +4,7 @@
  * lightweight Suspense fallback covers the first load of each chunk.
  */
 import { lazy, Suspense, type ReactElement } from 'react';
+import { StorefrontVisit } from '../analytics/hooks';
 import { Route, Routes } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Container, Section, Spinner } from '../foundation/components';
@@ -54,6 +55,7 @@ function PageFallback(): ReactElement {
 export function AppRoutes(): ReactElement {
   return (
     <Suspense fallback={<PageFallback />}>
+      <StorefrontVisit />
       <Routes>
         <Route path="/" element={<HomePage />} />
         {/*

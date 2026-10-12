@@ -15,6 +15,7 @@ export function cardCartInput(product: ProductCardModel, variantId?: string): Ad
     ...(product.orderMaxQuantity !== undefined ? { orderMaxQuantity: product.orderMaxQuantity } : {}),
     title: product.title, url: product.url, price: variant?.price ?? product.price,
     currency: product.currency, quantity: 1,
+    ...(product.analyticsSource ? { analyticsSource: product.analyticsSource } : {}),
     ...(variant ? { variantId: variant.id, attributes: variant.label } : {}),
     ...(variant?.image || product.image ? { image: (variant?.image ?? product.image)!.src } : {}),
     ...(stock !== undefined ? { maxQuantity: stock } : {}),

@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next';
 
 const copy = {
+    statisticsDashboard: ['لوحة الإحصائيات', 'Statistics dashboard'],
     quickAccess: ['الوصول السريع', 'Quick access'], storeDesign: ['تصميم المتجر', 'Store design'], company: ['مساحة الشركة', 'Company'], procurement: ['شبكة المشتريات', 'Procurement'], hello: ['مرحبًا', 'Hello'], language: ['تغيير اللغة', 'Change language'],
     search: ['ابحث في الأقسام…', 'Search sections…'], searchTitle: ['بحث في لوحة التحكم', 'Search your workspace'],
     searchHint: ['ابحث عن صفحة أو إعداد وانتقل إليه مباشرة.', 'Find a page or setting and jump straight to it.'],
