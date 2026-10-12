@@ -211,7 +211,7 @@ export function StorefrontApp(): ReactElement {
       ?? (dev && previewData && categoryNav.length === 0
         ? previewData.sampleFooter(manifest.id, t, locale)
         : buildFooter(categoryNav, t));
-    const footer = appendFooterPages(footerBase, toNavItems(navigation.footer.filter((item) => item.automatic_page), locale, store.defaultLocale), t('footer.links'));
+    const footer = appendFooterPages(footerBase, toNavItems(navigation.footer.filter((item) => item.automatic_page), locale, store.defaultLocale), t('footer.links'), menuFooter === null);
     const announcements = dev && previewData ? previewData.sampleAnnouncements(manifest.id, locale) : [];
 
     return {

@@ -22,7 +22,7 @@ import { ProductOptionPicker } from '../components/ProductOptionPicker';
 import { ProductPersonalizationFields } from '../components/ProductPersonalizationFields';
 import type { PersonalizationChoice } from '../../types/personalization';
 import { personalizedLineId, normalizedPersonalization, personalizationReady } from '../../utils/personalization';
-import { blankSelection, resolveVariant, selectionFor, variantAvailable, type VariantSelection } from '../../state/variant-selection';
+import { blankSelection, catalogVariantSelection, resolveVariant, selectionFor, variantAvailable, type VariantSelection } from '../../state/variant-selection';
 import { boundedQuantity, cartAdditionLimit } from '../../state/cart-quantity';
 import { variantGallery, variantImage } from '../../utils/variant-image';
 import { QuantityStepper } from '../components/QuantityStepper';
@@ -59,7 +59,8 @@ export function ProductDetailsSection(props: SectionRenderProps): ReactElement |
   const toast = useToast();
   const reviews = reviewsFor(context);
 
-  const [selection, setSelection] = useState<{ productId: string; choice: VariantSelection }>();
+  const catalogVariantId = typeof context.data?.catalogVariantId === 'string' ? context.data.catalogVariantId : null;
+  const [selection, setSelection] = useState<{ productId: string; choice: VariantSelection; catalogVariantId: string | null }>();
   const [quantityChoice, setQuantityChoice] = useState<{ productId: string; value: number }>();
   const qty = quantityChoice?.productId === product?.id ? quantityChoice?.value ?? 1 : 1;
   const [activeTab, setActiveTab] = useState('description');
@@ -67,7 +68,7 @@ export function ProductDetailsSection(props: SectionRenderProps): ReactElement |
   const [offerChoice, setOfferChoice] = useState<{ productId: string; id: string | null; version?: number }>();
   // Product data arrives asynchronously. Resolve the displayed default on every render,
   // so an untouched select still adds the visible variant instead of the parent product.
-  const choice = selection?.productId === product?.id ? selection?.choice : undefined;
+  const choice = selection && selection.productId === product?.id && selection.catalogVariantId === catalogVariantId ? selection.choice : catalogVariantSelection(product?.variants ?? [], catalogVariantId);
   const activeVariant = resolveVariant(product?.variants ?? [], choice, automatic);
   const variantId = activeVariant?.id;
 
@@ -159,7 +160,7 @@ export function ProductDetailsSection(props: SectionRenderProps): ReactElement |
               <ProductOptionPicker variants={product.variants} display={product.optionDisplay ?? []}
                 automatic={automatic}
                 selection={choice ?? (activeVariant ? selectionFor(activeVariant) : blankSelection(product.variants))}
-                onChange={(next) => { setSelection({ productId: product.id, choice: next }); setQuantityChoice({ productId: product.id, value: 1 }); setOfferChoice(undefined); }} />
+                onChange={(next) => { setSelection({ productId: product.id, choice: next, catalogVariantId }); setQuantityChoice({ productId: product.id, value: 1 }); setOfferChoice(undefined); }} />
             ) : null}
 
             <ProductPersonalizationFields key={product.id} productId={product.id} fields={customFields} choice={custom} onChange={(next) => setCustomChoice({ productId: product.id, choice: next })} />

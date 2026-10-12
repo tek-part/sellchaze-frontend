@@ -40,3 +40,8 @@ pixel/Google save and reload, server note edit and an order/receipt replay were
 verified. Server delivery was simulated with Http::fake, never real providers.
 All named disposable fixture rows/settings were removed; prior data retained.
 Production integration and full competitor pages/themes remain incomplete.
+Catalog feed follow-up: variant actions now use p{product}-v{variant} IDs shared
+with exported feeds; generic parent views use product_group. The release CI
+accessibility suite uses its default desktop viewport and does not prove merchant
+page mobile parity. See MERCHANT-CATALOG.txt for current validation and remaining
+acceptance work.

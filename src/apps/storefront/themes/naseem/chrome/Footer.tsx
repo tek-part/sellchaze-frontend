@@ -1,3 +1,4 @@
+import { MerchantContact } from '../../../shared-ui/MerchantContact';
 /**
  * Naseem Footer — brand + blurb, link columns from `navigation.footer`, a newsletter form
  * (POST /storefront/newsletter), social links, payment marks and the legal row.
@@ -97,6 +98,7 @@ export function Footer(props: FooterProps): ReactElement {
           ) : null}
         </div>
       </div>
+    <MerchantContact />
     </footer>
   );
 }

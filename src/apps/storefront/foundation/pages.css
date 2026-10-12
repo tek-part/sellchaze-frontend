@@ -98,3 +98,13 @@
 .sf-policy__list li { list-style: disc; }
 .sf-policy__foot { margin-top: var(--sp-10); padding-top: var(--sp-7); border-top: 1px solid var(--border); display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--sp-4); }
 .sf-policy__foot p { color: var(--muted); font-family: var(--font); margin: 0; }
+/* Merchant-authored contact details and sanitized policies share the active theme's tokens. */
+.sf-merchant-contact { display:flex;flex-wrap:wrap;gap:16px 24px;font-style:normal;font-size:14px;line-height:1.6;padding-block:24px;overflow-wrap:anywhere; }
+.sf-merchant-contact a { color:inherit; }
+.sf-merchant-policy-content { line-height:1.8;overflow-wrap:anywhere; }
+.sf-merchant-policy-content :is(img,video) { max-width:100%;height:auto; }
+.sf-merchant-policy-content :is(p,ul,ol,blockquote,h1,h2,h3,h4,h5,h6) { margin-block:16px; }
+.sf-merchant-policy-content :is(ul,ol) { padding-inline-start:24px; }
+.sf-merchant-policy-content ul { list-style:disc; }
+.sf-merchant-policy-content ol { list-style:decimal; }
+.sf-merchant-policy-content table { max-width:100%;display:block;overflow-x:auto; }

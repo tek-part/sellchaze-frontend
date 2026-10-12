@@ -15,11 +15,11 @@ export function StorefrontAdvertising(): null {
   }, [apiOk, store.id, store.trackingEnabled, pathname]);
   return null;
 }
-export function useProductAdvertising(productId?: string): void {
+export function useProductAdvertising(productId?: string, variantId?: string): void {
   const { store, apiOk } = useStore(); const previous = useRef('');
   useEffect(() => {
     if (!apiOk || !store.trackingEnabled || !productId || !/^[1-9]\d*$/.test(productId)) return;
-    const key = `${store.id}:${productId}`; if (previous.current === key) return;
-    previous.current = key; recordAdvertising(store.id, 'view_item', [{ product_id: Number(productId), quantity: 1 }]);
-  }, [apiOk, store.id, store.trackingEnabled, productId]);
+    const key = `${store.id}:${productId}:${variantId ?? ''}`; if (previous.current === key) return;
+    previous.current = key; recordAdvertising(store.id, 'view_item', [{ product_id: Number(productId), quantity: 1, ...(variantId && /^[1-9]\d*$/.test(variantId) ? { variant_id: Number(variantId) } : {}) }]);
+  }, [apiOk, store.id, store.trackingEnabled, productId, variantId]);
 }

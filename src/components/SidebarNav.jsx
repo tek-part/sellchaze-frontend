@@ -10,6 +10,7 @@ import { CHAT_ENABLED } from '../lib/features';
 import { storeAccess } from '../lib/storeAccess';
 
 import { buildWorkspaceStoreNav, workspaceStoreItemActive } from './store/workspaceStoreNav';
+import { DashboardIcon, SidebarChevronIcon } from './workspace/SidebarReferenceIcons';
 import { FaGoogle, FaWhatsapp } from 'react-icons/fa';
 import {
     HiOutlineBanknotes,
@@ -21,7 +22,6 @@ import {
     HiOutlineCog6Tooth,
     HiOutlineDocumentText,
     HiOutlineEnvelope,
-    HiOutlineHome,
     HiOutlineRectangleStack,
     HiOutlineShieldCheck,
     HiOutlineShoppingBag,
@@ -87,8 +87,15 @@ const NavVariantContext = createContext('list');
 const ExpandedGroupContext = createContext('');
 const AccordionContext = createContext(null);
 
-function RegisterDisclosure({ groupKey, close, buttonRef, groupActive, expanded }) {
+function RegisterDisclosure({ groupKey, close, buttonRef, groupActive, expanded, open }) {
     const accordion = useContext(AccordionContext);
+    const previous = useRef({ groupActive, expanded });
+    useEffect(() => {
+        const newlyActive = groupActive && !previous.current.groupActive;
+        const newlyExpanded = expanded && !previous.current.expanded;
+        previous.current = { groupActive, expanded };
+        if ((newlyActive || newlyExpanded) && !open) buttonRef.current?.click();
+    }, [groupActive, expanded, open, buttonRef]);
     useEffect(() => {
         if (!accordion) return;
         const unregister = accordion.register(groupKey, close);
@@ -119,16 +126,17 @@ function SectionLabel({ children }) {
     );
 }
 
-function NavGroup({ title, groupKey = title, icon: Icon, defaultOpen, groupActive, children }) {
+function NavGroup({ title, groupKey = title, icon: Icon, defaultOpen, groupActive, reference = false, children }) {
     const mega = useContext(NavVariantContext) === 'mega';
     const expanded = useContext(ExpandedGroupContext) === groupKey;
     const reducedMotion = useReducedMotion();
     const accordion = useContext(AccordionContext); const buttonRef = useRef(null);
+    const ChevronIcon = reference ? SidebarChevronIcon : HiOutlineChevronDown;
     return (
-        <Disclosure key={`${groupActive ? 'active' : 'idle'}-${expanded}`} defaultOpen={defaultOpen || expanded}>
+        <Disclosure defaultOpen={defaultOpen || expanded}>
             {({ open, close }) => (
                 <div className="flex flex-col overflow-hidden rounded-xl">
-                    <RegisterDisclosure groupKey={groupKey} close={close} buttonRef={buttonRef} groupActive={groupActive} expanded={expanded} />
+                    <RegisterDisclosure groupKey={groupKey} close={close} buttonRef={buttonRef} groupActive={groupActive} expanded={expanded} open={open} />
                     <DisclosureButton
                         ref={buttonRef}
                         onClick={() => accordion?.activate(groupKey, buttonRef.current)}
@@ -155,7 +163,7 @@ function NavGroup({ title, groupKey = title, icon: Icon, defaultOpen, groupActiv
                             transition={{ duration: reducedMotion ? 0 : 0.2, ease: [0.4, 0, 0.2, 1] }}
                             className={`shrink-0 ${groupActive ? 'text-brand' : 'text-slate-400'}`}
                         >
-                            <HiOutlineChevronDown className="h-4 w-4" />
+                            <ChevronIcon className={reference ? 'h-5 w-5' : 'h-4 w-4'} />
                         </motion.span>
                     </DisclosureButton>
                     <DisclosurePanel
@@ -447,7 +455,7 @@ function SidebarNavInner({ isAdmin = false, isSupplier = false, roles = [], perm
             <div className={sec('flex flex-col gap-1')}>
                 <SectionLabel>{hasStoreAccess ? t('workspace_nav_main', 'Main') : t('nav_sidebar_section_overview')}</SectionLabel>
                 {hasStoreAccess ? <NavLink to="/dashboard" className={navLinkClass}>
-                    <HiOutlineHome className="h-5 w-5 shrink-0 opacity-95" aria-hidden />
+                    <DashboardIcon className="h-5 w-5 shrink-0 opacity-95" aria-hidden />
                     {ws('statisticsDashboard')}
                 </NavLink> : <NavLink to="/community" className={navLinkClass}><HiOutlineUsers aria-hidden />{t('feed_title', 'Community')}</NavLink>}
                 {workspaceStoreGroups.filter((group) => group.key !== 'settings').map((group) => {
@@ -456,7 +464,7 @@ function SidebarNavInner({ isAdmin = false, isSupplier = false, roles = [], perm
                         return <Link key={group.key} to={group.to} aria-current={active ? 'page' : undefined} className={navLinkClass({ isActive: active })}><group.Icon className="h-5 w-5 shrink-0" aria-hidden />{group.label}</Link>;
                     }
                     const active = group.items.some((item) => workspaceStoreItemActive(item, location.pathname));
-                    return <NavGroup key={group.key} groupKey={`store-${group.key}`} title={group.label} icon={group.Icon} defaultOpen={active} groupActive={active}>
+                    return <NavGroup reference key={group.key} groupKey={`store-${group.key}`} title={group.label} icon={group.Icon} defaultOpen={active} groupActive={active}>
                         {group.items.map((item) => <Link key={item.key} to={item.to} aria-current={workspaceStoreItemActive(item, location.pathname) ? 'page' : undefined} className={subNavLinkClass({ isActive: workspaceStoreItemActive(item, location.pathname) })}>{item.label}</Link>)}
                     </NavGroup>;
                 })}

@@ -18,9 +18,13 @@ export function appendHeaderPages(base: ReadonlyArray<NavItem>, pages: ReadonlyA
   return result;
 }
 
-export function appendFooterPages(base: ReadonlyArray<FooterGroup>, pages: ReadonlyArray<NavItem>, title: string): FooterGroup[] {
-  const used = new Set(base.flatMap((group) => group.links.map((link) => key(link.url))));
+export function appendFooterPages(base: ReadonlyArray<FooterGroup>, pages: ReadonlyArray<NavItem>, title: string, replaceDefaultPolicies = false): FooterGroup[] {
+  const replacements = new Map(pages.filter((page) => ['/policies/shipping', '/policies/returns'].includes(key(page.url))).map((page) => [key(page.url).replace('/policies/', '/pages/'), page]));
+  const groups = replaceDefaultPolicies ? base.map((group) => ({ ...group, links: group.links.map((link) => {
+    const policy = replacements.get(key(link.url)); return policy ? { label: policy.label, url: policy.url } : link;
+  }) })) : [...base];
+  const used = new Set(groups.flatMap((group) => group.links.map((link) => key(link.url))));
   const links: Array<{ label: string; url: string }> = [];
   for (const page of pages) if (!used.has(key(page.url))) { links.push({ label: page.label, url: page.url }); used.add(key(page.url)); }
-  return links.length ? [...base, { title, links }] : [...base];
+  return links.length ? [...groups, { title, links }] : groups;
 }

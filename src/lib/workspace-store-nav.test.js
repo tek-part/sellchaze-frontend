@@ -11,9 +11,11 @@ describe('Store workspace navigation', () => {
         expect(groups[0].items.map((item) => item.to)).toEqual(['/store/orders', '/store/missed-orders', '/store/blocked-phone-numbers', '/store/blocked-phones', '/store/newsletter']);
         expect(groups[1].items[0].to).toBe('/store/products');
         expect(groups[1].items.map((item) => item.to)).toContain('/store/categories');
+        expect(groups[1].items.at(-1).to).toBe('/store/product-feed');
         expect(groups[3].to).toBe('/store/funnels');
         expect(groups.slice(3, 6).map((group) => group.key)).toEqual(['funnels', 'tracking', 'marketing']);
         expect(groups[4].items.map((item) => item.to)).toEqual(['/store/pixels-settings', '/store/pixel-conversion', '/store/ga']);
+        expect(groups[5].items.map((item) => item.to)).toEqual(['/store/coupons', '/store/google-merchant']);
         for (const row of groups.flatMap((group) => group.single ? [group] : group.items)) expect(merchantWorkspaceRouteAllowed(row.to)).toBe(true);
         expect(merchantWorkspaceRouteAllowed('/store/inventory')).toBe(true);
         expect(merchantWorkspaceRouteAllowed('/admin/settings')).toBe(false);

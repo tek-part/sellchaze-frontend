@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { blankSelection, resolveCardVariant, resolveVariant, selectionAutomatic, selectionFor } from './variant-selection';
+import { blankSelection, catalogVariantSelection, resolveCardVariant, resolveVariant, selectionAutomatic, selectionFor } from './variant-selection';
 import type { ProductVariantModel } from '../types/catalog';
 
 const variants: ProductVariantModel[] = [
@@ -9,6 +9,12 @@ const variants: ProductVariantModel[] = [
   { id: '4', label: 'Legacy', available: true },
 ];
 describe('variant property selection', () => {
+  it('selects the catalog deep-link SKU without falling back from foreign, malformed or unavailable IDs', () => {
+    expect(catalogVariantSelection(variants, null)).toBeUndefined();
+    expect(resolveVariant(variants, catalogVariantSelection(variants, '3'))?.id).toBe('3');
+    expect(resolveVariant(variants, catalogVariantSelection(variants, '2'))?.available).toBe(false);
+    for (const id of ['foreign', '999', '<script>', '1&receipt=private']) expect(resolveVariant(variants, catalogVariantSelection(variants, id))).toBeUndefined();
+  });
   it('uses current store policy over cached card data, with an independent preview fallback', () => {
     expect(selectionAutomatic(false, true)).toBe(false);
     expect(selectionAutomatic(true, false)).toBe(true);

@@ -1,0 +1,50 @@
+Merchant catalog UI
+===================
+
+Product Feed appears after Reviews in Products. Google Merchant appears after
+Coupons in Marketing; the other missing reference pages remain implementation
+work, not inactive menu placeholders. Both pages use real protected APIs.
+Merchants choose Google/Meta/Snapchat/TikTok, download the current feed and copy a
+canonical URL for scheduled updates. Google downloads TSV; other feeds download
+CSV. Response and download errors remain visible; no third-party upload occurs.
+
+Google Merchant has enable/contact inputs, shipping/return/COD rich editors,
+independent COD visibility, export, dirty/save feedback and stale-edit reload.
+Saved policies render at /policies/{shipping|returns|cod}; all five existing theme
+footers show enabled contact information and links. Generated default policy links
+are replaced to avoid duplicates; explicitly managed menu links are preserved.
+Disabled information disappears after a fresh bootstrap; authored content remains.
+
+Feed landing URLs choose the exact variant. A foreign/malformed ID never silently
+chooses another SKU; an unavailable SKU remains selected and cannot be purchased.
+Initial product structured data uses selected SKU price/image/availability and the
+same one-unit offer as the page. Advertising item IDs match the exported variants.
+
+The reference permits multiple sidebar groups to stay open across navigation.
+Merchant desktop/mobile menus now allow this, retain open groups and open the
+active group without preventing manual collapse. The operator desktop accordion
+keeps its existing exclusivity. Eight neutral reference vectors replace the
+merchant dashboard/orders/products/design/funnels/tracking/marketing/chevron
+shapes. The competitor's brand is excluded. Five group icons and five chevrons
+were compared against actual rendered reference paths/viewBoxes/20px sizes and
+computed strokes. The unchanged Google Merchant PNG was acquired from the visible
+reference asset, SHA2569130c04b05716d4d79368d9b7c2e0f0343c5e454f9de68b365339b3dba47a7c3.
+
+Product Feed desktop measurements match the observed 1920px reference: heading
+y141, select x152/y249.421875/1344x56, create button y329.421875/1344x50.25. Fields
+use16px IBM Plex Sans Arabic (native select computes normal line height on Chrome).
+Google contact frames800x43.78125 at y901.828125,
+956,1010.171875 match the observed reference. Its export button uses the observed
+512px image and528px height. Full visual parity, current mobile and paid Easy
+Catalog screens remain unverified. Easy Catalog is gated by an unactivated paid
+plugin in the authenticated reference; no subscription or competitor save occurred.
+
+Validation: all516 unit tests in78 files passed, including the four original schema
+tests plus the added selected-SKU regression. Final lint/types/build/budgets passed;
+storefront/studio/dashboard gzip149.79/84.60/155.15KiB. Exact release CI must follow. Four
+actual browser download files were parsed for correct prices, variants, stock and
+private-field absence. Policy/contact display was verified in all five existing
+themes, including Sahra dark at desktop width. These five are not evidence that
+all152 requested reference themes or84 funnel templates have been implemented.
+Browser recents still contain older disposable fixture snapshots; no broad browser
+storage clearing was performed. Full competitor parity and deployment remain open.

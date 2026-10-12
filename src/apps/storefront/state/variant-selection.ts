@@ -15,6 +15,12 @@ export const variantAvailable = (variant: ProductVariantModel): boolean => varia
 export function blankSelection(variants: ReadonlyArray<ProductVariantModel>): VariantSelection {
   return { group: variants[0] ? optionGroup(variants[0]) : '[]', values: {} };
 }
+/** A catalog deep link selects exactly its SKU, including an unavailable SKU; invalid links never choose a different one. */
+export function catalogVariantSelection(variants: ReadonlyArray<ProductVariantModel>, id: string | null): VariantSelection | undefined {
+  if (id === null) return undefined;
+  const variant = /^[1-9]\d*$/.test(id) ? variants.find((row) => row.id === id) : undefined;
+  return variant ? selectionFor(variant) : blankSelection(variants);
+}
 /** A missing customer choice may use the default; an invalid explicit choice never does. */
 export function resolveCardVariant(variants: ReadonlyArray<ProductVariantModel>, id?: string, automatic = true): ProductVariantModel | undefined {
   return id === undefined ? (automatic ? variants.find(variantAvailable) : undefined) : variants.find((variant) => variant.id === id);

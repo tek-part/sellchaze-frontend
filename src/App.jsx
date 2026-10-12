@@ -128,6 +128,8 @@ const StoreDesignAssetsPage = lazy(() => import('./pages/StoreDesignAssetsPage')
 const StoreGeneralSettingsPage = lazy(() => import('./pages/store/settings/StoreGeneralSettingsPage'));
 const StoreBotProtectionPage = lazy(() => import('./pages/store/settings/StoreBotProtectionPage'));
 const StoreTrackingPage = lazy(() => import('./pages/store/StoreTrackingPage'));
+const StoreProductFeedPage = lazy(() => import('./pages/store/StoreProductFeedPage'));
+const StoreGoogleMerchantPage = lazy(() => import('./pages/store/StoreGoogleMerchantPage'));
 const StoreShoppingPreferencesPage = lazy(() => import('./pages/store/settings/StoreShoppingPreferencesPage'));
 const StoreLocalizationSettingsPage = lazy(() => import('./pages/store/settings/StoreLocalizationSettingsPage'));
 const StoreShippingTaxSettingsPage = lazy(() => import('./pages/store/settings/StoreShippingTaxSettingsPage'));
@@ -238,6 +240,8 @@ const STORE_ROUTES = [
     { path: 'pixels-settings', element: <StoreTrackingPage /> },
     { path: 'pixel-conversion', element: <StoreTrackingPage mode="conversions" /> },
     { path: 'ga', element: <StoreTrackingPage mode="google" /> },
+    { path: 'product-feed', element: <StoreProductFeedPage /> },
+    { path: 'google-merchant', element: <StoreGoogleMerchantPage /> },
     { path: 'settings/phone-verification', element: <StorePhoneVerificationPage /> },
     { path: 'funnels', element: <StoreFunnelsPage /> },
     { path: 'pages/:pageId/builder', element: <StorePageBuilderPage /> },

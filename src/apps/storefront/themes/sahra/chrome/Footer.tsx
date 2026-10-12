@@ -1,3 +1,4 @@
+import { MerchantContact } from '../../../shared-ui/MerchantContact';
 /**
  * Sahra Footer — a large serif brand statement with a newsletter form (POST /storefront/newsletter)
  * beside it, thin gold rules, link columns from `navigation.footer`, social links, payment marks and
@@ -115,6 +116,7 @@ export function Footer(props: FooterProps): ReactElement {
           ) : null}
         </div>
       </div>
+    <MerchantContact />
     </footer>
   );
 }
