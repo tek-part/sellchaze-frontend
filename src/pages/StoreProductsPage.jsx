@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { Link, useOutletContext } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { HiOutlinePlus, HiOutlineMagnifyingGlass, HiOutlineArrowDownTray, HiOutlineCube, HiOutlinePencilSquare, HiOutlineEye } from '../components/workspace/WorkspaceIcons';
+import { HiOutlinePlus, HiOutlineMagnifyingGlass, HiOutlineArrowDownTray, HiOutlineCube, HiOutlinePencilSquare, HiOutlineEye, HiOutlineChevronUpDown, HiOutlineArrowUp, HiOutlineArrowDown } from '../components/workspace/WorkspaceIcons';
+import CatalogBulkEditDialog from '../components/store/CatalogBulkEditDialog';
 import api from '../api/client';
 import useStoreScope from '../hooks/useStoreScope';
 import { useDebounced } from '../hooks/useDebounced';
@@ -21,6 +22,10 @@ export default function StoreProductsPage() {
     const text = (a, e) => ar ? a : e;
     const [query, setQuery] = useState('');
     const search = useDebounced(query, 300);
+    const [skuInput, setSkuInput] = useState('');
+    const sku = useDebounced(skuInput, 300);
+    const [sortBy, setSortBy] = useState('position');
+    const [sortDirection, setSortDirection] = useState('asc');
     const [status, setStatus] = useState('');
     const [categoryId, setCategoryId] = useState('');
     const [categories, setCategories] = useState([]);
@@ -33,6 +38,8 @@ export default function StoreProductsPage() {
     const [selected, setSelected] = useState(() => new Map());
     const [loading, setLoading] = useState(true);
     const [reload, setReload] = useState(0);
+    const [bulkOpen, setBulkOpen] = useState(false);
+    const [notice, setNotice] = useState('');
     const canCategories = permissions.includes('categories-list');
     useEffect(() => {
         if (!canCategories) return;
@@ -42,23 +49,31 @@ export default function StoreProductsPage() {
     }, [apiBase, canCategories]);
     useEffect(() => {
         let active = true; setLoading(true); setError('');
-        api.get(`${apiBase}/catalog/products`, { params: { search, status, category_id: categoryId, page, per_page: perPage } })
+        api.get(`${apiBase}/catalog/products`, { params: { search, sku, sort_by: sortBy, sort_direction: sortDirection, status, category_id: categoryId, page, per_page: perPage } })
             .then(({ data }) => { if (active) setResult(data); })
             .catch((e) => { if (active) setError(e.response?.data?.message || e.message); })
             .finally(() => { if (active) setLoading(false); });
         return () => { active = false; };
-    }, [apiBase, search, status, categoryId, page, perPage, reload]);
+    }, [apiBase, search, sku, sortBy, sortDirection, status, categoryId, page, perPage, reload]);
+    useEffect(() => { setSelected(new Map()); setBulkOpen(false); setNotice(''); setPage(1); }, [apiBase]);
     const money = (value) => new Intl.NumberFormat(ar ? 'ar-EG' : 'en', { style: 'currency', currency: store?.currency || 'EGP' }).format(Number(value));
+    const listBusy = loading || query !== search || skuInput !== sku;
     const pageProducts = result?.data || [];
     const allSelected = pageProducts.length > 0 && pageProducts.every((product) => selected.has(product.id));
     const someSelected = pageProducts.some((product) => selected.has(product.id));
     const toggleProduct = (product, checked) => setSelected((current) => { const next = new Map(current); if (checked) next.set(product.id, product); else next.delete(product.id); return next; });
     const togglePage = (checked) => setSelected((current) => { const next = new Map(current); pageProducts.forEach((product) => { if (checked) next.set(product.id, product); else next.delete(product.id); }); return next; });
+    const sort = (field) => { setSortBy(field); setSortDirection(sortBy === field && sortDirection === 'asc' ? 'desc' : 'asc'); setPage(1); };
+    const sortHeader = (field, label) => <th aria-sort={sortBy === field ? sortDirection === 'asc' ? 'ascending' : 'descending' : 'none'}><button type="button" className="ws-catalog-sort" onClick={() => sort(field)} aria-label={`${text('رتب حسب', 'Sort by')} ${label} ${sortBy === field && sortDirection === 'asc' ? text('تنازلي', 'descending') : text('تصاعدي', 'ascending')}`}>{label}{sortBy === field ? sortDirection === 'asc' ? <HiOutlineArrowUp aria-hidden /> : <HiOutlineArrowDown aria-hidden /> : <HiOutlineChevronUpDown aria-hidden />}</button></th>;
+    const date = (value) => value ? new Intl.DateTimeFormat(ar ? 'ar-EG' : 'en', { dateStyle: 'medium' }).format(new Date(value)) : '—';
+    const storefrontUrl = store?.storefront_url || store?.public_url;
+    const canBulk = permissions.includes('products-edit') && selected.size <= 100 && [...selected.values()].every((product) => product.edit_version);
+    const refreshSelection = () => { setBulkOpen(false); setSelected(new Map()); setNotice(''); setReload((value) => value + 1); };
     const exportCatalog = async (format) => {
         setExporting(true); setExportError('');
         try {
             if (!selected.size && result?.meta?.total > 10000) throw new Error(text('ضيّق الفلاتر لتصدير 10,000 منتج أو أقل في الملف الواحد.', 'Narrow your filters to export 10,000 products or fewer per file.'));
-            const products = selected.size ? [...selected.values()] : await fetchAllPages(`${apiBase}/catalog/products`, { search, status, category_id: categoryId });
+            const products = selected.size ? [...selected.values()] : await fetchAllPages(`${apiBase}/catalog/products`, { search, sku, sort_by: sortBy, sort_direction: sortDirection, status, category_id: categoryId });
             if (!selected.size && products.length !== result?.meta?.total) throw new Error(text('تغيرت القائمة أثناء التصدير. حدّث المنتجات وحاول مرة أخرى.', 'The list changed during export. Refresh the products and try again.'));
             const rows = products.map(catalogExportRow);
             const filename = `store-products-${new Date().toISOString().slice(0, 10)}`;
@@ -81,31 +96,36 @@ export default function StoreProductsPage() {
         <div className="ws-catalog-toolbar">
             <div className="ws-catalog-filters">
                 <label className="ws-catalog-search"><HiOutlineMagnifyingGlass aria-hidden /><input aria-label={text('بحث المنتجات', 'Search products')} value={query} onChange={(e) => { setQuery(e.target.value); setPage(1); setSelected(new Map()); }} placeholder={text('ابحث باسم المنتج أو الرابط', 'Search product name or slug')} /></label>
+                <label className="ws-catalog-search ws-catalog-sku"><HiOutlineMagnifyingGlass aria-hidden /><input aria-label={text('ابحث بالـSKU', 'Search by SKU')} value={skuInput} onChange={(e) => { setSkuInput(e.target.value); setPage(1); setSelected(new Map()); }} placeholder={text('ابحث بالـSKU', 'Search by SKU')} /></label>
                 <select aria-label={text('حالة النشر', 'Publication status')} value={status} onChange={(e) => { setStatus(e.target.value); setPage(1); setSelected(new Map()); }}><option value="">{text('كل الحالات', 'All statuses')}</option><option value="active">{text('منشور', 'Published')}</option><option value="draft">{text('مسودة', 'Draft')}</option></select>
                 {categories.length > 0 ? <select aria-label={text('قسم المنتج', 'Product category')} value={categoryId} onChange={(e) => { setCategoryId(e.target.value); setPage(1); setSelected(new Map()); }}><option value="">{text('كل الأقسام', 'All categories')}</option>{categories.map((category) => <option key={category.id} value={category.id}>{category.name}</option>)}</select> : null}
             </div>
             <div className="ws-catalog-actions">
-                <button type="button" className="ws-secondary-button" disabled={loading || !!error || exporting} onClick={() => void exportCatalog('json')}><HiOutlineArrowDownTray aria-hidden />{text('تصدير JSON', 'Export JSON')}</button>
-                <button type="button" className="ws-secondary-button" disabled={loading || !!error || exporting} onClick={() => void exportCatalog('excel')}><HiOutlineArrowDownTray aria-hidden />{text('تصدير Excel', 'Export Excel')}</button>
+                <button type="button" className="ws-secondary-button" disabled={listBusy || !!error || exporting} onClick={() => void exportCatalog('json')}><HiOutlineArrowDownTray aria-hidden />{text('تصدير JSON', 'Export JSON')}</button>
+                <button type="button" className="ws-secondary-button" disabled={listBusy || !!error || exporting} onClick={() => void exportCatalog('excel')}><HiOutlineArrowDownTray aria-hidden />{text('تصدير Excel', 'Export Excel')}</button>
                 {permissions.includes('products-create') ? <Link className="ws-primary-button" to={`${uiBase}/products/new`}><HiOutlinePlus aria-hidden />{text('إضافة منتج', 'Add product')}</Link> : null}
             </div>
         </div>
-        {selected.size > 0 ? <div className="ws-catalog-selection"><span>{selected.size} {text('منتج محدد · التصدير يشمل المنتجات المحددة فقط', 'selected · exports include only selected products')}</span><button type="button" className="ws-secondary-button" onClick={() => setSelected(new Map())}>{text('إلغاء التحديد', 'Clear selection')}</button></div> : null}
+        {notice ? <p role="status" className="ws-catalog-selection">{notice}</p> : null}
+        {selected.size > 0 ? <div className="ws-catalog-selection"><span>{selected.size} {text('منتج محدد · التصدير يشمل المنتجات المحددة فقط', 'selected · exports include only selected products')}</span><div className="ws-catalog-actions">{permissions.includes('products-edit') ? <button type="button" disabled={!canBulk || listBusy || !!error || exporting} className="ws-secondary-button" onClick={() => setBulkOpen(true)}><HiOutlinePencilSquare aria-hidden />{text('تعديل', 'Edit')}</button> : null}<button type="button" className="ws-secondary-button" onClick={() => setSelected(new Map())}>{text('إلغاء التحديد', 'Clear selection')}</button></div>{selected.size > 100 ? <p>{text('اختر 100 منتج أو أقل للتعديل في المرة الواحدة.', 'Select 100 products or fewer to edit at a time.')}</p> : null}</div> : null}
+        {bulkOpen ? <CatalogBulkEditDialog apiBase={apiBase} products={[...selected.values()]} categories={categories} onClose={() => setBulkOpen(false)} onRefresh={refreshSelection} onSaved={(count) => { refreshSelection(); setNotice(text(`تم تعديل ${count} منتج.`, `${count} products updated.`)); }} /> : null}
         {exporting ? <p className="ws-note" role="status">{text('جارٍ تجهيز ملف المنتجات…', 'Preparing your product export…')}</p> : null}
         {exportError ? <p role="alert" className="ws-catalog-error">{exportError}</p> : null}
         {error ? <div role="alert" className="ws-catalog-error">{error}<button type="button" className="ws-secondary-button" onClick={() => setReload((value) => value + 1)}>{text('إعادة المحاولة', 'Retry')}</button></div> : <>
-            <div className="ws-catalog-table" aria-busy={loading}>
-                {loading ? <p role="status" className="ws-catalog-loading">{text('جارٍ تحميل المنتجات…', 'Loading products…')}</p> : null}
-                <table><thead><tr><th className="ws-catalog-check"><input type="checkbox" aria-label={text('اختيار كل منتجات الصفحة', 'Select all products on this page')} disabled={loading || !pageProducts.length} checked={allSelected} ref={(input) => { if (input) input.indeterminate = someSelected && !allSelected; }} onChange={(e) => togglePage(e.target.checked)} /></th>{[text('المنتج', 'Product'), text('السعر', 'Price'), text('الخيارات / المخزون', 'Options / stock'), text('الحالة', 'Status'), text('إجراءات', 'Actions')].map((title) => <th key={title}>{title}</th>)}</tr></thead>
-                    <tbody>{!loading && result?.data?.map((product) => <tr key={product.id}>
+            <div className="ws-catalog-table" aria-busy={listBusy}>
+                {listBusy ? <p role="status" className="ws-catalog-loading">{text('جارٍ تحميل المنتجات…', 'Loading products…')}</p> : null}
+                <table><thead><tr><th className="ws-catalog-check"><input type="checkbox" aria-label={text('اختيار كل منتجات الصفحة', 'Select all products on this page')} disabled={listBusy || !pageProducts.length} checked={allSelected} ref={(input) => { if (input) input.indeterminate = someSelected && !allSelected; }} onChange={(e) => togglePage(e.target.checked)} /></th>{sortHeader('name', text('المنتج', 'Product'))}{sortHeader('price', text('السعر', 'Price'))}<th>{text('الخيارات / المخزون', 'Options / stock')}</th>{sortHeader('created_at', text('تاريخ الإنشاء', 'Created'))}<th>{text('الحالة', 'Status')}</th><th>{text('مشاهدة', 'View')}</th><th>{text('إجراءات', 'Actions')}</th></tr></thead>
+                    <tbody>{!listBusy && result?.data?.map((product) => <tr key={product.id}>
                         <td className="ws-catalog-check"><input type="checkbox" aria-label={`${text('اختيار', 'Select')} ${product.name}`} checked={selected.has(product.id)} onChange={(e) => toggleProduct(product, e.target.checked)} /></td>
                         <td><div className="ws-catalog-product"><CatalogImage key={product.image_url || 'empty'} url={product.image_url} /><div><Link to={`${uiBase}/products/${product.id}/edit`}>{product.name}</Link><small>{product.sku || product.slug}</small></div></div></td>
                         <td className="ws-catalog-money">{money(product.price)}</td>
                         <td>{product.variants?.length ? `${product.variants.length} ${text('خيارات', 'options')}` : product.track_inventory ? `${product.stock} ${text('متاح', 'available')}` : text('دون تتبع', 'Untracked')}</td>
+                        <td className="ws-catalog-date">{date(product.created_at)}</td>
                         <td><span className={`ws-catalog-status ${product.is_active ? 'ws-catalog-published' : ''}`}>{product.is_active ? text('منشور', 'Published') : text('مسودة', 'Draft')}</span></td>
+                        <td>{storefrontUrl && product.is_active ? <a className="ws-icon-button" href={`${storefrontUrl.replace(/\/$/, '')}/products/${encodeURIComponent(product.slug)}`} target="_blank" rel="noopener noreferrer" aria-label={`${text('مشاهدة', 'View')} ${product.name}`} title={text('مشاهدة', 'View')}><HiOutlineEye aria-hidden /></a> : '—'}</td>
                         <td><Link className="ws-icon-button" title={permissions.includes('products-edit') ? text('تعديل', 'Edit') : text('عرض', 'View')} aria-label={`${permissions.includes('products-edit') ? text('تعديل', 'Edit') : text('عرض', 'View')} ${product.name}`} to={`${uiBase}/products/${product.id}/edit`}>{permissions.includes('products-edit') ? <HiOutlinePencilSquare aria-hidden /> : <HiOutlineEye aria-hidden />}</Link></td>
                     </tr>)}</tbody></table>
-                {!loading && !result?.data?.length ? <div className="ws-catalog-empty"><HiOutlineCube aria-hidden /><strong>{text('لا توجد منتجات مطابقة', 'No matching products')}</strong><p>{text('غيّر البحث أو الفلاتر، أو أضف أول منتج إلى متجرك.', 'Change your search or filters, or add your first store product.')}</p></div> : null}
+                {!listBusy && !result?.data?.length ? <div className="ws-catalog-empty"><HiOutlineCube aria-hidden /><strong>{text('لا توجد منتجات مطابقة', 'No matching products')}</strong><p>{text('غيّر البحث أو الفلاتر، أو أضف أول منتج إلى متجرك.', 'Change your search or filters, or add your first store product.')}</p></div> : null}
             </div>
             {result?.meta ? <footer className="ws-catalog-pagination"><label>{text('عدد الصفوف', 'Rows per page')}<select value={perPage} onChange={(e) => { setPerPage(Number(e.target.value)); setPage(1); }}>{[20, 50, 100].map((value) => <option key={value} value={value}>{value}</option>)}</select></label><span>{result.meta.current_page} / {result.meta.last_page} · {result.meta.total} {text('منتج', 'products')}</span><div><button type="button" className="ws-secondary-button" disabled={loading || page <= 1} onClick={() => setPage((value) => value - 1)}>{text('السابق', 'Previous')}</button><button type="button" className="ws-secondary-button" disabled={loading || page >= result.meta.last_page} onClick={() => setPage((value) => value + 1)}>{text('التالي', 'Next')}</button></div></footer> : null}
         </>}
