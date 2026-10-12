@@ -1,7 +1,7 @@
 // Merchant workspace follows the reference app. Community is the requested exception.
 // The platform operator console lives outside this merchant route boundary.
 const roots = [
-    '/dashboard', '/community', '/reels', '/feed', '/chat', '/notifications', '/settings/profile', '/subscription',
+    '/dashboard', '/community', '/reels', '/feed', '/chat', '/notifications', '/settings/profile', '/subscription', '/top-up', '/transactions', '/referral',
     '/store/products', '/store/categories', '/store/reviews', '/store/funnels', '/store/coupons',
     '/store/orders', '/store/missed-orders', '/store/newsletter',
     '/store/pixels-settings', '/store/pixel-conversion', '/store/ga', '/store/inventory',

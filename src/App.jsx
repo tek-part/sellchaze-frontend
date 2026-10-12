@@ -1,4 +1,5 @@
 import { lazy, Suspense } from 'react';
+import PlatformReferralCapture from './components/PlatformReferralCapture';
 import { Routes, Route, Navigate, useParams } from 'react-router-dom';
 import useStoreScope from './hooks/useStoreScope';
 import AppErrorBoundary from './components/AppErrorBoundary';
@@ -132,6 +133,7 @@ const StoreProductFeedPage = lazy(() => import('./pages/store/StoreProductFeedPa
 const StoreGoogleMerchantPage = lazy(() => import('./pages/store/StoreGoogleMerchantPage'));
 const StoreCampaignBuilderPage = lazy(() => import('./pages/store/StoreCampaignBuilderPage'));
 const StoreReferralBuilderPage = lazy(() => import('./pages/store/StoreReferralBuilderPage'));
+const PlatformWalletPage = lazy(() => import('./pages/account/PlatformWalletPage'));
 const StoreRetargetingPage = lazy(() => import('./pages/store/StoreRetargetingPage'));
 const StoreMarketingServicesPage = lazy(() => import('./pages/store/StoreMarketingServicesPage'));
 const StoreShoppingPreferencesPage = lazy(() => import('./pages/store/settings/StoreShoppingPreferencesPage'));
@@ -276,6 +278,7 @@ const STORE_ROUTES = [
 export default function App() {
     return (
         <AppErrorBoundary>
+        <PlatformReferralCapture />
         <Suspense fallback={<div className="flex min-h-[40vh] items-center justify-center text-sm text-slate-500">…</div>}>
         <Routes>
             <Route path="/login" element={<Login />} />
@@ -423,6 +426,9 @@ export default function App() {
                 <Route path="/balance/in" element={<BalancePage />} />
                 <Route path="/balance/out" element={<BalancePage />} />
                 <Route path="/balance" element={<BalancePage />} />
+                <Route path="/top-up" element={<PlatformWalletPage key="wallet" />} />
+                <Route path="/transactions" element={<PlatformWalletPage key="transactions" mode="transactions" />} />
+                <Route path="/referral" element={<PlatformWalletPage key="referral" mode="referral" />} />
                 <Route path="/wavex/settings" element={<WavexSettingsPage />} />
                 <Route path="/wavex/connect" element={<WavexConnectPage />} />
                 <Route path="/wavex/chats" element={<WavexChatsPage />} />

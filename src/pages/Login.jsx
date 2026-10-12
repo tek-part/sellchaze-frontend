@@ -8,6 +8,7 @@ import api, { clearTokens, setTokens } from '../api/client';
 import LanguageSwitcher from '../components/LanguageSwitcher';
 import { useGoogleOAuthClientId } from '../hooks/useGoogleOAuthClientId';
 import { loginErrorMessage } from '../utils/apiError';
+import { savedPlatformReferral, clearPlatformReferral } from '../shared/marketing/platform-referral';
 
 function BackgroundDecor() {
     return (
@@ -110,7 +111,9 @@ export default function Login() {
             const { data } = await api.post('/auth/google', {
                 id_token: cred.credential,
                 registration_role: googleRegisterRole,
+                platform_referral_code: savedPlatformReferral(),
             });
+            clearPlatformReferral();
             if (data.pending_approval) {
                 if (data.access_token && data.refresh_token) {
                     setTokens({ access_token: data.access_token, refresh_token: data.refresh_token });

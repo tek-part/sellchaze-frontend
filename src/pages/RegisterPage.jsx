@@ -5,6 +5,7 @@ import toast from 'react-hot-toast';
 import api, { setTokens } from '../api/client';
 import LanguageSwitcher from '../components/LanguageSwitcher';
 import { loginErrorMessage } from '../utils/apiError';
+import { savedPlatformReferral, clearPlatformReferral } from '../shared/marketing/platform-referral';
 
 function BackgroundDecor() {
     return (
@@ -142,7 +143,9 @@ export default function RegisterPage() {
                 registration_role: registrationRole,
                 company_name: companyName,
                 store_name: storeName,
+                platform_referral_code: savedPlatformReferral(),
             });
+            clearPlatformReferral();
             if (data.pending_approval) {
                 if (data.access_token && data.refresh_token) {
                     setTokens({ access_token: data.access_token, refresh_token: data.refresh_token });
