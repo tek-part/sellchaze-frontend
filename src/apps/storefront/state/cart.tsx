@@ -25,7 +25,8 @@ import { toProductDetail } from '../api/mappers';
 import { useToast } from '../foundation/components/toast/useToast';
 import { useTranslation } from 'react-i18next';
 import type { ProductDetailModel } from '../types/catalog';
-import { metricsEventId, recordCartEvent } from '../analytics/events';
+import { metricsEventId } from '../analytics/identity';
+import type { recordCartEvent } from '../analytics/events';
 import { recordAdvertising } from '../advertising/events';
 
 export type AddCartInput = Omit<CartLine, 'quantity'> & { quantity?: number; analyticsSource?: 'cross_sell' };
@@ -144,10 +145,19 @@ function ScopedCartProvider({ children, store, apiOk }: { children: ReactNode; s
 
   useEffect(() => {
     if (!apiOk || !events.length) return;
-    events.forEach((event) => recordCartEvent(store.id, event));
-    if (store.trackingEnabled) events.forEach((event) => recordAdvertising(store.id, 'add_to_cart', [event.selection], event.id));
-    const recorded = new Set(events.map((event) => event.id));
-    setState((previous) => ({ ...previous, events: previous.events.filter((event) => !recorded.has(event.id)) }));
+    let active = true; let busy = false;
+    const deliver = (): void => {
+      if (busy) return; busy = true;
+      void import('../analytics/events').then(({ recordCartEvent }) => {
+        if (!active) return;
+        events.forEach((event) => recordCartEvent(store.id, event));
+        if (store.trackingEnabled) events.forEach((event) => recordAdvertising(store.id, 'add_to_cart', [event.selection], event.id));
+        const recorded = new Set(events.map((event) => event.id));
+        setState((previous) => ({ ...previous, events: previous.events.filter((event) => !recorded.has(event.id)) }));
+      }).catch(() => { /* Retain cart events for an online retry if this chunk cannot load. */ }).finally(() => { busy = false; });
+    };
+    deliver(); window.addEventListener('online', deliver);
+    return () => { active = false; window.removeEventListener('online', deliver); };
   }, [events, apiOk, store.id, store.trackingEnabled]);
 
   const remove = useCallback((id: string) => {

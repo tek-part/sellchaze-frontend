@@ -147,6 +147,7 @@ export function useCheckoutPaymentFlow(options?: { items: ReadonlyArray<Checkout
       ...payload,
       analytics_session: metrics?.id,
       marketing_attribution: metrics?.campaign,
+      referral_attribution: metrics?.referral,
       advertising_allowed: browserAdvertisingAllowed(),
       payment_method: paymentMethod,
       ...(preserveCart ? { cart_mode: 'direct' } : {}),
