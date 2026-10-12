@@ -132,6 +132,8 @@ const StoreProductFeedPage = lazy(() => import('./pages/store/StoreProductFeedPa
 const StoreGoogleMerchantPage = lazy(() => import('./pages/store/StoreGoogleMerchantPage'));
 const StoreCampaignBuilderPage = lazy(() => import('./pages/store/StoreCampaignBuilderPage'));
 const StoreReferralBuilderPage = lazy(() => import('./pages/store/StoreReferralBuilderPage'));
+const StoreRetargetingPage = lazy(() => import('./pages/store/StoreRetargetingPage'));
+const StoreMarketingServicesPage = lazy(() => import('./pages/store/StoreMarketingServicesPage'));
 const StoreShoppingPreferencesPage = lazy(() => import('./pages/store/settings/StoreShoppingPreferencesPage'));
 const StoreLocalizationSettingsPage = lazy(() => import('./pages/store/settings/StoreLocalizationSettingsPage'));
 const StoreShippingTaxSettingsPage = lazy(() => import('./pages/store/settings/StoreShippingTaxSettingsPage'));
@@ -246,6 +248,8 @@ const STORE_ROUTES = [
     { path: 'google-merchant', element: <StoreGoogleMerchantPage /> },
     { path: 'utm-builder', element: <StoreCampaignBuilderPage /> },
     { path: 'create-referral-link', element: <StoreReferralBuilderPage /> },
+    { path: 'retargeting', element: <StoreRetargetingPage /> },
+    { path: 'marketing-services', element: <StoreMarketingServicesPage /> },
     { path: 'settings/phone-verification', element: <StorePhoneVerificationPage /> },
     { path: 'funnels', element: <StoreFunnelsPage /> },
     { path: 'pages/:pageId/builder', element: <StorePageBuilderPage /> },

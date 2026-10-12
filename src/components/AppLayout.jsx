@@ -45,7 +45,6 @@ export default function AppLayout() {
     const [logoutOpen, setLogoutOpen] = useState(false);
     const [mobileNavOpen, setMobileNavOpen] = useState(false);
     const [mobileDrawerWidth, setMobileDrawerWidth] = useState(null);
-    const frameRef = useRef(null);
     const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
     const sidebarToggleRef = useRef(null);
     const [impersonationActive, setImpersonationActive] = useState(() => isImpersonating());
@@ -57,14 +56,15 @@ export default function AppLayout() {
     const [searchQuery, setSearchQuery] = useState('');
     const [navigationQuery, setNavigationQuery] = useState('');
     const openMobileNavigation = () => {
-        setMobileDrawerWidth(Math.min(384, (frameRef.current?.clientWidth || document.documentElement.clientWidth) * 0.75));
+        // The dialog locks document scrolling; viewport width stays stable when the gutter changes.
+        setMobileDrawerWidth(Math.min(384, window.innerWidth * 0.75));
         setMobileNavOpen(true);
     };
     useEffect(() => {
         if (!mobileNavOpen) return;
         const resize = () => {
             if (window.matchMedia('(min-width: 768px)').matches) setMobileNavOpen(false);
-            else setMobileDrawerWidth(Math.min(384, (frameRef.current?.clientWidth || document.documentElement.clientWidth) * 0.75));
+            else setMobileDrawerWidth(Math.min(384, window.innerWidth * 0.75));
         };
         window.addEventListener('resize', resize);
         return () => window.removeEventListener('resize', resize);
@@ -224,7 +224,7 @@ export default function AppLayout() {
     const navigationProps = { isAdmin, isSupplier, roles: me.roles ?? [], permissions };
     const Sidebar = isAdminOnly ? AdminSidebar : MerchantSidebar;
     return (
-        <WorkspaceIconProvider><div ref={frameRef} className="sc-workspace ws-frame" data-workspace-theme={appearance.theme}>
+        <WorkspaceIconProvider><div className="sc-workspace ws-frame" data-workspace-theme={appearance.theme}>
             <a href="#workspace-content" className="ws-skip-link">{currentLng === 'ar' ? 'انتقل إلى المحتوى' : 'Skip to content'}</a>
             <motion.div id="workspace-sidebar" className="ws-sidebar-container" data-collapsed={sidebarCollapsed || undefined} initial={false} animate={{ width: sidebarCollapsed ? 64 : 272 }} transition={{ duration: reducedMotion ? 0 : 0.15, ease: [0.4, 0, 0.2, 1] }}><Sidebar me={me} permissions={permissions} storeUrl={storeUrl} collapsed={sidebarCollapsed} onSearch={() => setSearchOpen(true)} onCollapse={() => { setSidebarCollapsed(true); sidebarToggleRef.current?.focus(); }} onExpand={() => { setSidebarCollapsed(false); sidebarToggleRef.current?.focus(); }} /></motion.div>
             <div className="ws-main-column">

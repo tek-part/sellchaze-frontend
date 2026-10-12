@@ -1,0 +1,16 @@
+.ws-marketing-services { width:100%;min-width:0; }
+.ws-marketing-services-panel { padding:40px 32px 32px;background:var(--ws-panel);border-radius:12px; }
+.ws-marketing-services-brands { display:flex;justify-content:space-between;align-items:center;gap:24px;min-height:41.703125px; }
+.ws-marketing-services-brands strong { font-size:26px;font-weight:700;line-height:32px; }
+.ws-marketing-services-brands span { font-size:18px;line-height:24px;font-weight:600; }
+.sc-workspace .ws-page .ws-marketing-services h1 { margin:32px 0 0;font-size:20px;line-height:32px;font-weight:500;letter-spacing:0;text-align:center; }
+.sc-workspace .ws-page .ws-marketing-services-intro { margin:16px 0 0;font-size:16px;line-height:24px;text-align:center; }
+.ws-marketing-services-columns { display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:32px;margin-top:50px; }
+.ws-marketing-services-columns section { display:flex;flex-direction:column;min-width:0; }
+.sc-workspace .ws-page .ws-marketing-services h2 { margin:0;font-size:24px;line-height:36px;font-weight:700;letter-spacing:0; }
+.sc-workspace .ws-page .ws-marketing-services-columns p { margin:10px 0 0;font-size:16px;line-height:24px; }
+.ws-marketing-services-columns p:nth-of-type(2) { min-height:48px; }
+.ws-marketing-services-columns a { display:flex;justify-content:center;align-items:center;border-radius:8px;padding:8px 16px;min-height:40.5px;background:#0abb45;color:#fff;font-size:14px;line-height:24.5px;font-weight:500;margin-top:16px; }
+.ws-marketing-services-columns a:focus-visible { outline:2px solid var(--ws-green-ink);outline-offset:3px; }
+.ws-marketing-services-note { width:max-content;max-width:100%;margin-top:32px;padding:14px 16px;border-radius:8px;background:var(--ws-green-soft);color:var(--ws-green-ink);font-size:14px;line-height:22px; }
+@media(max-width:767px) { .ws-marketing-services-columns { grid-template-columns:minmax(0,1fr);gap:40px; }.ws-marketing-services-panel { padding:32px 16px; }.ws-marketing-services-brands { flex-wrap:wrap;gap:16px; }.ws-marketing-services-brands strong { font-size:22px; }.ws-marketing-services-brands span { font-size:16px; } }
