@@ -21,6 +21,8 @@ import { sampleNewest, sampleProductDetail } from '../dev/sampleData';
 import { useProductAdvertising } from '../advertising/hooks';
 import { catalogVariantSelection, resolveVariant, selectionAutomatic, variantAvailable } from '../state/variant-selection';
 import { variantImage } from '../utils/variant-image';
+import { recordReferral } from '../analytics/events';
+import { referralFromSearch } from '../../../shared/marketing/referral';
 
 export function ProductPage(): ReactElement | null {
   const manifest = useThemeManifest();
@@ -35,6 +37,10 @@ export function ProductPage(): ReactElement | null {
   const productQ = useAsync(() => getProduct(slug), [slug, locale]);
   const reviewsQ = useAsync(() => getProductReviews(slug), [slug, locale]);
   const relatedQ = useAsync(() => getProducts({ perPage: 8 }), [slug, locale]);
+  const referralSearch = searchParams.toString(); const referralProductId = productQ.data?.data.id;
+  useEffect(() => {
+    if (referralProductId && !productQ.loading && !productQ.error) recordReferral(store.id, referralFromSearch(referralSearch, Number(referralProductId)));
+  }, [store.id, referralProductId, referralSearch, productQ.loading, productQ.error]);
 
   const { record } = useRecentlyViewed();
   const dev = previewOrDev();

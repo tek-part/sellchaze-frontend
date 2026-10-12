@@ -1,0 +1,46 @@
+The marketing navigation includes Create referral links after Google Merchant
+in the observed order. The working scoped page searches the actual active store
+catalog, supports paginated choices, clear/open, keyboard ArrowDown/Up/Enter/Escape,
+loading/retry/no-result states, create and copy/manual-copy fallback. Editing inputs
+clears stale results. Public links use the server's verified canonical storefront
+origin and the observed /products/{numeric-ID}/ref/{code} shape. The landing route
+resolves the active host-scoped product and navigates to its slug while preserving
+query/fragment and setting ref. No draft/foreign/demo product is fabricated.
+
+Product resolution captures only a bounded Unicode marketer code/source product in
+the existing30-minute per-store inactivity session. Invalid/duplicate tags do not
+replace valid attribution; untagged navigation retains it and expiry removes it.
+Preview/DNT/GPC prevent capture/submission. Checkout snapshots the two values with
+the existing analytics UUID, alongside campaign attribution. Merchant order details
+show the private snapshot; public receipts omit it. This is a visitor-supplied
+source hint; commission entitlement/configuration/settlement is not yet verified.
+
+The desktop reference matches both native input frames/fonts, the create button
+frame/font and18px neutral save glyph path. Native clear/arrow vectors follow the
+observed paths. Actual390px local create/copy/keyboard flow succeeded. Campaign
+labels now clip with ellipsis instead of overflowing a phone; floating motion and
+outline gaps are retained. Final390px comparison matches both native inputs/create
+frames/fonts and the76px header. The24px mobile menu uses every observed path
+attribute and mirrors in RTL; the24px bell is beside it at302x26, with matching
+reference paths. Actual drawer292.5x844 matches the reference75% of390, measured
+from the visible panel rather than the zero-height portal role wrapper. Complete
+application/theme pixel parity remains unproven; ten existing Linux references
+are missing and nonblocking. All three UTM phone input/create frames/fonts also
+match the observed390px reference and clipped labels no longer add horizontal
+scrolling. Unsupported merchant drawer search/support entries were removed;
+Community remains the requested exception and operator console controls remain.
+
+Privacy/ID helpers stay small/eager; metrics queue/session logic loads on allowed
+visible visits or cart events and with product/checkout routes. Cart events remain
+queued when loading fails and retry online; existing event IDs/deduplication,
+store scope and advertising semantics are preserved. The original150KiB storefront
+gate is unchanged; adding attribution initially failed150.52KiB, then demand loading
+passed149.78/84.63/155.65KiB. Local525tests81files, ESLint/types passed after header
+changes; final lint/build/sitemap passed after drawer cleanup. Exact PR/main CI
+must validate the complete final source before merge/publication.
+Actual local link-origin substitution (only origin/path/code retained, optional
+campaign tags added) is documented; no public test-domain acceptance is claimed.
+All174 original database tables preserved after owned review cleanup. Owned5193
+server25999 stopped after its shop tab closed;8008/5187 and unrelated5192 retained.
+No broad browser storage clear.152 themes/84funnels/all remaining features and
+production activation remain required/incomplete.

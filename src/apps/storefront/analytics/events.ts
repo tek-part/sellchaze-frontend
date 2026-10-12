@@ -1,28 +1,19 @@
 import { ApiError, apiFetch } from '../api/client';
 import { campaignFromSearch, cleanCampaign, type CampaignAttribution } from '../../../shared/marketing/campaign';
+import { cleanReferral, type ReferralAttribution } from '../../../shared/marketing/referral';
+import { metricsAllowedInBrowser as allowed, metricsEventId } from './identity';
+export { metricsAllowed, metricsEventId } from './identity';
 
 const uuid = /^[a-f0-9]{8}-[a-f0-9]{4}-[1-8][a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/i;
 const lifetime = 30 * 60 * 1000;
 type EventKind = 'visit' | 'add_to_cart' | 'checkout_started';
 type EventSource = 'storefront' | 'funnel' | 'cross_sell';
 interface Event { event_id: string; kind: EventKind; source: EventSource; product_id?: number; quantity?: number }
-interface Session { id: string; expires: number; pending: Event[]; starts: string[]; campaign?: CampaignAttribution }
+interface Session { id: string; expires: number; pending: Event[]; starts: string[]; campaign?: CampaignAttribution; referral?: ReferralAttribution }
 const sessions = new Map<string, Session>();
 const busy = new Set<string>();
 const prefix = 'sf:metrics:v1:';
 
-export function metricsAllowed(options: { preview: boolean; doNotTrack?: string | null; globalPrivacyControl?: boolean }): boolean {
-  return !options.preview && options.doNotTrack !== '1' && options.globalPrivacyControl !== true;
-}
-function allowed(): boolean {
-  if (typeof window === 'undefined') return false;
-  return metricsAllowed({ preview: new URLSearchParams(window.location.search).get('preview') === '1',
-    doNotTrack: navigator.doNotTrack, globalPrivacyControl: (navigator as Navigator & { globalPrivacyControl?: boolean }).globalPrivacyControl });
-}
-export function metricsEventId(): string | undefined {
-  if (!allowed()) return undefined;
-  try { return crypto.randomUUID(); } catch { return undefined; }
-}
 export function restoredMetricsSession(value: unknown, now: number): Session | undefined {
   if (!value || typeof value !== 'object') return undefined;
   const row = value as Partial<Session>;
@@ -36,7 +27,8 @@ export function restoredMetricsSession(value: unknown, now: number): Session | u
       ...(event.kind !== 'visit' ? { product_id: event.product_id! } : {}), ...(event.kind === 'add_to_cart' ? { quantity: event.quantity! } : {}) });
   }
   const campaign = cleanCampaign(row.campaign);
-  return { id: row.id, expires: row.expires, pending, starts: row.starts, ...(campaign ? { campaign } : {}) };
+  const referral = cleanReferral(row.referral);
+  return { id: row.id, expires: row.expires, pending, starts: row.starts, ...(campaign ? { campaign } : {}), ...(referral ? { referral } : {}) };
 }
 export function saveMetricsSession(storeId: string, session: Session): void {
   sessions.set(storeId, session);
@@ -77,6 +69,11 @@ export async function flushMetricsSession(storeId: string): Promise<void> {
 }
 export function recordVisit(storeId: string): void {
   if (metricsSession(storeId)) void flushMetricsSession(storeId);
+}
+export function recordReferral(storeId: string, value: unknown): void {
+  const referral = cleanReferral(value); if (!referral) return;
+  const session = metricsSession(storeId); if (!session) return;
+  session.referral = referral; saveMetricsSession(storeId, session);
 }
 export function recordCartEvent(storeId: string, event: { id: string; productId: string; quantity: number; source?: 'cross_sell' }): void {
   const session = metricsSession(storeId); if (!session || !uuid.test(event.id) || !/^[1-9]\d*$/.test(event.productId) || !Number.isSafeInteger(event.quantity) || event.quantity < 1 || event.quantity > 999) return;

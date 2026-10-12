@@ -11,6 +11,7 @@ import { FaWhatsapp } from 'react-icons/fa';
 import UserAvatar from '../UserAvatar';
 import NotificationsMenu from '../NotificationsMenu';
 import NotificationBell from './NotificationBell';
+import { MobileMenuIcon } from './SidebarReferenceIcons';
 import { CHAT_ENABLED } from '../../lib/features';
 import useWorkspaceCopy from './workspaceCopy';
 import WorkspaceAppearanceControl from './WorkspaceAppearanceControl';
@@ -27,9 +28,10 @@ export default function WorkspaceHeader({ me, storeUrl, isSupplier, permissions,
     const mobile = useSyncExternalStore(subscribeMobile, getMobile, () => false);
     const iconButton = 'ws-icon-button'; const menuRow = 'ws-menu-row';
     const publicSlug = me.username || me.profile?.username || `user_${me.id}`;
-    return <header className="ws-header">
+    return <header className={`ws-header ${merchantWorkspace ? 'ws-header--merchant' : ''}`}>
         <div className="ws-header-start">
-            <button type="button" className={`${iconButton} ws-mobile-menu`} onClick={onNavigation} aria-label={ws('openNavigation')}><HiOutlineBars3 aria-hidden /></button>
+            <button type="button" className={`${iconButton} ws-mobile-menu`} onClick={onNavigation} aria-label={ws('openNavigation')}><MobileMenuIcon aria-hidden /></button>
+            {mobile && merchantWorkspace ? <NotificationBell className="ws-mobile-notifications" /> : null}
             <button ref={sidebarToggleRef} type="button" className={`${iconButton} ws-expand`} onClick={onToggleSidebar} aria-label={ws(collapsed ? 'expand' : 'collapse')} aria-expanded={!collapsed} aria-controls="workspace-sidebar"><HiOutlineBars3 aria-hidden /></button>
         </div>
         {mobile ? <Link className="ws-mobile-brand" to="/dashboard" aria-label={t('dashboard')}><img src="/icon.png" alt="" /><strong>Sellchaze</strong></Link> : null}
@@ -38,7 +40,7 @@ export default function WorkspaceHeader({ me, storeUrl, isSupplier, permissions,
             <button type="button" className={`${iconButton} ws-refresh`} onClick={() => window.location.reload()} aria-label={ws('refresh')} title={ws('refresh')}><HiOutlineArrowPath aria-hidden /></button>
             {!mobile ? <WorkspaceAppearanceControl appearance={appearance} /> : null}
             {!mobile ? <button type="button" onClick={onLanguage} className={iconButton} aria-label={ws('language')} title={i18n.language.startsWith('ar') ? 'English' : 'العربية'}><HiOutlineLanguage aria-hidden /></button> : null}
-            {merchantWorkspace ? <NotificationBell /> : <NotificationsMenu isSupplier={isSupplier} />}
+            {merchantWorkspace ? !mobile && <NotificationBell /> : <NotificationsMenu isSupplier={isSupplier} />}
             {!merchantWorkspace && CHAT_ENABLED ? <Link to="/chat" className={`${iconButton} ws-chat-link`} aria-label={t('nav_messages', 'Messages')}><HiOutlineChatBubbleLeftRight aria-hidden />{chatUnread > 0 ? <span className="ws-notification-dot">{chatUnread > 99 ? '99+' : chatUnread}</span> : null}</Link> : null}
             <Menu as="div" className="relative">
                 <MenuButton className="ws-account-button" aria-label={t('user_menu_aria', { name: me.name })}>

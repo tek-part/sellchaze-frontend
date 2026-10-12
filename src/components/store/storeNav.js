@@ -51,6 +51,7 @@ export function buildStoreNav(t, access = {}) {
                 { key: 'product-feed', to: 'product-feed', label: 'Product Feed', Icon: HiOutlineDocumentText, show: access.canStoreSettings },
                 { key: 'google-merchant', to: 'google-merchant', label: 'Google Merchant', Icon: HiOutlineGlobeAlt, show: access.canStoreSettings },
                 { key: 'utm-builder', to: 'utm-builder', label: t('store_nav_utm_builder', 'Track advertising campaigns'), Icon: HiOutlineGlobeAlt, show: access.canStoreSettings },
+                { key: 'create-referral-link', to: 'create-referral-link', label: t('store_nav_referral_builder', 'Create referral links'), Icon: HiOutlineGlobeAlt, show: access.canStoreSettings },
                 { key: 'analytics', to: 'analytics', label: t('store_nav_analytics', 'Analytics'), Icon: HiOutlineChartBar, show: access.canStoreAnalytics },
             ],
         },

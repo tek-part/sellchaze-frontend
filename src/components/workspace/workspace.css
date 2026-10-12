@@ -371,3 +371,5 @@ body[data-workspace-theme='dark'] .ws-page [class*='shadow-'] { --tw-shadow-colo
 @media (prefers-reduced-motion:reduce) { html:has(body[data-workspace-theme]) { scroll-behavior:auto; } }
 
 [dir='rtl'] svg[data-workspace-icon='SidebarLeftIcon'] { transform:rotate(180deg); }
+[dir='rtl'] svg[data-workspace-mobile-menu] { transform:scaleX(-1); }
+@media(max-width:767px) { .ws-header--merchant .ws-header-start { gap:16px; }.ws-header--merchant .ws-mobile-menu,.ws-header--merchant .ws-mobile-notifications { width:24px;height:24px;padding:0; }.ws-header--merchant .ws-account-button { padding:0; }.ws-header--merchant .ws-header-start .ws-icon-button svg { width:24px;height:24px; }body[data-workspace-theme='light'] .ws-header--merchant .ws-header-start .ws-icon-button { color:#171717; } }
