@@ -18,6 +18,7 @@ export interface StoreInfo {
   phone?: string;
   identity?: import('../store-identity').StoreIdentity;
   autoSelectVariants?: boolean;
+  trackingEnabled?: boolean;
   shipping?: import('../types/shipping').ShippingOffer;
   id: string;
   name: string;
@@ -85,6 +86,7 @@ export function StoreProvider(props: { children: ReactNode; initialData?: ApiSto
     store = {
       id: String(s.id),
       ...(s.auto_select_variants !== undefined ? { autoSelectVariants: s.auto_select_variants } : {}),
+      ...(s.tracking_enabled !== undefined ? { trackingEnabled: s.tracking_enabled } : {}),
       name: s.name,
       ...(s.identity ? { identity: s.identity } : {}),
       slug: s.slug,

@@ -1,0 +1,42 @@
+Store tracking UI and storefront events
+======================================
+
+The merchant sidebar has Tracking tools after Sales funnels, with Pixel settings,
+Conversion API and Connect Google tag. Existing store settings permissions apply
+to the three pages. Multiline IDs are trimmed on save, empty lists clear them,
+stale edits offer reload, and successful saves display confirmation. Server
+pixels have provider/ID/note/enable controls, masked token editing and delete
+confirmation. The API never returns the saved token.
+
+The authenticated reference was observed read-only. Desktop Google textarea
+border frame is800x152.78125 at1920 viewport,16px/23px IBM Plex Sans Arabic; its
+measured x808/y337.8125 matches the observed reference. Pixel fields follow the
+same frame and responsive/compact sidebar rules. This does not establish full
+visual parity. Current browser viewport control did not resize the claimed tab;
+390px actual UI acceptance remains unverified. Arabic/English and dark display
+were inspected; release CI runs the existing responsive accessibility suite.
+
+Configured stores send page/product/add/checkout and accepted order actions.
+Catalog prices and canonical HMAC IDs come from the backend. SDK scripts use
+fixed official origins, explicit provider destination IDs and no GA automatic
+page view. Snap track targets the specific pixel. Browser replay suppression is
+bounded per session; network action queue is bounded in memory. Receipt refresh
+uses the recorded purchase event and does not create another order or purchase.
+Ad blockers/SDK failures never prevent cart, checkout or receipt use.
+
+Preview, private receipt URL capabilities, DNT/GPC and private account paths
+disable advertising. Contact data, proof links and personalization never enter
+browser SDK payloads. Google purchase amount is merchandise250 plus separately
+reported85 shipping in the local fixture; Facebook/TikTok/Snap amount is335.
+
+VITE_TRACKING_TEST_MODE=1 is a DEV-only review adapter: commands are logged with
+the [tracking-local-review] prefix without loading advertising scripts. Production
+builds ignore it. The local fixture used dummy IDs and no real advertising calls.
+Do not use real tokens with review fixtures. Backend CAPI requires its scheduler.
+
+Validation:512 unit tests in78 files, including9 advertising tests in3 files;
+ESLint, storefront TypeScript, Vite build and bundle budgets passed. Actual local
+pixel/Google save and reload, server note edit and an order/receipt replay were
+verified. Server delivery was simulated with Http::fake, never real providers.
+All named disposable fixture rows/settings were removed; prior data retained.
+Production integration and full competitor pages/themes remain incomplete.
