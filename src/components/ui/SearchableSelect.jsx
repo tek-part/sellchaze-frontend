@@ -69,6 +69,8 @@ function optionsFromChildren(children) {
 export default function SearchableSelect({
     value,
     onChange,
+    onSearch,
+    loading = false,
     options,
     children,
     name,
@@ -123,6 +125,7 @@ export default function SearchableSelect({
             value={currentValue}
             onChange={(next) => {
                 setQuery('');
+                onSearch?.('');
                 emit(next);
             }}
             disabled={disabled}
@@ -163,7 +166,7 @@ export default function SearchableSelect({
                                 type="text"
                                 autoFocus
                                 value={query}
-                                onChange={(e) => setQuery(e.target.value)}
+                                onChange={(e) => { setQuery(e.target.value); onSearch?.(e.target.value); }}
                                 onKeyDown={(e) => {
                                     if (e.key === 'Enter') e.preventDefault(); // never submit the surrounding form
                                     if (!['Escape', 'Tab'].includes(e.key)) e.stopPropagation();
@@ -175,7 +178,7 @@ export default function SearchableSelect({
                     </div>
                 ) : null}
 
-                {filtered.length === 0 ? (
+                {loading ? <div role="status" className="px-3 py-2 text-sm text-slate-400">{t('loading', 'Loading…')}</div> : filtered.length === 0 ? (
                     <div className="px-3 py-2 text-sm text-slate-400">{t('no_results', 'No results')}</div>
                 ) : (
                     filtered.map((opt) => (
