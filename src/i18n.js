@@ -5,6 +5,11 @@ const resources = {
     en: {
         translation: {
             app_name: 'Sellchaze',
+            workspace_nav_main: 'Main', workspace_store_design: 'Store design', workspace_marketing_tools: 'Marketing tools',
+            workspace_all_products: 'All products', workspace_all_orders: 'All orders',
+            workspace_business_catalog: 'Business catalog', workspace_business_products: 'Business products',
+            workspace_business_orders: 'Business orders',
+            workspace_nav_other: 'Other', workspace_business_tools: 'Business & administration',
             store_nav_funnels: 'Sales funnels',
             store_nav_checkout_fields: 'Checkout form',
             store_nav_thank_you: 'Thank-you page',
@@ -2892,6 +2897,11 @@ stdout_logfile=/path/to/your-app/storage/logs/wavex-worker.log`,
     ar: {
         translation: {
             app_name: 'سيلتشيس',
+            workspace_nav_main: 'الرئيسية', workspace_store_design: 'تصميم المتجر', workspace_marketing_tools: 'أدوات التسويق',
+            workspace_all_products: 'كل المنتجات', workspace_all_orders: 'كل الطلبات',
+            workspace_business_catalog: 'كتالوج الأعمال', workspace_business_products: 'منتجات الأعمال',
+            workspace_business_orders: 'طلبات الأعمال',
+            workspace_nav_other: 'أخرى', workspace_business_tools: 'الأعمال والإدارة',
             store_nav_funnels: 'مسارات البيع',
             store_nav_checkout_fields: 'نموذج الشراء',
             store_nav_thank_you: 'صفحة الشكر',
