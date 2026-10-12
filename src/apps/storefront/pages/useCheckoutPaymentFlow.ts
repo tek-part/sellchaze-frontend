@@ -16,7 +16,7 @@ import { clearCheckoutAttempt, readCheckoutAttempt, resumeCheckoutAttempt, saveC
 import { saveOrderReceipt } from './order-receipt';
 import { retireLeadToken } from './checkout-lead-session';
 import { checkoutCartItems } from './checkout-cart-items';
-import { analyticsSessionId } from '../analytics/events';
+import { metricsSession } from '../analytics/events';
 import { browserAdvertisingAllowed, sendAdvertisingEnvelope } from '../advertising/events';
 import { useStore } from '../state/store-context';
 
@@ -142,9 +142,11 @@ export function useCheckoutPaymentFlow(options?: { items: ReadonlyArray<Checkout
       setAttempt(unresolved);
       return;
     }
+    const metrics = metricsSession(store.id);
     const next = { key: crypto.randomUUID(), body: {
       ...payload,
-      analytics_session: analyticsSessionId(store.id),
+      analytics_session: metrics?.id,
+      marketing_attribution: metrics?.campaign,
       advertising_allowed: browserAdvertisingAllowed(),
       payment_method: paymentMethod,
       ...(preserveCart ? { cart_mode: 'direct' } : {}),

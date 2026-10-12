@@ -157,6 +157,7 @@ export default function StoreOrderDetailPage() {
 
                 {/* Sidebar: customer + status actions */}
                 <div className="space-y-5">
+                    {order.marketing_attribution ? <section className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-card" aria-label={ar ? 'مصدر الحملة الاعلانية' : 'Campaign attribution'}><h2 className="mb-3 text-base font-semibold text-slate-900">{ar ? 'مصدر الحملة الاعلانية' : 'Campaign attribution'}</h2><dl className="space-y-2 text-sm"><div><dt className="text-slate-500">{ar ? 'مصدر الحملة' : 'Campaign source'}</dt><dd className="break-words text-slate-900"><bdi>{order.marketing_attribution.source}</bdi></dd></div><div><dt className="text-slate-500">{ar ? 'اسم الحملة' : 'Campaign name'}</dt><dd className="break-words text-slate-900"><bdi>{order.marketing_attribution.campaign}</bdi></dd></div></dl></section> : null}
                     <div className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-card">
                         <h2 className="mb-3 text-base font-semibold text-slate-900">{ar ? 'الدفع' : 'Payment'}</h2>
                         <p className="text-sm text-slate-700">{order.payment_method === 'bank_transfer' ? (ar ? 'تحويل بنكي' : 'Bank transfer') : order.payment_method === 'cod' ? (ar ? 'الدفع عند الاستلام' : 'Cash on delivery') : order.payment_method} · {order.payment_status === 'paid' ? (ar ? 'مدفوع' : 'Paid') : (ar ? 'بانتظار الدفع' : 'Awaiting payment')}</p>

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { checkoutMetricsKey, metricsAllowed, restoredMetricsSession } from './events';
+import { metricsAllowed, restoredMetricsSession } from './events';
+import { checkoutMetricsKey } from './checkout-key';
 
 describe('first-party metrics contracts', () => {
   it('excludes design previews and respects browser privacy choices', () => {
@@ -24,5 +25,7 @@ describe('first-party metrics contracts', () => {
     expect(restoredMetricsSession({ ...session, expires: Infinity }, 0)).toBeUndefined();
     expect(restoredMetricsSession({ ...session, pending: [{ ...event, quantity: 1000 }] }, 0)).toBeUndefined();
     expect(restoredMetricsSession({ ...session, pending: Array(51).fill(event) }, 0)).toBeUndefined();
+    expect(restoredMetricsSession({ ...session, campaign: { source: 'meta', campaign: 'test', privateContact: 'NEVER-SEND' } }, 0)?.campaign).toEqual({ source: 'meta', campaign: 'test' });
+    expect(restoredMetricsSession({ ...session, campaign: { source: '<script>', campaign: 'test' } }, 0)?.campaign).toBeUndefined();
   });
 });
