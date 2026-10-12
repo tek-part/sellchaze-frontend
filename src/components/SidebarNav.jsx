@@ -1,6 +1,7 @@
 import NavigationResults from './workspace/NavigationResults';
+import useWorkspaceCopy from './workspace/workspaceCopy';
 import { Disclosure, DisclosureButton, DisclosurePanel } from '@headlessui/react';
-import { createContext, useContext } from 'react';
+import { createContext, useContext, useEffect, useMemo, useRef } from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
 import { Link, NavLink, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -84,6 +85,18 @@ function megaSubNavLinkClass({ isActive }) {
  */
 const NavVariantContext = createContext('list');
 const ExpandedGroupContext = createContext('');
+const AccordionContext = createContext(null);
+
+function RegisterDisclosure({ groupKey, close, buttonRef, groupActive, expanded }) {
+    const accordion = useContext(AccordionContext);
+    useEffect(() => {
+        if (!accordion) return;
+        const unregister = accordion.register(groupKey, close);
+        if (expanded || groupActive) accordion.activate(groupKey, expanded ? buttonRef.current : document.activeElement);
+        return unregister;
+    }, [accordion, groupKey, close, buttonRef, groupActive, expanded]);
+    return null;
+}
 
 // No boxes: sections are open columns of links separated by whitespace only.
 const MEGA_SECTION_CLASS = 'flex flex-col gap-0.5';
@@ -110,11 +123,16 @@ function NavGroup({ title, groupKey = title, icon: Icon, defaultOpen, groupActiv
     const mega = useContext(NavVariantContext) === 'mega';
     const expanded = useContext(ExpandedGroupContext) === groupKey;
     const reducedMotion = useReducedMotion();
+    const accordion = useContext(AccordionContext); const buttonRef = useRef(null);
     return (
         <Disclosure key={`${groupActive ? 'active' : 'idle'}-${expanded}`} defaultOpen={defaultOpen || expanded}>
-            {({ open }) => (
+            {({ open, close }) => (
                 <div className="flex flex-col overflow-hidden rounded-xl">
+                    <RegisterDisclosure groupKey={groupKey} close={close} buttonRef={buttonRef} groupActive={groupActive} expanded={expanded} />
                     <DisclosureButton
+                        ref={buttonRef}
+                        onClick={() => accordion?.activate(groupKey, buttonRef.current)}
+                        onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') accordion?.activate(groupKey, buttonRef.current); }}
                         className={[
                             'flex w-full items-center justify-between gap-2 rounded-xl px-3 py-2.5 text-start font-medium transition-all duration-200',
                             mega ? 'text-[15px]' : 'text-sm',
@@ -152,16 +170,22 @@ function NavGroup({ title, groupKey = title, icon: Icon, defaultOpen, groupActiv
     );
 }
 
-export default function SidebarNav({ variant = 'list', expandedGroup = '', ...props }) {
+export default function SidebarNav({ variant = 'list', expandedGroup = '', exclusive = false, ...props }) {
+    const closers = useRef(new Map());
+    const accordion = useMemo(() => exclusive ? {
+        register(key, close) { closers.current.set(key, close); return () => { if (closers.current.get(key) === close) closers.current.delete(key); }; },
+        activate(key, target) { for (const [other, close] of closers.current) if (other !== key) close(target); },
+    } : null, [exclusive]);
     return (
         <NavVariantContext.Provider value={variant}>
-            <ExpandedGroupContext.Provider value={expandedGroup}><SidebarNavInner {...props} variant={variant} /></ExpandedGroupContext.Provider>
+            <AccordionContext.Provider value={accordion}><ExpandedGroupContext.Provider value={expandedGroup}><SidebarNavInner {...props} variant={variant} /></ExpandedGroupContext.Provider></AccordionContext.Provider>
         </NavVariantContext.Provider>
     );
 }
 
 function SidebarNavInner({ isAdmin = false, isSupplier = false, roles = [], permissions = [], onNavigate, onExpand, compact = false, variant = 'list', query = '', search = false }) {
     const { t } = useTranslation();
+    const ws = useWorkspaceCopy();
     const mega = variant === 'mega';
     // Link styles follow the variant; the JSX below references these local names.
     const navLinkClass = mega ? megaNavLinkClass : listNavLinkClass;
@@ -424,7 +448,7 @@ function SidebarNavInner({ isAdmin = false, isSupplier = false, roles = [], perm
                 <SectionLabel>{hasStoreAccess ? t('workspace_nav_main', 'Main') : t('nav_sidebar_section_overview')}</SectionLabel>
                 {hasStoreAccess ? <NavLink to="/dashboard" className={navLinkClass}>
                     <HiOutlineHome className="h-5 w-5 shrink-0 opacity-95" aria-hidden />
-                    {t('dashboard')}
+                    {ws('statisticsDashboard')}
                 </NavLink> : <NavLink to="/community" className={navLinkClass}><HiOutlineUsers aria-hidden />{t('feed_title', 'Community')}</NavLink>}
                 {workspaceStoreGroups.filter((group) => group.key !== 'settings').map((group) => {
                     if (group.single) {

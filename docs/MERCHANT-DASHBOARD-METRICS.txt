@@ -1,0 +1,37 @@
+Merchant dashboard layout and counters
+
+The statistics page uses twelve metrics in the observed order, six columns on
+large screens, five existing Chart.js area charts, low-stock and best-seller tables,
+and the observed curved three-stage conversion graphic. Reference measurements at
+1920px viewport/1910px client: cards 245 x 107.15625px, gap 24px, 16px radius,
+#d6d6d6 border, 24px icon circle and 16px glyph; IBM Plex Sans Arabic. Smaller
+screens use four/three/two metric columns and one chart column. Color values were
+observed from the current authenticated reference. Semantic glyph wrappers remain
+the existing icon library; every exact glyph is not yet verified.
+
+The date control has quick selections, two calendars on desktop, one on phones,
+explicit date inputs, inclusive range validation, arrow/month keys and bounded tab
+stops. Locale, RTL, dark appearance and reduced motion use workspace preferences.
+API errors clear stale statistics and expose Retry. Unknown historical traffic is
+not drawn as zero; legacy costs do not produce a fabricated profit.
+
+Merchant navigation now keeps one section expanded, including mouse/keyboard and
+the mobile drawer, while preserving focus. Generic admin navigation keeps its prior
+behavior. Remaining competitor tracking/wallet/services/catalog/A-B sections and
+dashboard onboarding/promotion panels are not implemented by this change.
+
+First-party analytics records real accepted cart additions, storefront visits and
+cart/funnel checkout starts. Preview pages, DNT and GPC are excluded; the bounded
+session-storage queue contains only opaque IDs and catalog identifiers, never
+contacts/personalization/receipt/payment proofs/prices/URLs. No dependency added.
+VITE_DEV_STOREFRONT_ONLY=1 supports a separate live local storefront dev server;
+it does not alter production routing or the normal merchant dev server.
+
+Quote and actual cart checkout now share checkoutCartItems(). Quantity-offer IDs
+and versions survive submission, while server-authoritative prices/free delivery
+remain outside the client request. This fixes the prior case where the quote used
+an offer but final submission silently omitted its identity.
+
+This is one dashboard phase, not complete competitor/layout/theme parity. Filled
+competitor financial data was unavailable. See the paired backend metrics document
+for precise calculation definitions and additive migration activation requirements.

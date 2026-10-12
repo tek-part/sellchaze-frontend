@@ -17,7 +17,7 @@ import { fileURLToPath } from 'node:url';
  * This is the dev shim ONLY. It replaces the old `storefront.html` + hash-routing workaround, and
  * nothing in the application depends on it: on a real store host the storefront is simply the root.
  */
-function storefrontPreviewRouting() {
+function storefrontPreviewRouting(liveDevStorefront = false) {
   const installMiddleware = (server) => {
     server.middlewares.use((req, _res, next) => {
       if (!req.url) return next();
@@ -27,7 +27,7 @@ function storefrontPreviewRouting() {
       if (!accept.includes('text/html')) return next();
 
       const url = new URL(req.url, 'http://localhost');
-      if (url.searchParams.get('preview') === '1') {
+      if (liveDevStorefront || url.searchParams.get('preview') === '1') {
         req.url = `/storefront.html${url.search}`;
       }
       return next();
@@ -47,7 +47,7 @@ export default defineConfig(({ mode }) => {
     const proxyTarget = env.VITE_PROXY_TARGET || 'http://127.0.0.1:8000';
 
     return {
-        plugins: [react(), storefrontPreviewRouting()],
+        plugins: [react(), storefrontPreviewRouting(env.VITE_DEV_STOREFRONT_ONLY === '1')],
         build: {
             chunkSizeWarningLimit: 900,
             rollupOptions: {

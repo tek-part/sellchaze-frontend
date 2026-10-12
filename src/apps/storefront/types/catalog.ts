@@ -27,6 +27,7 @@ export interface ProductMediaModel extends ProductImage {
 
 /** Compact product shape a card needs — a projection of the full product. */
 export interface ProductCardModel {
+  analyticsSource?: 'cross_sell';
   sharedMaxQuantity?: number;
   orderMaxQuantity?: number;
   autoSelectVariants?: boolean;

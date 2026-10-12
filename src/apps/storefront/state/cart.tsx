@@ -24,8 +24,10 @@ import { toProductDetail } from '../api/mappers';
 import { useToast } from '../foundation/components/toast/useToast';
 import { useTranslation } from 'react-i18next';
 import type { ProductDetailModel } from '../types/catalog';
+import { metricsEventId, recordCartEvent } from '../analytics/events';
 
-export type AddCartInput = Omit<CartLine, 'quantity'> & { quantity?: number };
+export type AddCartInput = Omit<CartLine, 'quantity'> & { quantity?: number; analyticsSource?: 'cross_sell' };
+type CartMetricEvent = Parameters<typeof recordCartEvent>[1];
 
 export interface CartApi {
   lines: ReadonlyArray<CartLine>;
@@ -49,7 +51,7 @@ export function CartProvider(props: { children: ReactNode }): ReactElement {
 }
 
 function ScopedCartProvider({ children, store, apiOk }: { children: ReactNode; store: StoreInfo; apiOk: boolean }): ReactElement {
-  const [{ lines, notification }, setState] = useState(() => ({ lines: loadInitial(store), notification: 0 }));
+  const [{ lines, notification, events }, setState] = useState(() => ({ lines: loadInitial(store), notification: 0, events: [] as CartMetricEvent[] }));
   const { t, i18n } = useTranslation();
   const { toast } = useToast();
   const notified = useRef(0);
@@ -101,7 +103,7 @@ function ScopedCartProvider({ children, store, apiOk }: { children: ReactNode; s
         setState((previous) => {
           const next = reconcileCartCatalog(previous.lines, requested, products);
           const changed = cartPurchaseSummary(previous.lines) !== cartPurchaseSummary(next);
-          return { lines: next, notification: previous.notification + (changed ? 1 : 0) };
+          return { ...previous, lines: next, notification: previous.notification + (changed ? 1 : 0) };
         });
       } catch { /* offline/transient failure never erases selections; checkout validates again */ }
       finally { busy = false; }
@@ -128,8 +130,21 @@ function ScopedCartProvider({ children, store, apiOk }: { children: ReactNode; s
   }, [notification, toast, t]);
 
   const add = useCallback((line: AddCartInput) => {
-    setState((previous) => ({ ...previous, lines: addCartLine(previous.lines, line) }));
-  }, []);
+    const id = apiOk ? metricsEventId() : undefined;
+    const { analyticsSource, ...input } = line;
+    setState((previous) => {
+      const next = addCartLine(previous.lines, input);
+      const quantity = (next.find((row) => row.id === line.id)?.quantity ?? 0) - (previous.lines.find((row) => row.id === line.id)?.quantity ?? 0);
+      return { ...previous, lines: next, events: id && quantity > 0 ? [...previous.events, { id, productId: line.productId, quantity, ...(analyticsSource ? { source: analyticsSource } : {}) }] : previous.events };
+    });
+  }, [apiOk]);
+
+  useEffect(() => {
+    if (!apiOk || !events.length) return;
+    events.forEach((event) => recordCartEvent(store.id, event));
+    const recorded = new Set(events.map((event) => event.id));
+    setState((previous) => ({ ...previous, events: previous.events.filter((event) => !recorded.has(event.id)) }));
+  }, [events, apiOk, store.id]);
 
   const remove = useCallback((id: string) => {
     setState((previous) => ({ ...previous, lines: previous.lines.filter((line) => line.id !== id) }));

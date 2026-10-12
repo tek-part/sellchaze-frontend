@@ -15,6 +15,9 @@ import { withSessionParams } from './NavigationInterceptor';
 import { clearCheckoutAttempt, readCheckoutAttempt, resumeCheckoutAttempt, saveCheckoutAttempt, type CheckoutAttempt } from './checkout-attempt';
 import { saveOrderReceipt } from './order-receipt';
 import { retireLeadToken } from './checkout-lead-session';
+import { checkoutCartItems } from './checkout-cart-items';
+import { analyticsSessionId } from '../analytics/events';
+import { useStore } from '../state/store-context';
 
 export interface CheckoutContactPayload {
   customer_name?: string;
@@ -45,6 +48,7 @@ export function useCheckoutPaymentFlow(options?: { items: ReadonlyArray<Checkout
   const { t } = useTranslation();
   const navigate = useNavigate();
   const cart = useCart();
+  const { store } = useStore();
   const scope = window.location.origin;
   const [attempt, setAttempt] = useState<CheckoutAttempt | undefined>(() => readCheckoutAttempt(scope));
   const [paymentMethods, setPaymentMethods] = useState<ReadonlyArray<StorefrontPaymentMethod>>([]);
@@ -137,14 +141,15 @@ export function useCheckoutPaymentFlow(options?: { items: ReadonlyArray<Checkout
     }
     const next = { key: crypto.randomUUID(), body: {
       ...payload,
+      analytics_session: analyticsSessionId(store.id),
       payment_method: paymentMethod,
       ...(preserveCart ? { cart_mode: 'direct' } : {}),
-      items: items ?? cart.lines.map((line) => ({ product_id: Number(line.productId), variant_id: line.variantId ? Number(line.variantId) : undefined, quantity: line.quantity, ...(line.personalization ? { personalization: line.personalization } : {}) })),
+      items: items ?? checkoutCartItems(cart.lines),
     } };
     saveCheckoutAttempt(scope, next);
     setAttempt(next);
     await run(() => submitCheckout(next.body, next.key) as Promise<CheckoutResponse>);
-  }, [attempt, cart.lines, items, paymentMethod, paymentRetry, preserveCart, run, scope]);
+  }, [attempt, cart.lines, items, paymentMethod, paymentRetry, preserveCart, run, scope, store.id]);
 
   const recover = useCallback(async (): Promise<void> => {
     if (!attempt) return;

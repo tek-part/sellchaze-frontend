@@ -22,6 +22,8 @@ import { minimumOrderAllows } from './minimum-order';
 import { ThankYouContent, ThankYouProducts } from './ThankYouContent';
 import { currentThankYou } from './thank-you';
 import { useCheckoutLead } from './useCheckoutLead';
+import { checkoutCartItems } from './checkout-cart-items';
+import { useCheckoutMetrics } from '../analytics/hooks';
 
 export function CheckoutPage(): ReactElement {
   const { t } = useTranslation();
@@ -33,7 +35,8 @@ export function CheckoutPage(): ReactElement {
   const [appliedCoupon, setAppliedCoupon] = useState('');
   const checkout = useCheckoutPaymentFlow();
   const tpl = useTemplate('checkout');
-  const items = useMemo(() => cart.lines.map((line) => ({ product_id: Number(line.productId), quantity: line.quantity, ...(line.quantityOffer ? { quantity_offer_id: line.quantityOffer.id, quantity_offer_version: line.quantityOffer.version } : {}), ...(line.personalization ? { personalization: line.personalization } : {}), ...(line.variantId ? { variant_id: Number(line.variantId) } : {}) })), [cart.lines]);
+  const items = useMemo(() => checkoutCartItems(cart.lines), [cart.lines]);
+  useCheckoutMetrics(items, 'storefront');
   const contact = useCheckoutFields(checkout.paymentMethod, items.map((item) => item.product_id));
   const lead = useCheckoutLead({ contact: { ...contact.payload(), coupon_code: appliedCoupon }, items, source: 'storefront', kind: 'cart', paymentMethod: checkout.paymentMethod, enabled: contact.ready && !checkout.busy && !checkout.completed && !checkout.unresolved && !checkout.paymentRetry });
   const quoteKey = JSON.stringify([items, appliedCoupon, contact.shippingSelection, contact.shippingReady]);

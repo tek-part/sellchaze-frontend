@@ -15,10 +15,10 @@ export default function MerchantSidebar({ me, permissions, storeUrl, onCollapse,
             {storeUrl ? <a href={storeUrl} target="_blank" rel="noopener noreferrer" className="ws-icon-button" aria-label={t('view_store', 'View store')} title={t('view_store', 'View store')}><HiOutlineEye aria-hidden /></a> : null}
             <button type="button" className="ws-icon-button" onClick={onSearch} aria-label={ws('searchTitle')} title={ws('searchTitle')}><HiOutlineMagnifyingGlass aria-hidden /></button>
         </div>
-        <div className="ws-sidebar-scroll"><SidebarNav isAdmin={me.roles?.includes('Admin')} isSupplier={me.roles?.includes('Supplier')} roles={me.roles ?? []} permissions={permissions} compact onExpand={(key) => { setExpandedGroup(key); onExpand(); }} /></div>
+        <div className="ws-sidebar-scroll"><SidebarNav exclusive isAdmin={me.roles?.includes('Admin')} isSupplier={me.roles?.includes('Supplier')} roles={me.roles ?? []} permissions={permissions} compact onExpand={(key) => { setExpandedGroup(key); onExpand(); }} /></div>
     </aside>;
     return <aside className="ws-sidebar ws-desktop-sidebar" aria-label={ws('navigation')}>
         <div className="ws-sidebar-brand"><Link to={admin ? '/admin/dashboard' : '/dashboard'}><img src="/icon.png" alt="" /><strong>Sellchaze</strong></Link><div className="ws-sidebar-brand-actions">{storeUrl ? <a href={storeUrl} target="_blank" rel="noopener noreferrer" className="ws-icon-button" aria-label={t('view_store', 'View store')} title={t('view_store', 'View store')}><HiOutlineEye aria-hidden /></a> : null}<button type="button" onClick={onCollapse} className="ws-icon-button" aria-label={ws('collapse')}><HiOutlineBars3 aria-hidden /></button></div></div>
-        <div className="ws-sidebar-scroll"><SidebarNav isAdmin={me.roles?.includes('Admin')} isSupplier={me.roles?.includes('Supplier')} roles={me.roles ?? []} permissions={permissions} expandedGroup={expandedGroup} onNavigate={() => setExpandedGroup('')} /></div>
+        <div className="ws-sidebar-scroll"><SidebarNav exclusive isAdmin={me.roles?.includes('Admin')} isSupplier={me.roles?.includes('Supplier')} roles={me.roles ?? []} permissions={permissions} expandedGroup={expandedGroup} onNavigate={() => setExpandedGroup('')} /></div>
     </aside>;
 }
