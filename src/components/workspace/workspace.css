@@ -91,6 +91,16 @@ body[data-workspace-theme] #root .max-h-dvh { max-height:100dvh; }
 .sc-workspace .ws-page .ws-catalog-table td { padding:20px 8px; line-height:20px; }
 .ws-catalog-check { width:44px; }
 .ws-catalog-check input { width:16px; height:16px; }
+.ws-catalog-sku { width:min(100%,200px); }
+.ws-catalog-sort { display:flex; align-items:center; gap:7px; color:inherit; cursor:pointer; white-space:nowrap; }
+.ws-catalog-sort svg { width:16px; height:16px; flex-shrink:0; color:var(--ws-muted); }
+.ws-catalog-sort:focus-visible { outline:2px solid var(--ws-green); outline-offset:4px; border-radius:2px; }
+.ws-catalog-date { white-space:nowrap; font-size:12px; color:var(--ws-muted); }
+.ws-catalog-bulk-fields { display:grid; gap:16px; margin-top:24px; }
+.ws-catalog-bulk-fields label { display:grid; gap:7px; font-size:13px; }
+.ws-catalog-bulk-fields :is(input,select) { width:100%; padding:10px 12px; background:var(--ws-panel); color:var(--ws-text); border:1px solid var(--ws-border); border-radius:6px; }
+.ws-catalog-bulk-fields :is(input,select):focus { outline:2px solid var(--ws-green); outline-offset:2px; }
+.ws-catalog-bulk-dialog { max-height:calc(100dvh - 40px); overflow:auto; }
 .ws-catalog-selection { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:12px; color:var(--ws-muted); font-size:12px; padding:10px 14px; background:var(--ws-panel-soft); border:1px solid var(--ws-border); border-radius:6px; }
 .ws-catalog-money { font-variant-numeric:tabular-nums; white-space:nowrap; }
 .ws-catalog-status { display:inline-flex; padding:3px 8px; border-radius:5px; background:var(--ws-panel-soft); color:var(--ws-muted); font-size:11px; }
