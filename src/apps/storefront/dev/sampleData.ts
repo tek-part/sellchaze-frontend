@@ -110,6 +110,10 @@ export const sampleAnnouncements = (themeId?: string, locale?: string): string[]
 
 export function sampleProductDetail(slug: string, themeId?: string, locale?: string): ProductDetailModel {
   const base = sampleNewest(themeId, locale).find((p) => p.handle === slug) ?? sampleNewest(themeId, locale)[0]!;
+  if (themeId === 'nature-kids') {
+    const ar = locale === 'ar'; const source = base.image?.src; const clothing = base.categorySlug?.includes('clothing');
+    return { ...base, images: source ? [source, base.hoverImage?.src ?? source].map(src => ({ src, alt: base.title })) : [], inStock: true, sku: `KIDS-${base.id}`, descriptionHtml: ar ? '<p>بيانات معاينة للمتجر. يضيف التاجر وصف المنتجات ومواصفاتها الفعلية.</p>' : '<p>Store preview content. Merchants supply their actual product descriptions and specifications.</p>', variants: clothing ? [{ id: 'kids-small', label: ar ? '4–6 سنوات' : '4–6 years', options: { [ar ? 'المقاس' : 'Size']: ar ? '4–6 سنوات' : '4–6 years' }, price: base.price, available: true, availableStock: 5 }, { id: 'kids-medium', label: ar ? '7–9 سنوات' : '7–9 years', options: { [ar ? 'المقاس' : 'Size']: ar ? '7–9 سنوات' : '7–9 years' }, price: base.price, available: true, availableStock: 2 }] : [] };
+  }
   if (themeId === 'elite-furniture' || themeId === 'pure-furniture' || themeId === 'sphinx-v3') {
     const ar = locale === 'ar';
     const source = base.image?.src;

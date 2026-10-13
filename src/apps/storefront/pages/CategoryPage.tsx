@@ -8,7 +8,8 @@
  */
 import { previewOrDev } from '../preview';
 import { useMemo, type ReactElement } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useSearchParams } from 'react-router-dom';
+import { kidsListingSearch, sortKidsPreview } from '../themes/nature-kids/listing';
 import { ThemeRenderer, useTemplate, type StorefrontContext, useThemeManifest } from '../theme-engine';
 import { useStore } from '../state/store-context';
 import { useAsync } from '../api/useAsync';
@@ -28,21 +29,30 @@ export function CategoryPage(): ReactElement | null {
   const { t } = useTranslation();
   // `/shop` has no :slug segment; it is the shop-all view, same as /collections/all.
   const { slug = 'all' } = useParams();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const kids = manifest.id === 'nature-kids';
+  const listing = kidsListingSearch(searchParams);
   const { store } = useStore();
   const currency = store.currency;
   const template = useTemplate('category');
   const curated = isCuratedSlug(slug) ? curatedView(slug) : null;
   // Keyed on the locale as well: the API returns translated names per `?lang=`.
   const category = useAsync(() => (curated ? Promise.resolve(null) : getCategory(slug)), [slug, locale]);
+  const productScope = `${store.id}:${slug}:${locale}:${kids ? listing.sort : "default"}:${kids ? listing.page : 1}`;
   const productsQ = useAsync(
-    () => getProducts(curated ? { perPage: 60 } : { category: slug, perPage: 60 }),
-    [slug, locale],
+    async () => ({ scope: productScope, payload: await getProducts({ ...(curated ? {} : { category: slug }), perPage: kids ? 24 : 60, ...(kids ? listing : {}) }) }),
+    [productScope],
   );
 
+  const productsData = productsQ.data?.scope === productScope ? productsQ.data.payload : null;
   const dev = previewOrDev();
-  let products: ProductCardModel[] = productsQ.data ? productsQ.data.data.map((p) => toProductCard(p, currency, store.currencyMultipliers[currency] ?? 1)) : [];
-  if (dev && !productsQ.data) products = sampleNewest(manifest.id, locale);
-  if (curated?.rank) products = [...curated.rank(products)];
+  let products: ProductCardModel[] = productsData ? productsData.data.map((p) => toProductCard(p, currency, store.currencyMultipliers[currency] ?? 1)) : [];
+  if (dev && !productsData) {
+    products = sampleNewest(manifest.id, locale);
+    if (kids && !curated) products = products.filter(product => product.categorySlug === slug);
+    if (kids) products = sortKidsPreview(products, listing.sort).slice((listing.page - 1) * 24, listing.page * 24);
+  }
+  if (curated?.rank && !kids) products = [...curated.rank(products)];
 
   const c = category.data?.data;
   // DEV, no API: fall back to the demo category so the page gets its real title
@@ -63,6 +73,8 @@ export function CategoryPage(): ReactElement | null {
         // could only tell "loading" from "empty", and a failed request looked like an empty shelf.
         ...(productsQ.error ? { error: productsQ.error } : {}),
         products,
+        ...(kids ? { listing: { ...listing, lastPage: productsData?.meta.last_page ?? 1, loading: productsQ.loading,
+          change: (sort: typeof listing.sort, page: number): void => { const next = new URLSearchParams(searchParams); next.set('sort', sort); next.set('page', String(page)); setSearchParams(next); } } } : {}),
         pageHeader: {
           title,
           ...(curated
@@ -80,7 +92,7 @@ export function CategoryPage(): ReactElement | null {
       },
     }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [productsQ.data, productsQ.loading, productsQ.error, category.data, category.loading, currency, slug, store.name, curated],
+    [productsData, productsQ.data, productsQ.loading, productsQ.error, category.data, category.loading, currency, slug, store.id, store.name, curated, locale, kids, listing.sort, listing.page, searchParams, setSearchParams],
   );
 
   return (

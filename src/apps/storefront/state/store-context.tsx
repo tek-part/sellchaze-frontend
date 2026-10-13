@@ -5,6 +5,7 @@
  * backend. In production there is no fallback — an unresolved store surfaces normally.
  */
 import { previewOrDev } from '../preview';
+import { previewStore } from '../dev/preview-store';
 import { createContext, useContext, useEffect, useState, type ReactElement, type ReactNode } from 'react';
 import { loadStorefrontBootstrap } from '../api/bootstrap';
 import type { ApiStorefrontBootstrap } from '../api/storefront';
@@ -112,7 +113,7 @@ export function StoreProvider(props: { children: ReactNode; initialData?: ApiSto
       description: s.description || undefined,
     };
   } else if (previewOrDev()) {
-    store = DEV_STORE;
+    store = previewStore(DEV_STORE, typeof window === 'undefined' ? null : new URLSearchParams(window.location.search).get('theme'));
   } else {
     store = EMPTY_STORE;
   }

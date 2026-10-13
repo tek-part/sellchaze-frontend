@@ -7,20 +7,12 @@
  * mechanism the frozen engine registry uses. Listing metadata mirrors the theme's manifest; the
  * platform validator flags any drift once the module is loaded.
  *
- * Adding a 6th theme = append one entry below. No engine, page, or component change.
+ * Add the listing here and its shared loader in loaders.ts. No engine or page changes.
  */
 import type { CatalogEntry, ThemeCatalog } from './types';
+import { THEME_LOADERS } from './loaders';
 
 export const THEME_CATALOG: ThemeCatalog = [
-  {
-    id: 'pure-furniture', name: 'Pure Furniture', version: '1.0.0', archetype: 'Furniture',
-    description: 'Warm furniture, video hero, rounded photos and image comparison.',
-    author: 'Sellchaze', tags: ['furniture', 'warm', 'modern', 'rtl'], accent: '#834523',
-    minEngineVersion: '1.0.0', capabilities: ['rtl', 'cart-drawer', 'quick-add', 'newsletter'],
-    license: { type: 'free', sku: 'theme-pure-furniture' }, featured: true,
-    changelog: [{ version: '1.0.0', date: '2026-10-13', notes: ['Initial release.'] }],
-    load: () => import('../../themes/pure-furniture').then(module => module.pureTheme),
-  },
   {
     id: 'elite-furniture', name: 'Elite Furniture', version: '1.0.0', archetype: 'Furniture',
     description: 'Furniture with cinematic photography, category shelves and image comparison.',
@@ -29,7 +21,26 @@ export const THEME_CATALOG: ThemeCatalog = [
     minEngineVersion: '1.0.0', capabilities: ['rtl', 'cart-drawer', 'newsletter', 'countdown'],
     license: { type: 'free', sku: 'theme-elite-furniture' }, featured: true,
     changelog: [{ version: '1.0.0', date: '2026-10-13', notes: ['Furniture layout and editable sections.'] }],
-    load: () => import('../../themes/elite-furniture').then(module => module.eliteTheme),
+    load: THEME_LOADERS['elite-furniture'],
+  },
+  {
+    id: 'nature-kids', name: 'Nature Kids', version: '1.0.0', archetype: 'Kids & Lifestyle',
+    description: 'Playful clothing, toy collections, linked looks and photo stories.',
+    previewImage: '/media/theme-previews/nature-kids.png',
+    author: 'Sellchaze', tags: ['kids', 'clothing', 'toys', 'modern', 'rtl'], accent: '#1470F2',
+    minEngineVersion: '1.0.0', capabilities: ['rtl', 'cart-drawer', 'newsletter'],
+    license: { type: 'free', sku: 'theme-nature-kids' }, featured: true,
+    changelog: [{ version: '1.0.0', date: '2026-10-13', notes: ['Independent layout and editable collections.'] }],
+    load: THEME_LOADERS['nature-kids'],
+  },
+  {
+    id: 'pure-furniture', name: 'Pure Furniture', version: '1.0.0', archetype: 'Furniture',
+    description: 'Warm furniture, video hero, rounded photos and image comparison.',
+    author: 'Sellchaze', tags: ['furniture', 'warm', 'modern', 'rtl'], accent: '#834523',
+    minEngineVersion: '1.0.0', capabilities: ['rtl', 'cart-drawer', 'quick-add', 'newsletter'],
+    license: { type: 'free', sku: 'theme-pure-furniture' }, featured: true,
+    changelog: [{ version: '1.0.0', date: '2026-10-13', notes: ['Initial release.'] }],
+    load: THEME_LOADERS['pure-furniture'],
   },
   {
     id: 'sphinx-v3', name: 'Sphinx V3', version: '1.1.0', archetype: 'Furniture & Lifestyle',
@@ -38,7 +49,7 @@ export const THEME_CATALOG: ThemeCatalog = [
     minEngineVersion: '1.0.0', capabilities: ['rtl', 'dark-mode', 'cart-drawer', 'quick-add', 'newsletter'],
     license: { type: 'free', sku: 'theme-sphinx-v3' }, featured: true,
     changelog: [{ version: '1.0.0', date: '2026-10-12', notes: ['Independent Sphinx layout, editable sections and phone newsletter.'] }],
-    load: () => import('../../themes/sphinx').then((module) => module.sphinxTheme),
+    load: THEME_LOADERS['sphinx-v3'],
   },
   {
     id: 'naseem',
@@ -56,7 +67,7 @@ export const THEME_CATALOG: ThemeCatalog = [
     license: { type: 'free', sku: 'theme-naseem' },
     changelog: [{ version: '1.0.0', date: '2026-09-05', notes: ['Initial release — first theme on the shared section library.'] }],
     featured: true,
-    load: () => import('../../themes/naseem').then((m) => m.naseemTheme),
+    load: THEME_LOADERS.naseem,
   },
   {
     id: 'bazaar',
@@ -74,7 +85,7 @@ export const THEME_CATALOG: ThemeCatalog = [
     license: { type: 'free', sku: 'theme-bazaar' },
     changelog: [{ version: '1.0.0', date: '2026-09-05', notes: ['Initial release — marketplace theme on the shared section library.'] }],
     featured: true,
-    load: () => import('../../themes/bazaar').then((m) => m.bazaarTheme),
+    load: THEME_LOADERS.bazaar,
   },
   {
     id: 'sahra',
@@ -92,7 +103,7 @@ export const THEME_CATALOG: ThemeCatalog = [
     license: { type: 'free', sku: 'theme-sahra' },
     changelog: [{ version: '1.0.0', date: '2026-09-05', notes: ['Initial release — luxury theme on the shared section library.'] }],
     featured: true,
-    load: () => import('../../themes/sahra').then((m) => m.sahraTheme),
+    load: THEME_LOADERS.sahra,
   },
   {
     id: 'fresh',
@@ -109,7 +120,7 @@ export const THEME_CATALOG: ThemeCatalog = [
     capabilities: ['rtl', 'dark-mode', 'search-overlay', 'cart-drawer', 'wishlist', 'quick-add', 'newsletter', 'countdown', 'blog'],
     license: { type: 'free', sku: 'theme-fresh' },
     changelog: [{ version: '1.0.0', date: '2026-09-05', notes: ['Initial release — grocery / fresh-market theme on the shared section library.'] }],
-    load: () => import('../../themes/fresh').then((m) => m.freshTheme),
+    load: THEME_LOADERS.fresh,
   },
   {
     id: 'techno',
@@ -126,7 +137,7 @@ export const THEME_CATALOG: ThemeCatalog = [
     capabilities: ['rtl', 'dark-mode', 'mega-menu', 'search-overlay', 'cart-drawer', 'wishlist', 'compare', 'quick-add', 'newsletter', 'countdown'],
     license: { type: 'free', sku: 'theme-techno' },
     changelog: [{ version: '1.0.0', date: '2026-09-05', notes: ['Initial release — electronics / gadgets theme on the shared section library.'] }],
-    load: () => import('../../themes/techno').then((m) => m.technoTheme),
+    load: THEME_LOADERS.techno,
   },
 ];
 

@@ -101,3 +101,6 @@ export function useAuth(): AuthContextValue {
   if (!context) throw new Error('useAuth must be used within an <AuthProvider>.');
   return context;
 }
+
+/** Theme/editor previews may render without customer authentication providers. */
+export function useOptionalAuth(): AuthContextValue | null { return useContext(AuthContext); }
