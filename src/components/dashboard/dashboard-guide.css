@@ -27,3 +27,5 @@
 @media(max-width:767px){.ws-guide-steps article{min-height:111.5px}.ws-guide-progress-row{border-width:2px}.ws-guide-progress-row strong{line-height:1.594}.ws-dashboard-promotions{margin-bottom:46px}}
 
 [data-workspace-theme='dark'] .ws-guide-steps article{border-color:#a3a3a3}
+
+[data-workspace-theme='light'] .ws-guide-close{color:rgba(0,0,0,.54)}[data-workspace-theme='dark'] .ws-guide-close{color:rgba(255,255,255,.7)}
