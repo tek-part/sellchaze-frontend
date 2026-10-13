@@ -53,8 +53,8 @@ export default function ManualProductPicker({ apiBase, items, ar, theme, onClose
     const pending = loading || name !== searchName || sku !== searchSku;
     const rows = result?.data || [];
     return <Dialog open onClose={onClose} className="ws-manual-picker" dir={ar ? 'rtl' : 'ltr'} data-workspace-theme={theme}>
-        <DialogBackdrop className="ws-orders-backdrop" />
-        <div className="ws-manual-picker-position"><DialogPanel className="ws-manual-picker-panel">
+        <DialogBackdrop transition className="ws-orders-backdrop ws-manual-picker-backdrop" />
+        <div className="ws-manual-picker-position"><DialogPanel transition className="ws-manual-picker-panel">
             <header><DialogTitle>{text('اختر المنتجات', 'Choose products')}</DialogTitle><button type="button" onClick={onClose} aria-label={text('إغلاق اختيار المنتجات', 'Close product selection')}><HiOutlineXMark aria-hidden /></button></header>
             <div className="ws-manual-picker-content"><div className="ws-manual-picker-search"><Field label={text('ابحث باسم المنتج', 'Search by product name')} value={name} maxLength={200} onChange={setName} /><Field label={text('ابحث بال SKU', 'Search by SKU')} value={sku} maxLength={200} onChange={setSku} /></div>
                 {error ? <p role="alert">{error}</p> : null}

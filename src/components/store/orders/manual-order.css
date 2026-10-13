@@ -12,3 +12,5 @@
 @media(max-width:767px){.ws-manual-picker-search{display:grid;gap:16px}.ws-manual-picker-search label{width:100%;padding-inline-end:0}.ws-manual-picker-content{padding:16px 8px 0}.ws-manual-picker-search{margin-bottom:16px}}
 
 @media(max-width:767px){.ws-manual-order{padding-top:8px}.ws-manual-notes{order:2}.ws-manual-main{order:1}.ws-manual-customer-fields{gap:46.296875px}.ws-manual-summary{margin-top:71.90625px}}
+
+.ws-manual-picker-panel,.ws-manual-picker-backdrop{transition:opacity .225s cubic-bezier(.4,0,.2,1)}.ws-manual-picker-panel[data-closed],.ws-manual-picker-backdrop[data-closed]{opacity:0}@media(prefers-reduced-motion:reduce){.ws-manual-picker-panel,.ws-manual-picker-backdrop{transition:none}}
