@@ -1,0 +1,34 @@
+Merchant Public API configuration increment
+
+Reference create page reviewed without generating a competitor key. It contains an
+optional description, 12 independent permissions and enabled by default. Initial Save
+is disabled. The Public API settings parent now contains Webhooks then Public API.
+The API leaf is available only to owners and existing global store administration;
+general employee settings grants do not expose credentials.
+
+Create/edit/list/documentation routes share the real scoped backend API. Creates use
+a stable request UUID; edits/deletion use versions. Secrets appear only in creation
+component state, masked by default, with explicit reveal/copy actions. GET, navigating
+to the saved configuration and page reload never restore the secret. A creation retry
+after the recovery period explains that the user must create a replacement if the
+original value was not saved. No secrets enter browser storage.
+
+Reference desktop measurements (1920 viewport, 1910 document with natural scrollbar):
+description outline x442.09375/y269.8125/800x60.78125;
+permission fieldset y362.5/156.75x453.90625;
+checkbox target x1235.09375/y393.5, subsequent rows +34px;
+toolbar x50/y911.3125/1208.09375x64.
+Material checkbox outline path matches MdCheckBoxOutlineBlank exactly; 24px SVG centered
+over the 18px target. Source unchecked color #414141 and 16px/24px permission labels.
+
+390x844 reference/current: doc380/scroll380; description66/366.8125/248x60.78125;
+all checkbox targets x307, first y490.5 and rows+34; toolbar0/771.5/380x72.5.
+320x780 current: doc310/scroll310; description178x60.78125; toolbar310x72.5.
+Keyboard focus and scrolling reach the last permission and enabled switch above the
+fixed save toolbar. Native save/edit/reload uses one disabled own-store local fixture;
+no production key creation or competitor writes were performed.
+
+The real list and API documentation use native numeric IDs/catalog fields. The populated
+competitor list/edit state cannot be inspected without creating a competitor key; it
+is not claimed as fully verified. Full external wire-contract parity, all original
+merchant pages/features/themes/funnels and provider acceptance remain incomplete.

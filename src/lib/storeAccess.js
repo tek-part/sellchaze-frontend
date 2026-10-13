@@ -44,6 +44,7 @@ export function storeAccess(roles = [], permissions = []) {
         canStoreSettings,
         canStoreHeadCode: isStoreOwner || can('stores-edit'),
         canStoreWebhooks: isStoreOwner || can('stores-edit'),
+        canStorePublicApi: isStoreOwner || can('stores-edit'),
         canStorePayments,
         storeMyGroup,
         storeCatalogGroup,

@@ -133,6 +133,9 @@ const StoreSocialSettingsPage = lazy(() => import('./pages/store/settings/StoreS
 const StoreOrderPushPage = lazy(() => import('./pages/store/settings/StoreOrderPushPage'));
 const StoreHeadCodePage = lazy(() => import('./pages/store/settings/StoreHeadCodePage'));
 const StoreWebhooksPage = lazy(() => import('./pages/store/settings/StoreWebhooksPage'));
+const StorePublicApiPage = lazy(() => import('./pages/store/settings/StorePublicApiPage'));
+const StorePublicApiEditorPage = lazy(() => import('./pages/store/settings/StorePublicApiPage').then(module => ({ default: module.StorePublicApiEditorPage })));
+const StorePublicApiDocsPage = lazy(() => import('./pages/store/settings/StorePublicApiPage').then(module => ({ default: module.StorePublicApiDocsPage })));
 const StoreWebhookEditorPage = lazy(() => import('./pages/store/settings/StoreWebhooksPage').then(module => ({ default: module.StoreWebhookEditorPage })));
 const StoreLoginSessionsPage = lazy(() => import('./pages/store/settings/StoreLoginSessionsPage'));
 const StoreBotProtectionPage = lazy(() => import('./pages/store/settings/StoreBotProtectionPage'));
@@ -286,6 +289,10 @@ const STORE_ROUTES = [
     { path: 'settings/order-push', element: <StoreOrderPushPage /> },
     { path: 'settings/head-code', element: <StoreHeadCodePage /> },
     { path: 'settings/webhooks', element: <StoreWebhooksPage /> },
+    { path: 'settings/public-api', element: <StorePublicApiPage /> },
+    { path: 'settings/public-api/create', element: <StorePublicApiEditorPage /> },
+    { path: 'settings/public-api/docs', element: <StorePublicApiDocsPage /> },
+    { path: 'settings/public-api/:keyId', element: <StorePublicApiEditorPage /> },
     { path: 'settings/webhooks/create', element: <StoreWebhookEditorPage /> },
     { path: 'settings/webhooks/:webhookId', element: <StoreWebhookEditorPage /> },
     { path: 'settings/login-sessions', element: <StoreLoginSessionsPage /> },
