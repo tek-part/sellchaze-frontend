@@ -56,7 +56,7 @@ for (const theme of themes) {
 
     await page.goto(`/?preview=1&theme=${theme}`, { waitUntil: 'networkidle' });
     await expect(page.locator('#storefront-root')).toBeVisible();
-    if (theme === 'elite-furniture') await page.getByRole('link', { name: 'Search', exact: true }).first().click();
+    if (theme === 'elite-furniture') await page.getByRole('button', { name: 'Open menu', exact: true }).click();
     else await page.getByRole('button', { name: 'Search', exact: true }).first().click();
     await page.waitForTimeout(750);
 
