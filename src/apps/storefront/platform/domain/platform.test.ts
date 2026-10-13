@@ -386,11 +386,11 @@ describe('updates', () => {
 
 /* -------------------------------------------------------------- catalog + bridge */
 describe('catalog + registry bridge', () => {
-  it('the real catalog lists independent Elite and Sphinx layouts alongside the five original themes', () => {
-    expect(THEME_CATALOG).toHaveLength(7);
+  it('the catalog includes independent furniture layouts alongside the five original themes', () => {
+    expect(THEME_CATALOG).toHaveLength(8);
     const ids = THEME_CATALOG.map((e) => e.id);
     expect(new Set(ids).size).toBe(ids.length);
-    expect(ids).toEqual(['elite-furniture', 'sphinx-v3', 'naseem', 'bazaar', 'sahra', 'fresh', 'techno']);
+    expect(ids).toEqual(['pure-furniture', 'elite-furniture', 'sphinx-v3', 'naseem', 'bazaar', 'sahra', 'fresh', 'techno']);
   });
   it('registers every catalogued theme into a fresh registry', () => {
     const registry = new ThemeRegistry();

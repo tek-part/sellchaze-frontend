@@ -27,6 +27,7 @@ const DEFAULT_THEME = 'naseem';
 
 const BY_THEME: Readonly<Record<string, DemoCatalog>> = {
   'elite-furniture': SPHINX_CATALOG,
+  'pure-furniture': SPHINX_CATALOG,
   'sphinx-v3': SPHINX_CATALOG,
   naseem: HEARTH_CATALOG,
   bazaar: HEARTH_CATALOG,
@@ -41,6 +42,7 @@ const BY_THEME: Readonly<Record<string, DemoCatalog>> = {
  */
 const AR_OVERLAY: Readonly<Record<string, CatalogOverlay>> = {
   'elite-furniture': SPHINX_AR,
+  'pure-furniture': SPHINX_AR,
   'sphinx-v3': SPHINX_AR,
   naseem: HEARTH_AR,
   bazaar: HEARTH_AR,

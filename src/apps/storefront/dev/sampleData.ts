@@ -110,7 +110,7 @@ export const sampleAnnouncements = (themeId?: string, locale?: string): string[]
 
 export function sampleProductDetail(slug: string, themeId?: string, locale?: string): ProductDetailModel {
   const base = sampleNewest(themeId, locale).find((p) => p.handle === slug) ?? sampleNewest(themeId, locale)[0]!;
-  if (themeId === 'elite-furniture' || themeId === 'sphinx-v3') {
+  if (themeId === 'elite-furniture' || themeId === 'pure-furniture' || themeId === 'sphinx-v3') {
     const ar = locale === 'ar';
     const source = base.image?.src;
     const images = source ? [source, source.replace('fit=crop', 'fit=crop&crop=top'), source.replace('fit=crop', 'fit=crop&crop=bottom')].map(src => ({ src, alt: base.title })) : [];
