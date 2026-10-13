@@ -11,6 +11,7 @@ import { useChatUnread } from '../lib/useChatUnread';
 import SidebarNav from './SidebarNav';
 import AdminSidebar from './admin/AdminSidebar';
 import MerchantSidebar from './MerchantSidebar';
+import MerchantSidebarFooter from './workspace/MerchantSidebarFooter';
 import WorkspaceHeader from './workspace/WorkspaceHeader';
 import WorkspaceAppearanceControl from './workspace/WorkspaceAppearanceControl';
 import useWorkspaceAppearance from './workspace/useWorkspaceAppearance';
@@ -261,6 +262,7 @@ export default function AppLayout() {
                         <div className="ws-sidebar-brand"><Link to={isAdminOnly ? '/admin/dashboard' : '/dashboard'}><img src="/icon.png" alt="" /><DialogTitle as="strong">Sellchaze</DialogTitle></Link><div className="ws-sidebar-brand-actions">{merchantWorkspace && storeUrl ? <a href={storeUrl} target="_blank" rel="noopener noreferrer" className="ws-icon-button" aria-label={t('view_store', 'View store')} title={t('view_store', 'View store')}><HiOutlineEye aria-hidden /></a> : null}<button type="button" className="ws-icon-button" onClick={() => setMobileNavOpen(false)} aria-label={t('close')}><HiOutlineXMark aria-hidden /></button></div></div>
                         {!merchantWorkspace ? <div className="ws-sidebar-tools"><label className="ws-sidebar-search"><HiOutlineMagnifyingGlass aria-hidden /><input value={navigationQuery} onChange={(e) => setNavigationQuery(e.target.value)} placeholder={ws('search')} aria-label={ws('search')} /></label></div> : null}
                         <div className="ws-sidebar-scroll"><SidebarNav {...navigationProps} query={merchantWorkspace ? '' : navigationQuery} onNavigate={() => setMobileNavOpen(false)} /></div>
+                        {merchantWorkspace && me.roles?.some(role => ['Merchant', 'Supplier'].includes(role)) && !me.parent_user_id ? <MerchantSidebarFooter onNavigate={() => setMobileNavOpen(false)} /> : null}
                         <div className="ws-sidebar-footer"><div className="ws-drawer-preferences"><WorkspaceAppearanceControl appearance={appearance} inDrawer /><button type="button" className="ws-icon-button" onClick={toggleLanguage} aria-label={ws('language')}><HiOutlineLanguage aria-hidden /></button></div>{!merchantWorkspace ? <Link to="/contact" onClick={() => setMobileNavOpen(false)}>{ws('help')}</Link> : null}</div>
                     </DialogPanel>
                 </div>

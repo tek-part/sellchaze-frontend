@@ -34,7 +34,7 @@ export default function PlatformWalletPage({ mode = 'wallet' }) {
     if (!owner) return <Navigate to="/dashboard" replace />;
     const title = mode === 'referral' ? text('اربح معنا بالتسويق بالعمولة', 'Earn with our referral program') : mode === 'transactions' ? text('المعاملات', 'Transactions') : text('المحفظة', 'Wallet');
     const subtitle = mode === 'referral' ? text('شارك رابط المنصة وتابع العمولات النقدية الناتجة عن شحن الرصيد.', 'Share the platform link and track cash commissions from confirmed funding.') : mode === 'transactions' ? text('ستجد اخر المعاملات التي قمت بها مثل الشحن او الخصومات', 'View your latest funding, fees and refunds') : text('هذه الصفحة مختصة باظهار رصيدك والمبلغ المستحق الدفع وشحن الرصيد', 'View your wallet balance, amount due and funding information');
-    const labels = { topup: text('شحن رصيد المحفظة', 'Wallet funding'), refund: text('استرداد شحن الرصيد', 'Funding refund'), order_fee: text('رسوم طلب', 'Order fee') };
+    const labels = { topup: text('شحن رصيد المحفظة', 'Wallet funding'), refund: text('استرداد شحن الرصيد', 'Funding refund'), order_fee: text('رسوم طلب', 'Order fee'), subscription: text('اشتراك المتجر', 'Merchant subscription') };
     const toggleSort = (field) => { setDirection(sort === field && direction === 'asc' ? 'desc' : 'asc'); setSort(field); setPage(1); };
     const pendingPayment = payment && ['creating', 'uncertain', 'pending'].includes(payment.status);
     const startFunding = async (amount) => {
