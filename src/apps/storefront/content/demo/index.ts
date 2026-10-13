@@ -19,6 +19,7 @@ import { LUXURY_AR } from './luxury.ar';
 import { HEARTH_AR } from './hearth.ar';
 import { VOLTAGE_AR } from './voltage.ar';
 import { SPHINX_CATALOG, SPHINX_AR } from './sphinx';
+import { KIDS_CATALOG, KIDS_AR } from './kids';
 
 export type { DemoCatalog, DemoBrand, DemoFaq, DemoTestimonial } from './types';
 
@@ -26,6 +27,7 @@ export type { DemoCatalog, DemoBrand, DemoFaq, DemoTestimonial } from './types';
 const DEFAULT_THEME = 'naseem';
 
 const BY_THEME: Readonly<Record<string, DemoCatalog>> = {
+  'nature-kids': KIDS_CATALOG,
   'elite-furniture': SPHINX_CATALOG,
   'pure-furniture': SPHINX_CATALOG,
   'sphinx-v3': SPHINX_CATALOG,
@@ -41,6 +43,7 @@ const BY_THEME: Readonly<Record<string, DemoCatalog>> = {
  * images, ratings and ids stay canonical, so a fact corrected once is correct in both languages.
  */
 const AR_OVERLAY: Readonly<Record<string, CatalogOverlay>> = {
+  'nature-kids': KIDS_AR,
   'elite-furniture': SPHINX_AR,
   'pure-furniture': SPHINX_AR,
   'sphinx-v3': SPHINX_AR,

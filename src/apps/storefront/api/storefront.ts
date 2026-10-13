@@ -50,9 +50,10 @@ export function getThankYouPage(): Promise<{ data: import('../pages/thank-you').
 
 /** Merchandising filter driven by real product flags. */
 export type ProductFilter = 'best_sellers' | 'new_arrivals' | 'trending' | 'on_sale';
+export type ProductSort = 'rating' | 'newest' | 'oldest' | 'price_asc' | 'price_desc';
 
 export function getProducts(
-  params: { category?: string; perPage?: number; page?: number; filter?: ProductFilter; q?: string } = {},
+  params: { category?: string; perPage?: number; page?: number; filter?: ProductFilter; q?: string; sort?: ProductSort } = {},
 ): Promise<ApiPaginated<ApiProduct>> {
   const qs = new URLSearchParams();
   if (params.category) qs.set('category', params.category);
@@ -60,6 +61,7 @@ export function getProducts(
   if (params.page) qs.set('page', String(params.page));
   if (params.filter) qs.set('filter', params.filter);
   if (params.q) qs.set('q', params.q);
+  if (params.sort) qs.set('sort', params.sort);
   const query = qs.toString();
   return apiGet(`/products${query ? `?${query}` : ''}`);
 }
@@ -180,8 +182,12 @@ export function getCategory(slug: string): Promise<{ data: ApiCategory; children
   return apiGet(`/categories/${encodeURIComponent(slug)}`);
 }
 
-export function getProductReviews(slug: string): Promise<ApiPaginated<ApiReview>> {
-  return apiGet(`/products/${encodeURIComponent(slug)}/reviews`);
+export function getProductReviews(slug: string, page = 1): Promise<ApiPaginated<ApiReview> & { summary?: { count: number; average: number | null } }> {
+  return apiGet(`/products/${encodeURIComponent(slug)}/reviews${page > 1 ? `?page=${page}` : ''}`);
+}
+
+export function submitProductReview(slug: string, review: { rating: number; title: string; body: string }): Promise<{ data: ApiReview }> {
+  return apiSend(`/products/${encodeURIComponent(slug)}/reviews`, 'POST', review);
 }
 
 /* ---- checkout ----

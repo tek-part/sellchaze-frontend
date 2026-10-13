@@ -1,0 +1,17 @@
+{
+  "mode": "built-in image_gen",
+  "generation": [
+    "Use case: ads-marketing. Asset type: original Nature Kids clothing storefront campaign banner, wide 16:9 landscape. Scene: fresh lime-green studio backdrop with softly layered playful leaf and star shapes. Subject: a fictional smiling 8-year-old boy fully dressed in a plain yellow cotton T-shirt and casual blue trousers, with a friendly original green dinosaur toy and a small wooden toy vehicle. Style: polished contemporary kids retail photography mixed with tasteful playful 3D toy accents, soft studio light, natural clothing textures. Composition: full-body child and toys centrally framed with generous clear surroundings, usable as a wide website slideshow banner and for a portrait crop. No text, no logos, no watermark, no recognizable copyrighted characters. Original imagery, not an exact copy of any existing campaign.",
+    "Use case: ads-marketing. Asset type: original Nature Kids clothing storefront campaign banner, wide 16:9 landscape. Scene: soft blush-pink studio backdrop with playful pastel geometric shapes. Subject: a fictional smiling 7-year-old girl fully dressed in a modest pastel-pink cotton T-shirt and denim trousers, beside a small original dollhouse and colorful wooden play toys. Style: polished contemporary kids retail photography, gentle studio lighting, detailed natural fabric, cheerful uncluttered composition. Composition: child and toys centrally framed with generous clear surroundings, usable as a wide website slideshow banner and for a portrait crop. No text, no logos, no watermark, no recognizable copyrighted characters. Original imagery, not an exact copy of any existing campaign."
+  ],
+  "portraitEdits": [
+    "Edit this original campaign into a vertical 2:3 portrait website banner for mobile. Preserve the same fictional boy's face, age, yellow T-shirt, blue trousers, white shoes, friendly plush dinosaur, wooden toy vehicle, green studio palette, realistic fabric and soft lighting. Reframe and extend the green backdrop to keep the entire child and both toys visible, centered and comfortably spaced in the portrait frame. No text, logos or watermark. Change framing only, not character identity, clothes or style.",
+    "Edit this original campaign into a vertical 2:3 portrait website banner for mobile. Preserve the same fictional girl's face, age, pastel-pink T-shirt, jeans, white shoes, small dollhouse, wooden toys, blush-pink palette, realistic fabric and soft lighting. Reframe and extend the studio backdrop so the girl and dollhouse are both fully visible and comfortably arranged in the tall portrait frame. Keep a natural modest seated pose. No text, logos or watermark. Change framing only, not character identity, clothes or style."
+  ],
+  "assets": [
+    "public/media/theme-campaigns/nature-kids-green-desktop-v1.png",
+    "public/media/theme-campaigns/nature-kids-pink-desktop-v1.png",
+    "public/media/theme-campaigns/nature-kids-green-mobile-v1.png",
+    "public/media/theme-campaigns/nature-kids-pink-mobile-v1.png"
+  ]
+}

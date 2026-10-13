@@ -67,7 +67,7 @@ export function useHomeContext(): HomeContextResult {
     // Named collections the API exposes (by slug and by id) so a `collection` field can reference one.
     const named: Record<string, ProductCardModel[]> = {};
     for (const c of b?.collections ?? []) {
-      if (c.products && c.products.length > 0) {
+      if (c.products) {
         const items = cards(c.products);
         named[c.slug] = items;
         named[String(c.id)] = items;

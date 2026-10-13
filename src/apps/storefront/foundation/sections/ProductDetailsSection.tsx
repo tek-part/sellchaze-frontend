@@ -32,7 +32,7 @@ import { ShareButton } from '../components/ShareButton';
 import { Tabs } from '../components/Tabs';
 import { ReviewList, ReviewSummary } from '../components/Reviews';
 import { useCart } from '../../state/cart';
-import { useVariantSelectionAutomatic } from '../../state/store-context';
+import { useOptionalStore, useVariantSelectionAutomatic } from '../../state/store-context';
 import { useWishlist } from '../../state/wishlist';
 import { useToast } from '../components/toast/useToast';
 import { productDetailOf, reviewsFor } from './section-data';
@@ -53,6 +53,7 @@ export function ProductDetailsSection(props: SectionRenderProps): ReactElement |
   const ar = i18n.language.startsWith('ar');
   const { settings, context } = props;
   const product = productDetailOf(context);
+  const store = useOptionalStore()?.store;
   const automatic = useVariantSelectionAutomatic(product?.autoSelectVariants);
   const cart = useCart();
   const wishlist = useWishlist();
@@ -78,6 +79,7 @@ export function ProductDetailsSection(props: SectionRenderProps): ReactElement |
   const showShare = flag(settings, 'show_share', true);
   const sphinx = flag(settings, 'sphinx_layout', false);
   const elite = flag(settings, 'elite_layout', false);
+  const accordion = flag(settings, 'accordion_content', false);
   const offers = flag(settings, 'show_quantity_offers', true) ? product.quantityOffers ?? [] : [];
   const selectionRequired = Boolean(product.variants?.length && !activeVariant);
   const outOfStock = product.inStock === false || Boolean(activeVariant && !variantAvailable(activeVariant));
@@ -190,7 +192,8 @@ export function ProductDetailsSection(props: SectionRenderProps): ReactElement |
               ) : null}
             </div>
 
-            {!sphinx && !elite ? <Tabs tabs={tabs} value={activeTab} onChange={setActiveTab} renderPanel={(id) =>
+            {accordion ? <div className="sf-pdp__accordion"><details open><summary>{t('pdp.tabDescription')}</summary><ProductDescription html={product.descriptionHtml ?? ''} /></details>{store?.merchantInformation?.policies.map(policy => <details key={policy.kind}><summary>{policy.title}</summary><ProductDescription html={policy.content_html} /></details>)}{!store?.merchantInformation?.policies.length && product.shippingReturns ? <details><summary>{t('pdp.tabShipping')}</summary><p>{product.shippingReturns}</p></details> : null}</div> : null}
+            {!sphinx && !elite && !accordion ? <Tabs tabs={tabs} value={activeTab} onChange={setActiveTab} renderPanel={(id) =>
               id === 'description' ? (
                 <ProductDescription html={product.descriptionHtml ?? ''} />
               ) : (
@@ -204,7 +207,7 @@ export function ProductDetailsSection(props: SectionRenderProps): ReactElement |
         {sphinx ? <div className="sph-product__content"><ProductDescription html={product.descriptionHtml ?? ''} />{product.shippingReturns ? <details><summary>{ar ? 'الشحن والاسترجاع' : 'Shipping and returns'}</summary><p>{product.shippingReturns}</p></details> : null}</div> : null}
         {elite ? <div className="elt-product__content"><ProductDescription html={product.descriptionHtml ?? ''} />{product.shippingReturns ? <details><summary>{ar ? 'الشحن والاسترجاع' : 'Shipping and returns'}</summary><p>{product.shippingReturns}</p></details> : null}{product.careInstructions ? <details><summary>{ar ? 'تعليمات العناية' : 'Care instructions'}</summary><p>{product.careInstructions}</p></details> : null}{product.warranty ? <details><summary>{ar ? 'الضمان' : 'Warranty'}</summary><p>{product.warranty}</p></details> : null}</div> : null}
 
-        {reviews.length > 0 ? (
+        {!flag(settings, 'hide_reviews', false) && reviews.length > 0 ? (
           <div style={{ marginTop: 'var(--section-y)' }}>
             <ReviewSummary
               average={reviews.reduce((s, r) => s + r.rating, 0) / reviews.length}
@@ -214,6 +217,7 @@ export function ProductDetailsSection(props: SectionRenderProps): ReactElement |
           </div>
         ) : null}
       </Container>
+      {flag(settings, 'sticky_purchase', false) ? <div className="sf-sticky-purchase"><Container><div className="sf-sticky-purchase__product">{selectedImage || product.image?.src ? <img src={selectedImage ?? product.image?.src} alt="" /> : null}<div><p>{product.title}</p><Price amount={unitPrice} {...(compareAt !== undefined ? { compareAt } : {})} currency={product.currency} /></div></div><div className="sf-sticky-purchase__actions">{!offers.length ? <QuantityStepper value={quantity} onChange={value => setQuantityChoice({ productId: product.id, value })} min={1} max={remaining} label={ar ? `الكمية: ${product.title}` : `Quantity for ${product.title}`} /> : null}<BuyNow disabled={unavailable || !customReady} add={addToCart} /></div></Container></div> : null}
     </section>
   );
 }

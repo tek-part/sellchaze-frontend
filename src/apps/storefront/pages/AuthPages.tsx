@@ -1,3 +1,5 @@
+import { customerAuthLink, customerAuthReturn } from './auth-return';
+import { withSessionParams } from './NavigationInterceptor';
 /**
  * Auth pages — Login, Register, Forgot Password, Reset Password. Real integration against the
  * storefront auth endpoints (login/register) and the shared /auth password-reset routes. Errors
@@ -57,7 +59,7 @@ export function LoginPage(): ReactElement {
     setError(undefined);
     try {
       await login(email, password);
-      navigate('/account');
+      navigate(withSessionParams(customerAuthReturn(window.location.search), window.location.search));
     } catch (err) {
       setError(messageOf(err, t('auth.genericError')));
     } finally {
@@ -76,7 +78,7 @@ export function LoginPage(): ReactElement {
             <a href="/forgot-password">{t('auth.forgotLink')}</a>
           </p>
           <p className="sf-auth__alt">
-            {t('auth.newHere')} <a href="/register">{t('auth.createOne')}</a>
+            {t('auth.newHere')} <a href={withSessionParams(customerAuthLink('/register', window.location.search), window.location.search)}>{t('auth.createOne')}</a>
           </p>
         </>
       }
@@ -108,7 +110,7 @@ export function RegisterPage(): ReactElement {
     setError(undefined);
     try {
       await register(form);
-      navigate('/account');
+      navigate(withSessionParams(customerAuthReturn(window.location.search), window.location.search));
     } catch (err) {
       setError(messageOf(err, t('auth.genericError')));
     } finally {
@@ -123,7 +125,7 @@ export function RegisterPage(): ReactElement {
       title={t('auth.registerTitle')}
       alt={
         <p className="sf-auth__alt">
-          {t('auth.alreadyHaveAccount')} <a href="/login">{t('auth.signIn')}</a>
+          {t('auth.alreadyHaveAccount')} <a href={withSessionParams(customerAuthLink('/login', window.location.search), window.location.search)}>{t('auth.signIn')}</a>
         </p>
       }
     >
