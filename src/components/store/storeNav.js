@@ -109,6 +109,9 @@ export function buildStoreNav(t, access = {}) {
             label: t('nav_store_settings', 'Store settings'),
             items: [
                 { key: 'general', to: 'settings/general', label: t('store_nav_general', 'General'), Icon: HiOutlineCog6Tooth, show: access.canStoreSettings },
+                { key: 'store-info', to: 'settings/store-info', label: t('store_nav_store_info', 'Store policies'), Icon: HiOutlineDocumentText, show: access.canStoreSettings },
+                { key: 'seo-settings', to: 'settings/seo', label: t('store_nav_seo_settings', 'SEO settings'), Icon: HiOutlineGlobeAlt, show: access.canStoreSettings },
+                { key: 'social-links', to: 'settings/social-links', label: t('store_nav_social_links', 'Social links'), Icon: HiOutlineGlobeAlt, show: access.canStoreSettings },
                 { key: 'bot-protection', to: 'settings/bot-protection', label: t('store_nav_bot_protection', 'Bot protection'), Icon: HiOutlineCog6Tooth, show: access.canStoreSettings },
                 { key: 'shopping-preferences', to: 'settings/shopping-preferences', label: t('store_nav_shopping_preferences', 'Shopping preferences'), Icon: HiOutlineCog6Tooth, show: access.canStoreSettings },
                 { key: 'localization', to: 'settings/localization', label: t('store_nav_localization', 'Language & currency'), Icon: HiOutlineLanguage, show: access.canStoreSettings },

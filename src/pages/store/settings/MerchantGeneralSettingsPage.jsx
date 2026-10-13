@@ -7,6 +7,8 @@ import { clearStoreLocalesCache } from '../../../hooks/useStoreLocales';
 import SearchableSelect from '../../../components/ui/SearchableSelect';
 import { HiOutlinePhoto, HiOutlineXMark } from '../../../components/workspace/WorkspaceIcons';
 import fontCatalog from '../../../shared/store-fonts.json';
+import MerchantSettingsHeading from '../../../components/store/MerchantSettingsHeading';
+import MerchantSettingsSave from '../../../components/store/MerchantSettingsSave';
 import './merchant-general-settings.css';
 
 const editable = ['revision','site_title','header_text','primary_color','font_family','default_locale','currency','timezone','shipping_flat_rate','phone_country','disable_auto_select_shipping','disable_auto_select_variants','disable_bot_protection','max_product_quantity','max_orders_per_phone_24h'];
@@ -17,7 +19,7 @@ const message = (failure) => Object.values(failure.response?.data?.errors || {})
 function Field({ label, value, children }) {
     return <div className={`ws-general-field ${value !== '' && value !== null && value !== undefined ? 'is-filled' : ''}`}><span>{label}</span>{children}</div>;
 }
-function BrandImage({ title, current, file, setFile, removed, setRemoved, ar }) {
+export function BrandImage({ title, current, file, setFile, removed, setRemoved, ar }) {
     const input=useRef(null);const preview=useMemo(()=>file?URL.createObjectURL(file):null,[file]);
     useEffect(()=>()=>{if(preview)URL.revokeObjectURL(preview);},[preview]);
     useEffect(()=>{if(!file&&input.current)input.current.value='';},[file]);
@@ -50,7 +52,7 @@ function GeneralEditor({ context:{apiBase,uiBase,access,setStore} }) {
         {error?<div className="ws-general-feedback" role="alert">{error}<button type="button" disabled={busy} onClick={()=>setAttempt(value=>value+1)}>{text('إعادة تحميل آخر الإعدادات','Reload latest settings')}</button></div>:null}
         {success?<p className="ws-general-feedback" role="status">{success}</p>:null}
         {loading?<p role="status">{text('جارٍ تحميل إعدادات المتجر…','Loading store settings…')}</p>:draft&&choices?<form onSubmit={submit}><fieldset disabled={busy}>
-            <header><h2>{text('إعدادات المتجر','Store settings')}</h2></header>
+            <MerchantSettingsHeading title={text('إعدادات المتجر','Store settings')} description={text('يمكنك تعديل اسم المتجر وألوانه ولغته وعملته وإعدادات الشحن.','Update your store name, colors, language, currency and delivery settings.')} help />
             <Field label={text('لغة موقعك *','Store language *')} value={draft.default_locale}><select aria-label={text('لغة موقعك','Store language')} value={draft.default_locale} onChange={event=>change('default_locale',event.target.value)}><option value="ar">العربية</option><option value="en">English</option></select></Field>
             <Field label={text('عنوان الموقع الرئيسي','Main site title')} value={draft.site_title}><input aria-label={text('عنوان الموقع الرئيسي','Main site title')} value={draft.site_title||''} maxLength={255} onChange={event=>change('site_title',event.target.value)}/></Field>
             <section><h3>{text('الجزء الأعلى من الهيدر','Top header')}</h3><Field label={text('محتوى الجزء العلوي من الهيدر','Top header content')} value={draft.header_text}><input aria-label={text('محتوى الجزء العلوي من الهيدر','Top header content')} value={draft.header_text||''} maxLength={500} onChange={event=>change('header_text',event.target.value)}/></Field></section>
@@ -70,7 +72,7 @@ function GeneralEditor({ context:{apiBase,uiBase,access,setStore} }) {
             <p className="ws-general-note">{text('يطبق الحد على كمية كل منتج. الصفر يعني عدم وجود حد.','The limit applies to the quantity of each product. Zero means no limit.')}</p>
             <Field label={text('الحد الأقصى لعدد الطلبات لكل رقم هاتف','Maximum orders per phone number')} value={draft.max_orders_per_phone_24h}><input type="number" min="0" max="100000" step="1" required aria-label={text('الحد الأقصى لعدد الطلبات لكل رقم هاتف','Maximum orders per phone number')} value={draft.max_orders_per_phone_24h} onChange={event=>change('max_orders_per_phone_24h',event.target.value)}/></Field>
             <p className="ws-general-note">{text('يحسب خلال آخر 24 ساعة. الصفر يعني عدم وجود حد.','Counted over the last 24 hours. Zero means no limit.')}</p>
-            <button className="ws-general-save" type="submit" disabled={!dirty||busy}>{busy?text('جارٍ الحفظ…','Saving…'):text('حفظ','Save')}</button>
+            <MerchantSettingsSave busy={busy} disabled={!dirty||busy} ar={ar} />
         </fieldset></form>:null}
     </div>;
 }

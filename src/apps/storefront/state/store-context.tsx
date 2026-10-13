@@ -20,7 +20,7 @@ export interface StoreInfo {
   autoSelectVariants?: boolean;
   trackingEnabled?: boolean;
   downsellEnabled?: boolean;
-  merchantInformation?: import('../api/types').ApiMerchantInformation;
+  merchantInformation?: import('../api/types').ApiMerchantInformation | null;
   shipping?: import('../types/shipping').ShippingOffer;
   id: string;
   name: string;
@@ -39,20 +39,23 @@ export interface StoreInfo {
 
 const EMPTY_NAVIGATION: ApiStorefrontNavigation = Object.freeze({ header: [], footer: [] });
 
-const DEV_STORE: StoreInfo = {
-  id: 'dev',
-  name: 'Sellchaze Demo Store',
-  slug: 'demo',
+const EMPTY_STORE: StoreInfo = {
+  id: '', name: 'Store', slug: '',
   currency: 'USD',
   baseCurrency: 'USD',
   supportedCurrencies: ['USD'],
   currencyMultipliers: { USD: 1 },
   defaultLocale: 'en',
-  supportedLocales: ['en', 'ar'],
+  supportedLocales: ['en'],
+};
+
+const DEV_STORE: StoreInfo = {
+  ...EMPTY_STORE,
+  id: 'dev', name: 'Sellchaze Demo Store', slug: 'demo', supportedLocales: ['en', 'ar'],
   // Real stores get this from the API (StoreResource.logo_url); the demo store
   // ships a wordmark so the header renders a logo rather than plain text.
   logoUrl: '/brand-logo.svg',
-  description: 'Considered luxury, made to last.',
+  description: 'Store preview',
 };
 
 interface StoreContextValue {
@@ -83,35 +86,35 @@ export function StoreProvider(props: { children: ReactNode; initialData?: ApiSto
     // `locale.fallback` is the server's view of the store default; the StoreResource field is the
     // same value and wins when present so an older API without `locale` still resolves correctly.
     const defaultLocale = s.default_locale || data.locale?.fallback || 'en';
-    const supportedFromApi = data.locale?.supported?.length ? data.locale.supported : s.supported_locales ?? [];
-    const supportedLocales = supportedFromApi.length ? supportedFromApi : [defaultLocale];
+    const supportedLocales = data.locale?.supported?.length ? data.locale.supported
+      : s.supported_locales?.length ? s.supported_locales : [defaultLocale];
     store = {
       id: String(s.id),
-      ...(s.auto_select_variants !== undefined ? { autoSelectVariants: s.auto_select_variants } : {}),
-      ...(s.tracking_enabled !== undefined ? { trackingEnabled: s.tracking_enabled } : {}),
-      ...(s.downsell_enabled !== undefined ? { downsellEnabled: s.downsell_enabled } : {}),
-      ...(s.merchant_information ? { merchantInformation: s.merchant_information } : {}),
+      autoSelectVariants: s.auto_select_variants,
+      trackingEnabled: s.tracking_enabled,
+      downsellEnabled: s.downsell_enabled,
+      merchantInformation: s.merchant_information,
       name: s.name,
-      ...(s.identity ? { identity: s.identity } : {}),
+      identity: s.identity,
       slug: s.slug,
       currency,
       baseCurrency,
       supportedCurrencies,
       currencyMultipliers: s.currency_multipliers || { [baseCurrency]: 1 },
-      ...(s.shipping ? { shipping: s.shipping } : {}),
+      shipping: s.shipping,
       defaultLocale,
       supportedLocales,
-      ...(s.logo_url ? { logoUrl: s.logo_url } : {}),
-      ...(s.banner_url ? { bannerUrl: s.banner_url } : {}),
-      ...(s.email ? { email: s.email } : {}),
-      ...(s.phone ? { phone: s.phone } : {}),
-      ...(s.merchant_information ? { email: s.merchant_information.email, phone: s.merchant_information.phone } : {}),
-      ...(s.description ? { description: s.description } : {}),
+      logoUrl: s.logo_url || undefined,
+      bannerUrl: s.banner_url || undefined,
+      // Enabled merchant contact information takes priority over the base store fields.
+      email: s.merchant_information ? s.merchant_information.email : s.email || undefined,
+      phone: s.merchant_information ? s.merchant_information.phone : s.phone || undefined,
+      description: s.description || undefined,
     };
   } else if (previewOrDev()) {
     store = DEV_STORE;
   } else {
-    store = { id: '', name: 'Store', slug: '', currency: 'USD', baseCurrency: 'USD', supportedCurrencies: ['USD'], currencyMultipliers: { USD: 1 }, defaultLocale: 'en', supportedLocales: ['en'] };
+    store = EMPTY_STORE;
   }
 
   const navigation: ApiStorefrontNavigation = data?.navigation

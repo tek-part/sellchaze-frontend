@@ -1,6 +1,7 @@
 import type { DesignTokens, ThemeSettings } from './theme-engine/types';
 
 export interface StoreIdentity {
+  social?: ReadonlyArray<{ label: string; url: string }>;
   site_title?: string | null;
   header_mode?: 'theme' | 'custom' | 'hidden' | null;
   header_text?: string | null;

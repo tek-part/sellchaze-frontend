@@ -211,41 +211,39 @@ export function StorefrontApp(): ReactElement {
       ?? (dev && previewData && categoryNav.length === 0
         ? previewData.sampleFooter(manifest.id, t, locale)
         : buildFooter(categoryNav, t));
-    const footer = appendFooterPages(footerBase, toNavItems(navigation.footer.filter((item) => item.automatic_page), locale, store.defaultLocale), t('footer.links'), menuFooter === null);
+    const automaticFooter = toNavItems(navigation.footer.filter((item) => item.automatic_page), locale, store.defaultLocale);
+    const footer = appendFooterPages(footerBase, automaticFooter, t('footer.links'), menuFooter === null);
     const announcements = dev && previewData ? previewData.sampleAnnouncements(manifest.id, locale) : [];
+    const previewCategories = dev && previewData && !categoryNav.length
+      ? previewData.sampleCategories(manifest.id, locale).map((category) => ({ label: category.title, url: category.url }))
+      : undefined;
 
     return {
       store: {
         name: store.name,
         currency: store.currency,
-        ...(store.description ? { description: store.description } : {}),
+        description: store.description,
       },
       seo: {},
       navigation: { header, footer },
       data: {
         announcements,
-        categoryNavigation: dev && previewData && !categoryNav.length
-          ? previewData.sampleCategories(manifest.id, locale).map((category) => ({ label: category.title, url: category.url }))
-          : headerCategoryNav,
-        allCategoryNavigation: dev && previewData && !categoryNav.length
-          ? previewData.sampleCategories(manifest.id, locale).map((category) => ({ label: category.title, url: category.url }))
-          : categoryNav,
+        categoryNavigation: previewCategories ?? headerCategoryNav,
+        allCategoryNavigation: previewCategories ?? categoryNav,
         headerPageNavigation: toNavItems(navigation.header.filter((item) => item.automatic_page), locale, store.defaultLocale),
         managedHeaderNavigation: menuHeader,
-        sphinxFooterNavigation: menuFooter ?? (navigation.footer.some((item) => item.automatic_page)
-          ? [{ title: t('footer.links'), links: toNavItems(navigation.footer.filter((item) => item.automatic_page), locale, store.defaultLocale) }]
+        sphinxFooterNavigation: menuFooter ?? (automaticFooter.length
+          ? [{ title: t('footer.links'), links: automaticFooter }]
           : []),
         freeShippingThreshold: shippingThreshold(store.shipping, store.currency, store.currencyMultipliers),
         // Resolved once here, at the app boundary, so rendered chrome carries no request-time clock
         // (engine invariant I4) while never going stale in source.
         year: BUILD_YEAR,
         payments: ['Visa', 'Mastercard', 'American Express', 'PayPal', 'Apple Pay'],
-        // Social handles are merchant data the storefront API does not expose yet; shown in DEV
-        // preview only so the chrome reads complete, never fabricated for a live store.
-        ...(dev && previewData ? { social: previewData.sampleSocial() } : {}),
+        social: store.identity?.social ?? (dev && previewData ? previewData.sampleSocial() : []),
       },
     };
-  }, [categoriesQ.data, navigation, store.name, store.currency, store.currencyMultipliers, store.shipping, store.description, store.defaultLocale, manifest.id, t, locale, previewData]);
+  }, [categoriesQ.data, navigation, store.name, store.currency, store.currencyMultipliers, store.shipping, store.description, store.defaultLocale, store.identity, manifest.id, t, locale, previewData]);
 
   return (
     <UiBlocksProvider><div className="sf-root" data-theme-id={manifest.id}>

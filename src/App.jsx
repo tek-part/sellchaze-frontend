@@ -127,6 +127,9 @@ const StoreFunnelsPage = lazy(() => import('./pages/StoreFunnelsPage'));
 const StoreMediaPage = lazy(() => import('./pages/StoreMediaPage'));
 const StoreDesignAssetsPage = lazy(() => import('./pages/StoreDesignAssetsPage'));
 const StoreGeneralSettingsPage = lazy(() => import('./pages/store/settings/StoreGeneralSettingsPage'));
+const StorePoliciesSettingsPage = lazy(() => import('./pages/store/settings/StorePoliciesSettingsPage'));
+const StoreSeoSettingsPage = lazy(() => import('./pages/store/settings/StoreSeoSettingsPage'));
+const StoreSocialSettingsPage = lazy(() => import('./pages/store/settings/StoreSocialSettingsPage'));
 const StoreBotProtectionPage = lazy(() => import('./pages/store/settings/StoreBotProtectionPage'));
 const StoreTrackingPage = lazy(() => import('./pages/store/StoreTrackingPage'));
 const StoreAppsPage = lazy(() => import('./pages/store/StoreAppsPage'));
@@ -272,6 +275,9 @@ const STORE_ROUTES = [
     { path: 'media', element: <StoreMediaPage /> },
     { path: 'upload-assets', element: <StoreDesignAssetsPage /> },
     { path: 'settings/general', element: <StoreGeneralSettingsPage /> },
+    { path: 'settings/store-info', element: <StorePoliciesSettingsPage /> },
+    { path: 'settings/seo', element: <StoreSeoSettingsPage /> },
+    { path: 'settings/social-links', element: <StoreSocialSettingsPage /> },
     { path: 'settings/bot-protection', element: <StoreBotProtectionPage /> },
     { path: 'settings/shopping-preferences', element: <StoreShoppingPreferencesPage /> },
     { path: 'settings/localization', element: <StoreLocalizationSettingsPage /> },
