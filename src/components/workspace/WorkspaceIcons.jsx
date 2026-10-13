@@ -1,4 +1,6 @@
 import { createContext, useContext } from 'react';
+import PrinterIcon from '@hugeicons/core-free-icons/PrinterIcon';
+import { HiOutlinePrinter as OriginalHiOutlinePrinter } from 'react-icons/hi2';
 import { HugeiconsIcon } from '@hugeicons/react';
 import Activity01Icon from '@hugeicons/core-free-icons/Activity01Icon';
 import Add01Icon from '@hugeicons/core-free-icons/Add01Icon';
@@ -166,6 +168,7 @@ function makeIcon(icon, Original, name) {
     };
 }
 export const HiArrowDownTray = /*#__PURE__*/makeIcon(Download01Icon, OriginalHiArrowDownTray, 'Download01Icon');
+export const HiOutlinePrinter = /*#__PURE__*/makeIcon(PrinterIcon, OriginalHiOutlinePrinter, 'PrinterIcon');
 export const HiArrowUpTray = /*#__PURE__*/makeIcon(Upload01Icon, OriginalHiArrowUpTray, 'Upload01Icon');
 export const HiBookmark = /*#__PURE__*/makeIcon(Bookmark01Icon, OriginalHiBookmark, 'Bookmark01Icon');
 export const HiChartBar = /*#__PURE__*/makeIcon(ChartAverageIcon, OriginalHiChartBar, 'ChartAverageIcon');
