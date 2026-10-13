@@ -13,6 +13,7 @@ import StoreOrderShipment from '../components/store/StoreOrderShipment';
 import StoreOrderDigitalEmail from '../components/store/StoreOrderDigitalEmail';
 import StoreOrderDigitalDelivery from '../components/store/StoreOrderDigitalDelivery';
 import StoreOrderCashPayment from '../components/store/StoreOrderCashPayment';
+import StoreOrderEditModal from '../components/store/orders/StoreOrderEditModal';
 import { orderStatusLabel } from '../components/store/orders/order-workspace';
 import '../components/store/orders/orders-workspace.css';
 import '../components/store/orders/order-detail.css';
@@ -20,7 +21,7 @@ import '../components/store/orders/order-detail.css';
 const errorMessage = error => Object.values(error.response?.data?.errors || {}).flat().join(' ') || error.response?.data?.message || error.message;
 const reviewLabels = { moderate_risk: ['مخاطر متوسطة', 'Moderate risk'], high_risk: ['مخاطر مرتفعة', 'High risk'], spam: ['طلب مزعج', 'Spam'], clear: ['إزالة التصنيف', 'Clear classification'] };
 const actionLabels = { status: ['تحديث حالة الطلب', 'Update order status'], review: ['تصنيف الطلب', 'Classify order'], block: ['حظر رقم الهاتف', 'Block phone number'], webhook: ['إعادة إرسال الويب هوك', 'Resend webhook'], archive: ['أرشفة الطلب', 'Archive order'], restore: ['استرجاع الطلب', 'Restore order'], bank: ['تأكيد التحويل البنكي', 'Confirm bank transfer'] };
-const eventLabels = { merchant_archive: ['أُرشف الطلب', 'Order archived'], merchant_restore: ['استُرجع الطلب', 'Order restored'], merchant_phone_block: ['حُظر رقم الهاتف', 'Phone blocked'], merchant_webhook_resend: ['طُلب إعادة إرسال الويب هوك', 'Webhook resend requested'], merchant_review_clear: ['أُزيل التصنيف', 'Classification cleared'], merchant_review_moderate_risk: reviewLabels.moderate_risk, merchant_review_high_risk: reviewLabels.high_risk, merchant_review_spam: reviewLabels.spam };
+const eventLabels = { merchant_edit: ['عُدّل الطلب', 'Order edited'], merchant_archive: ['أُرشف الطلب', 'Order archived'], merchant_restore: ['استُرجع الطلب', 'Order restored'], merchant_phone_block: ['حُظر رقم الهاتف', 'Phone blocked'], merchant_webhook_resend: ['طُلب إعادة إرسال الويب هوك', 'Webhook resend requested'], merchant_review_clear: ['أُزيل التصنيف', 'Classification cleared'], merchant_review_moderate_risk: reviewLabels.moderate_risk, merchant_review_high_risk: reviewLabels.high_risk, merchant_review_spam: reviewLabels.spam };
 
 function DetailCard({ title, children, className = '' }) {
     return <section className={`ws-order-card ${className}`}><h2>{title}</h2>{children}</section>;
@@ -29,24 +30,27 @@ function DataRow({ label, children }) { return <div><dt>{label}</dt><dd>{childre
 
 export default function StoreOrderDetailPage() {
     const { orderId } = useParams(); const { apiBase, uiBase } = useStoreScope(); const location = useLocation();
-    const { permissions = [] } = useOutletContext() ?? {}; const canManage = permissions.includes('store.orders.manage');
+    const { permissions = [], me, store } = useOutletContext() ?? {}; const canManage = permissions.includes('store.orders.manage');
+    const scopeKey = `${me?.id ?? ''}:${store?.id ?? ''}`;
     const { i18n } = useTranslation(); const ar = i18n.language.startsWith('ar'); const text = (a, e) => ar ? a : e;
     const { theme } = useWorkspaceAppearance(); const [order, setOrder] = useState(null); const [error, setError] = useState('');
     const [dialog, setDialog] = useState(null); const [note, setNote] = useState(''); const [classification, setClassification] = useState('');
     const [status, setStatus] = useState(''); const [bankReference, setBankReference] = useState(''); const [busy, setBusy] = useState(false);
     const [notice, setNotice] = useState(''); const [actionError, setActionError] = useState('');
+    const [editing, setEditing] = useState(false);
+    const [loadedScope, setLoadedScope] = useState(null);
     const generation = useRef(0); const fetchVersion = useRef(0); const submitting = useRef(false); const requestKey = useRef(null);
     const endpoint = `${apiBase}/orders/${orderId}`;
     const load = useCallback(async () => {
         const scope = generation.current; const version = ++fetchVersion.current;
         try {
             const { data } = await api.get(`${endpoint}${canManage ? '/detail' : ''}`);
-            if (generation.current === scope && fetchVersion.current === version) { setOrder(data.data); setError(''); }
+            if (generation.current === scope && fetchVersion.current === version) { setOrder(data.data); setLoadedScope(scopeKey); setError(''); }
         } catch (e) { if (generation.current === scope && fetchVersion.current === version) setError(errorMessage(e)); }
-    }, [endpoint, canManage]);
+    }, [endpoint, canManage, scopeKey]);
     useEffect(() => {
         generation.current += 1; fetchVersion.current += 1; submitting.current = false; requestKey.current = null;
-        setOrder(null); setError(''); setDialog(null); setBusy(false); setNotice(''); setNote(''); setBankReference('');
+        setOrder(null); setError(''); setDialog(null); setEditing(false); setBusy(false); setNotice(''); setNote(''); setBankReference('');
         void load(); return () => { generation.current += 1; fetchVersion.current += 1; };
     }, [load]);
     function open(kind) {
@@ -75,11 +79,12 @@ export default function StoreOrderDetailPage() {
         } catch (e) { if (scope === generation.current) setActionError(errorMessage(e)); }
         finally { if (scope === generation.current) { submitting.current = false; setBusy(false); } }
     }
-    if (!order) return <div className="ws-order-detail">{error ? <p role="alert" className="ws-orders-error">{error}<button onClick={() => void load()}>{text('إعادة المحاولة', 'Retry')}</button></p> : <p role="status">{text('جار تحميل الطلب…', 'Loading order…')}</p>}</div>;
+    if (!order || loadedScope !== scopeKey) return <div className="ws-order-detail">{error ? <p role="alert" className="ws-orders-error">{error}<button onClick={() => void load()}>{text('إعادة المحاولة', 'Retry')}</button></p> : <p role="status">{text('جار تحميل الطلب…', 'Loading order…')}</p>}</div>;
     const archived = Boolean(order.archived_at); const money = value => `${String(value ?? '0.00')} ${order.currency}`;
     const address = order.shipping_address || {}; const digital = order.items?.some(item => item.digital_delivery); const requiresShipping = order.fulfillment?.requires_shipping !== false;
     const next = order.next_statuses || []; const label = actionLabels[dialog]; const phone = order.customer?.phone;
-    const whatsapp = phone && /^\+?[1-9]\d{7,14}$/.test(phone.replace(/[\s()-]/g, '')) ? `https://wa.me/${phone.replace(/\D/g, '')}?text=${encodeURIComponent(text(`مرحبًا، نود تأكيد طلبك ${order.order_number} بقيمة ${money(order.grand_total)}.`, `Hello, please confirm your order ${order.order_number} for ${money(order.grand_total)}.`))}` : null;
+    const whatsappPhone = order.customer?.whatsapp_phone || phone;
+    const whatsapp = whatsappPhone && /^\+?[1-9]\d{7,14}$/.test(whatsappPhone.replace(/[\s()-]/g, '')) ? `https://wa.me/${whatsappPhone.replace(/\D/g, '')}?text=${encodeURIComponent(text(`مرحبًا، نود تأكيد طلبك ${order.order_number} بقيمة ${money(order.grand_total)}.`, `Hello, please confirm your order ${order.order_number} for ${money(order.grand_total)}.`))}` : null;
     const date = value => value ? new Date(value).toLocaleString(ar ? 'ar-EG' : 'en-GB') : '—';
     return <div className="ws-order-detail" dir={ar ? 'rtl' : 'ltr'}>
         <header className="ws-order-heading"><div><h1>{text('تفاصيل الطلب', 'Order details')} <bdi>#{order.order_number}</bdi></h1><p>{date(order.placed_at || order.created_at)}</p></div><Link to={`${uiBase}/orders`}>{text('الطلبات', 'Orders')}</Link></header>
@@ -88,6 +93,7 @@ export default function StoreOrderDetailPage() {
         {notice ? <p role="status" className="ws-orders-notice">{notice}</p> : null}
         <div className="ws-order-toolbar"><StatusBadge status={order.status} label={orderStatusLabel(order.status, ar)} />{archived ? <span className="ws-order-archived">{text('مؤرشف', 'Archived')}</span> : null}{order.review?.classification ? <span className={`ws-order-review is-${order.review.classification}`}>{reviewLabels[order.review.classification]?.[ar ? 0 : 1]}</span> : null}
             {canManage && !archived ? <>
+                <button type="button" onClick={() => setEditing(true)}>{text('تعديل الطلب', 'Edit order')}</button>
                 <button type="button" onClick={() => open('status')} disabled={!next.length}>{text('تحديث الحالة', 'Update status')}</button>
                 <button type="button" onClick={() => open('review')}>{text('تصنيف الطلب', 'Classify order')}</button>
                 {whatsapp ? <a href={whatsapp} target="_blank" rel="noopener noreferrer">{text('تأكيد عبر واتساب', 'Confirm via WhatsApp')}</a> : null}
@@ -115,6 +121,7 @@ export default function StoreOrderDetailPage() {
             <DetailCard title={text('ملاحظات الطلب', 'Order notes')} className="ws-order-notes">{order.customer_notes ? <p>{order.customer_notes}</p> : <p className="ws-order-muted">{text('لا توجد ملاحظات من العميل.', 'No customer notes.')}</p>}{canManage && !archived ? <PrivateOrderNote key={endpoint} endpoint={endpoint} ar={ar} onSaved={() => void load()} /> : null}</DetailCard>
             <DetailCard title={text('مصدر الطلب', 'Order UTMs')}><dl className="ws-order-data"><DataRow label={text('مصدر الحملة', 'Campaign source')}>{order.marketing_attribution?.source}</DataRow><DataRow label={text('اسم الحملة', 'Campaign name')}>{order.marketing_attribution?.campaign}</DataRow><DataRow label={text('كود الإحالة', 'Referral code')}>{order.referral_attribution?.code}</DataRow><DataRow label={text('طريقة الإنشاء', 'Created via')}>{order.entry_source === 'manual' ? text('طلب يدوي', 'Manual order') : text('المتجر', 'Storefront')}</DataRow></dl></DetailCard>
         </aside></div>
+        {editing && canManage && !archived ? <StoreOrderEditModal key={`${endpoint}:${scopeKey}`} apiBase={apiBase} orderId={order.id} ar={ar} theme={theme} onClose={() => setEditing(false)} onSaved={(updated, recovered) => { setOrder(updated); setLoadedScope(scopeKey); setEditing(false); setNotice(recovered ? text('تحققنا من حفظ التعديل. هذه أحدث بيانات الطلب.', 'We reconciled the saved edit. These are the latest order details.') : text('حُفظ تعديل الطلب.', 'Order changes saved.')); }} /> : null}
         <Dialog open={Boolean(dialog)} onClose={close} className="ws-orders-dialog" dir={ar ? 'rtl' : 'ltr'} data-workspace-theme={theme}><DialogBackdrop transition className="ws-orders-backdrop ws-order-transition" /><div className="ws-orders-dialog-position"><DialogPanel transition className="ws-order-action-panel ws-order-transition"><form onSubmit={submit}><header><DialogTitle>{label?.[ar ? 0 : 1]}</DialogTitle><button type="button" onClick={close} disabled={busy} aria-label={text('إغلاق', 'Close')}><HiOutlineXMark aria-hidden /></button></header><div className="ws-order-action-body">
             {dialog === 'status' ? <label>{text('الحالة الجديدة', 'New status')}<select required value={status} disabled={busy} onChange={event => setStatus(event.target.value)}><option value="">{text('اختر الحالة', 'Choose status')}</option>{next.map(value => <option value={value} key={value}>{orderStatusLabel(value, ar)}</option>)}</select></label> : null}
             {dialog === 'review' ? <><p>{text('تصنيف يدوي للمراجعة؛ تبقى حالة الطلب والدفع كما هي.', 'A manual review classification. Order and payment status stay as recorded.')}</p><label>{text('التصنيف', 'Classification')}<select value={classification} disabled={busy} onChange={event => setClassification(event.target.value)}>{Object.entries(reviewLabels).map(([key, labels]) => <option key={key} value={key}>{labels[ar ? 0 : 1]}</option>)}</select></label></> : null}

@@ -6,10 +6,10 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import StoreOrderDetailPage from '../pages/StoreOrderDetailPage';
 import api from '../api/client';
 
-const state = vi.hoisted(() => ({ orderId: '1', apiBase: '/my-store', permissions: ['store.orders.manage'] }));
+const state = vi.hoisted(() => ({ orderId: '1', apiBase: '/my-store', permissions: ['store.orders.manage'], meId: 1, storeId: 1 }));
 vi.mock('../api/client', () => ({ default: { get: vi.fn(), post: vi.fn() } }));
 vi.mock('../hooks/useStoreScope', () => ({ default: () => ({ apiBase: state.apiBase, uiBase: '/store' }) }));
-vi.mock('react-router-dom', async () => ({ ...await vi.importActual('react-router-dom'), useParams: () => ({ orderId: state.orderId }), useOutletContext: () => ({ permissions: state.permissions }), useLocation: () => ({ state: null }) }));
+vi.mock('react-router-dom', async () => ({ ...await vi.importActual('react-router-dom'), useParams: () => ({ orderId: state.orderId }), useOutletContext: () => ({ permissions: state.permissions, me: { id: state.meId }, store: { id: state.storeId } }), useLocation: () => ({ state: null }) }));
 vi.mock('react-i18next', () => ({ useTranslation: () => ({ i18n: { language: 'en' } }) }));
 vi.mock('../components/workspace/useWorkspaceAppearance', () => ({ default: () => ({ theme: 'light' }) }));
 vi.mock('../components/workspace/WorkspaceIcons', () => ({ HiOutlineArchiveBox: () => null, HiOutlineArrowPath: () => null, HiOutlinePrinter: () => null, HiOutlineXMark: () => null }));
@@ -29,7 +29,7 @@ const button = name => [...document.querySelectorAll('button')].find(el => el.te
 async function click(el) { await act(async () => el.click()); }
 
 beforeEach(() => {
-    vi.clearAllMocks(); state.orderId = '1'; state.apiBase = '/my-store'; state.permissions = ['store.orders.manage'];
+    vi.clearAllMocks(); state.orderId = '1'; state.apiBase = '/my-store'; state.permissions = ['store.orders.manage']; state.meId = 1; state.storeId = 1;
     globalThis.IS_REACT_ACT_ENVIRONMENT = true;
     vi.stubGlobal('ResizeObserver', class { observe() {} unobserve() {} disconnect() {} });
     host = document.createElement('div'); document.body.append(host); root = createRoot(host);
@@ -61,4 +61,13 @@ describe('merchant order detail asynchronous actions', () => {
         await act(async () => render()); expect(button('Resend webhook')).toBeUndefined(); expect(button('Classify order')).toBeUndefined();
         expect(api.get).toHaveBeenCalledWith('/my-store/orders/1'); expect(api.post).not.toHaveBeenCalled();
     });
+    it('invalidates owner data when the account and resolved store change under the same my-store URL', async () => {
+        const old = deferred(); const current = deferred(); api.get.mockReturnValueOnce(old.promise).mockReturnValueOnce(current.promise);
+        await act(async () => render()); state.meId = 2; state.storeId = 2; await act(async () => render());
+        await act(async () => current.resolve({ data: { data: row(1, 'Current account fixture') } }));
+        await act(async () => old.resolve({ data: { data: row(1, 'Previous account fixture') } }));
+        expect(host.textContent).toContain('Current account fixture'); expect(host.textContent).not.toContain('Previous account fixture');
+        expect(api.get.mock.calls.map(call => call[0])).toEqual(['/my-store/orders/1/detail', '/my-store/orders/1/detail']);
+    });
+
 });
