@@ -6,6 +6,13 @@ import { HiOutlineChevronDown, HiOutlineChevronRight, HiOutlineXMark } from '../
 import Field from './ManualOrderField';
 import { manualLineKey } from './manual-order';
 
+function matchesSelection(line, product, variant) {
+    return line.product.id === product.id && (line.variant?.id ?? null) === (variant?.id ?? null);
+}
+function hasSelection(selected, product, variant = null) {
+    return [...selected.values()].some(line => matchesSelection(line, product, variant));
+}
+
 function VariantChoices({ product, apiBase, selected, onToggle, ar }) {
     const [page, setPage] = useState(1);
     const [result, setResult] = useState(null);
@@ -20,7 +27,7 @@ function VariantChoices({ product, apiBase, selected, onToggle, ar }) {
     return <div className="ws-manual-variants" aria-busy={loading}>
         {error ? <p role="alert">{error}</p> : null}
         {loading ? <p role="status">{ar ? 'جارٍ تحميل المتغيرات…' : 'Loading variants…'}</p> : result?.data.length ? result.data.map(variant => <label key={variant.id}>
-            <input type="checkbox" checked={selected.has(manualLineKey(product.id, variant.id))} onChange={event => onToggle(product, variant, event.target.checked)} disabled={!selected.has(manualLineKey(product.id, variant.id)) && selected.size >= 100} />
+            <input type="checkbox" checked={hasSelection(selected, product, variant)} onChange={event => onToggle(product, variant, event.target.checked)} disabled={!hasSelection(selected, product, variant) && selected.size >= 100} />
             <span><strong>{Object.entries(variant.options || {}).map(([key, value]) => `${key}: ${value}`).join(' · ') || variant.name}</strong><small>{ar ? 'السعر' : 'Price'}: {variant.price}</small></span>
         </label>) : <p>{ar ? 'لا توجد متغيرات متاحة.' : 'No variants are available.'}</p>}
         {result?.meta.last_page > 1 ? <div className="ws-manual-variant-pages"><button type="button" disabled={loading || page <= 1} onClick={() => setPage(value => value - 1)}>{ar ? 'السابق' : 'Previous'}</button><span>{page} / {result.meta.last_page}</span><button type="button" disabled={loading || page >= result.meta.last_page} onClick={() => setPage(value => value + 1)}>{ar ? 'التالي' : 'Next'}</button></div> : null}
@@ -45,8 +52,8 @@ export default function ManualProductPicker({ apiBase, items, ar, theme, onClose
         const key = manualLineKey(product.id, variant?.id);
         setSelected(current => {
             const next = new Map(current);
-            if (!checked) next.delete(key);
-            else if (!next.has(key) && next.size < 100) next.set(key, { key, product, variant, unitPrice: variant?.price ?? product.price, priceEdited: false, quantity: '1', personalization: {} });
+            if (!checked) { for (const [entryKey, line] of next) if (matchesSelection(line, product, variant)) next.delete(entryKey); }
+            else if (!hasSelection(next, product, variant) && next.size < 100) next.set(key, { key, product, variant, unitPrice: variant?.price ?? product.price, priceEdited: false, quantity: '1', personalization: {} });
             return next;
         });
     }
@@ -67,6 +74,6 @@ export default function ManualProductPicker({ apiBase, items, ar, theme, onClose
 }
 
 function ProductRow({ product, apiBase, selected, toggle, ar, expanded, onExpand }) {
-    const chosen = selected.has(manualLineKey(product.id));
+    const chosen = hasSelection(selected, product);
     return <><tr><td>{product.variants_count ? <button type="button" aria-expanded={expanded} onClick={onExpand} aria-label={`${ar ? 'عرض متغيرات' : 'Show variants for'} ${product.name}`}><HiOutlineChevronDown className={expanded ? 'rotate-180' : ''} /></button> : <input type="checkbox" checked={chosen} disabled={!chosen && selected.size >= 100} aria-label={`${ar ? 'اختيار' : 'Select'} ${product.name}`} onChange={event => toggle(product, null, event.target.checked)} />}</td><td>{product.image_url ? <img src={product.image_url} alt="" /> : null}</td><td>{product.name}</td><td>{product.price}</td><td>{product.created_at ? new Date(product.created_at).toLocaleDateString('en-US') : '—'}</td></tr>{expanded ? <tr><td colSpan={5}><VariantChoices product={product} apiBase={apiBase} selected={selected} onToggle={toggle} ar={ar} /></td></tr> : null}</>;
 }
