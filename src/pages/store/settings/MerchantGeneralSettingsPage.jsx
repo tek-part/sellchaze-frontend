@@ -20,6 +20,7 @@ function Field({ label, value, children }) {
 function BrandImage({ title, current, file, setFile, removed, setRemoved, ar }) {
     const input=useRef(null);const preview=useMemo(()=>file?URL.createObjectURL(file):null,[file]);
     useEffect(()=>()=>{if(preview)URL.revokeObjectURL(preview);},[preview]);
+    useEffect(()=>{if(!file&&input.current)input.current.value='';},[file]);
     const src=preview || (!removed&&current);
     return <section className="ws-general-brand"><h3>{title}</h3><div><div className="ws-general-image">{src?<img src={src} alt={title}/>:<HiOutlinePhoto aria-hidden/>}</div><div><input ref={input} type="file" accept="image/png,image/jpeg,image/webp" onChange={(event)=>{setFile(event.target.files?.[0]||null);setRemoved(false);}} aria-label={`${ar?'رفع صورة':'Upload image'} — ${title}`}/><button type="button" className="ws-general-outlined" onClick={()=>input.current?.click()}>{ar?'تغيير الصورة':'Change image'}</button>{file?<button type="button" className="ws-general-image-clear" onClick={()=>{setFile(null);if(input.current)input.current.value='';}} aria-label={ar?'إلغاء اختيار الصورة':'Clear selected image'}><HiOutlineXMark aria-hidden/></button>:current?<button type="button" className="ws-general-image-clear" onClick={()=>setRemoved(!removed)}>{removed?(ar?'استعادة الصورة':'Restore image'):(ar?'إزالة الصورة':'Remove image')}</button>:null}</div></div>{file?<p>{file.name}</p>:null}</section>;
 }
