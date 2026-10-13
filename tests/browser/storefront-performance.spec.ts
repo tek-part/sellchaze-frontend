@@ -9,7 +9,7 @@ declare global {
   }
 }
 
-const themes = ['naseem', 'bazaar', 'sahra', 'fresh', 'techno'] as const;
+const themes = ['naseem', 'bazaar', 'sahra', 'fresh', 'techno', 'elite-furniture'] as const;
 
 for (const theme of themes) {
   test(`${theme} storefront stays inside local web-vitals budgets`, async ({ page }) => {
@@ -56,7 +56,8 @@ for (const theme of themes) {
 
     await page.goto(`/?preview=1&theme=${theme}`, { waitUntil: 'networkidle' });
     await expect(page.locator('#storefront-root')).toBeVisible();
-    await page.getByRole('button', { name: 'Search', exact: true }).first().click();
+    if (theme === 'elite-furniture') await page.getByRole('link', { name: 'Search', exact: true }).first().click();
+    else await page.getByRole('button', { name: 'Search', exact: true }).first().click();
     await page.waitForTimeout(750);
 
     const metrics = await page.evaluate(() => {

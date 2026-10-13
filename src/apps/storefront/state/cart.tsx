@@ -79,9 +79,13 @@ function ScopedCartProvider({ children, store, apiOk }: { children: ReactNode; s
   useEffect(() => {
     const receive = (event: StorageEvent): void => {
       if (event.key !== storage && event.key !== null) return;
-      try { if (event.storageArea !== window.localStorage) return; } catch { return; }
-      const restored = decodeCart(event.newValue, store.id, store.currency);
-      if (restored !== null) setState((previous) => ({ ...previous, lines: restored }));
+      try {
+        if (event.storageArea !== window.localStorage) return;
+        // A queued event can describe a superseded write. Replaying that payload
+        // could restore a line another tab has already removed.
+        const restored = decodeCart(window.localStorage.getItem(storage), store.id, store.currency);
+        if (restored !== null) setState((previous) => ({ ...previous, lines: restored }));
+      } catch { return; }
     };
     window.addEventListener('storage', receive);
     return () => window.removeEventListener('storage', receive);

@@ -110,6 +110,19 @@ export const sampleAnnouncements = (themeId?: string, locale?: string): string[]
 
 export function sampleProductDetail(slug: string, themeId?: string, locale?: string): ProductDetailModel {
   const base = sampleNewest(themeId, locale).find((p) => p.handle === slug) ?? sampleNewest(themeId, locale)[0]!;
+  if (themeId === 'elite-furniture' || themeId === 'sphinx-v3') {
+    const ar = locale === 'ar';
+    const source = base.image?.src;
+    const images = source ? [source, source.replace('fit=crop', 'fit=crop&crop=top'), source.replace('fit=crop', 'fit=crop&crop=bottom')].map(src => ({ src, alt: base.title })) : [];
+    return { ...base, images, sku: `FURNITURE-${base.id}`, inStock: true,
+      descriptionHtml: ar ? '<p>قطعة أثاث عملية بخامات مختارة وتفاصيل تناسب الاستخدام اليومي. هذه بيانات معاينة؛ يضع كل متجر مواصفات منتجاته الفعلية.</p>' : '<p>Thoughtfully selected furniture for everyday living. This is preview content; each store supplies its own product specifications.</p>',
+      variants: [
+        { id: 'walnut', label: ar ? 'جوز' : 'Walnut', options: { [ar ? 'الخامة' : 'Finish']: ar ? 'جوز' : 'Walnut' }, available: true, price: base.price, availableStock: 5 },
+        { id: 'oak', label: ar ? 'بلوط' : 'Oak', options: { [ar ? 'الخامة' : 'Finish']: ar ? 'بلوط' : 'Oak' }, available: true, price: base.price + 100, availableStock: 2 },
+        { id: 'black', label: ar ? 'أسود' : 'Black', options: { [ar ? 'الخامة' : 'Finish']: ar ? 'أسود' : 'Black' }, available: false, price: base.price },
+      ],
+    };
+  }
   return {
     ...base,
     images: [{ src: img('sc-0') }, { src: img('sc-0-b') }, { src: img('sc-0-c') }],

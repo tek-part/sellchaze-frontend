@@ -13,7 +13,17 @@ import type { CatalogEntry, ThemeCatalog } from './types';
 
 export const THEME_CATALOG: ThemeCatalog = [
   {
-    id: 'sphinx-v3', name: 'Sphinx V3', version: '1.0.0', archetype: 'Furniture & Lifestyle',
+    id: 'elite-furniture', name: 'Elite Furniture', version: '1.0.0', archetype: 'Furniture',
+    description: 'An independent furniture storefront with cinematic hero, category photo tiles, featured shelves, image comparison and stacked product photography.',
+    author: 'Sellchaze', tags: ['furniture', 'modern', 'editorial', 'rtl'], accent: '#C8AA62',
+    previewImage: '/media/theme-previews/elite-furniture.png',
+    minEngineVersion: '1.0.0', capabilities: ['rtl', 'cart-drawer', 'newsletter', 'countdown'],
+    license: { type: 'free', sku: 'theme-elite-furniture' }, featured: true,
+    changelog: [{ version: '1.0.0', date: '2026-10-13', notes: ['Independent furniture layout, photo comparison and editable sections.'] }],
+    load: () => import('../../themes/elite-furniture').then(module => module.eliteTheme),
+  },
+  {
+    id: 'sphinx-v3', name: 'Sphinx V3', version: '1.1.0', archetype: 'Furniture & Lifestyle',
     description: 'A green storefront with a category mosaic, featured category shelves, inline search, a cart drawer and mobile bottom navigation.',
     author: 'Sellchaze', tags: ['furniture', 'green', 'classic', 'rtl'], accent: '#006C35',
     minEngineVersion: '1.0.0', capabilities: ['rtl', 'dark-mode', 'cart-drawer', 'quick-add', 'newsletter'],
@@ -26,10 +36,7 @@ export const THEME_CATALOG: ThemeCatalog = [
     name: 'Naseem — نسيم',
     version: '1.0.0',
     archetype: 'General Store',
-    description:
-      'Clean, modern general-store theme — light and airy with a blue primary, Arabic-first ' +
-      'typography, sticky search header, category circles, product tabs, flash deals and a ' +
-      'newsletter band. Built on the shared section library: every block is editable in the customizer.',
+    description: 'An airy general store with a search header, category circles, product tabs and flash deals.',
     author: 'Sellchaze',
     tags: ['general', 'clean', 'modern', 'arabic', 'light', 'salla-style'],
     accent: '#1D4ED8',
@@ -47,11 +54,7 @@ export const THEME_CATALOG: ThemeCatalog = [
     name: 'Bazaar — بازار',
     version: '1.0.0',
     archetype: 'Marketplace',
-    description:
-      'Salla-style multi-category marketplace — warm amber primary on white with deep-charcoal text, a ' +
-      'two-row header with a big category search and an "All categories" mega-menu, compact rounded ' +
-      'cards, promo badges, flash deals with countdown, product tabs and dense grids. Built on the shared ' +
-      'section library: every block is editable in the customizer.',
+    description: 'A multi-category marketplace with a category menu, compact product grids and flash deals.',
     author: 'Sellchaze',
     tags: ['marketplace', 'multi-category', 'salla-style', 'arabic', 'dense', 'orange', 'deals'],
     accent: '#C2410C',
@@ -69,11 +72,7 @@ export const THEME_CATALOG: ThemeCatalog = [
     name: 'Sahra — صحراء',
     version: '1.0.0',
     archetype: 'Luxury Gifts',
-    description:
-      'Luxury theme for perfumes, jewellery, abayas and gifts — warm sand or deep charcoal canvas, ' +
-      'gold accents, serif headings (Playfair Display / Amiri), thin gold rules, centred minimal header, ' +
-      'cinematic full-bleed hero, editorial image-with-text and hover-swap product cards. Built on the ' +
-      'shared section library: every block is editable in the customizer.',
+    description: 'A luxury storefront with gold accents, serif headings, cinematic photography and editorial sections.',
     author: 'Sellchaze',
     tags: ['luxury', 'perfume', 'jewellery', 'abaya', 'gifts', 'gold', 'dark', 'editorial', 'arabic', 'salla-style'],
     accent: '#1C1A17',
@@ -91,11 +90,7 @@ export const THEME_CATALOG: ThemeCatalog = [
     name: 'Fresh — فريش',
     version: '1.0.0',
     archetype: 'Grocery & Food',
-    description:
-      'Friendly grocery & fresh-market theme — green primary with a lime accent on a cream canvas, ' +
-      'pill shapes, a delivery-time promise in the header, big quick-add buttons with quantity ' +
-      'steppers on cards, category circles, weekly deals with a countdown and a sticky bottom tab bar ' +
-      'on phones. Built on the shared section library: every block is editable in the customizer.',
+    description: 'A fresh-market storefront with category circles, quick-add quantities, weekly deals and mobile navigation.',
     author: 'Sellchaze',
     tags: ['grocery', 'food', 'organic', 'market', 'fresh', 'green', 'arabic', 'salla-style'],
     accent: '#15803D',
@@ -112,11 +107,7 @@ export const THEME_CATALOG: ThemeCatalog = [
     name: 'Techno — تكنو',
     version: '1.0.0',
     archetype: 'Electronics',
-    description:
-      'Electronics & gadgets theme — navy header and footer, electric-blue primary with cyan accents ' +
-      'on a light-grey page, sharp technical typography, spec chips and price/discount emphasis on ' +
-      'cards, a compare tray, category mega-menu, support hotline, trust bar, flash deals with a ' +
-      'countdown and a brand wall. Built on the shared section library: every block is editable in the customizer.',
+    description: 'An electronics storefront with technical product cards, comparison, a category menu and timed deals.',
     author: 'Sellchaze',
     tags: ['electronics', 'tech', 'gadgets', 'navy', 'blue', 'spec-led', 'arabic', 'salla-style'],
     accent: '#2563EB',

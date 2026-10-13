@@ -26,6 +26,7 @@ export type { DemoCatalog, DemoBrand, DemoFaq, DemoTestimonial } from './types';
 const DEFAULT_THEME = 'naseem';
 
 const BY_THEME: Readonly<Record<string, DemoCatalog>> = {
+  'elite-furniture': SPHINX_CATALOG,
   'sphinx-v3': SPHINX_CATALOG,
   naseem: HEARTH_CATALOG,
   bazaar: HEARTH_CATALOG,
@@ -39,6 +40,7 @@ const BY_THEME: Readonly<Record<string, DemoCatalog>> = {
  * images, ratings and ids stay canonical, so a fact corrected once is correct in both languages.
  */
 const AR_OVERLAY: Readonly<Record<string, CatalogOverlay>> = {
+  'elite-furniture': SPHINX_AR,
   'sphinx-v3': SPHINX_AR,
   naseem: HEARTH_AR,
   bazaar: HEARTH_AR,
