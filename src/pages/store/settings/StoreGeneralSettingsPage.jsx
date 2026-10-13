@@ -9,6 +9,7 @@ import StoreStatusPill from '../../../components/store/StoreStatusPill';
 import useStoreContext from '../../../hooks/useStoreContext';
 import useStoreSettings, { useDirty } from '../../../hooks/useStoreSettings';
 import fontCatalog from '../../../shared/store-fonts.json';
+import MerchantGeneralSettingsPage from './MerchantGeneralSettingsPage';
 
 function fromStore(store) {
     return {
@@ -80,6 +81,10 @@ function ImageField({ label, hint, current, file, onChange, removed, onRemove, a
 }
 
 export default function StoreGeneralSettingsPage() {
+    const context=useStoreContext();
+    return context.unifiedStoreNavigation && !context.isAdminScope ? <MerchantGeneralSettingsPage/> : <LegacyStoreGeneralSettingsPage/>;
+}
+function LegacyStoreGeneralSettingsPage() {
     const { t, i18n } = useTranslation();
     const { store } = useStoreContext();
     const text = (ar, en) => i18n.language.startsWith('ar') ? ar : en;
