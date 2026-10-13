@@ -7,7 +7,7 @@ export function buildWorkspaceStoreNav(t, access, permissions = []) {
     const groups = buildStoreNav(t, access);
     const items = groups.flatMap((group) => group.items);
     const item = (key) => items.find((row) => row.key === key);
-    const absolute = (row) => row ? { ...row, to: `/store/${row.to}`, label: row.key === 'products' ? t('workspace_all_products', 'All products') : row.key === 'orders' ? t('workspace_all_orders', 'All orders') : row.label } : null;
+    const absolute = (row) => row ? { ...row, to: `/store/${row.to}`, label: row.key === 'products' ? t('workspace_all_products', 'All products') : row.key === 'orders' ? t('workspace_all_orders', 'All orders') : row.label, ...(row.key === 'newsletter' ? { badge: t('workspace_new', 'New') } : {}) } : null;
     const route = (key, to, label, Icon, show) => show ? { key, to, label, Icon } : null;
     const can = (permission) => permissions.includes(permission);
     const group = (key, label, Icon, rows) => ({ key, label, Icon, items: rows.filter(Boolean) });
