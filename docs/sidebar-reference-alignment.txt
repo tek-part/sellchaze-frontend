@@ -1,0 +1,29 @@
+Merchant sidebar alignment — 2026-10-13
+
+Reference: authenticated https://app.easy-orders.net/#/webhooks.
+The primary rows use the foreground color, including disclosure icons. Active
+rows keep weight 400. Hover is #fafafa in light mode. Section labels retain
+their muted color. The order submenu has no gaps between its five 36px rows;
+its panel is 188px tall, with a 20px start margin and 4px vertical padding.
+The reference desktop submenu link is 198px wide.
+
+Mobile at 390x844: the reference drawer is 285px wide, x=95. Its first row
+is x=115, y=137, width=244, height=36. The merchant drawer now uses the
+same 75% CSS width, 85px brand header, one start border and 20px inner
+padding. A stable scrollbar gutter prevents dialog scroll locking from
+changing the usable layout width. The drawer includes the existing authorized
+store-preview link. Newsletter has the observed New badge. Community remains
+the user-requested exception. No permissions or business data are changed.
+
+This is an incremental visual correction. Shater, subscription workflows,
+the complete page feature set and all differentiated theme/template layouts
+remain unverified or unfinished; this change does not claim full parity.
+
+CI evidence interpretation: quality.yml builds the current source into dist.
+production_baseline.py restores historical files into production-site, a
+separate directory. Playwright preview serves dist. Accessibility/performance/
+PWA gates therefore exercise current source. Performance is enforced and CI
+has one retry. The head-code main run had four stable performance passes and
+one flaky pass after retry, not a terminal performance failure. Visual checks
+alone are nonblocking while Linux reference images are missing. The intermittent
+Naseem footer layout shift remains an unresolved stability concern.

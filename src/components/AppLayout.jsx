@@ -4,7 +4,7 @@ import { motion, useReducedMotion } from 'framer-motion';
 import { Link, Navigate, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
-import { HiOutlineArrowUturnLeft, HiOutlineXMark, HiOutlineMagnifyingGlass, HiOutlineLanguage } from './workspace/WorkspaceIcons';
+import { HiOutlineArrowUturnLeft, HiOutlineXMark, HiOutlineMagnifyingGlass, HiOutlineLanguage, HiOutlineEye } from './workspace/WorkspaceIcons';
 import api, { clearTokens } from '../api/client';
 import { endImpersonation, isImpersonating } from '../utils/impersonation';
 import { useChatUnread } from '../lib/useChatUnread';
@@ -245,8 +245,8 @@ export default function AppLayout() {
             <Dialog open={mobileNavOpen} onClose={() => setMobileNavOpen(false)} className="ws-dialog-layer">
                 <DialogBackdrop transition className="ws-backdrop" />
                 <div className="ws-drawer-position" dir={currentLng === 'ar' ? 'rtl' : 'ltr'}>
-                    <DialogPanel transition className="ws-sidebar ws-drawer" style={{ width: mobileDrawerWidth ?? undefined }} data-workspace-theme={appearance.theme}>
-                        <div className="ws-sidebar-brand"><Link to={isAdminOnly ? '/admin/dashboard' : '/dashboard'}><img src="/icon.png" alt="" /><DialogTitle as="strong">Sellchaze</DialogTitle></Link><button type="button" className="ws-icon-button" onClick={() => setMobileNavOpen(false)} aria-label={t('close')}><HiOutlineXMark aria-hidden /></button></div>
+                    <DialogPanel transition className="ws-sidebar ws-drawer" style={{ width: merchantWorkspace ? undefined : mobileDrawerWidth ?? undefined }} data-workspace-theme={appearance.theme}>
+                        <div className="ws-sidebar-brand"><Link to={isAdminOnly ? '/admin/dashboard' : '/dashboard'}><img src="/icon.png" alt="" /><DialogTitle as="strong">Sellchaze</DialogTitle></Link><div className="ws-sidebar-brand-actions">{merchantWorkspace && storeUrl ? <a href={storeUrl} target="_blank" rel="noopener noreferrer" className="ws-icon-button" aria-label={t('view_store', 'View store')} title={t('view_store', 'View store')}><HiOutlineEye aria-hidden /></a> : null}<button type="button" className="ws-icon-button" onClick={() => setMobileNavOpen(false)} aria-label={t('close')}><HiOutlineXMark aria-hidden /></button></div></div>
                         {!merchantWorkspace ? <div className="ws-sidebar-tools"><label className="ws-sidebar-search"><HiOutlineMagnifyingGlass aria-hidden /><input value={navigationQuery} onChange={(e) => setNavigationQuery(e.target.value)} placeholder={ws('search')} aria-label={ws('search')} /></label></div> : null}
                         <div className="ws-sidebar-scroll"><SidebarNav {...navigationProps} query={merchantWorkspace ? '' : navigationQuery} onNavigate={() => setMobileNavOpen(false)} /></div>
                         <div className="ws-sidebar-footer"><div className="ws-drawer-preferences"><WorkspaceAppearanceControl appearance={appearance} inDrawer /><button type="button" className="ws-icon-button" onClick={toggleLanguage} aria-label={ws('language')}><HiOutlineLanguage aria-hidden /></button></div>{!merchantWorkspace ? <Link to="/contact" onClick={() => setMobileNavOpen(false)}>{ws('help')}</Link> : null}</div>

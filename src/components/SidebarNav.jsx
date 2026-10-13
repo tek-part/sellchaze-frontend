@@ -465,7 +465,7 @@ function SidebarNavInner({ isAdmin = false, isSupplier = false, roles = [], perm
                     }
                     const active = group.items.some((item) => workspaceStoreItemActive(item, location.pathname));
                     return <NavGroup reference key={group.key} groupKey={`store-${group.key}`} title={group.label} icon={group.Icon} defaultOpen={active} groupActive={active}>
-                        {group.items.map((item) => <Link key={item.key} to={item.to} aria-current={workspaceStoreItemActive(item, location.pathname) ? 'page' : undefined} className={subNavLinkClass({ isActive: workspaceStoreItemActive(item, location.pathname) })}>{item.label}</Link>)}
+                        {group.items.map((item) => <Link key={item.key} to={item.to} aria-current={workspaceStoreItemActive(item, location.pathname) ? 'page' : undefined} className={subNavLinkClass({ isActive: workspaceStoreItemActive(item, location.pathname) })}><span className="ws-nav-label">{item.label}</span>{item.badge ? <span className="ws-nav-badge">{item.badge}</span> : null}</Link>)}
                     </NavGroup>;
                 })}
             </div>
