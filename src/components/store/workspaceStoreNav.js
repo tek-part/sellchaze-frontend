@@ -25,7 +25,11 @@ export function buildWorkspaceStoreNav(t, access, permissions = []) {
         { key: 'funnels', ...absolute(item('funnels')), Icon: FunnelsIcon, single: true },
         group('tracking', t('workspace_tracking_tools', 'Tracking tools'), TrackingIcon,
             ['pixels-settings', 'pixel-conversion', 'ga'].map((key) => absolute(item(key)))),
-        group('marketing', t('workspace_marketing_tools', 'Marketing tools'), MarketingIcon, ['coupons', 'retargeting', 'utm-builder', 'google-merchant', 'create-referral-link'].map((key) => absolute(item(key)))),
+        group('marketing', t('workspace_marketing_tools', 'Marketing tools'), MarketingIcon, [
+            ...['coupons', 'retargeting', 'utm-builder', 'google-merchant', 'create-referral-link'].map((key) => absolute(item(key))),
+            route('minimum-order', '/store/settings/order-limits', t('workspace_minimum_order', 'Minimum order and free shipping'), HiOutlineCog6Tooth, access.canStoreSettings),
+            route('downsell', '/store/downsell', 'Downsell', HiOutlineCog6Tooth, access.canStoreSettings && access.canStoreCoupons),
+        ]),
         group('wallet', t('platform_wallet_nav', 'Your wallet'), WalletReferenceIcon, [route('top-up', '/top-up', t('platform_wallet_balance', 'Your balance'), WalletReferenceIcon, access.isStoreOwner), route('transactions', '/transactions', t('platform_wallet_transactions', 'Transactions'), WalletReferenceIcon, access.isStoreOwner)]),
         { ...route('apps', '/store/apps', t('workspace_apps', 'Apps'), AppsReferenceIcon, access.canStoreSettings), single: true },
         { key: 'community', label: t('feed_title', 'Community'), to: '/community', Icon: HiOutlineUserGroup, single: true },

@@ -68,6 +68,12 @@ export default function StoreLayout() {
     const rel = relativeStorePath(location.pathname, uiBase);
     const activeGroup = useMemo(() => findActiveGroup(groups, rel), [groups, rel]);
     const settingsNavigation = unifiedNavigation && activeGroup?.key === 'settings';
+    const generalSettings = settingsNavigation && rel === '/settings/general';
+    const settingsOrder = ['general', 'domains', 'payments', 'digital-delivery', 'shipping', 'phone-verification', 'localization', 'publish'];
+    const settingsItems = settingsNavigation
+        ? [...activeGroup.items].filter((item) => settingsOrder.includes(item.key) || item.isActive(rel))
+            .sort((a, b) => settingsOrder.indexOf(a.key) - settingsOrder.indexOf(b.key))
+        : [];
 
     const context = useMemo(() => ({
         ...parent,
@@ -152,12 +158,14 @@ export default function StoreLayout() {
                         </button>
                     </div>
                 ) : (
-                    settingsNavigation ? <div className="ws-settings-layout">
+                    settingsNavigation ? <>
+                    {generalSettings ? <header className="ws-general-page-heading"><h1>{t('settings', 'Settings')}</h1><p>{t('store_general_control', 'Manage your store')}</p></header> : null}
+                    <div className={`ws-settings-layout${generalSettings ? ' ws-settings-layout--general' : ''}`}>
                         <nav className="ws-settings-navigation" aria-label={activeGroup.label}>
-                            {activeGroup.items.map((item) => <Link key={item.key} to={`${uiBase}/${item.to}`} aria-current={item.isActive(rel) ? 'page' : undefined}><item.Icon aria-hidden /><span>{item.label}</span></Link>)}
+                            {settingsItems.map((item) => <Link key={item.key} to={`${uiBase}/${item.to}`} aria-current={item.isActive(rel) ? 'page' : undefined}><item.Icon aria-hidden /><span>{item.label}</span></Link>)}
                         </nav>
                         <div className="ws-settings-content"><Outlet context={context} /></div>
-                    </div> : <Outlet context={context} />
+                    </div></> : <Outlet context={context} />
                 )}
             </div>
 
