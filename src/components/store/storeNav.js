@@ -118,6 +118,7 @@ export function buildStoreNav(t, access = {}) {
                 { key: 'social-links', to: 'settings/social-links', label: t('store_nav_social_links', 'Social links'), Icon: HiOutlineGlobeAlt, show: access.canStoreSettings },
                 { key: 'order-push', to: 'settings/order-push', label: t('store_nav_order_push', 'Order notifications'), Icon: HiOutlineBell, show: access.isStoreOwner },
                 { key: 'login-sessions', to: 'settings/login-sessions', label: t('store_nav_login_sessions', 'Login sessions'), Icon: HiOutlineComputerDesktop, show: access.isStoreOwner },
+                { key: 'webhooks', to: 'settings/webhooks', label: 'Webhooks', Icon: HiOutlineCommandLine, show: access.canStoreWebhooks },
                 { key: 'bot-protection', to: 'settings/bot-protection', label: t('store_nav_bot_protection', 'Bot protection'), Icon: HiOutlineCog6Tooth, show: access.canStoreSettings },
                 { key: 'shopping-preferences', to: 'settings/shopping-preferences', label: t('store_nav_shopping_preferences', 'Shopping preferences'), Icon: HiOutlineCog6Tooth, show: access.canStoreSettings },
                 { key: 'localization', to: 'settings/localization', label: t('store_nav_localization', 'Language & currency'), Icon: HiOutlineLanguage, show: access.canStoreSettings },

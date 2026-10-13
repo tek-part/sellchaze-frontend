@@ -1,5 +1,5 @@
 /* Workspace tokens stay inside the authenticated shell and its portals. */
-html:has(body[data-workspace-theme]) { scroll-behavior:smooth; scroll-padding-top:93px; scrollbar-width:thin; scrollbar-gutter:stable; scrollbar-color:#e5e9ef transparent; }
+html:has(body[data-workspace-theme]) { scroll-behavior:smooth; scroll-padding-top:93px; scrollbar-width:thin; scrollbar-color:#e5e9ef transparent; }
 html:has(body[data-workspace-theme='dark']) { scrollbar-color:#2d3b4d transparent; }
 body[data-workspace-theme] { overflow:visible; }
 body[data-workspace-theme] #root { zoom:1; width:100%; min-height:100dvh; }

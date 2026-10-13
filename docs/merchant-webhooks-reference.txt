@@ -1,0 +1,39 @@
+Merchant Webhooks and settings navigation — 2026-10-13
+
+Owner/global store administration has working list/create/edit/delete settings
+routes. New-order and status-update events use the backend's durable outbox;
+configuration edits carry the current version. Creation uses a stable request
+UUID so retrying an uncertain response does not create another destination.
+The creation/replay secret is masked by default and can be copied explicitly;
+configuration GETs, lists, reloads and history never reveal it. No browser storage
+holds the secret. A local disabled .example.test receiver was saved, edited and
+reloaded through the native browser; no external delivery was attempted.
+
+Authenticated reference #/webhooks/create measurements matched on desktop:
+settings navigation width305.90625; URL x452.09375/y324.8125, width800,
+height43.78125; description container y402.890625/height60.78125; type field
+y497.96875; switch y577.65625/42x26; toolbar y660.5625/height64.
+The reference navigation uses its content width, rather than a guessed20%
+column. Its Arabic labels, foreground color,14px text,20px Hugeicons,8px gaps
+and digital-delivery badge are now applied. Fourteen neutral settings glyphs
+were matched by SVG geometry against the installed Hugeicons package. The
+select's24px Material arrow matches its reference vector. Public API groups
+the implemented Webhooks child; key management and its other child are pending.
+
+Phone390: URL x66/y421.8125/248x43.78125, document380/client380;
+save toolbar y771.5/380x72.5 — matches the observed reference. Phone320:
+document310/client310, URL178px wide, toolbar310x72.5. No document overflow.
+Removing the permanent scrollbar gutter restores full width for short pages.
+The mobile drawer instead captures the actual frame width before scroll locking:
+at390 it stays285px wide, x95, in a380px container, preserving the page width.
+Dark input foreground228,236,246/background29,41,55 was checked after fixing
+the field background specificity. Appearance and viewport were restored.
+Appearance-menu pointer actions need the drawer animation to settle; keyboard
+and settled pointer actions both worked. No change to that control was retained.
+
+Populated reference tables/history, Manager settings, API keys/external APIs,
+Shater, subscriptions, all differentiated themes/templates and production
+publication remain unverified or incomplete. Existing accessibility, performance
+and PWA CI gates serve current dist. Linux visual baselines are still missing
+and their nonblocking checks do not prove visual parity. The unrelated
+intermittent storefront footer shift has not been fixed by this change.

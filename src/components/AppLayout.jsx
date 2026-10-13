@@ -33,6 +33,11 @@ function applyLocale(next) {
     document.documentElement.setAttribute('lang', next);
 }
 
+function navigationViewport() {
+    const frame = document.querySelector('.ws-frame[data-merchant-workspace]');
+    return { width: frame?.clientWidth ?? window.innerWidth, merchant: Boolean(frame) };
+}
+
 export default function AppLayout() {
     const chatUnread = useChatUnread();
     const { t, i18n } = useTranslation();
@@ -45,6 +50,7 @@ export default function AppLayout() {
     const [logoutOpen, setLogoutOpen] = useState(false);
     const [mobileNavOpen, setMobileNavOpen] = useState(false);
     const [mobileDrawerWidth, setMobileDrawerWidth] = useState(null);
+    const [mobileDrawerViewportWidth, setMobileDrawerViewportWidth] = useState(null);
     const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
     const sidebarToggleRef = useRef(null);
     const [impersonationActive, setImpersonationActive] = useState(() => isImpersonating());
@@ -56,15 +62,21 @@ export default function AppLayout() {
     const [searchQuery, setSearchQuery] = useState('');
     const [navigationQuery, setNavigationQuery] = useState('');
     const openMobileNavigation = () => {
-        // The dialog locks document scrolling; viewport width stays stable when the gutter changes.
-        setMobileDrawerWidth(Math.min(384, window.innerWidth * 0.75));
+        // Preserve the actual available width when the dialog locks scrolling.
+        const viewport = navigationViewport();
+        setMobileDrawerViewportWidth(viewport.merchant ? viewport.width : null);
+        setMobileDrawerWidth(Math.min(384, viewport.width * 0.75));
         setMobileNavOpen(true);
     };
     useEffect(() => {
         if (!mobileNavOpen) return;
         const resize = () => {
             if (window.matchMedia('(min-width: 768px)').matches) setMobileNavOpen(false);
-            else setMobileDrawerWidth(Math.min(384, window.innerWidth * 0.75));
+            else {
+                const viewport = navigationViewport();
+                setMobileDrawerViewportWidth(viewport.merchant ? viewport.width : null);
+                setMobileDrawerWidth(Math.min(384, viewport.width * 0.75));
+            }
         };
         window.addEventListener('resize', resize);
         return () => window.removeEventListener('resize', resize);
@@ -244,8 +256,8 @@ export default function AppLayout() {
             </div>
             <Dialog open={mobileNavOpen} onClose={() => setMobileNavOpen(false)} className="ws-dialog-layer">
                 <DialogBackdrop transition className="ws-backdrop" />
-                <div className="ws-drawer-position" dir={currentLng === 'ar' ? 'rtl' : 'ltr'}>
-                    <DialogPanel transition className="ws-sidebar ws-drawer" style={{ width: merchantWorkspace ? undefined : mobileDrawerWidth ?? undefined }} data-workspace-theme={appearance.theme}>
+                <div className="ws-drawer-position" dir={currentLng === 'ar' ? 'rtl' : 'ltr'} style={mobileDrawerViewportWidth ? { width: mobileDrawerViewportWidth, left: 0, right: 'auto' } : undefined}>
+                    <DialogPanel transition className="ws-sidebar ws-drawer" style={{ width: mobileDrawerWidth ?? undefined }} data-workspace-theme={appearance.theme}>
                         <div className="ws-sidebar-brand"><Link to={isAdminOnly ? '/admin/dashboard' : '/dashboard'}><img src="/icon.png" alt="" /><DialogTitle as="strong">Sellchaze</DialogTitle></Link><div className="ws-sidebar-brand-actions">{merchantWorkspace && storeUrl ? <a href={storeUrl} target="_blank" rel="noopener noreferrer" className="ws-icon-button" aria-label={t('view_store', 'View store')} title={t('view_store', 'View store')}><HiOutlineEye aria-hidden /></a> : null}<button type="button" className="ws-icon-button" onClick={() => setMobileNavOpen(false)} aria-label={t('close')}><HiOutlineXMark aria-hidden /></button></div></div>
                         {!merchantWorkspace ? <div className="ws-sidebar-tools"><label className="ws-sidebar-search"><HiOutlineMagnifyingGlass aria-hidden /><input value={navigationQuery} onChange={(e) => setNavigationQuery(e.target.value)} placeholder={ws('search')} aria-label={ws('search')} /></label></div> : null}
                         <div className="ws-sidebar-scroll"><SidebarNav {...navigationProps} query={merchantWorkspace ? '' : navigationQuery} onNavigate={() => setMobileNavOpen(false)} /></div>

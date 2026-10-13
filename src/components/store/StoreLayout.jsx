@@ -8,6 +8,7 @@ import useStoreScope from '../../hooks/useStoreScope';
 import { fullStoreAccess, storeAccess } from '../../lib/storeAccess';
 import StoreSidebar from './StoreSidebar';
 import StoreStatusPill from './StoreStatusPill';
+import StoreSettingsNavigation from './StoreSettingsNavigation';
 import { buildStoreNav, findActiveGroup, relativeStorePath } from './storeNav';
 import './merchant-settings-frame.css';
 
@@ -69,8 +70,8 @@ export default function StoreLayout() {
     const rel = relativeStorePath(location.pathname, uiBase);
     const activeGroup = useMemo(() => findActiveGroup(groups, rel), [groups, rel]);
     const settingsNavigation = unifiedNavigation && activeGroup?.key === 'settings';
-    const referenceSettings = settingsNavigation && ['/settings/general', '/settings/store-info', '/settings/head-code', '/settings/seo', '/settings/social-links', '/settings/order-push', '/settings/login-sessions'].includes(rel);
-    const settingsOrder = ['general', 'domains', 'store-info', 'head-code', 'seo-settings', 'payments', 'digital-delivery', 'order-push', 'shipping', 'social-links', 'login-sessions', 'phone-verification'];
+    const referenceSettings = settingsNavigation && (['/settings/general', '/settings/store-info', '/settings/head-code', '/settings/seo', '/settings/social-links', '/settings/order-push', '/settings/login-sessions'].includes(rel) || rel.startsWith('/settings/webhooks'));
+    const settingsOrder = ['general', 'domains', 'store-info', 'head-code', 'seo-settings', 'payments', 'digital-delivery', 'order-push', 'shipping', 'social-links', 'webhooks', 'login-sessions', 'phone-verification'];
     const settingsItems = settingsNavigation
         ? [...activeGroup.items].filter((item) => settingsOrder.includes(item.key) || item.isActive(rel))
             .sort((a, b) => settingsOrder.indexOf(a.key) - settingsOrder.indexOf(b.key))
@@ -162,9 +163,7 @@ export default function StoreLayout() {
                     settingsNavigation ? <>
                     {referenceSettings ? <header className="ws-settings-page-heading"><h1>{t('settings', 'Settings')}</h1><p>{t('store_general_control', 'Manage your store')}</p></header> : null}
                     <div className={`ws-settings-layout${referenceSettings ? ' ws-settings-layout--reference' : ''}`}>
-                        <nav className="ws-settings-navigation" aria-label={activeGroup.label}>
-                            {settingsItems.map((item) => <Link key={item.key} to={`${uiBase}/${item.to}`} aria-current={item.isActive(rel) ? 'page' : undefined}><item.Icon aria-hidden /><span>{item.key === 'general' ? t('nav_store_settings', 'Store settings') : item.label}</span></Link>)}
-                        </nav>
+                        <StoreSettingsNavigation items={settingsItems} uiBase={uiBase} rel={rel} label={activeGroup.label} />
                         <div className="ws-settings-content"><Outlet context={context} /></div>
                     </div></> : <Outlet context={context} />
                 )}
