@@ -1,0 +1,16 @@
+import type { ReactElement } from 'react';
+import { useTranslation } from 'react-i18next';
+import { Drawer } from '../../foundation/components/Drawer';
+import { PersonalizationSummary } from '../../foundation/components/PersonalizationSummary';
+import { useCart } from '../../state/cart';
+import { useStore } from '../../state/store-context';
+import { useLocale } from '../../i18n/useLocale';
+import { cartLineLimit, quantityStep } from '../../state/cart-quantity';
+import { cartHasFreeShippingOffer, cartRequiresShipping, shippingThreshold } from '../../utils/shipping';
+import { formatMoney } from '../../utils/format';
+import { PureIcon } from './icons';
+
+export function PureCart({ open, close }: { open: boolean; close: () => void }): ReactElement {
+  const { lines, totals, updateQuantity, remove } = useCart(); const { store } = useStore(); const { locale } = useLocale(); const { t } = useTranslation(); const threshold = shippingThreshold(store.shipping, totals.currency, store.currencyMultipliers); const free = cartHasFreeShippingOffer(lines); const remaining = Math.max(0, (threshold ?? 0) - totals.subtotal);
+  return <Drawer open={open} onClose={close} title={t('cart.title')} className="pur-cart"><div className="sf-overlay__body">{!lines.length ? <div className="pur-cart-empty"><PureIcon kind="bag" /><p>{t('cart.empty')}</p><a className="pur-pill" href="/shop" onClick={close}>{t('nav.allProducts')}</a></div> : <>{cartRequiresShipping(lines) && (free || threshold !== undefined) ? <div className="pur-cart-shipping"><p>{free ? locale === 'ar' ? 'شحن مجاني مع العرض، يُؤكد عند الدفع.' : 'Free shipping with the selected offer, confirmed at checkout.' : remaining > 0 ? t('cart.freeShippingProgress', { amount: formatMoney(remaining, totals.currency, locale) }) : t('cart.freeShippingReached')}</p><progress max="100" value={free || threshold === 0 ? 100 : threshold ? Math.min(100, totals.subtotal / threshold * 100) : 0} /></div> : null}<ul>{lines.map(line => <li key={line.id}>{line.image ? <img src={line.image} alt="" /> : null}<div><a href={line.url}>{line.title}</a>{line.attributes ? <small>{line.attributes}</small> : null}<PersonalizationSummary entries={line.personalizationEntries} /><strong>{formatMoney(line.price * line.quantity, line.currency, locale)}</strong><div className="pur-cart-quantity"><button type="button" disabled={line.quantity <= quantityStep(line)} aria-label={t('product.decreaseQuantity')} onClick={() => updateQuantity(line.id, line.quantity - quantityStep(line))}><PureIcon kind="minus" /></button><output aria-live="polite">{line.quantity}</output><button type="button" disabled={line.quantity >= cartLineLimit(lines, line)} aria-label={t('product.increaseQuantity')} onClick={() => updateQuantity(line.id, line.quantity + quantityStep(line))}><PureIcon kind="plus" /></button><button type="button" aria-label={`${t('common.remove')}: ${line.title}`} onClick={() => remove(line.id)}><PureIcon kind="trash" /></button></div></div></li>)}</ul></>}</div>{lines.length ? <div className="sf-overlay__footer"><div className="pur-cart-total"><span>{t('cart.subtotal')}</span><strong>{formatMoney(totals.subtotal, totals.currency, locale)}</strong></div><a href="/checkout" className="pur-pill" onClick={close}>{t('cart.checkout')}</a><a href="/cart" onClick={close}>{t('cart.viewBag')}</a></div> : null}</Drawer>;
+}
