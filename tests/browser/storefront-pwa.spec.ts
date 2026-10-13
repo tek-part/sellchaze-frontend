@@ -12,10 +12,11 @@ test('storefront exposes an installable manifest and production service worker c
 });
 
 test('a delayed cart storage event cannot restore an item removed in another tab', async ({ page, context }) => {
-  const key = 'sf-cart-v2:dev:USD';
+  // Elite's isolated preview uses EGP, matching the native furniture demo prices.
+  const key = 'sf-cart-v2:dev:EGP';
   await page.addInitScript((cartKey) => {
     localStorage.setItem('sf:locale', 'en');
-    localStorage.setItem(cartKey, JSON.stringify({ version: 2, storeId: 'dev', currency: 'USD', lines: [{ id: 'local-line', productId: '777', title: 'Local regression product', url: '/products/local-regression-product', price: 20, currency: 'USD', quantity: 1 }] }));
+    localStorage.setItem(cartKey, JSON.stringify({ version: 2, storeId: 'dev', currency: 'EGP', lines: [{ id: 'local-line', productId: '777', title: 'Local regression product', url: '/products/local-regression-product', price: 20, currency: 'EGP', quantity: 1 }] }));
   }, key);
   await page.goto('/?preview=1&theme=elite-furniture', { waitUntil: 'networkidle' });
   await expect(page.getByRole('button', { name: 'Cart (1)', exact: true })).toBeVisible();
