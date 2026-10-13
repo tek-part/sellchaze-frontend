@@ -32,11 +32,11 @@ export default function WorkspaceHeader({ me, storeUrl, isSupplier, permissions,
         <div className="ws-header-start">
             <button type="button" className={`${iconButton} ws-mobile-menu`} onClick={onNavigation} aria-label={ws('openNavigation')}><MobileMenuIcon aria-hidden /></button>
             {mobile && merchantWorkspace ? <NotificationBell className="ws-mobile-notifications" /> : null}
-            <button ref={sidebarToggleRef} type="button" className={`${iconButton} ws-expand`} onClick={onToggleSidebar} aria-label={ws(collapsed ? 'expand' : 'collapse')} aria-expanded={!collapsed} aria-controls="workspace-sidebar"><HiOutlineBars3 aria-hidden /></button>
+            {!merchantWorkspace ? <button ref={sidebarToggleRef} type="button" className={`${iconButton} ws-expand`} onClick={onToggleSidebar} aria-label={ws(collapsed ? 'expand' : 'collapse')} aria-expanded={!collapsed} aria-controls="workspace-sidebar"><HiOutlineBars3 aria-hidden /></button> : null}
         </div>
         {mobile ? <Link className="ws-mobile-brand" to="/dashboard" aria-label={t('dashboard')}><img src="/icon.png" alt="" /><strong>Sellchaze</strong></Link> : null}
         <div className="ws-header-actions">
-            {storeUrl ? <a href={storeUrl} target="_blank" rel="noopener noreferrer" className={`${iconButton} ws-store-link`} aria-label={t('view_store', 'View store')} title={t('view_store', 'View store')}><HiOutlineEye aria-hidden /></a> : null}
+            {storeUrl && !merchantWorkspace ? <a href={storeUrl} target="_blank" rel="noopener noreferrer" className={`${iconButton} ws-store-link`} aria-label={t('view_store', 'View store')} title={t('view_store', 'View store')}><HiOutlineEye aria-hidden /></a> : null}
             <button type="button" className={`${iconButton} ws-refresh`} onClick={() => window.location.reload()} aria-label={ws('refresh')} title={ws('refresh')}><HiOutlineArrowPath aria-hidden /></button>
             {!mobile ? <WorkspaceAppearanceControl appearance={appearance} /> : null}
             {!mobile ? <button type="button" onClick={onLanguage} className={iconButton} aria-label={ws('language')} title={i18n.language.startsWith('ar') ? 'English' : 'العربية'}><HiOutlineLanguage aria-hidden /></button> : null}
