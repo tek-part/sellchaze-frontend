@@ -20,6 +20,7 @@ import type {
 /* ---- catalog (public) ---- */
 
 export interface ApiStorefrontBootstrap {
+  head_code?: import('../head-code/runtime').PublishedHeadCode | null;
   store: ApiStoreSummary;
   seo?: unknown;
   /** Resolved request language + the store's supported set. */

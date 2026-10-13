@@ -131,6 +131,7 @@ const StorePoliciesSettingsPage = lazy(() => import('./pages/store/settings/Stor
 const StoreSeoSettingsPage = lazy(() => import('./pages/store/settings/StoreSeoSettingsPage'));
 const StoreSocialSettingsPage = lazy(() => import('./pages/store/settings/StoreSocialSettingsPage'));
 const StoreOrderPushPage = lazy(() => import('./pages/store/settings/StoreOrderPushPage'));
+const StoreHeadCodePage = lazy(() => import('./pages/store/settings/StoreHeadCodePage'));
 const StoreLoginSessionsPage = lazy(() => import('./pages/store/settings/StoreLoginSessionsPage'));
 const StoreBotProtectionPage = lazy(() => import('./pages/store/settings/StoreBotProtectionPage'));
 const StoreTrackingPage = lazy(() => import('./pages/store/StoreTrackingPage'));
@@ -281,6 +282,7 @@ const STORE_ROUTES = [
     { path: 'settings/seo', element: <StoreSeoSettingsPage /> },
     { path: 'settings/social-links', element: <StoreSocialSettingsPage /> },
     { path: 'settings/order-push', element: <StoreOrderPushPage /> },
+    { path: 'settings/head-code', element: <StoreHeadCodePage /> },
     { path: 'settings/login-sessions', element: <StoreLoginSessionsPage /> },
     { path: 'settings/bot-protection', element: <StoreBotProtectionPage /> },
     { path: 'settings/shopping-preferences', element: <StoreShoppingPreferencesPage /> },

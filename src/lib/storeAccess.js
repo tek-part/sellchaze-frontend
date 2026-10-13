@@ -42,6 +42,7 @@ export function storeAccess(roles = [], permissions = []) {
         canStorePages,
         canStoreMenus,
         canStoreSettings,
+        canStoreHeadCode: isStoreOwner || can('stores-edit'),
         canStorePayments,
         storeMyGroup,
         storeCatalogGroup,

@@ -10,6 +10,7 @@ import {
     HiOutlineDocumentText,
     HiOutlineBell,
     HiOutlineComputerDesktop,
+    HiOutlineCommandLine,
     HiOutlineGlobeAlt,
     HiOutlineLanguage,
     HiOutlinePhoto,
@@ -112,6 +113,7 @@ export function buildStoreNav(t, access = {}) {
             items: [
                 { key: 'general', to: 'settings/general', label: t('store_nav_general', 'General'), Icon: HiOutlineCog6Tooth, show: access.canStoreSettings },
                 { key: 'store-info', to: 'settings/store-info', label: t('store_nav_store_info', 'Store policies'), Icon: HiOutlineDocumentText, show: access.canStoreSettings },
+                { key: 'head-code', to: 'settings/head-code', label: t('store_nav_head_code', 'Add head code'), Icon: HiOutlineCommandLine, show: access.canStoreHeadCode },
                 { key: 'seo-settings', to: 'settings/seo', label: t('store_nav_seo_settings', 'SEO settings'), Icon: HiOutlineGlobeAlt, show: access.canStoreSettings },
                 { key: 'social-links', to: 'settings/social-links', label: t('store_nav_social_links', 'Social links'), Icon: HiOutlineGlobeAlt, show: access.canStoreSettings },
                 { key: 'order-push', to: 'settings/order-push', label: t('store_nav_order_push', 'Order notifications'), Icon: HiOutlineBell, show: access.isStoreOwner },
