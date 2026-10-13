@@ -132,6 +132,8 @@ const StoreSeoSettingsPage = lazy(() => import('./pages/store/settings/StoreSeoS
 const StoreSocialSettingsPage = lazy(() => import('./pages/store/settings/StoreSocialSettingsPage'));
 const StoreOrderPushPage = lazy(() => import('./pages/store/settings/StoreOrderPushPage'));
 const StoreHeadCodePage = lazy(() => import('./pages/store/settings/StoreHeadCodePage'));
+const StoreWebhooksPage = lazy(() => import('./pages/store/settings/StoreWebhooksPage'));
+const StoreWebhookEditorPage = lazy(() => import('./pages/store/settings/StoreWebhooksPage').then(module => ({ default: module.StoreWebhookEditorPage })));
 const StoreLoginSessionsPage = lazy(() => import('./pages/store/settings/StoreLoginSessionsPage'));
 const StoreBotProtectionPage = lazy(() => import('./pages/store/settings/StoreBotProtectionPage'));
 const StoreTrackingPage = lazy(() => import('./pages/store/StoreTrackingPage'));
@@ -283,6 +285,9 @@ const STORE_ROUTES = [
     { path: 'settings/social-links', element: <StoreSocialSettingsPage /> },
     { path: 'settings/order-push', element: <StoreOrderPushPage /> },
     { path: 'settings/head-code', element: <StoreHeadCodePage /> },
+    { path: 'settings/webhooks', element: <StoreWebhooksPage /> },
+    { path: 'settings/webhooks/create', element: <StoreWebhookEditorPage /> },
+    { path: 'settings/webhooks/:webhookId', element: <StoreWebhookEditorPage /> },
     { path: 'settings/login-sessions', element: <StoreLoginSessionsPage /> },
     { path: 'settings/bot-protection', element: <StoreBotProtectionPage /> },
     { path: 'settings/shopping-preferences', element: <StoreShoppingPreferencesPage /> },
