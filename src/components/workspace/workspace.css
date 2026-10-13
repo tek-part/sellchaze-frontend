@@ -398,3 +398,5 @@ body[data-workspace-theme='dark'] .ws-page [class*='shadow-'] { --tw-shadow-colo
 .ws-mobile-sidebar-preferences{display:flex;align-items:center;justify-content:center;gap:4px;flex-shrink:0;margin-block:8px}.ws-mobile-sidebar-preferences svg{width:24px;height:24px}
 
 .ws-mobile-sidebar-preferences>div{display:flex}
+
+body[data-workspace-merchant='true'] .ws-sidebar-brand{padding-inline:12px}body[data-workspace-merchant='true'] .ws-sidebar-brand-actions .ws-icon-button{width:32px;height:32px;padding:6px}body[data-workspace-merchant='true'] .ws-sidebar-brand-actions a.ws-icon-button svg{width:16px;height:16px}
