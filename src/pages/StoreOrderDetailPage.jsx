@@ -1,7 +1,7 @@
 import { PersonalizationSummary } from '../apps/storefront/foundation/components/PersonalizationSummary';
 import { DigitalDeliverySummary } from '../apps/storefront/foundation/components/DigitalDeliverySummary';
 import { useCallback, useEffect, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useParams, useLocation } from 'react-router-dom';
 import useStoreScope from '../hooks/useStoreScope';
 import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
@@ -24,6 +24,7 @@ const TRANSITIONS = {
 
 export default function StoreOrderDetailPage() {
     const { orderId } = useParams();
+    const location = useLocation();
     const { apiBase, uiBase } = useStoreScope();
     const { t, i18n } = useTranslation();
     const ar = i18n.language.startsWith('ar');
@@ -79,6 +80,7 @@ export default function StoreOrderDetailPage() {
 
     return (
         <div className="mx-auto max-w-6xl space-y-5">
+            {location.state?.manualRecovered ? <p role="status" className="rounded-lg bg-emerald-50 p-3 text-sm text-emerald-800">{ar ? 'عثرنا على طلب هذه المحاولة. راجع بياناته قبل تعديلها.' : 'We found the order from this attempt. Review its details before making changes.'}</p> : null}
             <div className="flex flex-wrap items-center justify-between gap-3">
                 <div className="border-s-4 border-brand ps-4">
                     <h1 className="flex items-center gap-3 text-2xl font-semibold tracking-tight text-slate-900">
@@ -127,6 +129,8 @@ export default function StoreOrderDetailPage() {
                             <div className="flex justify-between text-slate-600"><span>{t('order_subtotal', 'Subtotal')}</span><span>{money(order.subtotal)}</span></div>
                             <div className="flex justify-between text-slate-600"><span>{t('order_discount', 'Discount')}</span><span>−{money(order.discount_total)}</span></div>
                             <div className="flex justify-between text-slate-600"><span>{t('order_shipping', 'Shipping')}</span><span>{money(order.shipping_total)}</span></div>
+                            {order.manual_tax_included != null && Number(order.tax_total) !== 0 ? <div className="flex justify-between text-slate-600"><span>{order.manual_tax_included ? ar ? 'الضريبة المشمولة' : 'Included tax' : ar ? 'الضريبة' : 'Tax'}</span><span>{money(order.tax_total)}</span></div> : null}
+                            {Number(order.manual_adjustment_total) !== 0 ? <div className="flex justify-between text-slate-600"><span>{ar ? 'تسوية الإجمالي' : 'Total adjustment'}</span><span>{money(order.manual_adjustment_total)}</span></div> : null}
                             <div className="flex justify-between pt-1 text-base font-semibold text-slate-900"><span>{t('order_grand_total', 'Grand total')}</span><span>{money(order.grand_total)}</span></div>
                         </div>
                     </div>
