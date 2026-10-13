@@ -70,8 +70,8 @@ export default function StoreLayout() {
     const rel = relativeStorePath(location.pathname, uiBase);
     const activeGroup = useMemo(() => findActiveGroup(groups, rel), [groups, rel]);
     const settingsNavigation = unifiedNavigation && activeGroup?.key === 'settings';
-    const referenceSettings = settingsNavigation && (['/settings/general', '/settings/store-info', '/settings/head-code', '/settings/seo', '/settings/social-links', '/settings/order-push', '/settings/login-sessions'].includes(rel) || rel.startsWith('/settings/webhooks'));
-    const settingsOrder = ['general', 'domains', 'store-info', 'head-code', 'seo-settings', 'payments', 'digital-delivery', 'order-push', 'shipping', 'social-links', 'webhooks', 'login-sessions', 'phone-verification'];
+    const referenceSettings = settingsNavigation && (['/settings/general', '/settings/store-info', '/settings/head-code', '/settings/seo', '/settings/social-links', '/settings/order-push', '/settings/login-sessions'].includes(rel) || rel.startsWith('/settings/webhooks') || rel.startsWith('/settings/public-api'));
+    const settingsOrder = ['general', 'domains', 'store-info', 'head-code', 'seo-settings', 'payments', 'digital-delivery', 'order-push', 'shipping', 'social-links', 'webhooks', 'public-api', 'login-sessions', 'phone-verification'];
     const settingsItems = settingsNavigation
         ? [...activeGroup.items].filter((item) => settingsOrder.includes(item.key) || item.isActive(rel))
             .sort((a, b) => settingsOrder.indexOf(a.key) - settingsOrder.indexOf(b.key))
