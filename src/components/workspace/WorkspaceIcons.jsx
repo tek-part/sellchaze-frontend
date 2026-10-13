@@ -41,6 +41,8 @@ import Clock01Icon from '@hugeicons/core-free-icons/Clock01Icon';
 import CloudUploadIcon from '@hugeicons/core-free-icons/CloudUploadIcon';
 import ColorsIcon from '@hugeicons/core-free-icons/ColorsIcon';
 import ComputerIcon from '@hugeicons/core-free-icons/ComputerIcon';
+import CommandLineIcon from '@hugeicons/core-free-icons/CommandLineIcon';
+import { HiOutlineCommandLine as OriginalHiOutlineCommandLine } from 'react-icons/hi2';
 import Copy01Icon from '@hugeicons/core-free-icons/Copy01Icon';
 import CreditCardIcon from '@hugeicons/core-free-icons/CreditCardIcon';
 import Cursor01Icon from '@hugeicons/core-free-icons/Cursor01Icon';
@@ -228,6 +230,7 @@ export const HiOutlineClock = /*#__PURE__*/makeIcon(Clock01Icon, OriginalHiOutli
 export const HiOutlineCloudArrowUp = /*#__PURE__*/makeIcon(CloudUploadIcon, OriginalHiOutlineCloudArrowUp, 'CloudUploadIcon');
 export const HiOutlineCog6Tooth = /*#__PURE__*/makeIcon(Settings02Icon, OriginalHiOutlineCog6Tooth, 'Settings02Icon');
 export const HiOutlineComputerDesktop = /*#__PURE__*/makeIcon(ComputerIcon, OriginalHiOutlineComputerDesktop, 'ComputerIcon');
+export const HiOutlineCommandLine = /*#__PURE__*/makeIcon(CommandLineIcon, OriginalHiOutlineCommandLine, 'CommandLineIcon');
 export const HiOutlineCreditCard = /*#__PURE__*/makeIcon(CreditCardIcon, OriginalHiOutlineCreditCard, 'CreditCardIcon');
 export const HiOutlineCube = /*#__PURE__*/makeIcon(TagsIcon, OriginalHiOutlineCube, 'TagsIcon');
 export const HiOutlineCurrencyDollar = /*#__PURE__*/makeIcon(Dollar01Icon, OriginalHiOutlineCurrencyDollar, 'Dollar01Icon');

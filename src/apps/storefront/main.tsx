@@ -12,7 +12,6 @@ import { createRoot } from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
 import { I18nextProvider } from 'react-i18next';
 import { detectLocale, storefrontI18n } from './i18n';
-import { pickLocalized } from './i18n/localized';
 import { StorefrontThemeRoot, registerThemes, storefrontConfig, themeRegistry } from './index';
 import { StorefrontApp } from './StorefrontApp';
 import { StoreProvider } from './state/store-context';
@@ -75,24 +74,7 @@ const schemeOverride =
 // Theme Editor preview the active theme with unsaved merchant settings applied. Decode fail-safe.
 // Translatable settings arrive as `{ ar: '…', en: '…' }` maps and are picked for the preview's
 // language (`?lang=`, which detectLocale honours first) — the editor re-issues the URL per tab.
-let settingsOverride: Record<string, string | number | boolean> | undefined;
 const settingsParam = params.get('settings');
-if (settingsParam) {
-  try {
-    const decoded: unknown = JSON.parse(decodeURIComponent(atob(settingsParam)));
-    if (decoded && typeof decoded === 'object' && !Array.isArray(decoded)) {
-      const previewLocale = detectLocale();
-      const out: Record<string, string | number | boolean> = {};
-      for (const [k, v] of Object.entries(decoded as Record<string, unknown>)) {
-        if (typeof v === 'string' || typeof v === 'number' || typeof v === 'boolean') out[k] = v;
-        else if (v && typeof v === 'object' && !Array.isArray(v)) out[k] = pickLocalized(v, previewLocale);
-      }
-      settingsOverride = out;
-    }
-  } catch {
-    settingsOverride = undefined;
-  }
-}
 
 async function bootstrap(): Promise<void> {
   // i18n first: it seeds the API client's locale so the bootstrap request carries `?lang=` (the
@@ -111,6 +93,9 @@ async function bootstrap(): Promise<void> {
   } catch {
     // The store context exposes the normal unresolved-host state; preview/local mode still renders.
   }
+  const settingsOverride = settingsParam
+    ? (await import('./preview-settings')).readPreviewSettings(settingsParam, detectLocale()) : undefined;
+  if (initialData?.head_code) void import('./head-code/runtime').then(({ mountHeadCode }) => mountHeadCode(initialData.head_code!)).catch(() => undefined);
 
   // Resolve the selected font before first paint. A failed optional catalog must
   // not prevent the store from rendering with its inherited typography.
