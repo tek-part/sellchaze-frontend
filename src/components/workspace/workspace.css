@@ -113,7 +113,10 @@ body[data-workspace-merchant='true'] .ws-sidebar-scroll .ws-nav-panel-inner > a 
 .ws-notifications-heading { display:flex; justify-content:space-between; align-items:start; gap:20px; margin-bottom:24px; }
 .sc-workspace .ws-page .ws-notifications-heading h1 { font-size:24px; line-height:32px; font-weight:500; letter-spacing:0; margin-bottom:8px; }
 .ws-notifications-heading p { color:var(--ws-muted); font-size:14px; line-height:20px; max-width:340px; }
-.ws-notifications-empty { min-height:520px; display:grid; place-items:center; text-align:center; padding:32px 16px; }
+.ws-notifications:has(.ws-notifications-empty) .ws-notifications-heading { margin-bottom:40px; }
+.ws-notifications-empty { text-align:center; padding-inline:16px; }
+.ws-notifications .ws-notifications-empty-icon { display:block; width:216px; height:216px; margin-inline:auto; fill:currentColor; color:rgb(0 0 0 / .38); }
+[data-workspace-theme='dark'] .ws-notifications-empty-icon { color:rgb(255 255 255 / .5); }
 .ws-notifications-empty h2 { font-size:34px; font-weight:400; line-height:42px; color:var(--ws-text); }
 .ws-notifications-actions,.ws-notifications-row-actions { display:flex; gap:8px; align-items:center; }
 .ws-notifications :is(button) { cursor:pointer; }
