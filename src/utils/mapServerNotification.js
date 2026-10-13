@@ -56,6 +56,17 @@ export function mapServerNotification(row, t, opts = {}) {
     const read = Boolean(r.read_at);
     const at = r.created_at ? new Date(r.created_at).getTime() : Date.now();
 
+    if (d.type === 'store_order_export') {
+        const id = String(d.export_id || '');
+        const valid = /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i.test(id);
+        const merchantUrl = `/store/orders?export=${id}`;
+        const storeId = Number(d.store_id);
+        const adminUrl = Number.isSafeInteger(storeId) && storeId > 0 ? `/stores/${storeId}/orders?export=${id}` : '';
+        const url = adminUrl && d.url === adminUrl ? adminUrl : merchantUrl;
+        return { id: String(r.id), read, at, title: t('notification_order_export_ready', 'Order export ready'),
+            body: t('notification_order_export_body', { defaultValue: '{{count}} orders · Download your export', count: Number(d.row_count) || 0 }), ...(valid ? { link: url } : {}) };
+    }
+
     if (d.type === 'store_order') {
         return {
             id: String(r.id), read, at,

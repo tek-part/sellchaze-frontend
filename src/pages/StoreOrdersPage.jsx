@@ -1,139 +1,63 @@
-import { useCallback, useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import useStoreScope from '../hooks/useStoreScope';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { Dialog, DialogBackdrop, DialogPanel, DialogTitle, Popover, PopoverButton, PopoverPanel } from '@headlessui/react';
+import { Link, useNavigate, useOutletContext, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import api from '../api/client';
+import useStoreScope from '../hooks/useStoreScope';
 import { useDebounced } from '../hooks/useDebounced';
-import ListToolbar from '../components/table/ListToolbar';
-import PaginationBar from '../components/table/PaginationBar';
-import TableLoadingOverlay from '../components/table/TableLoadingOverlay';
-import StatusBadge from '../components/StatusBadge';
-import SearchableSelect from '../components/ui/SearchableSelect';
+import useWorkspaceAppearance from '../components/workspace/useWorkspaceAppearance';
+import { HiOutlineArrowDownTray, HiOutlineArrowUp, HiOutlineArrowDown, HiOutlineChevronUpDown, HiOutlineChevronRight, HiOutlineXMark, HiOutlinePrinter, HiOutlinePlus } from '../components/workspace/WorkspaceIcons';
+import OrderExportDialog from '../components/store/orders/OrderExportDialog';
+import OrderProductFilter from '../components/store/orders/OrderProductFilter';
+import { ORDER_FILTERS, ORDER_STATUSES, orderAddress, orderFilterParams, orderStatusLabel } from '../components/store/orders/order-workspace';
+import '../components/store/orders/orders-workspace.css';
 
-const STATUSES = ['pending', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled'];
+const uuid = /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i;
+
+function ExportFile({ id, apiBase, ar, onClose, theme }) {
+    const text = (a, e) => ar ? a : e; const [row, setRow] = useState(null); const [error, setError] = useState(''); const [busy, setBusy] = useState(false);
+    const unavailable = text('التصدير غير متاح لهذا الحساب أو المتجر.', 'This export is unavailable for this account or store.');
+    useEffect(() => { let active = true; const load = () => api.get(`${apiBase}/orders/exports/${id}`).then(({ data }) => { if (active) setRow(data.data); }).catch(() => { if (active) setError(unavailable); }); void load(); const timer = window.setInterval(() => { if (document.visibilityState !== 'hidden') void load(); }, 5000); return () => { active = false; window.clearInterval(timer); }; }, [id, apiBase, unavailable]);
+    async function download() {
+        setBusy(true); setError('');
+        try { const { data } = await api.get(`${apiBase}/orders/exports/${id}/download`, { responseType: 'blob' }); const href = URL.createObjectURL(data); const link = document.createElement('a'); link.href = href; link.download = `orders-${id}.csv`; link.click(); window.setTimeout(() => URL.revokeObjectURL(href), 1000); }
+        catch { setError(text('تعذر تنزيل الملف. ربما انتهت صلاحيته أو تغيرت صلاحية الوصول إلى الطلبات.', 'The file could not be downloaded. It may have expired or order access may have changed.')); }
+        finally { setBusy(false); }
+    }
+    const labels = { queued: text('التصدير في انتظار المعالجة', 'Export queued'), processing: text('جارٍ تجهيز الملف', 'Preparing file'), ready: text('الملف جاهز للتنزيل', 'File ready to download'), failed: text('تعذر إنشاء الملف. جرّب فترة زمنية أصغر أو أعد المحاولة.', 'Could not generate the file. Try a smaller date range or request it again.'), expired: text('انتهت صلاحية الملف. اطلب تصديرًا جديدًا.', 'The file expired. Request a new export.') };
+    return <Dialog open onClose={onClose} className="ws-orders-dialog" dir={ar ? 'rtl' : 'ltr'} data-workspace-theme={theme}><DialogBackdrop className="ws-orders-backdrop" /><div className="ws-orders-dialog-position"><DialogPanel className="ws-orders-export-panel"><DialogTitle>{text('تصدير الطلبات', 'Order export')}</DialogTitle><div className="ws-orders-export-content"><p role="status">{row ? labels[row.status] || row.status : text('جارٍ التحميل…', 'Loading…')}</p>{row?.status === 'ready' ? <><p>{text('عدد الطلبات', 'Orders')}: {row.row_count}</p><p>{text('متاح حتى', 'Available until')}: {new Date(row.expires_at).toLocaleString(ar ? 'ar-EG' : 'en-GB')}</p><button type="button" className="ws-primary-button" disabled={busy} onClick={() => void download()}>{text('تنزيل الملف', 'Download file')}</button></> : null}{error ? <p role="alert">{error}</p> : null}</div><footer><button type="button" onClick={onClose}>{text('إغلاق', 'Close')}</button></footer></DialogPanel></div></Dialog>;
+}
 
 export default function StoreOrdersPage() {
-    const { id, apiBase, uiBase } = useStoreScope();
-    const { t, i18n } = useTranslation();
-    const navigate = useNavigate();
-
-    const [rows, setRows] = useState([]);
-    const [meta, setMeta] = useState(null);
-    const [err, setErr] = useState('');
-    const [loading, setLoading] = useState(false);
-    const [page, setPage] = useState(1);
-    const [perPage, setPerPage] = useState(15);
-    const [searchInput, setSearchInput] = useState('');
-    const debouncedSearch = useDebounced(searchInput, 400);
-    const [status, setStatus] = useState('');
-    const [dateFrom, setDateFrom] = useState('');
-    const [dateTo, setDateTo] = useState('');
-
-    const loadParams = useCallback(() => ({
-        page,
-        per_page: perPage,
-        ...(debouncedSearch.trim() ? { search: debouncedSearch.trim() } : {}),
-        ...(status ? { status } : {}),
-        ...(dateFrom ? { date_from: dateFrom } : {}),
-        ...(dateTo ? { date_to: dateTo } : {}),
-    }), [page, perPage, debouncedSearch, status, dateFrom, dateTo]);
-
-    useEffect(() => setPage(1), [debouncedSearch, status, dateFrom, dateTo, perPage]);
-
-    useEffect(() => {
-        setLoading(true);
-        setErr('');
-        api.get(`${apiBase}/orders`, { params: loadParams() })
-            .then(({ data }) => { setRows(data.data ?? []); setMeta(data.meta ?? null); })
-            .catch((e) => setErr(e.response?.data?.message || e.message))
-            .finally(() => setLoading(false));
-    }, [id, apiBase, loadParams]);
-
-    return (
-        <div className="space-y-5">
-            <div className="flex flex-wrap items-center justify-between gap-3">
-                <div className="border-s-4 border-brand ps-4">
-                    <h1 className="text-2xl font-semibold tracking-tight text-slate-900">{t('orders_title', 'Orders')}</h1>
-                    <p className="mt-1 text-sm text-slate-500">{t('store_orders_subtitle', 'Manage storefront orders for this store.')}</p>
-                </div>
-                {id ? <Link to="/stores" className="text-sm text-brand hover:underline">← {t('stores_title', 'Stores')}</Link> : null}
-            </div>
-            {err && <p className="rounded-lg border border-red-100 bg-red-50 px-3 py-2 text-sm text-red-700">{err}</p>}
-            {meta?.locked_orders > 0 ? <p role="status" className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">{i18n.language.startsWith('ar') ? 'توجد طلبات جديدة محجوبة بسبب مديونية المحفظة. تظل الطلبات القديمة متاحة ويستمر المتجر في استقبال الطلبات.' : 'New orders are hidden because of wallet debt. Existing orders remain available and customers can still place orders.'} <Link to="/top-up" className="font-medium underline">{i18n.language.startsWith('ar') ? 'عرض المحفظة' : 'View wallet'}</Link></p> : null}
-
-            <div className="overflow-hidden rounded-2xl border border-slate-200/80 shadow-card">
-                <ListToolbar
-                    searchValue={searchInput}
-                    onSearchChange={setSearchInput}
-                    perPage={perPage}
-                    onPerPageChange={(n) => { setPerPage(n); setPage(1); }}
-                    advanced={
-                        <div className="grid gap-3 sm:grid-cols-3">
-                            <div>
-                                <label className="mb-1 block text-[11px] font-semibold uppercase text-slate-500">{t('col_status', 'Status')}</label>
-                                <SearchableSelect value={status} onChange={(e) => setStatus(e.target.value)} className="w-full">
-                                    <option value="">—</option>
-                                    {STATUSES.map((s) => <option key={s} value={s}>{t(`order_status_${s}`, s)}</option>)}
-                                </SearchableSelect>
-                            </div>
-                            <div>
-                                <label className="mb-1 block text-[11px] font-semibold uppercase text-slate-500">{t('filter_date_from', 'From')}</label>
-                                <input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} className="w-full rounded-lg border border-slate-200 px-2 py-1.5 text-sm" />
-                            </div>
-                            <div>
-                                <label className="mb-1 block text-[11px] font-semibold uppercase text-slate-500">{t('filter_date_to', 'To')}</label>
-                                <input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} className="w-full rounded-lg border border-slate-200 px-2 py-1.5 text-sm" />
-                            </div>
-                        </div>
-                    }
-                />
-                <div className="relative min-h-48 overflow-auto bg-white">
-                    <TableLoadingOverlay show={loading} />
-                    <table className="min-w-full text-start text-sm">
-                        <thead className="bg-surface-muted/90 text-xs font-semibold uppercase tracking-wide text-slate-600">
-                            <tr>
-                                <th className="px-4 py-3.5">{t('order_number', 'Order #')}</th>
-                                <th className="px-4 py-3.5">{t('order_customer', 'Customer')}</th>
-                                <th className="px-4 py-3.5">{t('col_status', 'Status')}</th>
-                                <th className="px-4 py-3.5">{t('order_items', 'Items')}</th>
-                                <th className="px-4 py-3.5">{t('order_total', 'Total')}</th>
-                                <th className="px-4 py-3.5">{t('order_placed', 'Placed')}</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {rows.length === 0 && !loading ? (
-                                <tr><td colSpan={6} className="px-4 py-14 text-center text-sm text-slate-500">{t('empty', 'Nothing here yet.')}</td></tr>
-                            ) : null}
-                            {rows.map((row) => (
-                                <tr key={row.id} onClick={() => navigate(`${uiBase}/orders/${row.id}`)} className="cursor-pointer border-t border-slate-100 transition-colors hover:bg-slate-50/60">
-                                    <td className="px-4 py-3 font-mono font-medium text-brand">
-                                        {row.order_number}
-                                        {row.b2b_order?.code ? (
-                                            <span
-                                                className="ms-2 inline-flex whitespace-nowrap rounded-full border border-emerald-100 bg-emerald-50 px-2 py-0.5 font-sans text-[10px] font-semibold text-emerald-700"
-                                                title={`${t('store_order_sent_to_supplier', 'Sent to supplier')} · ${row.b2b_order.code}`}
-                                            >
-                                                {t('store_order_sent_to_supplier', 'Sent to supplier')}
-                                            </span>
-                                        ) : null}
-                                    </td>
-                                    <td className="px-4 py-3 text-slate-700">
-                                        <div className="min-w-0">
-                                            <p className="truncate font-medium text-slate-900">{row.customer?.name || '—'}</p>
-                                            <p className="truncate text-xs text-slate-400">{row.customer?.email}</p>
-                                        </div>
-                                    </td>
-                                    <td className="px-4 py-3"><StatusBadge status={row.status} label={t(`order_status_${row.status}`, row.status)} /></td>
-                                    <td className="px-4 py-3 text-slate-600">{row.items_count ?? '—'}</td>
-                                    <td className="px-4 py-3 font-medium text-slate-900">{row.currency} {row.grand_total}</td>
-                                    <td className="px-4 py-3 text-slate-600">{row.placed_at ? new Date(row.placed_at).toLocaleDateString() : '—'}</td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
-                <PaginationBar meta={meta} loading={loading} onPageChange={setPage} />
-            </div>
-        </div>
-    );
+    const { apiBase, uiBase } = useStoreScope(); const { i18n } = useTranslation(); const ar = i18n.language.startsWith('ar'); const text = (a, e) => ar ? a : e; const navigate = useNavigate(); const { permissions = [] } = useOutletContext(); const { theme } = useWorkspaceAppearance(); const [urlParams, setUrlParams] = useSearchParams();
+    const [status, setStatus] = useState(''); const [payment, setPayment] = useState(''); const [filters, setFilters] = useState({}); const debounced = useDebounced(filters, 350);
+    const [page, setPage] = useState(1); const [perPage, setPerPage] = useState(25); const [sort, setSort] = useState('created_at'); const [dir, setDir] = useState('desc'); const [reload, setReload] = useState(0); const [result, setResult] = useState(null); const [error, setError] = useState(''); const [loading, setLoading] = useState(true);
+    const [selected, setSelected] = useState(() => new Map()); const [exportOpen, setExportOpen] = useState(false); const [statusOpen, setStatusOpen] = useState(false); const [nextStatus, setNextStatus] = useState(''); const [busy, setBusy] = useState(false); const [notice, setNotice] = useState(''); const pageCheckbox = useRef(null); const tabRefs = useRef([]);
+    const canManage = permissions.includes('store.orders.manage'); const rows = useMemo(() => result?.data || [], [result]); const pending = loading || filters !== debounced; const allSelected = rows.length > 0 && rows.every(row => selected.has(row.id));
+    const query = { ...orderFilterParams(debounced), ...(status ? { status } : {}), ...(payment ? { payment_status: payment } : {}) }; const queryKey = JSON.stringify(query);
+    useEffect(() => { let active = true; setLoading(true); setError(''); api.get(`${apiBase}/orders`, { params: { ...JSON.parse(queryKey), page, per_page: perPage, sort, dir } }).then(({ data }) => { if (active) setResult(data); }).catch(e => { if (active) setError(e.response?.data?.message || e.message); }).finally(() => { if (active) setLoading(false); }); return () => { active = false; }; }, [apiBase, queryKey, page, perPage, sort, dir, reload]);
+    useEffect(() => { setPage(1); setSelected(new Map()); }, [status, payment, filters, perPage, sort, dir, apiBase]);
+    useEffect(() => { if (pageCheckbox.current) pageCheckbox.current.indeterminate = !allSelected && rows.some(row => selected.has(row.id)); }, [allSelected, rows, selected]);
+    const tabs = [['', '', text('كل الطلبات', 'All orders')], ...ORDER_STATUSES.slice(0, 2).map(([key, a, e]) => [key, '', ar ? a : e]), ['', 'pending', text('في انتظار الدفع', 'Awaiting payment')], ['', 'paid', text('تم الدفع', 'Paid')], ['', 'failed', text('فشل الدفع', 'Payment failed')], ...ORDER_STATUSES.slice(2).map(([key, a, e]) => [key, '', ar ? a : e])];
+    function chooseTab(index) { setStatus(tabs[index][0]); setPayment(tabs[index][1]); }
+    function tabKey(event, index) { let next; if (event.key === 'Home') next = 0; else if (event.key === 'End') next = tabs.length - 1; else if (event.key === 'ArrowRight') next = (index + (ar ? -1 : 1) + tabs.length) % tabs.length; else if (event.key === 'ArrowLeft') next = (index + (ar ? 1 : -1) + tabs.length) % tabs.length; if (next != null) { event.preventDefault(); chooseTab(next); tabRefs.current[next]?.focus(); } }
+    function toggle(row, checked) { setSelected(current => { const next = new Map(current); if (checked && next.size < 100) next.set(row.id, row); else if (!checked) next.delete(row.id); return next; }); }
+    function sortBy(key) { setSort(key); setDir(sort === key && dir === 'asc' ? 'desc' : 'asc'); }
+    const header = (key, label) => <th aria-sort={sort === key ? dir === 'asc' ? 'ascending' : 'descending' : 'none'}><button type="button" onClick={() => sortBy(key)} aria-label={`${text('رتب حسب', 'Sort by')} ${label} ${sort === key && dir === 'asc' ? text('تنازلي', 'descending') : text('تصاعدي', 'ascending')}`}>{sort === key ? dir === 'asc' ? <HiOutlineArrowUp aria-hidden /> : <HiOutlineArrowDown aria-hidden /> : <HiOutlineChevronUpDown aria-hidden />}{label}</button></th>;
+    function filterValue(key, value) { setFilters(old => ({ ...old, [key]: value })); }
+    function filterToggle(key, enabled) { setFilters(old => { const next = { ...old }; if (enabled) next[key] = ''; else delete next[key]; return next; }); }
+    async function updateStatuses() { if (busy || !nextStatus || !selected.size) return; setBusy(true); setError(''); try { await api.post(`${apiBase}/orders/bulk-status`, { status: nextStatus, orders: [...selected.values()].map(row => ({ id: row.id, status: row.status })) }); setSelected(new Map()); setStatusOpen(false); setReload(value => value + 1); setNotice(text('تم تحديث حالات الطلبات.', 'Order statuses updated.')); } catch (e) { setError(e.response?.data?.message || e.message); } finally { setBusy(false); } }
+    const exportId = urlParams.get('export'); const showExport = exportId && uuid.test(exportId); const meta = result?.meta; const total = Number(meta?.total || 0); const from = total ? (page - 1) * perPage + 1 : 0; const to = Math.min(page * perPage, total);
+    return <div className="ws-orders"><header className="ws-orders-heading"><h1>{text('الطلبات', 'Orders')}</h1><p>{text('يمكنك التحكم في طلباتك وفلترتها حسب الحالة ويمكنك عرض أي طلب بالضغط عليه وتعديل حالته.', 'Manage and filter orders by status. Open any order to review it and change its status.')}</p></header>
+        <div className="ws-orders-tabs" role="tablist" aria-label={text('حالات الطلبات', 'Order statuses')}>{tabs.map(([s, p, label], index) => <button ref={element => { tabRefs.current[index] = element; }} type="button" role="tab" key={`${s}:${p}`} aria-selected={status === s && payment === p} tabIndex={status === s && payment === p ? 0 : -1} onKeyDown={event => tabKey(event, index)} onClick={() => chooseTab(index)}>{label}</button>)}</div>
+        <div className="ws-orders-toolbar"><button type="button" disabled={!canManage || pending} onClick={() => setExportOpen(true)}><HiOutlineArrowDownTray aria-hidden />{text('تصدير', 'Export')}</button><Popover className="ws-orders-filter-popover"><PopoverButton><HiOutlinePlus aria-hidden />{text('إضافة فلتر', 'Add filter')}</PopoverButton><PopoverPanel anchor="bottom end" className="ws-orders-filter-menu" data-workspace-theme={theme}>{ORDER_FILTERS.map(([key, a, e]) => <label key={key}><input type="checkbox" checked={Object.hasOwn(filters, key)} onChange={event => filterToggle(key, event.target.checked)} />{ar ? a : e}</label>)}</PopoverPanel></Popover></div>
+        {Object.keys(filters).length ? <div className="ws-orders-filters">{ORDER_FILTERS.filter(([key]) => Object.hasOwn(filters, key)).map(([key, a, e, type]) => <div className="ws-orders-filter" key={key}><label>{ar ? a : e}{type === 'product' ? <OrderProductFilter apiBase={apiBase} value={filters[key]} ar={ar} onChange={value => filterValue(key, value)} /> : <input type={type} min={type === 'number' ? 1 : undefined} maxLength={type === 'text' ? 200 : undefined} value={filters[key]} onChange={event => filterValue(key, event.target.value)} />}</label><button type="button" onClick={() => filterToggle(key, false)} aria-label={`${text('إزالة فلتر', 'Remove filter')} ${ar ? a : e}`}><HiOutlineXMark aria-hidden /></button></div>)}</div> : null}
+        {error ? <p role="alert" className="ws-orders-error">{error}<button type="button" onClick={() => setReload(value => value + 1)}>{text('إعادة التحميل', 'Reload')}</button></p> : null}{notice ? <p role="status" className="ws-orders-notice">{notice}</p> : null}{meta?.locked_orders > 0 ? <p role="status" className="ws-orders-notice">{text('توجد طلبات جديدة محجوبة بسبب مديونية المحفظة. تظل الطلبات القديمة متاحة ويستمر المتجر في استقبال الطلبات.', 'New orders are hidden because of wallet debt. Existing orders remain accessible and the store can still accept orders.')} <Link to="/top-up">{text('عرض المحفظة', 'View wallet')}</Link></p> : null}
+        <div className="ws-orders-selection"><button type="button" onClick={() => setSelected(new Map())} aria-label={text('إلغاء التحديد', 'Clear selection')} disabled={!selected.size}><HiOutlineXMark aria-hidden /></button><span>{selected.size} {text('العناصر المحددة', 'selected items')}</span><button type="button" disabled={!canManage || !selected.size || pending || busy} onClick={() => { setNextStatus(''); setStatusOpen(true); }}>{text('تحديث حالة الطلب', 'Update order status')}</button>{selected.size && canManage ? <Link target="_blank" rel="noopener noreferrer" to={`${uiBase}/orders/print?ids=${[...selected.keys()].join(',')}`}><HiOutlinePrinter aria-hidden />{text('طباعة الطلبات المحددة', 'Print selected orders')}</Link> : <span aria-disabled="true"><HiOutlinePrinter aria-hidden />{text('طباعة الطلبات المحددة', 'Print selected orders')}</span>}</div>
+        <div className="ws-orders-table-scroll" aria-busy={pending}><table><thead><tr><th><input ref={pageCheckbox} type="checkbox" checked={allSelected} aria-label={text('اختيار الكل', 'Select all')} disabled={!rows.length || pending} onChange={event => setSelected(current => { const next = new Map(current); rows.forEach(row => { if (!event.target.checked) next.delete(row.id); else if (next.size < 100) next.set(row.id, row); }); return next; })} /></th><th><span className="sr-only">{text('التحقق', 'Verification')}</span></th>{header('id', text('المعرف', 'ID'))}{header('customer_name', text('العميل', 'Customer'))}<th>{text('العنوان', 'Address')}</th>{header('grand_total', text('المبلغ الإجمالي', 'Total amount'))}{header('status', text('حالة الطلب', 'Order status'))}<th>Data Quality</th><th>IP Country</th>{header('created_at', text('تاريخ الطلب', 'Order date'))}</tr></thead><tbody>{rows.map(row => <tr key={row.id} onClick={() => navigate(`${uiBase}/orders/${row.id}`)}><td onClick={event => event.stopPropagation()}><input type="checkbox" aria-label={`${text('اختيار طلب', 'Select order')} ${row.id}`} checked={selected.has(row.id)} disabled={pending || !selected.has(row.id) && selected.size >= 100} onChange={event => toggle(row, event.target.checked)} /></td><td>{row.bot_verified === false ? <span title={text('لم يتم التحقق من حماية البوت لهذا الطلب.', 'Bot protection was not verified for this order.')} aria-label={text('لم يتم التحقق من حماية البوت', 'Bot protection not verified')}>!</span> : null}</td><td><Link to={`${uiBase}/orders/${row.id}`}>{row.id}</Link></td><td><span>{row.customer?.name || '—'}</span><small dir="ltr">{row.customer?.phone || '—'}</small></td><td>{orderAddress(row.shipping_address) || '—'}</td><td>{row.grand_total}</td><td><span className={`ws-orders-status is-${row.status}`}>{orderStatusLabel(row.status, ar)}</span></td><td>{row.data_quality ?? ''}</td><td>{row.ip_country ?? ''}</td><td>{row.created_at ? new Date(row.created_at).toLocaleString(ar ? 'ar-EG' : 'en-GB') : '—'}</td></tr>)}{!rows.length ? <tr><td colSpan={10}>{pending ? text('جارٍ تحميل الطلبات…', 'Loading orders…') : text('لا توجد طلبات لهذه الفلاتر.', 'No orders match these filters.')}</td></tr> : null}</tbody></table></div>
+        <footer className="ws-orders-pagination"><label>{text('الصفوف لكل صفحة:', 'Rows per page:')}<select aria-label={text('الصفوف لكل صفحة', 'Rows per page')} value={perPage} onChange={event => setPerPage(Number(event.target.value))}>{[10, 25, 50, 100].map(value => <option key={value} value={value}>{value}</option>)}</select></label><span>{from}-{to} {text('من', 'of')} {total}</span><button type="button" aria-label={text('الصفحة السابقة', 'Previous page')} disabled={pending || page <= 1} onClick={() => setPage(value => value - 1)}>{ar ? <HiOutlineChevronRight /> : <HiOutlineChevronRight className="rotate-180" />}</button><button type="button" aria-label={text('الصفحة التالية', 'Next page')} disabled={pending || page >= Number(meta?.last_page || 1)} onClick={() => setPage(value => value + 1)}>{ar ? <HiOutlineChevronRight className="rotate-180" /> : <HiOutlineChevronRight />}</button></footer>
+        {exportOpen ? <OrderExportDialog open apiBase={apiBase} filters={query} ar={ar} theme={theme} onClose={() => setExportOpen(false)} onQueued={() => setNotice(text('سيظهر ملف التصدير في الإشعارات عند جاهزيته.', 'The export file will appear in notifications when ready.'))} /> : null}
+        {showExport ? <ExportFile id={exportId} apiBase={apiBase} ar={ar} theme={theme} onClose={() => { const next = new URLSearchParams(urlParams); next.delete('export'); setUrlParams(next, { replace: true }); }} /> : null}
+        <Dialog open={statusOpen} onClose={() => { if (!busy) setStatusOpen(false); }} className="ws-orders-dialog" dir={ar ? 'rtl' : 'ltr'} data-workspace-theme={theme}><DialogBackdrop className="ws-orders-backdrop" /><div className="ws-orders-dialog-position"><DialogPanel className="ws-orders-export-panel"><DialogTitle>{text('تحديث حالة الطلب', 'Update order status')}</DialogTitle><div className="ws-orders-export-content"><p>{selected.size} {text('العناصر المحددة', 'selected items')}</p><label>{text('حالة الطلب', 'Order status')}<select value={nextStatus} onChange={event => setNextStatus(event.target.value)}><option value="">{text('اختر الحالة', 'Choose status')}</option>{ORDER_STATUSES.map(([key, a, e]) => <option key={key} value={key}>{ar ? a : e}</option>)}</select></label><p>{text('لن يتم تغيير أي طلب إذا تعذر تطبيق الحالة على أحد الطلبات المحددة.', 'No selected order will change if any order cannot make this transition.')}</p>{error ? <p role="alert">{error}</p> : null}</div><footer><button type="button" disabled={busy} onClick={() => setStatusOpen(false)}>{text('إلغاء', 'Cancel')}</button><button type="button" disabled={busy || !nextStatus} onClick={() => void updateStatuses()}>{text('تحديث', 'Update')}</button></footer></DialogPanel></div></Dialog>
+    </div>;
 }

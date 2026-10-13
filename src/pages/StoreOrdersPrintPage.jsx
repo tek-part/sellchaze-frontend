@@ -1,0 +1,13 @@
+import { useEffect, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
+import api from '../api/client';
+import useStoreScope from '../hooks/useStoreScope';
+import { orderAddress, orderPrintIds, orderStatusLabel } from '../components/store/orders/order-workspace';
+import '../components/store/orders/orders-workspace.css';
+
+export default function StoreOrdersPrintPage() {
+    const { apiBase } = useStoreScope(); const [params] = useSearchParams(); const { i18n } = useTranslation(); const ar = i18n.language.startsWith('ar'); const raw = params.get('ids') || ''; const [data, setData] = useState(null); const [error, setError] = useState('');
+    useEffect(() => { let active = true; setData(null); const ids = orderPrintIds(raw); if (!ids.length) { setError(ar ? 'اختر من طلب واحد إلى 100 طلب للطباعة.' : 'Select between one and 100 orders to print.'); return; } setError(''); api.get(`${apiBase}/orders/print-data`, { params: { ids } }).then(({ data }) => { if (active) setData(data); }).catch(e => { if (active) setError(e.response?.data?.message || e.message); }); return () => { active = false; }; }, [apiBase, raw, ar]);
+    return <div className="ws-orders-print"><header><h1>{ar ? 'طباعة الطلبات المحددة' : 'Print selected orders'}</h1><button type="button" disabled={!data} onClick={() => window.print()}>{ar ? 'طباعة' : 'Print'}</button></header>{error ? <p role="alert">{error}</p> : !data ? <p role="status">{ar ? 'جارٍ تحميل الطلبات…' : 'Loading orders…'}</p> : data.data.map(order => <article key={order.id}><h2>{data.store.name}</h2><h3>{ar ? 'الطلب' : 'Order'} {order.order_number}</h3><p>{orderStatusLabel(order.status, ar)} · {order.placed_at ? new Date(order.placed_at).toLocaleString(ar ? 'ar-EG' : 'en-GB') : ''}</p><dl><dt>{ar ? 'العميل' : 'Customer'}</dt><dd>{order.customer?.name}</dd><dt>{ar ? 'الهاتف' : 'Phone'}</dt><dd dir="ltr">{order.customer?.phone}</dd><dt>{ar ? 'العنوان' : 'Address'}</dt><dd>{orderAddress(order.shipping_address) || '—'}</dd></dl><table><thead><tr><th>{ar ? 'المنتج' : 'Product'}</th><th>{ar ? 'الكمية' : 'Quantity'}</th><th>{ar ? 'السعر' : 'Price'}</th><th>{ar ? 'الإجمالي' : 'Total'}</th></tr></thead><tbody>{order.items?.map(item => <tr key={item.id}><td>{item.name}</td><td>{item.quantity}</td><td>{item.unit_price}</td><td>{item.line_total}</td></tr>)}</tbody></table><p>{ar ? 'الشحن' : 'Shipping'}: {order.currency} {order.shipping_total}</p><p>{ar ? 'الخصم' : 'Discount'}: {order.currency} {order.discount_total}</p><strong>{ar ? 'الإجمالي' : 'Total'}: {order.currency} {order.grand_total}</strong></article>)}</div>;
+}
