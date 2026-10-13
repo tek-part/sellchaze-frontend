@@ -1,25 +1,16 @@
 import axios from 'axios';
+import { resolveApiBase } from './base-url';
 
 /**
  * API base URL. Prefer same-origin `/api/v1` in dev so the Vite proxy (see vite.config.js)
  * forwards to Laravel — avoids CORS (localhost:5173 vs 127.0.0.1:8000).
  * Set VITE_API_URL to call Laravel directly (you must allow that origin in config/cors.php).
- * Production builds use same-origin `/api/v1` unless VITE_API_URL is set at build time.
+ * Production merchant hosts use api.sellchaze.com unless VITE_API_URL overrides it.
  */
 function resolveBaseURL() {
-    const fromEnv = import.meta.env.VITE_API_URL;
-    if (fromEnv && String(fromEnv).trim() !== '') {
-        let url = String(fromEnv).trim().replace(/\/$/, '');
-        // SPA on https:// + API URL baked as http:// → browsers block (mixed content). Force https in that case.
-        if (typeof window !== 'undefined' && window.location?.protocol === 'https:' && /^http:\/\//i.test(url)) {
-            url = url.replace(/^http:\/\//i, 'https://');
-        }
-        return url;
-    }
-    if (import.meta.env.DEV) {
-        return '/api/v1';
-    }
-    return '/api/v1';
+    const location = typeof window !== 'undefined' ? window.location : null;
+    return resolveApiBase({ configured: import.meta.env.VITE_API_URL, protocol: location?.protocol,
+        hostname: location?.hostname, development: import.meta.env.DEV });
 }
 
 const baseURL = resolveBaseURL();
