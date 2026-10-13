@@ -77,6 +77,7 @@ export function ProductDetailsSection(props: SectionRenderProps): ReactElement |
   const showSku = flag(settings, 'show_sku', false);
   const showShare = flag(settings, 'show_share', true);
   const sphinx = flag(settings, 'sphinx_layout', false);
+  const elite = flag(settings, 'elite_layout', false);
   const offers = flag(settings, 'show_quantity_offers', true) ? product.quantityOffers ?? [] : [];
   const selectionRequired = Boolean(product.variants?.length && !activeVariant);
   const outOfStock = product.inStock === false || Boolean(activeVariant && !variantAvailable(activeVariant));
@@ -132,17 +133,18 @@ export function ProductDetailsSection(props: SectionRenderProps): ReactElement |
   ];
 
   return (
-    <section className={`sf-section${sphinx ? ' sph-product' : ''}`}>
+    <section className={`sf-section${sphinx ? ' sph-product' : ''}${elite ? ' elt-product' : ''}`}>
       <Container>
         <div className="sf-pdp">
           <div className="sf-pdp__media">
           <UiBlock slot="before_product_gallery" />
-          <ProductGallery key={`${product.id}:${variantId ?? 'default'}:${selectedImage ?? ''}`} images={product.images} media={variantGallery(product, selectedImage)} {...(selectedImage ? { initialSrc: selectedImage } : {})} title={product.title} mobileSlideshow={sphinx} />
+          <ProductGallery key={`${product.id}:${variantId ?? 'default'}:${selectedImage ?? ''}`} images={product.images} media={variantGallery(product, selectedImage)} {...(selectedImage ? { initialSrc: selectedImage } : {})} title={product.title} mobileSlideshow={sphinx} desktopStack={elite} />
           <UiBlock slot="after_product_gallery" />
           </div>
 
           <div className="sf-pdp__buybox">
             {sphinx && product.categorySlug && product.categoryName ? <a className="sph-product__category" href={`/collections/${product.categorySlug}`}>{product.categoryName}</a> : null}
+            {elite && product.categorySlug && product.categoryName ? <a className="elt-product__category" href={`/collections/${product.categorySlug}`}>{product.categoryName}</a> : null}
             {product.vendor ? <span className="sf-pdp__vendor">{product.vendor}</span> : null}
             <h1 className="sf-pdp__title">{product.title}</h1>
             {product.digitalType && product.digitalType !== 'physical' ? <p>{ar ? 'منتج رقمي — يُتاح الرابط أو الكود بعد تأكيد الدفع.' : 'Digital product — your link or code is available after payment is confirmed.'}</p> : null}
@@ -188,7 +190,7 @@ export function ProductDetailsSection(props: SectionRenderProps): ReactElement |
               ) : null}
             </div>
 
-            {!sphinx ? <Tabs tabs={tabs} value={activeTab} onChange={setActiveTab} renderPanel={(id) =>
+            {!sphinx && !elite ? <Tabs tabs={tabs} value={activeTab} onChange={setActiveTab} renderPanel={(id) =>
               id === 'description' ? (
                 <ProductDescription html={product.descriptionHtml ?? ''} />
               ) : (
@@ -200,6 +202,7 @@ export function ProductDetailsSection(props: SectionRenderProps): ReactElement |
           </div>
         </div>
         {sphinx ? <div className="sph-product__content"><ProductDescription html={product.descriptionHtml ?? ''} />{product.shippingReturns ? <details><summary>{ar ? 'الشحن والاسترجاع' : 'Shipping and returns'}</summary><p>{product.shippingReturns}</p></details> : null}</div> : null}
+        {elite ? <div className="elt-product__content"><ProductDescription html={product.descriptionHtml ?? ''} />{product.shippingReturns ? <details><summary>{ar ? 'الشحن والاسترجاع' : 'Shipping and returns'}</summary><p>{product.shippingReturns}</p></details> : null}{product.careInstructions ? <details><summary>{ar ? 'تعليمات العناية' : 'Care instructions'}</summary><p>{product.careInstructions}</p></details> : null}{product.warranty ? <details><summary>{ar ? 'الضمان' : 'Warranty'}</summary><p>{product.warranty}</p></details> : null}</div> : null}
 
         {reviews.length > 0 ? (
           <div style={{ marginTop: 'var(--section-y)' }}>

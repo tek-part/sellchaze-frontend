@@ -18,6 +18,7 @@ export interface ProductGalleryProps {
   enableZoom?: boolean;
   className?: string;
   mobileSlideshow?: boolean;
+  desktopStack?: boolean;
 }
 
 export function ProductGallery(props: ProductGalleryProps): ReactElement {
@@ -29,6 +30,13 @@ export function ProductGallery(props: ProductGalleryProps): ReactElement {
   const [videoError, setVideoError] = useState('');
   const thumbsRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const stackRef = useRef<HTMLDivElement>(null);
+
+  const scrollStack = (next: number): void => {
+    if (props.desktopStack && typeof window !== 'undefined' && window.matchMedia('(min-width:768px)').matches) {
+      stackRef.current?.children[next]?.scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion:reduce)').matches ? 'auto' : 'smooth', block: 'start' });
+    }
+  };
 
   const index = active < items.length ? active : 0;
   const current = items[index];
@@ -48,26 +56,27 @@ export function ProductGallery(props: ProductGalleryProps): ReactElement {
     const next = forward ? (index + 1) % items.length : (index - 1 + items.length) % items.length;
     setActive(next);
     setVideoError('');
+    scrollStack(next);
     (thumbsRef.current?.children[next] as HTMLElement | undefined)?.focus();
   };
 
   return (
-    <div className={cn('sf-gallery', !hasThumbs && 'sf-gallery--single', className)}>
+    <div className={cn('sf-gallery', !hasThumbs && 'sf-gallery--single', props.desktopStack && 'sf-gallery--stacked', className)}>
       {hasThumbs ? (
-        <div ref={thumbsRef} className="sf-gallery__thumbs" role="tablist" aria-label={t('product.imagesOf', { title })} onKeyDown={onThumbKeyDown}>
+        <div ref={thumbsRef} className="sf-gallery__thumbs" role={props.desktopStack ? 'group' : 'tablist'} aria-label={t('product.imagesOf', { title })} onKeyDown={onThumbKeyDown}>
           {items.map((image, i) => (
             <button
               key={i}
               type="button"
-              role="tab"
+              role={props.desktopStack ? undefined : 'tab'}
               id={`${galleryId}-image-${i}`}
               aria-controls={`${galleryId}-panel`}
               aria-current={i === index}
-              aria-selected={i === index}
+              aria-selected={props.desktopStack ? undefined : i === index}
               aria-label={image.type === 'video' ? `${i18n.language.startsWith('ar') ? 'عرض الفيديو' : 'View video'} ${i + 1}` : t('product.viewImage', { n: i + 1 })}
-              tabIndex={i === index ? 0 : -1}
+              tabIndex={props.desktopStack || i === index ? 0 : -1}
               className="sf-gallery__thumb"
-              onClick={() => { setActive(i); setVideoError(''); }}
+              onClick={() => { setActive(i); setVideoError(''); scrollStack(i); }}
             >
               {image.type === 'video' ? <span aria-hidden="true" className="sf-gallery__video-thumb">▶</span> : <StoreImage className="sf-gallery__thumb-img" src={image.src} alt="" />}
             </button>
@@ -75,7 +84,9 @@ export function ProductGallery(props: ProductGalleryProps): ReactElement {
         </div>
       ) : null}
 
-      <div className="sf-gallery__main" id={`${galleryId}-panel`} {...(hasThumbs ? { role: 'tabpanel', 'aria-labelledby': `${galleryId}-image-${index}` } : {})}>
+      {props.desktopStack ? <div ref={stackRef} className="sf-gallery__stack">{items.map((item, i) => <div key={`${item.src}-${i}`} style={{ scrollMarginTop: '95px' }}>{item.type === 'video' ? <video src={item.src} controls playsInline preload="none" aria-label={item.alt ?? title} /> : enableZoom ? <ImageZoom src={item.src} alt={item.alt ?? title} eager={i === 0} /> : <StoreImage src={item.src} alt={item.alt ?? title} eager={i === 0} />}</div>)}</div> : null}
+
+      <div className="sf-gallery__main" id={`${galleryId}-panel`} {...(hasThumbs ? { role: props.desktopStack ? 'region' : 'tabpanel', 'aria-labelledby': `${galleryId}-image-${index}` } : {})}>
         {current?.type === 'video' ? <><video ref={videoRef} key={current.src} className="sf-gallery__video" src={current.src} controls playsInline preload="metadata" aria-label={current.alt ?? title} onLoadedData={() => setVideoError('')} onError={(event) => setVideoError(event.currentTarget.error?.message || 'Unable to load video')} />{videoError ? <p role="status">{i18n.language.startsWith('ar') ? 'تعذّر تشغيل الفيديو في هذا المتصفح.' : 'This browser could not play the video.'} <a href={current.src} target="_blank" rel="noreferrer">{i18n.language.startsWith('ar') ? 'فتح الفيديو' : 'Open video'}</a></p> : null}</> : enableZoom ? (
           <ImageZoom src={current?.src} alt={current?.alt ?? title} eager />
         ) : (
