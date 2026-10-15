@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Dialog, DialogBackdrop, DialogPanel, DialogTitle } from '@headlessui/react';
-import { HiOutlinePlayCircle, HiOutlineXCircle, HiOutlineBookOpen, HiOutlineArrowTopRightOnSquare } from '../workspace/WorkspaceIcons';
+import { HiOutlinePlayCircle, HiOutlineXCircle, HiOutlineBookOpen, HiOutlineArrowTopRightOnSquare, HiOutlineRocketLaunch, HiOutlineChevronRight, HiOutlineXMark } from '../workspace/WorkspaceIcons';
 import useWorkspaceAppearance from '../workspace/useWorkspaceAppearance';
+import { SetupWalletIcon, SetupCategoriesIcon, SetupProductsIcon, SetupHomeIcon, SetupDomainIcon, SetupLogoIcon, SetupAddressIcon, SetupFontIcon, SetupColorIcon, SetupSeoIcon } from './DashboardSetupIcons';
 import './dashboard-guide.css';
 
 export const dashboardSteps = [
@@ -19,24 +20,54 @@ export const dashboardSteps = [
 ];
 export function DashboardPromotions({ access, ar }) {
     const text = (a,e) => ar ? a : e;
-    return <div className="ws-dashboard-promotions" role="region" tabIndex={0} aria-label={text('أدوات لتنمية متجرك', 'Tools to grow your store')} onKeyDown={(event) => {
+    const track = useRef(null); const paused = useRef({ mouse:false, focus:false }); const [active, setActive] = useState(0);
+    const count = Number(Boolean(access.canStoreOrders && access.canStoreSettings)) + Number(Boolean(access.canStoreCoupons && access.canStoreSettings));
+    useEffect(() => {
+        if (count < 2) return;
+        const timer = setInterval(() => {
+            const node = track.current;
+            if (!node || document.hidden || paused.current.mouse || paused.current.focus || !window.matchMedia('(max-width:767px)').matches || window.matchMedia('(prefers-reduced-motion:reduce)').matches) return;
+            const stride = node.clientWidth + 16; const index = (Math.round(Math.abs(node.scrollLeft) / stride) + 1) % count;
+            setActive(index);node.scrollTo({ left:(ar ? -1 : 1) * index * stride, behavior:'smooth' });
+        },6500);
+        return () => clearInterval(timer);
+    },[ar,count]);
+    function choose(index) { const node = track.current;setActive(index); if (node) node.scrollTo({ left:(ar ? -1 : 1) * index * (node.clientWidth + 16), behavior:window.matchMedia('(prefers-reduced-motion:reduce)').matches ? 'instant' : 'smooth' }); }
+    if (!count) return null;
+    return <section className="ws-dashboard-campaigns" onFocusCapture={() => { paused.current.focus=true; }} onBlurCapture={event => { if (!event.currentTarget.contains(event.relatedTarget)) paused.current.focus=false; }}><div ref={track} className="ws-dashboard-promotions" onMouseEnter={() => { paused.current.mouse=true; }} onMouseLeave={() => { paused.current.mouse=false; }} onScroll={event => { const node=event.currentTarget;setActive(Math.round(Math.abs(node.scrollLeft)/(node.clientWidth+16))); }} role="region" tabIndex={0} aria-label={text('أدوات لتنمية متجرك', 'Tools to grow your store')} onKeyDown={(event) => {
         if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return;
         const container = event.currentTarget;if (container.scrollWidth <= container.clientWidth) return;
         event.preventDefault();container.scrollBy({ left:(event.key === 'ArrowLeft' ? -1 : 1) * (container.clientWidth + 16), behavior:window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth' });
     }}>
         {access.canStoreOrders && access.canStoreSettings ? <Link to="/store/sheets" className="ws-dashboard-promotion ws-dashboard-promotion-sheets"><div><span>Google Sheets</span><h2>{text('طلباتك في مكان واحد', 'Your orders in one place')}</h2><p>{text('اربط جدولك بالمتجر لمزامنة الطلبات الجديدة.', 'Connect your spreadsheet to synchronize new orders.')}</p><strong>{text('إعداد الربط', 'Set up connection')} <HiOutlineArrowTopRightOnSquare aria-hidden /></strong></div><div className="ws-promotion-visual" aria-hidden><img src="/app-icons/sheets.svg" alt="" /><i /><i /><i /></div></Link> : null}
         {access.canStoreCoupons && access.canStoreSettings ? <Link to="/store/apps/downsell" className="ws-dashboard-promotion ws-dashboard-promotion-discount"><div><span>Downsell</span><h2>{text('امنح العميل سببًا لإكمال طلبه', 'Give shoppers a reason to finish')}</h2><p>{text('اعرض كوبونًا في اللحظة المناسبة واضبط وقت ظهوره.', 'Show a coupon at the right moment and control its timing.')}</p><strong>{text('إعداد نافذة الخصم', 'Set up discount popup')} <HiOutlineArrowTopRightOnSquare aria-hidden /></strong></div><div className="ws-promotion-visual" aria-hidden><img src="/app-icons/downsell.png" alt="" /><i /><i /><i /></div></Link> : null}
-    </div>;
+    </div>{count > 1 ? <div className="ws-promotion-dots" role="group" aria-label={text('التنقل بين بطاقات المتجر', 'Store campaign navigation')}>{Array.from({length:count},(_,index)=><button key={index} type="button" aria-label={text(`عرض البطاقة ${index+1}`,`Show campaign ${index+1}`)} aria-pressed={index===active} onClick={()=>choose(index)} />)}</div> : null}</section>;
 }
+const setupStepVisuals = {
+    wallet: [SetupWalletIcon, "rgb(14, 164, 79)"],
+    categories: [SetupCategoriesIcon, "rgb(100, 116, 139)"],
+    products: [SetupProductsIcon, "rgb(8, 145, 178)"],
+    home: [SetupHomeIcon, "rgb(234, 88, 12)"],
+    domain: [SetupDomainIcon, "rgb(124, 58, 237)"],
+    logo: [SetupLogoIcon, "rgb(8, 145, 178)"],
+    address: [SetupAddressIcon, "rgb(249, 115, 22)"],
+    font: [SetupFontIcon, "rgb(124, 58, 237)"],
+    color: [SetupColorIcon, "rgb(14, 164, 79)"],
+    seo: [SetupSeoIcon, "rgb(100, 116, 139)"],
+};
 export function DashboardSetupGuide({ guide, access, ar, onHelp }) {
     const text = (a,e) => ar ? a : e;
     if (guide.data?.preferences.hidden_panels.includes('setup')) return null;
+    const completed = dashboardSteps.filter(step => guide.data?.completed[step.key]).length;
     return <section className="ws-dashboard-setup" aria-labelledby="dashboard-setup-title" aria-busy={guide.loading || guide.busy}>
-        <header><h2 id="dashboard-setup-title">{text('دليل إعداد المتجر', 'Store setup guide')}</h2><button type="button" className="ws-guide-close" aria-label={text('إخفاء دليل الإعداد', 'Hide setup guide')} disabled={!guide.data || guide.busy} onClick={() => guide.dismiss('setup')}><HiOutlineXCircle aria-hidden /></button></header>
-        <p className="ws-guide-subtitle">{text('اتبع هذه الخطوات البسيطة لإعداد متجرك وبدء البيع', 'Follow these simple steps to set up your store and start selling')}</p>
-        <div className="ws-guide-progress-row"><div className="ws-guide-progress" role="progressbar" aria-label={text('تقدم إعداد المتجر', 'Store setup progress')} aria-valuemin={0} aria-valuemax={100} {...(guide.data ? { 'aria-valuenow':guide.data.percent } : {})}><span style={{ width:`${guide.data?.percent || 0}%` }} /></div><div><p>{text('لقد أكملت', 'You completed')}</p><strong>{guide.data ? `${guide.data.percent}%` : '—'}</strong></div></div>
+        <header><div className="ws-guide-title"><span className="ws-guide-title-icon" aria-hidden="true"><HiOutlineRocketLaunch /></span><div><h2 id="dashboard-setup-title">{text('دليل إعداد المتجر', 'Store setup guide')}</h2><p className="ws-guide-subtitle">{text('اتبع هذه الخطوات البسيطة لإعداد متجرك وبدء البيع', 'Follow these simple steps to set up your store and start selling')}</p></div></div><button type="button" className="ws-guide-close" aria-label={text('إخفاء دليل الإعداد', 'Hide setup guide')} disabled={!guide.data || guide.busy} onClick={() => guide.dismiss('setup')}><HiOutlineXMark aria-hidden /></button></header>
+        <div className="ws-guide-progress-row"><div className="ws-guide-progress-label"><p>{guide.data ? text(`${completed} من ${dashboardSteps.length} خطوات`, `${completed} of ${dashboardSteps.length} steps`) : text('جارٍ تحميل التقدم…', 'Loading progress…')}</p><strong>{guide.data ? `${guide.data.percent}%` : '—'}</strong></div><div className="ws-guide-progress" role="progressbar" aria-label={text('تقدم إعداد المتجر', 'Store setup progress')} aria-valuemin={0} aria-valuemax={100} {...(guide.data ? { 'aria-valuenow':guide.data.percent } : {})}><span style={{ width:`${guide.data?.percent || 0}%` }} /></div></div>
         {guide.error ? <div role="alert" className="ws-guide-error">{guide.error}<button type="button" disabled={guide.busy} onClick={guide.reload}>{text('إعادة التحميل', 'Reload')}</button></div> : null}
-        <div className="ws-guide-slider" role="region" tabIndex={0} aria-label={text('خطوات إعداد المتجر', 'Store setup steps')}><div className="ws-guide-steps">{dashboardSteps.map((step) => <article key={step.key}><div><div className="ws-guide-step-copy">{access[step.permission] ? <Link to={step.href}><h3>{text(step.ar,step.en)}</h3><p>{step.key === 'wallet' ? text('إضافة رصيد إلى محفظتك', 'Add funds to your wallet') : text('إعدادات متجرك الخاصة', 'Your store settings')}</p><span>{text('المزيد', 'More')}</span></Link> : <div><h3>{text(step.ar,step.en)}</h3><p>{text('إعدادات متجرك الخاصة', 'Your store settings')}</p></div>}</div><div className="ws-guide-step-actions"><label title={text('تحديد إكمال الخطوة', 'Mark step complete')}><input type="checkbox" aria-label={text(`إكمال ${step.ar}`,`Complete ${step.en}`)} checked={guide.data?.completed[step.key] || false} disabled={!guide.data || guide.loading || guide.busy} onChange={(event) => guide.complete(step.key,event.target.checked)} /></label><button type="button" aria-label={text(`شرح ${step.ar}`,`Help: ${step.en}`)} onClick={() => onHelp(step.key)}><HiOutlinePlayCircle aria-hidden /></button></div></div></article>)}</div></div>
+        <div className="ws-guide-slider" role="region" tabIndex={0} aria-label={text('خطوات إعداد المتجر', 'Store setup steps')}><div className="ws-guide-steps">{dashboardSteps.map((step) => {
+            const done = Boolean(guide.data?.completed[step.key]); const [Icon,color] = setupStepVisuals[step.key];
+            const copy = <><h3>{text(step.ar,step.en)}</h3><p>{step.key === 'wallet' ? text('إضافة رصيد إلى محفظتك', 'Add funds to your wallet') : text('إعدادات متجرك الخاصة', 'Your store settings')}</p></>;
+            return <article key={step.key} data-complete={done} style={{ '--step-color':color }}><div className="ws-guide-step-top"><span className="ws-guide-step-icon" aria-hidden="true"><Icon /></span><label className="ws-guide-check" title={text('تحديد إكمال الخطوة', 'Mark step complete')}><input type="checkbox" aria-label={text(`إكمال ${step.ar}`,`Complete ${step.en}`)} checked={done} disabled={!guide.data || guide.loading || guide.busy} onChange={(event) => guide.complete(step.key,event.target.checked)} /><span aria-hidden="true" /></label></div><div className="ws-guide-step-copy">{access[step.permission] ? <Link to={step.href}>{copy}</Link> : copy}</div><div className="ws-guide-step-bottom">{access[step.permission] ? <Link to={step.href}>{done ? text('المزيد', 'More') : text('ابدأ', 'Start')}<HiOutlineChevronRight aria-hidden /></Link> : <span />}<button type="button" aria-label={text(`شرح ${step.ar}`,`Help: ${step.en}`)} onClick={() => onHelp(step.key)}><HiOutlinePlayCircle aria-hidden /></button></div></article>;
+        })}</div></div>
     </section>;
 }
 export function DashboardResources({ guide, ar, onHelp }) {
