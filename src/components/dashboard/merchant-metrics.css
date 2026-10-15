@@ -74,3 +74,12 @@ body[data-workspace-theme='dark'] .ws-metric { border-color:var(--ws-border); }
 @media(max-width:767px) { .ws-metrics-grid { grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; }.ws-metric { padding:18px 12px; }.ws-metric-text strong { font-size:18px; }.ws-metrics-panels { grid-template-columns:minmax(0,1fr); }.ws-metrics-panel { padding:20px; }ws-metric-range { width:100%; }.ws-metric-range-button { width:100%; justify-content:space-between; } }
 @media(max-width:650px) { .ws-metric-range-editor { grid-template-columns:minmax(0,1fr); }.ws-metric-range-editor aside { padding:16px; border-inline-end:0; border-bottom:1px solid var(--ws-border); display:flex; flex-wrap:wrap; gap:4px; }.ws-metric-range-editor h3 { flex-basis:100%; margin-bottom:8px; }.ws-metric-range-editor aside button { width:auto; padding:6px 8px; }.ws-metric-months { grid-template-columns:minmax(0,1fr); }.ws-metric-second-month { display:none; } }
 @media(prefers-reduced-motion:reduce) { .ws-metric-skeleton { animation:none; }.ws-metric-range-popover { transition:none; } }
+
+.sc-workspace .ws-page .ws-metrics-heading h1{font-size:22px;line-height:28.6px;font-weight:700}.ws-metrics-heading p{font-size:13px;line-height:19.5px;margin-top:8px}.ws-merchant-metrics{gap:32px}
+@media(max-width:767px){.ws-metrics-heading{align-items:stretch;gap:24px;flex-direction:column}.sc-workspace .ws-page .ws-metrics-heading h1{font-size:18px;line-height:23.4px}.ws-metrics-heading p{font-size:12px}.ws-metrics-heading .ws-metric-range,.ws-metrics-heading .ws-metric-range-button{width:100%}}
+
+.ws-metrics-heading p{font-size:13px;line-height:20.15px;margin-top:4px}.ws-metric-range-button{min-height:38.6875px;padding-block:8px;line-height:20.6875px}
+@media(max-width:767px){.ws-metrics-heading p{font-size:13px}}
+
+.ws-metrics-heading p{margin-top:8px}.ws-metric-range{width:300px}.ws-metric-range-button{width:100%;justify-content:space-between}
+@media(max-width:767px){.ws-metrics-heading p{margin-top:4px}.ws-metric-range{width:100%}}

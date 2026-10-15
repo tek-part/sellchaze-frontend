@@ -405,3 +405,19 @@ body[data-workspace-theme='dark'] .ws-page [class*='shadow-'] { --tw-shadow-colo
 body[data-workspace-merchant='true'] .ws-sidebar-brand{padding-inline:12px}body[data-workspace-merchant='true'] .ws-sidebar-brand-actions .ws-icon-button{width:32px;height:32px;padding:6px}body[data-workspace-merchant='true'] .ws-sidebar-brand-actions a.ws-icon-button svg{width:16px;height:16px}
 
 body[data-workspace-merchant='true'] .ws-sidebar-brand-actions button.ws-icon-button[aria-expanded]{color:var(--ws-muted);background:transparent}body[data-workspace-merchant='true'] .ws-sidebar-brand-actions button.ws-icon-button:hover{background:var(--ws-panel-soft);color:var(--ws-text)}
+
+/* Measured merchant shell, EasyOrders public dashboard 2026-10-16. */
+body[data-workspace-merchant='true'][data-workspace-theme='light'],body[data-workspace-merchant='true'][data-workspace-theme='light'] [data-workspace-theme='light']{--ws-canvas:#f4f6f9;--ws-panel-soft:#fafbfc;--ws-border:#e3e8ef;--ws-green:#0ea44f;--ws-green-ink:#0b8440;--ws-green-soft:rgb(14 164 79/.1)}
+body[data-workspace-merchant='true'] .ws-header-container{padding-top:8px;padding-inline-end:8px}body[data-workspace-merchant='true'] .ws-header{height:56px;padding-inline:24px;background:var(--ws-panel-soft);border-start-start-radius:12px}
+body[data-workspace-merchant='true'] .ws-main-scroll{margin-inline-end:8px;background:var(--ws-panel-soft)}body[data-workspace-merchant='true'] .ws-sidebar-brand,body[data-workspace-merchant='true'] .ws-drawer .ws-sidebar-brand{height:65px}
+body[data-workspace-merchant='true'] .ws-sidebar:not(.ws-sidebar-compact) .ws-sidebar-scroll{padding-inline:12px}body[data-workspace-merchant='true'] .ws-sidebar-scroll nav>div{gap:0;padding-bottom:0}body[data-workspace-merchant='true'] .ws-sidebar-scroll nav>div+div{margin-top:16px}
+body[data-workspace-merchant='true'] .ws-sidebar-scroll nav>div>p{height:28px;min-height:28px;padding-inline:8px;font-size:11px;font-weight:600;line-height:16.5px}
+body[data-workspace-merchant='true'] .ws-sidebar-scroll nav:not(.ws-compact-nav) :is(a,button){height:32px;min-height:32px;padding:6px 8px;border-radius:6.4px;font-size:13px;line-height:18.57px;gap:8px}
+body[data-workspace-merchant='true'] .ws-sidebar-scroll nav svg{width:16px;height:16px}body[data-workspace-merchant='true'] .ws-sidebar-scroll nav a[aria-current='page']{background:var(--ws-panel);font-weight:500;box-shadow:0 1px 2px #1018280f,0 1px 3px #1018280d}
+body[data-workspace-merchant='true'] .ws-sidebar-scroll nav [id*='disclosure-panel']{margin-inline-start:16px;padding-inline-start:8px}body[data-workspace-merchant='true'] .ws-sidebar-scroll nav [id*='disclosure-panel'] a{font-size:13px}
+body[data-workspace-merchant='true'] .ws-sidebar-brand strong{font-size:16px}body[data-workspace-merchant='true'] .ws-sidebar-brand img{width:28px;height:28px}
+@media(max-width:767px){body[data-workspace-merchant='true'] .ws-header-container{padding:0}body[data-workspace-merchant='true'] .ws-header{height:56px;padding:12px 24px;border-radius:0}body[data-workspace-merchant='true'] .ws-main-scroll{margin-inline:0;padding:24px 16px}body[data-workspace-merchant='true'] .ws-drawer .ws-sidebar-scroll{padding-inline:12px}}
+
+body[data-workspace-merchant='true'] .ws-sidebar{border-inline-start:0}
+
+body[data-workspace-merchant='true'] .ws-sidebar-scroll nav [id*='disclosure-panel']{padding-block:2px;padding-inline-start:12px}body[data-workspace-merchant='true'] .ws-sidebar-scroll .ws-nav-panel-inner{display:flex;flex-direction:column;gap:1px}body[data-workspace-merchant='true'] .ws-sidebar-scroll nav:not(.ws-compact-nav) [id*='disclosure-panel'] a{height:30px;min-height:30px;padding-block:0}

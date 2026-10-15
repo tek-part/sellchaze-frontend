@@ -16,10 +16,11 @@ export default function Dashboard() {
 }
 function MerchantDashboard({ access, ar }) {
     const guide = useDashboardGuide(access.canStoreSettings);const help = useDashboardGuideDialog();
+    const setup = access.canStoreSettings ? <DashboardSetupGuide guide={guide} access={access} ar={ar} onHelp={help.open} /> : null;
     const resources = access.canStoreSettings ? <DashboardResources guide={guide} ar={ar} onHelp={help.open} /> : null;
     return <div className="ws-merchant-dashboard">
-        {access.canStoreSettings ? <><DashboardPromotions access={access} ar={ar} /><DashboardSetupGuide guide={guide} access={access} ar={ar} onHelp={help.open} /></> : null}
-        {access.canStoreAnalytics ? <StorePerformancePanel canOrders={access.canStoreOrders} canInventory={access.canStoreInventory}>{resources}</StorePerformancePanel> : <><div className="ws-dashboard-heading"><h1>{ar ? 'لوحة الإحصائيات' : 'Statistics dashboard'}</h1></div><p className="ws-note">{ar ? 'استخدم القائمة لإدارة أقسام المتجر المتاحة لحسابك.' : 'Use the navigation to manage the store sections available to your account.'}</p>{resources}</>}
+        {access.canStoreSettings ? <DashboardPromotions access={access} ar={ar} /> : null}
+        {access.canStoreAnalytics ? <StorePerformancePanel canOrders={access.canStoreOrders} canInventory={access.canStoreInventory} beforeMetrics={setup}>{resources}</StorePerformancePanel> : <><div className="ws-dashboard-heading"><h1>{ar ? 'لوحة الإحصائيات' : 'Statistics dashboard'}</h1></div>{setup}<p className="ws-note">{ar ? 'استخدم القائمة لإدارة أقسام المتجر المتاحة لحسابك.' : 'Use the navigation to manage the store sections available to your account.'}</p>{resources}</>}
         <DashboardGuideDialog selected={help.selected} onClose={help.close} access={access} ar={ar} />
     </div>;
 }
