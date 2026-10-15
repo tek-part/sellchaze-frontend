@@ -19,6 +19,7 @@ import { checkoutCartItems } from './checkout-cart-items';
 import { metricsSession } from '../analytics/events';
 import { browserAdvertisingAllowed, sendAdvertisingEnvelope } from '../advertising/events';
 import { useStore } from '../state/store-context';
+import { abCheckoutToken } from './ab-assignment';
 
 export interface CheckoutContactPayload {
   customer_name?: string;
@@ -148,6 +149,7 @@ export function useCheckoutPaymentFlow(options?: { items: ReadonlyArray<Checkout
       analytics_session: metrics?.id,
       marketing_attribution: metrics?.campaign,
       referral_attribution: metrics?.referral,
+      ab_token: abCheckoutToken(store.id, (items ?? checkoutCartItems(cart.lines)).map((item) => item.product_id)),
       advertising_allowed: browserAdvertisingAllowed(),
       payment_method: paymentMethod,
       ...(preserveCart ? { cart_mode: 'direct' } : {}),
