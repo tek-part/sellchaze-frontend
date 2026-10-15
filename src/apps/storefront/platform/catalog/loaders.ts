@@ -2,6 +2,7 @@ import type { ThemeLoader } from '../../theme-engine/types';
 
 /** Shared runtime loaders. Storefront boot needs these, without marketplace listing metadata. */
 export const THEME_LOADERS = {
+  'blast-pets': () => import('../../themes/blast-pets').then(module => module.petsTheme),
   'elite-furniture': () => import('../../themes/elite-furniture').then(module => module.eliteTheme),
   'nature-kids': () => import('../../themes/nature-kids').then(module => module.kidsTheme),
   'pure-furniture': () => import('../../themes/pure-furniture').then(module => module.pureTheme),

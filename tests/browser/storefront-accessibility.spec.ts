@@ -1,7 +1,7 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test } from 'playwright/test';
 
-const themes = ['naseem', 'bazaar', 'sahra', 'fresh', 'techno', 'elite-furniture'] as const;
+const themes = ['naseem', 'bazaar', 'sahra', 'fresh', 'techno', 'elite-furniture', 'blast-pets'] as const;
 
 for (const locale of ['en', 'ar'] as const) {
   for (const theme of themes) {

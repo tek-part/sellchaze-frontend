@@ -1,0 +1,9 @@
+# Blast Pets assets and review scope
+
+Three original synthetic campaign photographs were generated with built-in `image_gen` and copied unchanged into `public/media/theme-campaigns/blast-pets-*-v1.png`. Prompts and hashes are recorded in `blast-pets-image-prompts.json`. No competitor images, marks or product descriptions were copied. The marketplace preview is a screenshot of the actual local home page.
+
+This independent package implements twelve editable home sections, pet category listings with five sorts, a product gallery and purchase controls, actual store policy tabs, shipping progress, cart drawer and newsletter. The observed public reference uses orange navigation, Jost product typography, Georgia hero headings, Nunito search/newsletter, Lobster Two offer headings and Newsreader editorial headings. Arabic uses IBM Plex Sans Arabic. Animation pauses for reduced motion, hover, focus and hidden documents.
+
+Product shelves can filter their selected collection by a merchant-selected category. Default cat/dog/bed slugs are editable presets; stores must select their own categories and collections. Missing or empty collections do not borrow demo products. All photographs and prices in the isolated preview are demo content. Live inventory, variants, personalization and quantity limits use the existing store-scoped commerce implementation. Countdown dates default to blank and shipping incentives use actual configured thresholds.
+
+Reference evidence covers public desktop and phone home, product, category and empty cart. Nonempty reference cart and checkout were not inspected. This release does not assert exact visual or functional parity for unobserved behavior and does not complete the remaining competitor themes and funnels. Source publication and production deployment require separate verification.
