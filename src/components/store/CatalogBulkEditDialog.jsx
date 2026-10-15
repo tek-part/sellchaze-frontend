@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Dialog, DialogBackdrop, DialogPanel, DialogTitle } from '@headlessui/react';
 import { useTranslation } from 'react-i18next';
 import api from '../../api/client';
@@ -12,6 +12,8 @@ export default function CatalogBulkEditDialog({ apiBase, products, categories, o
     const [busy, setBusy] = useState(false);
     const [error, setError] = useState('');
     const [stale, setStale] = useState(false);
+    const active = useRef(true);
+    useEffect(() => { active.current = true; return () => { active.current = false; }; }, []);
     const changed = price !== '' || status !== '' || categoryId !== '';
     const submit = async (event) => {
         event.preventDefault();
@@ -25,15 +27,16 @@ export default function CatalogBulkEditDialog({ apiBase, products, categories, o
             const { data } = await api.put(`${apiBase}/catalog/products/bulk`, {
                 products: products.map((product) => ({ id: product.id, version: product.edit_version })), changes,
             });
-            onSaved(data.meta.updated);
+            if (active.current) onSaved(data.meta.updated);
         } catch (e) {
+            if (!active.current) return;
             if (e.response?.status === 422 && e.response.data?.errors?.products) {
                 setStale(true);
                 setError(text('تغيّر أحد المنتجات المحددة أو لم يعد متاحًا. لم يُحفظ أي تعديل. حدّث القائمة وراجع اختيارك.', 'A selected product changed or is unavailable. No edits were saved. Refresh the list and review your selection.'));
             } else {
                 setError(e.response?.data?.message || text('تعذر حفظ التعديل. حاول مرة أخرى.', 'Your changes could not be saved. Please try again.'));
             }
-        } finally { setBusy(false); }
+        } finally { if (active.current) setBusy(false); }
     };
     return <Dialog open onClose={() => { if (!busy) onClose(); }} className="ws-dialog-layer">
         <DialogBackdrop transition className="ws-backdrop" />
