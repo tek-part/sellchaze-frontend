@@ -1,4 +1,10 @@
 .product-rich-text{border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;min-width:0;background:#fff;color:#0f172a}
+body[data-workspace-theme] .product-rich-text{background:var(--ws-panel);color:var(--ws-text);border-color:var(--ws-border)}
+body[data-workspace-theme] .product-rich-text :is(.product-rich-text__heading,.product-rich-text__toolbar){background:var(--ws-panel);border-color:var(--ws-border)}
+body[data-workspace-theme] .product-rich-text :is(button,select,input,textarea){background:var(--ws-panel);color:var(--ws-text);border-color:var(--ws-border)}
+body[data-workspace-theme] .product-rich-text button[aria-pressed=true]{background:var(--ws-green-soft);color:var(--ws-green-ink);border-color:var(--ws-green)}
+body[data-workspace-theme] .product-rich-text .tiptap{color:var(--ws-text)}
+body[data-workspace-theme] .product-rich-text .product-rich-text__hint{color:var(--ws-muted)}
 .product-rich-text__heading{display:flex;justify-content:space-between;gap:12px;align-items:center;padding:12px;font-weight:600}
 .product-rich-text__toolbar{display:flex;flex-wrap:wrap;gap:5px;padding:10px;background:#f8fafc;border-block:1px solid #e2e8f0}
 .product-rich-text button,.product-rich-text select{border:1px solid #cbd5e1;border-radius:6px;background:#fff;padding:5px 8px;font-size:12px;max-width:100%}
