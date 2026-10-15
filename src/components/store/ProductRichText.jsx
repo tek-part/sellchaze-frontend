@@ -6,6 +6,7 @@ import StarterKit from '@tiptap/starter-kit';
 import { sanitizeHtml } from '../../shared/utils/sanitizeHtml';
 import { richTextColor } from '../../shared/utils/richTextFormatting';
 import './product-rich-text.css';
+import { HiOutlineArrowUturnLeft, HiOutlineArrowUturnRight, HiOutlineLink, HiOutlineListBullet, HiOutlinePhoto, HiOutlineVideoCamera, HiOutlineXMark } from '../workspace/WorkspaceIcons';
 
 const mediaNode = (tag) => Node.create({
     name: tag, group: 'block', atom: true, draggable: true,
@@ -30,7 +31,7 @@ const pageAlignment = Extension.create({
     } }],
 });
 
-export default function ProductRichText({ value, onChange, label, locale, disabled = false, ar, media = [], pageContent = false, categoryContent = false }) {
+export default function ProductRichText({ value, onChange, label, locale, disabled = false, ar, media = [], pageContent = false, categoryContent = false, compact = false, allowMedia = false }) {
     const text = (a, e) => ar ? a : e;
     const activeExtensions = useMemo(() => pageContent ? [...extensions, pageTextStyle, pageAlignment] : extensions, [pageContent]);
     const [source, setSource] = useState(false); const [expanded, setExpanded] = useState(false);
@@ -47,14 +48,15 @@ export default function ProductRichText({ value, onChange, label, locale, disabl
     if (!editor || !editor.schema || editor.isDestroyed) return null;
     const command = (name) => editor.chain().focus()[name]().run();
     const tools = [['bold', 'عريض', 'Bold', 'toggleBold'], ['italic', 'مائل', 'Italic', 'toggleItalic'], ['underline', 'تسطير', 'Underline', 'toggleUnderline'], ['strike', 'شطب', 'Strike', 'toggleStrike'], ['bulletList', 'قائمة نقطية', 'Bullet list', 'toggleBulletList'], ['orderedList', 'قائمة مرقمة', 'Numbered list', 'toggleOrderedList'], ['blockquote', 'اقتباس', 'Quote', 'toggleBlockquote']];
+    const toolSymbols = { bold: <b>B</b>, italic: <i>I</i>, underline: <u>U</u>, strike: <s>S</s>, bulletList: <HiOutlineListBullet aria-hidden />, orderedList: <span aria-hidden>1.</span>, blockquote: <span aria-hidden>❞</span> };
     const content = <div className={`product-rich-text ${expanded ? 'product-rich-text--expanded' : ''}`} onKeyDown={(event) => { if (event.key === 'Escape') setExpanded(false); }}>
         <div className="product-rich-text__heading"><span>{label}</span><button type="button" onClick={() => setExpanded(!expanded)}>{expanded ? text('تصغير المحرر', 'Collapse editor') : text('توسيع المحرر', 'Expand editor')}</button></div>
         <div className="product-rich-text__toolbar" role="group" aria-label={categoryContent ? text('تنسيق محتوى القسم', 'Category content formatting') : pageContent ? text('تنسيق محتوى الصفحة', 'Page content formatting') : text('تنسيق وصف المنتج', 'Product description formatting')}>
             <select aria-label={text('مستوى العنوان', 'Heading level')} disabled={disabled || source} value={[1, 2, 3, 4, 5, 6].find((level) => editor.isActive('heading', { level })) || ''} onChange={(e) => e.target.value ? editor.chain().focus().setHeading({ level: Number(e.target.value) }).run() : editor.chain().focus().setParagraph().run()}><option value="">{text('نص عادي', 'Paragraph')}</option>{[1, 2, 3, 4, 5, 6].map((level) => <option key={level} value={level}>H{level}</option>)}</select>
-            {tools.map(([mark, a, e, action]) => <button key={mark} type="button" disabled={disabled || source} aria-pressed={editor.isActive(mark)} onClick={() => command(action)}>{text(a, e)}</button>)}
-            <button type="button" disabled={disabled || source} onClick={() => setShowLink(!showLink)}>{text('رابط', 'Link')}</button>
-            <button type="button" disabled={disabled || source} onClick={() => editor.chain().focus().unsetLink().run()}>{text('إزالة الرابط', 'Unlink')}</button>
-            {pageContent ? <>{['img', 'video'].map((kind) => <button key={kind} type="button" disabled={disabled || source} onClick={() => { setMediaKind(mediaKind === kind ? '' : kind); setMediaUrl(''); setMediaAlt(''); }}>{kind === 'img' ? text('صورة', 'Image') : text('فيديو', 'Video')}</button>)}</> : null}
+            {tools.map(([mark, a, e, action]) => <button key={mark} type="button" title={text(a, e)} aria-label={text(a, e)} disabled={disabled || source} aria-pressed={editor.isActive(mark)} onClick={() => command(action)}>{compact ? toolSymbols[mark] : text(a, e)}</button>)}
+            <button type="button" aria-label={text('رابط', 'Link')} title={text('رابط', 'Link')} disabled={disabled || source} onClick={() => setShowLink(!showLink)}>{compact ? <HiOutlineLink aria-hidden /> : text('رابط', 'Link')}</button>
+            <button type="button" aria-label={text('إزالة الرابط', 'Unlink')} title={text('إزالة الرابط', 'Unlink')} disabled={disabled || source} onClick={() => editor.chain().focus().unsetLink().run()}>{compact ? <HiOutlineXMark aria-hidden /> : text('إزالة الرابط', 'Unlink')}</button>
+            {pageContent || allowMedia ? <>{['img', 'video'].map((kind) => <button key={kind} type="button" aria-label={kind === 'img' ? text('صورة', 'Image') : text('فيديو', 'Video')} title={kind === 'img' ? text('صورة', 'Image') : text('فيديو', 'Video')} disabled={disabled || source} onClick={() => { setMediaKind(mediaKind === kind ? '' : kind); setMediaUrl(''); setMediaAlt(''); }}>{compact ? kind === 'img' ? <HiOutlinePhoto aria-hidden /> : <HiOutlineVideoCamera aria-hidden /> : kind === 'img' ? text('صورة', 'Image') : text('فيديو', 'Video')}</button>)}</> : null}
             {pageContent ? <>
                 <label>{text('محاذاة النص', 'Text alignment')}<select aria-label={text('محاذاة النص', 'Text alignment')} disabled={disabled || source} value={editor.getAttributes('paragraph').textAlign || editor.getAttributes('heading').textAlign || ''} onChange={(e) => editor.chain().focus().updateAttributes('paragraph', { textAlign: e.target.value || null }).updateAttributes('heading', { textAlign: e.target.value || null }).run()}><option value="">{text('افتراضي', 'Default')}</option>{['start', 'center', 'end', 'justify'].map((align, i) => <option key={align} value={align}>{[text('بداية', 'Start'), text('وسط', 'Center'), text('نهاية', 'End'), text('ضبط', 'Justify')][i]}</option>)}</select></label>
                 <label>{text('لون النص', 'Text color')}<input type="color" aria-label={text('لون النص', 'Text color')} disabled={disabled || source} value={editor.getAttributes('pageTextStyle').color || '#000000'} onInput={(e) => editor.chain().focus().setMark('pageTextStyle', { color: e.currentTarget.value }).run()} onChange={(e) => editor.chain().focus().setMark('pageTextStyle', { color: e.target.value }).run()} /></label>
@@ -63,8 +65,8 @@ export default function ProductRichText({ value, onChange, label, locale, disabl
             </> : null}
             <select aria-label={text('إدراج رمز تعبيري', 'Insert emoji')} value="" disabled={disabled || source} onChange={(e) => editor.chain().focus().insertContent(e.target.value).run()}><option value="">☺</option>{['✨', '✓', '⭐', '💚', '🎁', '🚚'].map((emoji) => <option key={emoji}>{emoji}</option>)}</select>
             <button type="button" disabled={disabled || source} onClick={() => editor.chain().focus().clearNodes().unsetAllMarks().run()}>{text('مسح التنسيق', 'Clear formatting')}</button>
-            <button type="button" disabled={disabled || source} onClick={() => command('undo')}>{text('تراجع', 'Undo')}</button>
-            <button type="button" disabled={disabled || source} onClick={() => command('redo')}>{text('إعادة', 'Redo')}</button>
+            <button type="button" aria-label={text('تراجع', 'Undo')} title={text('تراجع', 'Undo')} disabled={disabled || source} onClick={() => command('undo')}>{compact ? <HiOutlineArrowUturnLeft aria-hidden /> : text('تراجع', 'Undo')}</button>
+            <button type="button" aria-label={text('إعادة', 'Redo')} title={text('إعادة', 'Redo')} disabled={disabled || source} onClick={() => command('redo')}>{compact ? <HiOutlineArrowUturnRight aria-hidden /> : text('إعادة', 'Redo')}</button>
             <button type="button" disabled={disabled} aria-pressed={source} onClick={() => { if (source) { const clean = sanitizeHtml(value, { formatting: pageContent }); editor.commands.setContent(clean, { emitUpdate: false }); onChange(clean); } setSource(!source); }}>HTML</button>
         </div>
         {showLink && !source ? <div className="product-rich-text__link"><label>{text('عنوان الرابط', 'Link URL')}<input dir="ltr" value={link} onChange={(e) => setLink(e.target.value)} placeholder="https://…" disabled={disabled} /></label><button type="button" disabled={disabled || !/^(https?:\/\/|mailto:|tel:|\/(?!\/)|#)/i.test(link.trim())} onClick={() => { editor.chain().focus().setLink({ href: link.trim() }).run(); setShowLink(false); setLink(''); }}>{text('إدراج الرابط', 'Insert link')}</button></div> : null}

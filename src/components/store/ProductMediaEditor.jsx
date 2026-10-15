@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { HiOutlinePhoto } from '../workspace/WorkspaceIcons';
 
 export function mediaFileError(files, cover = false) {
     if (files.length > 12) return true;
@@ -16,24 +17,30 @@ function FilePreview({ file }) {
     return file.type === 'video/mp4' ? <video className="h-28 w-full rounded-lg bg-slate-950 object-contain" src={url} controls preload="metadata" playsInline /> : <img className="h-28 w-full rounded-lg object-contain" src={url} alt={file.name} />;
 }
 
-export default function ProductMediaEditor({ product, cover, setCover, removeCover, setRemoveCover, gallery, setGallery, removed, setRemoved, order, setOrder, setError, ar, fileVersion }) {
+export default function ProductMediaEditor({ product, cover, setCover, removeCover, setRemoveCover, gallery, setGallery, removed, setRemoved, order, setOrder, setError, ar, fileVersion, compact = false, disabled = false }) {
     const text = (a, e) => ar ? a : e;
     const hint = text('صور JPG وPNG وWebP حتى 10 ميجابايت، وفيديو MP4 حتى 50 ميجابايت. حتى 12 ملفًا جديدًا في الحفظ الواحد.', 'JPG, PNG and WebP up to 10 MB; MP4 video up to 50 MB. Up to 12 new files per save.');
     const existing = order.map((id) => product?.media?.find((item) => item.id === id)).filter((item) => item && !removed.includes(item.id));
     const button = 'rounded-md border border-slate-200 px-2 py-1 text-xs disabled:opacity-40';
+    const [dragging, setDragging] = useState(false);
+    function accept(files, isCover) {
+        if (disabled || !files.length) return;
+        const next = isCover ? files : [...gallery, ...files];
+        if (mediaFileError(next, isCover)) { setError(hint); return; }
+        setError(''); if (isCover) { setCover(files[0]); setRemoveCover(false); } else setGallery(next);
+    }
     function choose(event, isCover) {
         const files = Array.from(event.target.files || []);
-        if (mediaFileError(files, isCover)) { setError(hint); event.target.value = ''; return; }
-        setError(''); if (isCover) { setCover(files[0] || null); setRemoveCover(false); } else setGallery(files);
+        accept(files, isCover); event.target.value = '';
     }
     function move(index, delta) {
         const ids = existing.map((item) => item.id); [ids[index], ids[index + delta]] = [ids[index + delta], ids[index]]; setOrder(ids);
     }
-    return <section className="space-y-4 rounded-xl border border-slate-200 bg-white p-5"><h2 className="text-lg font-bold">{text('صور وفيديوهات المنتج', 'Product images and videos')}</h2><p className="text-xs text-slate-500">{hint}</p>
+    return <section className="space-y-4 rounded-xl border border-slate-200 bg-white p-5"><h2 className="text-lg font-bold">{compact ? text('الصور', 'Images') : text('صور وفيديوهات المنتج', 'Product images and videos')}</h2>{compact ? <><p className="pe-hint">{text('صور المنتج', 'Product images')}</p><label className={`pe-media-drop${dragging ? ' is-dragging' : ''}`} onDragOver={(e) => { e.preventDefault(); if (!disabled) setDragging(true); }} onDragLeave={() => setDragging(false)} onDrop={(e) => { e.preventDefault(); setDragging(false); accept(Array.from(e.dataTransfer.files || []), false); }}><HiOutlinePhoto aria-hidden /><strong>{text('اسحب الصور أو الفيديو وأفلتها هنا، أو انقر لاختيارها', 'Drag images or videos here, or click to choose')}</strong><small>{hint}</small><input disabled={disabled} key={`gallery-${fileVersion}`} type="file" multiple accept="image/jpeg,image/png,image/webp,video/mp4" className="sr-only" onChange={(event) => choose(event, false)} /></label></> : <p className="text-xs text-slate-500">{hint}</p>}
         {cover ? <FilePreview file={cover} /> : product?.image_url && !removeCover ? <img src={product.image_url} alt={product.name} className="h-36 w-full rounded-lg object-contain" /> : null}
-        <label className="block text-sm">{text('الصورة الرئيسية', 'Cover image')}<input key={`cover-${fileVersion}`} type="file" accept="image/jpeg,image/png,image/webp" className="mt-2 block w-full text-sm" onChange={(event) => choose(event, true)} /></label>
+        <details open={!compact}><summary>{text('الصورة الرئيسية', 'Cover image')}</summary><label className="block text-sm">{text('اختيار الصورة الرئيسية', 'Choose cover image')}<input disabled={disabled} key={`cover-${fileVersion}`} type="file" accept="image/jpeg,image/png,image/webp" className="mt-2 block w-full text-sm" onChange={(event) => choose(event, true)} /></label></details>
         {product?.image_url || cover ? <button type="button" className={button} onClick={() => { setCover(null); setRemoveCover(!removeCover); }}>{removeCover ? text('استعادة الغلاف', 'Restore cover') : text('إزالة الغلاف', 'Remove cover')}</button> : null}
-        <label className="block text-sm">{text('إضافة صور وفيديوهات', 'Add images and videos')}<input key={`gallery-${fileVersion}`} type="file" multiple accept="image/jpeg,image/png,image/webp,video/mp4" className="mt-2 block w-full text-sm" onChange={(event) => choose(event, false)} /></label>
+        {!compact ? <label className="block text-sm">{text('إضافة صور وفيديوهات', 'Add images and videos')}<input disabled={disabled} key={`gallery-${fileVersion}`} type="file" multiple accept="image/jpeg,image/png,image/webp,video/mp4" className="mt-2 block w-full text-sm" onChange={(event) => choose(event, false)} /></label> : null}
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">{existing.map((item, index) => <div key={item.id} className="min-w-0 space-y-2 rounded-lg border border-slate-200 p-2">
             {item.type === 'video' ? <video src={item.url} controls preload="metadata" playsInline className="h-28 w-full rounded-lg bg-slate-950 object-contain" /> : <img src={item.url} alt={item.alt || product.name} className="h-28 w-full rounded-lg object-contain" />}
             <div className="flex flex-wrap gap-2"><button type="button" className={button} disabled={index === 0} aria-label={`${text('تقديم الوسائط', 'Move media earlier')} ${index + 1}`} onClick={() => move(index, -1)}>↑</button><button type="button" className={button} disabled={index === existing.length - 1} aria-label={`${text('تأخير الوسائط', 'Move media later')} ${index + 1}`} onClick={() => move(index, 1)}>↓</button><button type="button" className={button} aria-label={`${text('إزالة الوسائط', 'Remove media')} ${index + 1}`} onClick={() => setRemoved([...removed, item.id])}>{text('إزالة', 'Remove')}</button></div>
