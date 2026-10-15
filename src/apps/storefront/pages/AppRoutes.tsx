@@ -14,6 +14,7 @@ const HomePage = lazy(() => import('./HomePage').then((m) => ({ default: m.HomeP
 const CategoryPage = lazy(() => import('./CategoryPage').then((m) => ({ default: m.CategoryPage })));
 const ProductPage = lazy(() => import('./ProductPage').then((m) => ({ default: m.ProductPage })));
 const ReferralLandingPage = lazy(() => import('./ReferralLandingPage').then((m) => ({ default: m.ReferralLandingPage })));
+const AbTestLandingPage = lazy(() => import('./AbTestLandingPage').then((m) => ({ default: m.AbTestLandingPage })));
 const SearchPage = lazy(() => import('./SearchPage').then((m) => ({ default: m.SearchPage })));
 const CartPage = lazy(() => import('./CartPage').then((m) => ({ default: m.CartPage })));
 const CheckoutPage = lazy(() => import('./CheckoutPage').then((m) => ({ default: m.CheckoutPage })));
@@ -73,6 +74,7 @@ export function AppRoutes(): ReactElement {
         <Route path="/brands" element={<BrandsPage />} />
         <Route path="/products/:slug" element={<ProductPage />} />
         <Route path="/products/:product/ref/:code" element={<ReferralLandingPage />} />
+        <Route path="/ab/:slug" element={<AbTestLandingPage />} />
         <Route path="/search" element={<SearchPage />} />
         <Route path="/cart" element={<CartPage />} />
         <Route path="/checkout" element={<CheckoutPage />} />

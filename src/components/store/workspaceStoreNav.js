@@ -23,6 +23,7 @@ export function buildWorkspaceStoreNav(t, access, permissions = []) {
             absolute(item('reviews')),
             absolute(item('product-feed')),
             app('catalog', 'Easy Catalog'),
+            absolute(item('ab-tests')),
         ]),
         group('design', t('workspace_store_design', 'Store design'), DesignIcon,
             ['themes', 'customize', 'pages', 'checkout-fields', 'thanks-edit', 'ui-blocks', 'upload-assets'].map((key) => absolute(item(key)))),

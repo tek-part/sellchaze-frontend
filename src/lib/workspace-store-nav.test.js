@@ -11,7 +11,8 @@ describe('Store workspace navigation', () => {
         expect(groups[0].items.map((item) => item.to)).toEqual(['/store/orders', '/store/missed-orders', '/store/blocked-phone-numbers', '/store/blocked-phones', '/store/newsletter']);
         expect(groups[1].items[0].to).toBe('/store/products');
         expect(groups[1].items.map((item) => item.to)).toContain('/store/categories');
-        expect(groups[1].items.map((item) => item.to).slice(-2)).toEqual(['/store/product-feed', '/store/apps/catalog']);
+        expect(groups[1].items.map((item) => item.to).slice(-3)).toEqual(['/store/product-feed', '/store/apps/catalog', '/store/ab-tests']);
+        expect(merchantWorkspaceRouteAllowed('/store/ab-tests')).toBe(true);
         expect(groups[3].to).toBe('/store/funnels');
         expect(groups.slice(3, 6).map((group) => group.key)).toEqual(['funnels', 'tracking', 'marketing']);
         expect(groups[4].items.map((item) => item.to)).toEqual(['/store/pixels-settings', '/store/pixel-conversion', '/store/ga']);
