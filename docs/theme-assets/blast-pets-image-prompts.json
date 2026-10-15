@@ -1,0 +1,22 @@
+{
+  "mode": "built-in image_gen",
+  "generation": [
+    "Photorealistic wide ecommerce campaign photograph for an independent pet supplies storefront. A healthy orange tabby cat sitting calmly beside a plain unbranded cream feeding bowl, warm pale peach studio background, soft daylight, clean premium editorial photography. Landscape 2.1:1 composition with the cat toward the right third and uncluttered space at center and left for separate HTML headings. Show full animal with natural anatomy. No text, no logos, no product packaging, no watermark. Palette warm peach, cream, muted terracotta. Original imagery, no resemblance to any existing brand campaign.",
+    "Photorealistic wide ecommerce campaign photograph for an independent pet supplies storefront. A friendly medium-sized golden dog relaxing upright beside a plain unbranded ceramic water bowl, warm beige studio background with soft sunlight, clean premium editorial photography. Landscape 2.1:1 composition with the dog toward the right third and uncluttered space at center and left for separate HTML headings. Full natural animal anatomy, calm expression. No lettering, no logos, no packaging, no watermark. Original imagery with a warm cream and sand palette and a small orange accent.",
+    "Photorealistic wide ecommerce pet accessories campaign photograph. A relaxed grey house cat sleeping in a textured oatmeal oval pet bed with a single simple cotton rope toy on a warm pale sage studio floor and backdrop, soft natural window lighting, premium editorial detail. Landscape 2.1:1 composition, bed toward right third with uncluttered space center and left for separate HTML headings. Original unbranded design. No text, logos, packaging or watermark. Natural animal anatomy."
+  ],
+  "assets": [
+    {
+      "path": "public/media/theme-campaigns/blast-pets-cat-v1.png",
+      "sha256": "18b20014644766c12cbc6092239d930f3990aa8e4e5362b759b14ca14bb532b8"
+    },
+    {
+      "path": "public/media/theme-campaigns/blast-pets-dog-v1.png",
+      "sha256": "7fecd5662882b64abbab8872aeaef4e8d0334af96d4b911a7eb5f5814280eef8"
+    },
+    {
+      "path": "public/media/theme-campaigns/blast-pets-bed-v1.png",
+      "sha256": "925b83b23ff2c4dd1f71df318dab220d42b5c08b87be44a05dde0001d6e21652"
+    }
+  ]
+}

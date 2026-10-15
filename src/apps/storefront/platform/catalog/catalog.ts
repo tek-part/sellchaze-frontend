@@ -14,6 +14,16 @@ import { THEME_LOADERS } from './loaders';
 
 export const THEME_CATALOG: ThemeCatalog = [
   {
+    id: 'blast-pets', name: 'Blast Pets', version: '1.0.0', archetype: 'Pets',
+    description: 'Pet collections, warm orange navigation, full-image campaigns and photo stories.',
+    author: 'Sellchaze', tags: ['pets', 'animals', 'modern', 'rtl'], accent: '#FDAE03',
+    previewImage: '/media/theme-previews/blast-pets.png',
+    minEngineVersion: '1.0.0', capabilities: ['rtl', 'cart-drawer', 'quick-add', 'newsletter', 'countdown'],
+    license: { type: 'free', sku: 'theme-blast-pets' }, featured: true,
+    changelog: [{ version: '1.0.0', date: '2026-10-16', notes: ['Independent pet storefront and editable campaign sections.'] }],
+    load: THEME_LOADERS['blast-pets'],
+  },
+  {
     id: 'elite-furniture', name: 'Elite Furniture', version: '1.0.0', archetype: 'Furniture',
     description: 'Furniture with cinematic photography, category shelves and image comparison.',
     author: 'Sellchaze', tags: ['furniture', 'modern', 'editorial', 'rtl'], accent: '#C8AA62',

@@ -5,7 +5,7 @@ import { UiBlock } from '../../ui-blocks/UiBlocks';
  * tabs + reviews. Reads the product from context.data.product. Settings: show_sku, show_share,
  * gallery_layout. §08 product-details.
  */
-import { useState, type ReactElement } from 'react';
+import { useState, type ReactElement, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useInRouterContext, useNavigate } from 'react-router-dom';
 import { withSessionParams } from '../../pages/NavigationInterceptor';
@@ -48,7 +48,7 @@ function BuyNow(props: { disabled: boolean; add: () => boolean }): ReactElement 
   return routed ? <RoutedBuyNow {...props} /> : <Button disabled className="sf-pdp__buy-now">{i18n.language.startsWith('ar') ? 'اشترِ الآن' : 'Buy now'}</Button>;
 }
 
-export function ProductDetailsSection(props: SectionRenderProps): ReactElement | null {
+export function ProductDetailsSection(props: SectionRenderProps & { buyboxHeader?: ReactNode; buyboxFooter?: ReactNode; descriptionBelow?: boolean }): ReactElement | null {
   const { t, i18n } = useTranslation();
   const ar = i18n.language.startsWith('ar');
   const { settings, context } = props;
@@ -129,10 +129,15 @@ export function ProductDetailsSection(props: SectionRenderProps): ReactElement |
     return true;
   };
 
-  const tabs = [
-    { id: 'description', label: t('pdp.tabDescription') },
-    { id: 'shipping', label: t('pdp.tabShipping') },
-  ];
+  const policies = store?.merchantInformation?.policies ?? [];
+  const tabs = props.descriptionBelow
+    ? [{ id: 'description', label: t('pdp.tabDescription') }, ...policies.map(policy => ({ id: policy.kind, label: policy.title }))]
+    : [{ id: 'description', label: t('pdp.tabDescription') }, { id: 'shipping', label: t('pdp.tabShipping') }];
+  const descriptionTabs = <Tabs tabs={tabs} value={activeTab} onChange={setActiveTab} renderPanel={(id) =>
+    id === 'description' ? <ProductDescription html={product.descriptionHtml ?? ''} />
+      : props.descriptionBelow ? <ProductDescription html={policies.find(policy => policy.kind === id)?.content_html ?? ''} />
+        : <p className="sf-pdp__desc">{t('pdp.luxuryShipping')}</p>
+  } />;
 
   return (
     <section className={`sf-section${sphinx ? ' sph-product' : ''}${elite ? ' elt-product' : ''}`}>
@@ -145,6 +150,7 @@ export function ProductDetailsSection(props: SectionRenderProps): ReactElement |
           </div>
 
           <div className="sf-pdp__buybox">
+            {props.buyboxHeader}
             {sphinx && product.categorySlug && product.categoryName ? <a className="sph-product__category" href={`/collections/${product.categorySlug}`}>{product.categoryName}</a> : null}
             {elite && product.categorySlug && product.categoryName ? <a className="elt-product__category" href={`/collections/${product.categorySlug}`}>{product.categoryName}</a> : null}
             {product.vendor ? <span className="sf-pdp__vendor">{product.vendor}</span> : null}
@@ -191,19 +197,13 @@ export function ProductDetailsSection(props: SectionRenderProps): ReactElement |
                 />
               ) : null}
             </div>
+            {props.buyboxFooter}
 
             {accordion ? <div className="sf-pdp__accordion"><details open><summary>{t('pdp.tabDescription')}</summary><ProductDescription html={product.descriptionHtml ?? ''} /></details>{store?.merchantInformation?.policies.map(policy => <details key={policy.kind}><summary>{policy.title}</summary><ProductDescription html={policy.content_html} /></details>)}{!store?.merchantInformation?.policies.length && product.shippingReturns ? <details><summary>{t('pdp.tabShipping')}</summary><p>{product.shippingReturns}</p></details> : null}</div> : null}
-            {!sphinx && !elite && !accordion ? <Tabs tabs={tabs} value={activeTab} onChange={setActiveTab} renderPanel={(id) =>
-              id === 'description' ? (
-                <ProductDescription html={product.descriptionHtml ?? ''} />
-              ) : (
-                <p className="sf-pdp__desc">
-                  {t('pdp.luxuryShipping')}
-                </p>
-              )
-            } /> : null}
+            {!sphinx && !elite && !accordion && !props.descriptionBelow ? descriptionTabs : null}
           </div>
         </div>
+        {props.descriptionBelow ? <div className="sf-pdp__full-description">{descriptionTabs}</div> : null}
         {sphinx ? <div className="sph-product__content"><ProductDescription html={product.descriptionHtml ?? ''} />{product.shippingReturns ? <details><summary>{ar ? 'الشحن والاسترجاع' : 'Shipping and returns'}</summary><p>{product.shippingReturns}</p></details> : null}</div> : null}
         {elite ? <div className="elt-product__content"><ProductDescription html={product.descriptionHtml ?? ''} />{product.shippingReturns ? <details><summary>{ar ? 'الشحن والاسترجاع' : 'Shipping and returns'}</summary><p>{product.shippingReturns}</p></details> : null}{product.careInstructions ? <details><summary>{ar ? 'تعليمات العناية' : 'Care instructions'}</summary><p>{product.careInstructions}</p></details> : null}{product.warranty ? <details><summary>{ar ? 'الضمان' : 'Warranty'}</summary><p>{product.warranty}</p></details> : null}</div> : null}
 
