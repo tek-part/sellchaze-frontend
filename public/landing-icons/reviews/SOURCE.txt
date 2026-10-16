@@ -1,0 +1,7 @@
+Unmodified functional quotation symbols and abstract review backgrounds from the visible EasyOrders review-design references, reviewed 2026-10-16.
+No product photographs, customer portraits, demo ratings, recommendations or verified-review claims are included.
+quote.svg: https://files.easy-orders.net/1755953474999444619download.svg
+quote-mark.png: https://files.easy-orders.net/1746352109678596208.png
+review-background.svg: https://files.easy-orders.net/1747544094766263661download.svg
+review-background-purple.svg: https://files.easy-orders.net/1734354293750819397jm.svg
+rows-background.svg: https://files.easy-orders.net/1730816031362220381using-bg.svg

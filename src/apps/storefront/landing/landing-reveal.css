@@ -1,0 +1,7 @@
+.lp-reveal-pending{opacity:.01}
+.lp-image-pending{opacity:0}
+.lp-reveal-entered{animation:lp-native-slide-in .6s cubic-bezier(0,0,.3,1) forwards}
+.lp-image-entered{animation:lp-native-zoom-fade .6s ease forwards}
+@keyframes lp-native-slide-in{0%{transform:translateY(36px);opacity:.01}to{transform:translateY(0);opacity:1}}
+@keyframes lp-native-zoom-fade{0%{opacity:0;transform:scale(1.1)}to{opacity:1;transform:scale(1)}}
+@media(prefers-reduced-motion:reduce){.lp-reveal-pending,.lp-image-pending{opacity:1}.lp-reveal-entered,.lp-image-entered{animation:none}}

@@ -36,10 +36,10 @@
 @media(max-width:700px){.lp-pf{overflow-wrap:anywhere}.lp-pf .advanced-text{flex-direction:column;max-width:100%;width:100%!important}.lp-pf .lp-pf-hero,.lp-pf .ql-editor{width:100%;flex:auto}.lp-pf .icon-container{min-width:0!important}.lp-pf .icon-image-container{max-width:100%}.lp-pf .icon-container img{max-width:100%!important}.lp-pf .lp-pf-grid{max-width:100%!important}.lp-pf--4 .icon-container,.lp-pf--5 .icon-container,.lp-pf--8 .icon-container,.lp-pf--9 .icon-container,.lp-pf--12 .icon-container,.lp-pf--20 .icon-container,.lp-pf--24 .icon-container,.lp-pf--25 .icon-container,.lp-pf--29 .icon-container,.lp-pf--37 .icon-container{flex-direction:column!important}.lp-pf .icon-text-container{max-width:100%;margin-inline:0!important}}
 @media(prefers-reduced-motion:reduce){.lp-pf *,.lp-pf *::before,.lp-pf *::after{animation:none!important;transition:none!important}}
 
-.lp-pf .lp-pf-heading,.lp-pf .icon-container,.lp-pf .lp-pf-rich{animation:lp-pf-enter .6s ease-out both}
-.lp-pf img{animation:lp-pf-image .6s ease-out both}
-@keyframes lp-pf-enter{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
-@keyframes lp-pf-image{from{opacity:0;transform:scale(.95)}to{opacity:1;transform:scale(1)}}
+
+
+
+
 
 
 .lp-pf[data-thumbnail] .advanced-text{flex-direction:row-reverse!important}.lp-pf[data-thumbnail] .lp-pf-hero,.lp-pf[data-thumbnail] .ql-editor{width:auto;flex:1 1 0%}
