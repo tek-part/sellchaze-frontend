@@ -1,0 +1,5 @@
+Functional assets bundled unchanged after visual review.
+shape-3.png: https://easyorders.fra1.cdn.digitaloceanspaces.com/shape-3.png
+check24.png: https://files.easy-orders.net/1754926466533390647.png
+check16.svg: functional outline vector from the observed design16 CSS, URL-decoded unchanged.
+Source background product photographs10/11/12 are not bundled. Merchant background images remain supported; gallery artwork is original.
