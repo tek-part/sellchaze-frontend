@@ -76,6 +76,16 @@ describe('native FAQ designs', () => {
     await act(async () => host.querySelector<HTMLButtonElement>('.lp-faq-buy')!.click());
     expect(scroll).toHaveBeenCalledWith({ behavior: 'auto', block: 'start' }); expect(submit).not.toHaveBeenCalled(); expect(host.querySelectorAll('form')).toHaveLength(1); vi.unstubAllGlobals();
   });
+  it('gives legacy FAQ documents the single-open behavior without changing their stored content', async () => {
+    const document = { schema: 1 as const, mode: 'standalone' as const, sections: [{ id: 'legacy-faq', type: 'faq' as const, settings: { title: 'Own legacy heading', question_background: '#abcdef', items: own } }] };
+    const before = JSON.stringify(document); const context = { store: {}, data: {} } as unknown as StorefrontContext;
+    await act(async () => root.render(<LandingSections document={document} context={context} />));
+    expect(host.querySelector('details')).toBeNull(); expect(questions()).toHaveLength(9);
+    await act(async () => questions()[0]!.click()); await act(async () => questions()[1]!.click());
+    expect(questions().filter(b => b.getAttribute('aria-expanded') === 'true')).toHaveLength(1);
+    expect(questions()[0]!.getAttribute('aria-expanded')).toBe('false'); expect(JSON.stringify(document)).toBe(before);
+    expect(host.querySelectorAll('img')).toHaveLength(9);
+  });
   it('validates the complete variant family and rejects crossed or unknown designs', () => {
     const section = { id: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', type: 'faq', settings: {} };
     for (const d of faqDesigns) expect(parseLanding({ schema: 1, mode: 'standalone', sections: [{ ...section, settings: faqDefaults(d.id) }] })).not.toBeNull();

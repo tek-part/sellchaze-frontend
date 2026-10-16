@@ -88,8 +88,8 @@ Thirty-five FAQ presets add single-column, two-column and split heading/group
 structures, capsules, dashed outlines, bottom rules, offset shadows, gradient
 headings and distinct section/group/card paints. The native accessible diagram
 gallery includes no reference images or sample commercial policies. Blank slots
-remain blank in saved data. Existing FAQ sections without a variant keep their
-original rendering. Changing a FAQ preset retains all questions, answers, rich
+remain blank in saved data. Existing FAQ sections without a variant use the first
+native single-open layout while retaining their saved document. Changing a FAQ preset retains all questions, answers, rich
 HTML, owned images, URLs, colors and extra items; an explicit reset restores the
 preset colors/typography. Presets1/34 start with3/4 slots; the others start with6.
 Each accordion opens one answer at a time, supports Enter/Space and arrow/Home/End

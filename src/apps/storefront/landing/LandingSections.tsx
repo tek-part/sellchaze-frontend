@@ -62,7 +62,7 @@ export function LandingBlock({ section, context, preview = false, firstCheckout 
     case 'image': body = <LandingPhoto image={s.image} />; break;
     case 'slider': case 'gallery': body = <><h2>{title}</h2><div className={`sf-landing-images${section.type === 'slider' ? ' sf-landing-slider' : ''}`}>{s.images?.map((image, index) => <LandingPhoto key={index} image={image} />)}</div></>; break;
     case 'banner': case 'simple': case 'content': body = <div className={`sf-landing-content sf-landing-content--${s.layout ?? 'stack'}`}><LandingPhoto image={s.image} /><div><h2>{title}</h2><p>{s.description}</p>{s.html ? <StaticLandingFrame title={title || 'محتوى'} html={s.html} onPurchase={preview ? undefined : scrollLandingPurchase} /> : null}{s.button_text ? buy : null}</div></div>; break;
-    case 'faq': body = s.variant ? <Faq key={section.id} settings={s} preview={preview} onItemSelect={onFaqItemSelect} onPurchase={scrollLandingPurchase} /> : <><h2>{title}</h2><div className="sf-landing-faq" style={{ '--lp-faq-background': s.question_background } as CSSProperties}>{s.items?.map((item, index) => <details key={index}><summary>{item.title}</summary><p>{item.text}</p>{item.html ? <StaticLandingFrame title={item.title || 'إجابة'} html={item.html} /> : null}</details>)}</div></>; break;
+    case 'faq': body = <Faq key={section.id} settings={s} preview={preview} onItemSelect={onFaqItemSelect} onPurchase={scrollLandingPurchase} />; break;
     case 'buy_button': body = buy; break;
     case 'countdown': body = <><h2>{title}</h2><p>{s.description}</p><LandingCountdown section={section} productId={product?.id ?? ''} />{s.button_text ? buy : null}</>; break;
     case 'reviews': body = product?.productPreferences?.is_reviews_enabled === false ? null : <><h2>{title}</h2><ReviewList reviews={reviews} /></>; break;
@@ -73,8 +73,8 @@ export function LandingBlock({ section, context, preview = false, firstCheckout 
   if (!preview && section.type === 'promo_banners' && s.variant && !s.items?.some(item => item.image?.url || item.title?.trim() || item.text?.trim() || item.html?.trim())) return null;
   if (!preview && section.type === 'custom_reviews' && s.variant && !s.items?.length) return null;
   if (!preview && section.type === 'store_features' && s.variant && !hasStoreFeatureContent(s)) return null;
-  if (!preview && section.type === 'faq' && s.variant && !hasFaqContent(s)) return null;
-  const style: CSSProperties = { backgroundColor: s.background ?? (section.type === 'faq' && s.variant ? faqDesign(s.variant).background : undefined), ...(s.background_image?.url && landingUrl(s.background_image.url) && !s.background_image.url.startsWith('#') ? { backgroundImage: `url(${JSON.stringify(s.background_image.url)})`, backgroundSize: 'cover', backgroundPosition: 'center' } : {}), color: s.foreground, textAlign: s.align, padding: `${Math.max(0, Math.min(160, s.padding ?? 32))}px`, borderRadius: `${Math.max(0, Math.min(48, s.radius ?? 0))}px`, ...(s.font_size ? { fontSize: Math.max(12, Math.min(96, s.font_size)) } : {}) };
+  if (!preview && section.type === 'faq' && !hasFaqContent(s)) return null;
+  const style: CSSProperties = { backgroundColor: s.background ?? (section.type === 'faq' ? faqDesign(s.variant).background : undefined), ...(s.background_image?.url && landingUrl(s.background_image.url) && !s.background_image.url.startsWith('#') ? { backgroundImage: `url(${JSON.stringify(s.background_image.url)})`, backgroundSize: 'cover', backgroundPosition: 'center' } : {}), color: s.foreground, textAlign: s.align, padding: `${Math.max(0, Math.min(160, s.padding ?? 32))}px`, borderRadius: `${Math.max(0, Math.min(48, s.radius ?? 0))}px`, ...(s.font_size ? { fontSize: Math.max(12, Math.min(96, s.font_size)) } : {}) };
   return <section className={`sf-landing-block sf-landing-block--${section.type}`} style={style}>{body}</section>;
 }
 
