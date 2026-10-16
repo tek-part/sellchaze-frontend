@@ -13,7 +13,7 @@ export function VideoTemplates({ settings: s, preview = false, onPurchase }: { s
   if (!preview && !hasContent) return null;
   const items = s.items ?? [];
   const examples = preview && !items.some(item => item.title || item.text || item.image || item.icon || item.html);
-  const benefits: LandingItem[] = examples ? Array.from({ length: 3 }, (_, index) => ({ title: `عنوان الميزة ${index + 1}`, text: 'اكتب وصف الميزة هنا', icon: 'check' })) : items;
+  const benefits: LandingItem[] = examples ? Array.from({ length: 3 }, (_, index) => ({ title: `عنوان الميزة ${index + 1}`, text: 'اكتب وصف الميزة هنا', icon: 'badge' })) : items;
   const heading = <header className="lp-video-heading">{d.kind === 'benefits' && s.description ? <p>{s.description}</p> : null}{s.title || preview ? <h2>{s.title || 'عنوان الفيديو'}</h2> : null}{d.kind !== 'benefits' && s.description ? <p>{s.description}</p> : null}</header>;
   const media = source && !preview ? <div className="lp-video-media"><LandingVideo url={s.video} title={s.title || 'فيديو المنتج'} /></div> : preview ? <div className="lp-video-media lp-video-placeholder" role="img" aria-label="موضع الفيديو في المعاينة"><svg viewBox="0 0 64 64" fill="none" aria-hidden><circle cx="32" cy="32" r="27" stroke="currentColor" strokeWidth="2" /><path d="m26 20 18 12-18 12V20Z" fill="currentColor" /></svg><span>{source ? 'معاينة الفيديو — افتح صفحة المنتج لتشغيله' : 'أضف رابط الفيديو من الإعدادات'}</span></div> : null;
   const label = s.button_text ?? 'الشراء الآن';
