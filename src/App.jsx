@@ -114,6 +114,7 @@ const StoreThemesPage = lazy(() => import('./pages/StoreThemesPage'));
 const StoreCustomizePage = lazy(() => import('./pages/StoreCustomizePage'));
 const StorePaymentsPage = lazy(() => import('./pages/StorePaymentsPage'));
 const EditorLayout = lazy(() => import('./components/editor/EditorLayout'));
+const ProductLandingEditorPage = lazy(() => import('./pages/ProductLandingEditorPage'));
 const StorePagesPage = lazy(() => import('./pages/StorePagesPage'));
 const StoreSimplePageEditor = lazy(() => import('./pages/StoreSimplePageEditor'));
 const StoreCheckoutFieldsPage = lazy(() => import('./pages/store/settings/StoreCheckoutFieldsPage'));
@@ -502,6 +503,10 @@ export default function App() {
             >
                 <Route path="/store/customize" element={<StoreCustomizePage />} />
                 <Route path="/stores/:id/customize" element={<StoreCustomizePage />} />
+            </Route>
+            <Route element={<RequireAuth><EditorLayout product /></RequireAuth>}>
+                <Route path="/store/products/:productId/landing" element={<ProductLandingEditorPage />} />
+                <Route path="/stores/:id/products/:productId/landing" element={<ProductLandingEditorPage />} />
             </Route>
             <Route path="/403" element={<ForbiddenPage />} />
             <Route path="/401" element={<SessionExpiredPage />} />

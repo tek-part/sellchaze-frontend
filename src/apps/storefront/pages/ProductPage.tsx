@@ -24,6 +24,10 @@ import { variantImage } from '../utils/variant-image';
 import { recordReferral } from '../analytics/events';
 import { referralFromSearch } from '../../../shared/marketing/referral';
 import { useProductPresentation } from '../state/product-presentation';
+import { ProductPurchaseProvider } from '../state/product-purchase';
+import { parseLanding } from '../landing/document';
+import { LandingSections } from '../landing/LandingSections';
+import { ProductDetailsSection } from '../foundation/sections/ProductDetailsSection';
 
 export function ProductPage(): ReactElement | null {
   const manifest = useThemeManifest();
@@ -75,6 +79,7 @@ export function ProductPage(): ReactElement | null {
         loading: dev ? false : productQ.loading,
         product: detail,
         catalogVariantId,
+        landingCheckout: parseLanding(productQ.data?.data.landing_page)?.sections.some(section => section.type === 'checkout') ?? false,
         reviews,
         collections: { related },
       },
@@ -83,6 +88,7 @@ export function ProductPage(): ReactElement | null {
   }, [productQ.data, productQ.loading, reviewsQ.data, relatedQ.data, currency, slug, store.name, catalogVariantId]);
 
   const site = typeof window !== 'undefined' ? window.location.origin : '';
+  const landing = parseLanding(productQ.data?.data.landing_page);
   const productUrl = `${site}/products/${slug}`;
   const metadataVariant = detail ? resolveVariant(detail.variants ?? [], catalogVariantSelection(detail.variants ?? [], catalogVariantId), selectionAutomatic(store.autoSelectVariants, detail.autoSelectVariants)) : undefined;
   const metadataBasePrice = metadataVariant?.price ?? detail?.price ?? 0;
@@ -138,7 +144,11 @@ export function ProductPage(): ReactElement | null {
           ]}
         />
       ) : null}
-      {template ? <ThemeRenderer page={detail?.productPreferences?.hide_related_products ? { ...template, sections: template.sections.filter((section) => section.type !== 'related-products') } : template} context={context} /> : null}
+      <ProductPurchaseProvider key={detail?.id ?? slug}>
+        {landing && landing.mode === 'standalone' ? <LandingSections document={landing} context={context} checkout={<ProductDetailsSection context={context} instance={{ type: 'product-details' }} settings={{ show_share: false, show_wishlist: false }} purchaseOnly />} /> : null}
+        {template && (landing?.mode !== 'standalone' || !landing.sections.some(section => section.type === 'checkout')) ? <div data-landing-fallback><ThemeRenderer page={detail?.productPreferences?.hide_related_products ? { ...template, sections: template.sections.filter((section) => section.type !== 'related-products') } : template} context={context} /></div> : null}
+        {landing?.mode === 'below' ? <LandingSections document={landing} context={context} checkout={<ProductDetailsSection context={context} instance={{ type: 'product-details' }} settings={{ show_share: false, show_wishlist: false }} purchaseOnly />} /> : null}
+      </ProductPurchaseProvider>
     </>
   );
 }

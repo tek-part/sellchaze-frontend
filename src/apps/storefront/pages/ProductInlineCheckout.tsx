@@ -14,13 +14,13 @@ import { useCheckoutLead } from './useCheckoutLead';
 import { useCheckoutMetrics } from '../analytics/checkout-hooks';
 import { formatMoney } from '../utils/format';
 
-export default function ProductInlineCheckout({ productId, items, ready, buttonText }: { productId: string; items: ReadonlyArray<CheckoutItem>; ready: boolean; buttonText?: string }): ReactElement {
+export default function ProductInlineCheckout({ productId, items, ready, buttonText, surface = 'product' }: { productId: string; items: ReadonlyArray<CheckoutItem>; ready: boolean; buttonText?: string; surface?: 'product' | 'storefront' }): ReactElement {
   const { locale } = useLocale(); const ar = locale === 'ar'; const text = (a: string, e: string): string => ar ? a : e;
   const stableItems = useMemo(() => items, [items]);
-  const payment = useCheckoutPaymentFlow({ items: stableItems, preserveCart: true, surface: 'product' });
+  const payment = useCheckoutPaymentFlow({ items: stableItems, preserveCart: true, surface });
   const contact = useCheckoutFields(payment.paymentMethod, [Number(productId)]);
   const [coupon, setCoupon] = useState(''); const [appliedCoupon, setAppliedCoupon] = useState('');
-  useCheckoutMetrics(ready ? stableItems : [], 'storefront', 'product');
+  useCheckoutMetrics(ready ? stableItems : [], 'storefront', surface === 'product' ? 'product' : undefined);
   const lead = useCheckoutLead({ contact: { ...contact.payload(), coupon_code: appliedCoupon }, items: stableItems, source: 'storefront', kind: `product:${productId}`, paymentMethod: payment.paymentMethod, enabled: ready && contact.ready && !payment.busy && !payment.completed && !payment.unresolved && !payment.paymentRetry });
   const quoteKey = JSON.stringify([items, appliedCoupon, contact.shippingSelection, contact.shippingReady, ready]);
   const quotes = useAsync(async () => ready && items.length && contact.shippingReady ? { key: quoteKey, data: (await quoteCheckout(items, appliedCoupon, contact.shippingSelection)).data } : null, [quoteKey, locale]);

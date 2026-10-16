@@ -47,7 +47,7 @@ interface CheckoutResponse {
   payment?: { redirect_url?: string | null };
 }
 
-export function useCheckoutPaymentFlow(options?: { items: ReadonlyArray<CheckoutItem>; preserveCart?: boolean; surface?: 'product' }) {
+export function useCheckoutPaymentFlow(options?: { items: ReadonlyArray<CheckoutItem>; preserveCart?: boolean; surface?: 'product' | 'storefront' }) {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const cart = useCart();

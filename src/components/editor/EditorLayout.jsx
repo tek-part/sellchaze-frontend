@@ -16,7 +16,7 @@ const unwrapUser = (payload) => (payload ? payload.data ?? payload : null);
  * StoreLayout provides (`me`, `permissions`, `store`, `access`, `apiBase`, `uiBase`, `locales`…),
  * which keeps `useStoreContext()` / `useStoreLocales()` working unchanged inside the editor.
  */
-export default function EditorLayout() {
+export default function EditorLayout({ product = false }) {
     const { t } = useTranslation();
     const navigate = useNavigate();
     const { id, owner, apiBase, uiBase } = useStoreScope();
@@ -43,7 +43,7 @@ export default function EditorLayout() {
     const roles = useMemo(() => (Array.isArray(me?.roles) ? me.roles : []), [me?.roles]);
     const canAdminEdit = permissions.includes('stores-edit');
     const access = useMemo(() => (isAdminScope && canAdminEdit ? fullStoreAccess() : storeAccess(roles, permissions)), [isAdminScope, canAdminEdit, roles, permissions]);
-    const allowed = meLoaded && (isAdminScope ? canAdminEdit : access.canStoreThemes);
+    const allowed = meLoaded && (isAdminScope ? canAdminEdit : product ? permissions.includes('products-edit') : access.canStoreThemes);
 
     const refreshStore = useCallback(async () => {
         try {
@@ -103,7 +103,7 @@ export default function EditorLayout() {
                             <button type="button" onClick={() => { setStoreLoading(true); refreshStore().catch(() => {}); }} className="rounded-xl bg-white px-4 py-2 text-sm font-semibold text-red-700 ring-1 ring-red-200 hover:bg-red-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400">
                                 {t('action_retry', 'Retry')}
                             </button>
-                            <button type="button" onClick={() => navigate(`${uiBase}/themes`)} className="rounded-xl bg-white px-4 py-2 text-sm font-semibold text-slate-700 ring-1 ring-slate-200 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40">
+                            <button type="button" onClick={() => navigate(`${uiBase}/${product ? 'products' : 'themes'}`)} className="rounded-xl bg-white px-4 py-2 text-sm font-semibold text-slate-700 ring-1 ring-slate-200 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40">
                                 {t('editor_exit', 'Exit')}
                             </button>
                         </div>

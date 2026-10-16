@@ -23,7 +23,6 @@ import { cartStorageKey, decodeCart, encodeCart, loadCart } from './cart-storage
 import { cartPurchaseSummary, reconcileCartCatalog } from './cart-catalog';
 import { getCartCatalog } from '../api/storefront';
 import type { CheckoutItem } from '../api/storefront';
-import { toProductDetail } from '../api/mappers';
 import { useToast } from '../foundation/components/toast/useToast';
 import { useTranslation } from 'react-i18next';
 import type { ProductDetailModel } from '../types/catalog';
@@ -104,7 +103,7 @@ function ScopedCartProvider({ children, store, apiOk }: { children: ReactNode; s
         const products: ProductDetailModel[] = [];
         // Apply only after every batch succeeds, including saved baskets with more than100 products.
         for (let offset = 0; offset < requested.length; offset += 100) {
-          const response = await getCartCatalog(requested.slice(offset, offset + 100).map(Number));
+          const [response, { toProductDetail }] = await Promise.all([getCartCatalog(requested.slice(offset, offset + 100).map(Number)), import('../api/mappers')]);
           if (cancelled) return;
           if (String(response.store_id) !== store.id || !Array.isArray(response.data)) throw new Error('Catalog store mismatch');
           products.push(...response.data.map((product) => toProductDetail(product, store.currency, multiplier)));

@@ -20,9 +20,9 @@ import { ProductOfferPrice } from '../components/ProductOfferPrice';
 import { Rating } from '../components/Rating';
 import { ProductOptionPicker } from '../components/ProductOptionPicker';
 import { ProductPersonalizationFields } from '../components/ProductPersonalizationFields';
-import type { PersonalizationChoice } from '../../types/personalization';
+import { useProductPurchase } from '../../state/product-purchase';
 import { personalizedLineId, normalizedPersonalization, personalizationReady } from '../../utils/personalization';
-import { blankSelection, catalogVariantSelection, resolveVariant, selectionFor, variantAvailable, type VariantSelection } from '../../state/variant-selection';
+import { blankSelection, catalogVariantSelection, resolveVariant, selectionFor, variantAvailable } from '../../state/variant-selection';
 import { boundedQuantity, cartAdditionLimit } from '../../state/cart-quantity';
 import { variantGallery, variantImage } from '../../utils/variant-image';
 import { QuantityStepper } from '../components/QuantityStepper';
@@ -53,7 +53,7 @@ function BuyNow(props: { disabled: boolean; add: () => boolean; label?: string; 
   return routed ? <RoutedBuyNow {...props} /> : <Button disabled className="sf-pdp__buy-now">{i18n.language.startsWith('ar') ? 'اشترِ الآن' : 'Buy now'}</Button>;
 }
 
-export function ProductDetailsSection(props: SectionRenderProps & { buyboxHeader?: ReactNode; buyboxFooter?: ReactNode; descriptionBelow?: boolean }): ReactElement | null {
+export function ProductDetailsSection(props: SectionRenderProps & { buyboxHeader?: ReactNode; buyboxFooter?: ReactNode; descriptionBelow?: boolean; purchaseOnly?: boolean; suppressCheckout?: boolean }): ReactElement | null {
   const { t, i18n } = useTranslation();
   const ar = i18n.language.startsWith('ar');
   const { settings, context } = props;
@@ -66,12 +66,9 @@ export function ProductDetailsSection(props: SectionRenderProps & { buyboxHeader
   const reviews = reviewsFor(context);
 
   const catalogVariantId = typeof context.data?.catalogVariantId === 'string' ? context.data.catalogVariantId : null;
-  const [selection, setSelection] = useState<{ productId: string; choice: VariantSelection; catalogVariantId: string | null }>();
-  const [quantityChoice, setQuantityChoice] = useState<{ productId: string; value: number }>();
+  const { selection, setSelection, quantityChoice, setQuantityChoice, customChoice, setCustomChoice, offerChoice, setOfferChoice } = useProductPurchase();
   const qty = quantityChoice?.productId === product?.id ? quantityChoice?.value ?? 1 : 1;
   const [activeTab, setActiveTab] = useState('description');
-  const [customChoice, setCustomChoice] = useState<{ productId: string; choice: PersonalizationChoice }>();
-  const [offerChoice, setOfferChoice] = useState<{ productId: string; id: string | null; version?: number }>();
   const checkoutElement = useRef<HTMLDivElement>(null);
   // Product data arrives asynchronously. Resolve the displayed default on every render,
   // so an untouched select still adds the visible variant instead of the parent product.
@@ -81,7 +78,8 @@ export function ProductDetailsSection(props: SectionRenderProps & { buyboxHeader
 
   if (!product) return null;
   const preferences = product.productPreferences ?? {};
-  const samePage = preferences.is_one_page_checkout === true;
+  const landingCheckout = context.data.landingCheckout === true && !props.purchaseOnly;
+  const samePage = !!props.purchaseOnly || landingCheckout || !props.suppressCheckout && preferences.is_one_page_checkout === true;
   const skipCart = preferences.is_skip_cart === true;
 
   const showSku = flag(settings, 'show_sku', false);
@@ -140,10 +138,10 @@ export function ProductDetailsSection(props: SectionRenderProps & { buyboxHeader
 
   const purchase: CheckoutItem = { product_id: Number(product.id), quantity, ...(variantId ? { variant_id: Number(variantId) } : {}), personalization: normalizedPersonalization(custom.values), ...(activeOffer ? { quantity_offer_id: activeOffer.id, quantity_offer_version: activeOffer.version } : {}) };
   const startDirect = (): boolean => !unavailable && customReady && !!store?.id && saveDirectPurchase(store.id, purchase);
-  const scrollCheckout = (): void => { checkoutElement.current?.scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' }); };
+  const scrollCheckout = (): void => { (landingCheckout ? document.querySelector('[data-landing-checkout]') : checkoutElement.current)?.scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' }); };
   const buyButton = samePage ? <Button className="sf-pdp__buy-now" disabled={unavailable || !customReady} onClick={scrollCheckout}>{preferences.buy_now_text || (ar ? 'اشترِ الآن' : 'Buy now')}</Button> : <BuyNow disabled={unavailable || !customReady} add={skipCart ? startDirect : addToCart} label={preferences.buy_now_text} {...(skipCart ? { target: `/checkout?product=${product.id}` } : {})} />;
-  const inlineCheckout = samePage ? <div ref={checkoutElement} className="sf-inline-checkout-anchor"><Suspense fallback={<p role="status">{ar ? 'جارٍ تحميل نموذج الشراء…' : 'Loading checkout…'}</p>}><ProductInlineCheckout key={product.id} productId={product.id} items={[purchase]} ready={!unavailable && customReady} buttonText={preferences.buy_now_text} /></Suspense></div> : null;
-  const showReviews = preferences.is_reviews_enabled ?? !flag(settings, 'hide_reviews', false);
+  const inlineCheckout = samePage && !landingCheckout ? <div ref={checkoutElement} className="sf-inline-checkout-anchor"><Suspense fallback={<p role="status">{ar ? 'جارٍ تحميل نموذج الشراء…' : 'Loading checkout…'}</p>}><ProductInlineCheckout key={product.id} productId={product.id} items={[purchase]} ready={!unavailable && customReady} buttonText={preferences.buy_now_text} /></Suspense></div> : null;
+  const showReviews = !props.purchaseOnly && (preferences.is_reviews_enabled ?? !flag(settings, 'hide_reviews', false));
   const policies = store?.merchantInformation?.policies ?? [];
   const tabs = props.descriptionBelow
     ? [{ id: 'description', label: t('pdp.tabDescription') }, ...policies.map(policy => ({ id: policy.kind, label: policy.title }))]
@@ -155,14 +153,14 @@ export function ProductDetailsSection(props: SectionRenderProps & { buyboxHeader
   } />;
 
   return (
-    <section className={`sf-section${sphinx ? ' sph-product' : ''}${elite ? ' elt-product' : ''}`}>
+    <section className={`sf-section${props.purchaseOnly ? ' sf-landing-purchase' : ''}${sphinx ? ' sph-product' : ''}${elite ? ' elt-product' : ''}`}>
       <Container>
         <div className="sf-pdp">
-          <div className="sf-pdp__media">
+          {!props.purchaseOnly ? <div className="sf-pdp__media">
           <UiBlock slot="before_product_gallery" />
           <ProductGallery key={`${product.id}:${variantId ?? 'default'}:${selectedImage ?? ''}`} images={product.images} media={variantGallery(product, selectedImage)} {...(selectedImage ? { initialSrc: selectedImage } : {})} title={product.title} mobileSlideshow={sphinx} desktopStack={elite} />
           <UiBlock slot="after_product_gallery" />
-          </div>
+          </div> : null}
 
           <div className="sf-pdp__buybox">
             {props.buyboxHeader}
@@ -217,7 +215,7 @@ export function ProductDetailsSection(props: SectionRenderProps & { buyboxHeader
             {preferences.is_checkout_before_description ? inlineCheckout : null}
 
             {accordion ? <div className="sf-pdp__accordion"><details open><summary>{t('pdp.tabDescription')}</summary><ProductDescription html={product.descriptionHtml ?? ''} /></details>{store?.merchantInformation?.policies.map(policy => <details key={policy.kind}><summary>{policy.title}</summary><ProductDescription html={policy.content_html} /></details>)}{!store?.merchantInformation?.policies.length && product.shippingReturns ? <details><summary>{t('pdp.tabShipping')}</summary><p>{product.shippingReturns}</p></details> : null}</div> : null}
-            {!sphinx && !elite && !accordion && !props.descriptionBelow ? descriptionTabs : null}
+            {!props.purchaseOnly && !sphinx && !elite && !accordion && !props.descriptionBelow ? descriptionTabs : null}
           </div>
         </div>
         {props.descriptionBelow ? <div className="sf-pdp__full-description">{descriptionTabs}</div> : null}
@@ -235,7 +233,7 @@ export function ProductDetailsSection(props: SectionRenderProps & { buyboxHeader
           </div>
         ) : null}
       </Container>
-      {(preferences.is_fixed_bottom_buy ?? flag(settings, 'sticky_purchase', false)) ? <div className="sf-sticky-purchase"><Container><div className="sf-sticky-purchase__product">{selectedImage || product.image?.src ? <img src={selectedImage ?? product.image?.src} alt="" /> : null}<div><p>{product.title}</p><Price amount={unitPrice} {...(compareAt !== undefined ? { compareAt } : {})} currency={product.currency} /></div></div><div className="sf-sticky-purchase__actions">{!offers.length && !preferences.is_quantity_hidden ? <QuantityStepper value={quantity} onChange={value => setQuantityChoice({ productId: product.id, value })} min={1} max={remaining} label={ar ? `الكمية: ${product.title}` : `Quantity for ${product.title}`} /> : null}{buyButton}</div></Container></div> : null}
+      {!props.purchaseOnly && (preferences.is_fixed_bottom_buy ?? flag(settings, 'sticky_purchase', false)) ? <div className="sf-sticky-purchase"><Container><div className="sf-sticky-purchase__product">{selectedImage || product.image?.src ? <img src={selectedImage ?? product.image?.src} alt="" /> : null}<div><p>{product.title}</p><Price amount={unitPrice} {...(compareAt !== undefined ? { compareAt } : {})} currency={product.currency} /></div></div><div className="sf-sticky-purchase__actions">{!offers.length && !preferences.is_quantity_hidden ? <QuantityStepper value={quantity} onChange={value => setQuantityChoice({ productId: product.id, value })} min={1} max={remaining} label={ar ? `الكمية: ${product.title}` : `Quantity for ${product.title}`} /> : null}{buyButton}</div></Container></div> : null}
     </section>
   );
 }
