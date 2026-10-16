@@ -5,3 +5,6 @@
 .sf-landing-faq details{background:var(--lp-faq-background,transparent)}
 
 [data-landing-checkout],[data-landing-fallback]{scroll-margin-top:128px}
+.sf-landing-block.sf-landing-block--product-preset{padding:0!important;margin:0;min-width:0;border-radius:0;overflow:visible}
+.sf-landing-block--product-preset:empty{display:none}
+.sf-preset-product-surface{width:100%;min-width:0}.sf-preset-product-surface .sf-pdp__buybox{padding:32px;border-radius:30px;background:#fff;box-shadow:0 -2px 32px #7e8ba92e}@media(max-width:768px){.sf-preset-product-surface .sf-pdp__buybox{padding:20px}}

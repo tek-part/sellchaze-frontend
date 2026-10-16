@@ -1,4 +1,5 @@
-export const landingTypes = ['slider', 'image', 'banner', 'youtube', 'simple', 'advanced', 'heading', 'rich_text', 'html', 'checkout', 'faq', 'store_features', 'custom_reviews', 'promo_banners', 'countdown', 'video', 'gallery', 'how_to', 'content', 'buy_button', 'product_features', 'reviews', 'product_description', 'billboard'] as const;
+import { productPresetIndex } from './product-presets.generated';
+export const landingTypes = ['slider', 'image', 'banner', 'youtube', 'simple', 'advanced', 'heading', 'rich_text', 'html', 'checkout', 'faq', 'store_features', 'custom_reviews', 'promo_banners', 'countdown', 'video', 'gallery', 'how_to', 'content', 'buy_button', 'product_features', 'reviews', 'product_description', 'billboard', 'product_preset'] as const;
 export type LandingType = typeof landingTypes[number];
 export interface LandingImage { media_id?: number; url?: string; alt?: string; destination?: LandingDestination; link_url?: string }
 export type TestimonialVariant = `testimonials-${1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11}`;
@@ -32,6 +33,7 @@ export const descriptionVariants:DescriptionVariant[]=Array.from({length:25},(_,
 export interface LandingDestination { type: 'product' | 'category' | 'page'; id: number }
 export interface LandingItem { title?: string; text?: string; html?: string; image?: LandingImage; url?: string; icon?: string; accent?: string; background?: string; foreground?: string; rating?: number; author?: string; caption?: string; date?: string | null; platform?: string; destination?: LandingDestination }
 export interface LandingSettings {
+  preset_section?: string; preset_css_mode?: 'template' | 'custom'; preset_description_align?: 'start' | 'center' | 'end';
   title?: string; description?: string; eyebrow?: string; author?: string; caption?: string; html?: string; image?: LandingImage; secondary_image?: LandingImage; background_image?: LandingImage; images?: LandingImage[]; video?: string;
   variant?: TestimonialVariant | BannerVariant | StoreFeatureVariant | FaqVariant | VideoVariant | HowToVariant | ContentVariant | BuyButtonVariant | ProductFeatureVariant | ReviewVariant | DescriptionVariant | BillboardVariant | GalleryVariant | CountdownVariant; countdown_css_mode?:'template'|'custom';countdown_title_color?:string;countdown_description_color?:string;countdown_description_align?:'start'|'center'|'end'; gallery_description_align?:'start'|'center'|'end'; billboard_mode?:'fields'|'formatted';billboard_css_mode?:'template'|'custom'; description_mode?: 'fields' | 'formatted'; description_css_mode?:'template'|'custom'; eyebrow_color?: string; accent?: string; card_background?: string; question_background?: string;
   hover_background?: string; hover_foreground?: string; secondary_foreground?: string; hover_secondary_foreground?: string; icon_background?: string; icon_color?: string; motion?: boolean;
@@ -55,6 +57,10 @@ export function parseLanding(value: unknown): LandingDocument | null {
     if (!object(section) || typeof section.id !== 'string' || !/^[a-f0-9-]{36}$/i.test(section.id) || ids.has(section.id.toLowerCase()) || !landingTypes.includes(section.type as LandingType) || !(object(section.settings) || Array.isArray(section.settings) && section.settings.length === 0)) return null;
     ids.add(section.id.toLowerCase());
     const s = object(section.settings) ? section.settings : {};
+    if(section.type==='product_preset' && (typeof s.preset_section!=='string'||!Object.hasOwn(productPresetIndex,s.preset_section)))return null;
+    if(['preset_section','preset_css_mode','preset_description_align'].some(key=>s[key]!==undefined)&&section.type!=='product_preset')return null;
+    if(s.preset_css_mode!==undefined&&!['template','custom'].includes(String(s.preset_css_mode)))return null;
+    if(s.preset_description_align!==undefined&&!['start','center','end'].includes(String(s.preset_description_align)))return null;
     for (const key of ['title', 'description', 'eyebrow', 'author', 'caption', 'html', 'css', 'button_text', 'video']) if (key in s && typeof s[key] !== 'string') return null;
     for (const key of ['padding', 'radius', 'font_size', 'hours', 'rating']) if (key in s && (typeof s[key] !== 'number' || !Number.isFinite(s[key]))) return null;
     for (const key of ['background', 'foreground', 'eyebrow_color', 'accent', 'card_background', 'question_background', 'countdown_title_color', 'countdown_description_color', 'hover_background', 'hover_foreground', 'secondary_foreground', 'hover_secondary_foreground', 'icon_background', 'icon_color']) if (key in s && (typeof s[key] !== 'string' || !/^(#(?:[a-f0-9]{3}|[a-f0-9]{4}|[a-f0-9]{6}|[a-f0-9]{8})|transparent)$/i.test(s[key]))) return null;

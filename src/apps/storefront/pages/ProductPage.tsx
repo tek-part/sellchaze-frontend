@@ -26,7 +26,7 @@ import { referralFromSearch } from '../../../shared/marketing/referral';
 import { useProductPresentation } from '../state/product-presentation';
 import { ProductPurchaseProvider } from '../state/product-purchase';
 import { parseLanding } from '../landing/document';
-import { LandingSections } from '../landing/LandingSections';
+import { LandingSections,ProductPresetSurface } from '../landing/LandingSections';
 import { ProductDetailsSection } from '../foundation/sections/ProductDetailsSection';
 
 export function ProductPage(): ReactElement | null {
@@ -66,6 +66,7 @@ export function ProductPage(): ReactElement | null {
   }, [viewedId]);
 
   const context = useMemo<StorefrontContext>(() => {
+    const landingDocument=parseLanding(productQ.data?.data.landing_page);
     const reviews: ReviewModel[] = detail?.productPreferences?.is_reviews_enabled === false ? [] : reviewsQ.data ? reviewsQ.data.data.map(toReview) : [];
     let related: ProductCardModel[] = relatedQ.data ? relatedQ.data.data.map((p) => toProductCard(p, currency, multiplier)) : [];
     if (dev && !relatedQ.data) related = sampleNewest(manifest.id, locale).slice(0, 6);
@@ -79,7 +80,8 @@ export function ProductPage(): ReactElement | null {
         loading: dev ? false : productQ.loading,
         product: detail,
         catalogVariantId,
-        landingCheckout: parseLanding(productQ.data?.data.landing_page)?.sections.some(section => section.type === 'checkout') ?? false,
+        landingCheckout: landingDocument?.sections.some(section => section.type === 'checkout') ?? false,
+        presetInlineCheckout: landingDocument?.mode==='below'&&landingDocument.sections.some(section=>section.type==='product_preset'),
         reviews,
         collections: { related },
       },
@@ -145,9 +147,11 @@ export function ProductPage(): ReactElement | null {
         />
       ) : null}
       <ProductPurchaseProvider key={detail?.id ?? slug}>
+        <ProductPresetSurface document={landing}>
         {landing && landing.mode === 'standalone' ? <LandingSections document={landing} context={context} checkout={<ProductDetailsSection context={context} instance={{ type: 'product-details' }} settings={{ show_share: false, show_wishlist: false }} purchaseOnly />} /> : null}
         {template && (landing?.mode !== 'standalone' || !landing.sections.some(section => section.type === 'checkout')) ? <div data-landing-fallback><ThemeRenderer page={detail?.productPreferences?.hide_related_products ? { ...template, sections: template.sections.filter((section) => section.type !== 'related-products') } : template} context={context} /></div> : null}
         {landing?.mode === 'below' ? <LandingSections document={landing} context={context} checkout={<ProductDetailsSection context={context} instance={{ type: 'product-details' }} settings={{ show_share: false, show_wishlist: false }} purchaseOnly />} /> : null}
+        </ProductPresetSurface>
       </ProductPurchaseProvider>
     </>
   );

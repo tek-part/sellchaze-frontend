@@ -79,7 +79,7 @@ export function ProductDetailsSection(props: SectionRenderProps & { buyboxHeader
   if (!product) return null;
   const preferences = product.productPreferences ?? {};
   const landingCheckout = context.data.landingCheckout === true && !props.purchaseOnly;
-  const samePage = !!props.purchaseOnly || landingCheckout || !props.suppressCheckout && preferences.is_one_page_checkout === true;
+  const samePage = !!props.purchaseOnly || landingCheckout || !props.suppressCheckout && (preferences.is_one_page_checkout === true || context.data.presetInlineCheckout === true);
   const skipCart = preferences.is_skip_cart === true;
 
   const showSku = flag(settings, 'show_sku', false);
