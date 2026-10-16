@@ -55,6 +55,10 @@ export function productPresetMarkup(fragment: ProductPresetFragment, content: Pr
   const root = document.body.firstElementChild as HTMLElement | null;
   if (!root) return '';
   root.setAttribute('data-motion', options.motion === false ? 'paused' : 'playing');
+  if(fragment.kind==='testimonials'){
+    const track=root.querySelector('[data-preset-carousel]');track?.setAttribute('role','region');track?.setAttribute('aria-label',content.title||'شهادات العملاء');
+    root.querySelectorAll('.slider_buttons_container .slider_button').forEach((button,index)=>{button.setAttribute(index===0?'data-preset-prev':'data-preset-next','');button.setAttribute('aria-label',index===0?'السابق':'التالي');});
+  }
   if (options.background) root.style.setProperty('background-color',options.background,'important');
   if(options.padding!==undefined)root.style.setProperty('padding',`${Math.max(0,Math.min(160,options.padding))}px`,'important');
   if(options.radius!==undefined)root.style.setProperty('border-radius',`${Math.max(0,Math.min(48,options.radius))}px`,'important');
