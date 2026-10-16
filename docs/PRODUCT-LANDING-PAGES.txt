@@ -39,3 +39,14 @@ templates, deeper per-family reference controls, source-format landing conversio
 and activated AI authoring. Native page-file import is not a claim that competitor
 template files or private layouts can be imported. This change does not activate
 AI, billing, payments or production deployment.
+
+Eleven custom testimonial designs can be selected or changed without replacing
+merchant items. They include carousels, centered quotes, colored cards, a grid,
+two animated rows and speech bubbles. The gallery uses neutral preview-only data;
+empty published sections do not invent reviews, ratings or verified buyers.
+Author, optional date/caption/platform, accent and card colors persist with the
+layout. Motion pauses on hover/focus, has a pause control and honors reduced motion.
+Section background images use the same owned-media validation, portability and
+copy remapping as foreground images. FAQ question backgrounds are configurable.
+Cleared optional text fields remain empty after JSON middleware normalization.
+The storefront also accepts PHP's empty settings-map JSON representation ([]).
