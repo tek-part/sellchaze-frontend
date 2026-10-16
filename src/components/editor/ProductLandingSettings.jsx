@@ -5,7 +5,7 @@ import { elementLabel } from './product-landing-elements';
 import { HiOutlinePlus, HiOutlineTrash, HiOutlineXMark } from '../workspace/WorkspaceIcons';
 import { testimonialDesign } from '../../apps/storefront/landing/testimonial-designs';
 import { storeFeatureDesign } from '../../apps/storefront/landing/store-feature-designs';
-import { StoreFeatureControls, StoreFeatureItemFields } from './StoreFeatureFields';
+import { LandingColorInput, StoreFeatureControls, StoreFeatureItemFields } from './StoreFeatureFields';
 
 function ImageField({ value, onChange, media, onUpload, label = 'الصورة' }) {
     const url = value?.media_id ? media.find(item => item.id === value.media_id)?.url : value?.url;
@@ -35,10 +35,10 @@ export default function ProductLandingSettings({ section, product, onChange, onC
         {['buy_button', 'banner', 'simple', 'content', 'countdown'].includes(section.type) ? <label>نص زر الشراء<input maxLength={120} value={s.button_text || ''} onChange={e => set('button_text', e.target.value)} /></label> : null}
         {['banner', 'simple', 'content'].includes(section.type) ? <label>ترتيب المحتوى<select value={s.layout || 'stack'} onChange={e => set('layout', e.target.value)}><option value="stack">رأسي</option><option value="split">صورة بجوار النص</option><option value="reverse">نص بجوار الصورة</option><option value="grid">شبكة</option></select></label> : null}
         <label>محاذاة النص<select value={s.align || 'center'} onChange={e => set('align', e.target.value)}><option value="start">البداية</option><option value="center">الوسط</option><option value="end">النهاية</option></select></label>
-        <div className="pl-settings-colors"><label>لون الخلفية<input type="color" value={/^#[\da-f]{6}$/i.test(s.background) ? s.background : '#ffffff'} onChange={e => set('background', e.target.value)} /></label><label>لون النص<input type="color" value={/^#[\da-f]{6}$/i.test(s.foreground) ? s.foreground : '#111827'} onChange={e => set('foreground', e.target.value)} /></label></div>
+        <div className="pl-settings-colors"><label>لون الخلفية<LandingColorInput value={/^#[\da-f]{6}$/i.test(s.background) ? s.background : '#ffffff'} onChange={e => set('background', e.target.value)} /></label><label>لون النص<LandingColorInput value={/^#[\da-f]{6}$/i.test(s.foreground) ? s.foreground : '#111827'} onChange={e => set('foreground', e.target.value)} /></label></div>
         {section.type === 'store_features' && s.variant ? <StoreFeatureControls settings={s} set={set} /> : null}
-        {section.type === 'faq' ? <label>لون خلفية الأسئلة<input type="color" value={/^#[\da-f]{6}$/i.test(s.question_background) ? s.question_background : '#ffffff'} onChange={e => set('question_background', e.target.value)} /></label> : null}
-        {section.type === 'custom_reviews' && s.variant ? <div className="pl-settings-colors"><label>لون التمييز<input type="color" value={/^#[\da-f]{6}$/i.test(s.accent) ? s.accent : '#22c55e'} onChange={e => set('accent', e.target.value)} /></label><label>خلفية البطاقات<input type="color" value={/^#[\da-f]{6}$/i.test(s.card_background) ? s.card_background : '#ffffff'} onChange={e => set('card_background', e.target.value)} /></label></div> : null}
+        {section.type === 'faq' ? <label>لون خلفية الأسئلة<LandingColorInput value={/^#[\da-f]{6}$/i.test(s.question_background) ? s.question_background : '#ffffff'} onChange={e => set('question_background', e.target.value)} /></label> : null}
+        {section.type === 'custom_reviews' && s.variant ? <div className="pl-settings-colors"><label>لون التمييز<LandingColorInput value={/^#[\da-f]{6}$/i.test(s.accent) ? s.accent : '#22c55e'} onChange={e => set('accent', e.target.value)} /></label><label>خلفية البطاقات<LandingColorInput value={/^#[\da-f]{6}$/i.test(s.card_background) ? s.card_background : '#ffffff'} onChange={e => set('card_background', e.target.value)} /></label></div> : null}
         {[['padding', 'المسافة الداخلية', 0, 160, 32], ['radius', 'استدارة الحواف', 0, 48, 0], ['font_size', 'حجم النص', 12, 96, 18]].map(([key, label, min, max, fallback]) => <label key={key}>{label}<input type="number" min={min} max={max} value={s[key] ?? fallback} onChange={e => set(key, Number(e.target.value))} /></label>)}
     </div>;
 }

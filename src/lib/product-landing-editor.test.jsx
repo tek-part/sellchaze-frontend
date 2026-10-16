@@ -89,6 +89,10 @@ describe('product landing editor save recovery', () => {
     api.put.mockImplementation((_, payload) => Promise.resolve({ data: { data: payload.document, version: nextVersion } }));
     await act(async () => root.render(<ProductLandingEditorPage />));
     await act(async () => [...host.querySelectorAll('button')].filter(el => el.textContent.trim() === 'مميزات المتجر').at(-1).click());
+    const cardColor = [...host.querySelectorAll('label')].find(el => el.textContent.trim() === 'خلفية البطاقات').querySelector('input');
+    await act(async () => { Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set.call(cardColor, '#eaf1f7'); cardColor.dispatchEvent(new Event('input', { bubbles: true })); });
+    await click('حفظ'); expect(api.put.mock.calls.at(-1)[1].document.sections[0].settings.card_background).toBe('#eaf1f7');
+    await click('تراجع'); await click('حفظ'); api.put.mockClear();
     await click('تغيير تنسيق المميزات');
     const choices = [...document.querySelectorAll('button')].filter(el => el.getAttribute('aria-label')?.startsWith('استخدام تنسيق المميزات '));
     expect(choices).toHaveLength(45);
