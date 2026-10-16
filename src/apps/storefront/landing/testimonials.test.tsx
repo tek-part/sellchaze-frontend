@@ -41,6 +41,8 @@ describe('editable testimonial designs', () => {
     const section = { id: crypto.randomUUID(), type: 'custom_reviews', settings: { variant: 'testimonials-11', background_image: { url: '/storage/own.png' }, items } };
     const doc = { schema: 1, mode: 'standalone', sections: [section] };
     expect(parseLanding(doc)).not.toBeNull(); expect(parseLanding({ ...doc, sections: [{ ...section, type: 'checkout' }] })).toBeNull();
+    expect(parseLanding({ ...doc, sections: [{ ...section, settings: { ...section.settings, items: [{ author: 'Own', url: '' }] } }] })).not.toBeNull();
+    expect(parseLanding({ ...doc, sections: [{ ...section, settings: { ...section.settings, items: [{ author: 'Own', url: 'javascript:bad()' }] } }] })).toBeNull();
     expect(parseLanding({ ...doc, sections: [{ id: section.id, type: 'checkout', settings: [] }] })).not.toBeNull();
     expect(parseLanding({ ...doc, sections: [{ id: section.id, type: 'checkout', settings: ['not-a-map'] }] })).toBeNull();
     expect(parseLanding({ ...doc, sections: [{ ...section, settings: { ...section.settings, background_image: { url: 'javascript:bad()' } } }] })).toBeNull();
