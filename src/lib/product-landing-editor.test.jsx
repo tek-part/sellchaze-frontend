@@ -14,8 +14,8 @@ const version = 'a'.repeat(64); const nextVersion = 'b'.repeat(64);
 const product = { id: 33, name: 'Own product', slug: 'own-product', price: 150, media: [] };
 let host, root;
 beforeEach(() => { vi.clearAllMocks(); globalThis.IS_REACT_ACT_ENVIRONMENT = true; host = document.createElement('div'); document.body.append(host); root = createRoot(host); api.get.mockImplementation(url => Promise.resolve({ data: url.endsWith('/landing-page') ? { data: { schema: 1, mode: 'standard', sections: [] }, version, product } : { data: product } })); });
-afterEach(async () => { await act(async () => root.unmount()); host.remove(); });
-const button = name => [...host.querySelectorAll('button')].find(el => (el.getAttribute('aria-label') || el.textContent).trim() === name);
+afterEach(async () => { await act(async () => root.unmount()); host.remove(); vi.useRealTimers(); vi.unstubAllGlobals(); vi.restoreAllMocks(); });
+const button = name => [...host.querySelectorAll('button')].find(el => (el.getAttribute('aria-label') || el.getAttribute('title') || el.textContent).trim() === name);
 const click = async name => act(async () => button(name).click());
 
 describe('product landing editor save recovery', () => {
@@ -55,5 +55,31 @@ describe('product landing editor save recovery', () => {
     await click('تراجع'); await click('حفظ');
     // Undo restores the accepted document, so no second save is necessary.
     expect(api.put).toHaveBeenCalledTimes(1);
+  });
+  it('preserves banner images and destinations when applying a different layout and exports portable links', async () => {
+    const banner = { id: crypto.randomUUID(), type: 'promo_banners', settings: { variant: 'banners-1', items: [{ image: { url: '/own.png' }, destination: { type: 'page', id: 23 } }] } };
+    api.get.mockImplementation(url => Promise.resolve({ data: url.endsWith('/destinations') ? { data: [{ id: 23, name: 'Own page', url: '/pages/own' }], selected: { id: 23, name: 'Own page', url: '/pages/own' }, meta: { page: 1, has_more: false } } : { data: { schema: 1, mode: 'standalone', sections: [banner] }, version, product, destination_urls: { 'page:23': '/pages/own' } } }));
+    api.put.mockImplementation((_, payload) => Promise.resolve({ data: { data: payload.document, version: nextVersion, destination_urls: { 'page:23': '/pages/own' } } }));
+    await act(async () => root.render(<ProductLandingEditorPage />));
+    // The palette and existing section each have this label; select the section tool.
+    vi.useFakeTimers();
+    await act(async () => [...host.querySelectorAll('button')].filter(el => el.textContent.trim() === 'لافتات ترويجية مخصصة').at(-1).click());
+    // Exercise the debounced picker request using its actual response contract.
+    await act(async () => { await vi.advanceTimersByTimeAsync(250); });
+    vi.useRealTimers();
+    expect([...host.querySelectorAll('select')].some(select => [...select.options].some(option => option.textContent === 'Own page'))).toBe(true);
+    await click('تغيير تنسيق اللافتات');
+    await act(async () => [...document.querySelectorAll('button')].find(el => el.getAttribute('aria-label')?.startsWith('استخدام تنسيق اللافتات 4:')).click());
+    await click('حفظ'); const saved = api.put.mock.calls[0][1].document.sections[0];
+    expect(saved.settings.variant).toBe('banners-4'); expect(saved.settings.items).toHaveLength(5);
+    expect(saved.settings.items[0]).toEqual(banner.settings.items[0]);
+    let blob; const revoked = vi.fn(); vi.stubGlobal('URL', class extends URL { static createObjectURL(value) { blob = value; return 'blob:own'; } static revokeObjectURL(value) { revoked(value); } });
+    const anchorClick = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {});
+    let release; const schedule = vi.spyOn(globalThis, 'setTimeout').mockImplementationOnce(callback => { release = callback; return 0; });
+    await click('تصدير صفحة Sellchaze');
+    schedule.mockRestore();
+    const exported = JSON.parse(await new Promise(resolve => { const reader = new FileReader(); reader.onload = () => resolve(reader.result); reader.readAsText(blob); })); expect(exported.sections[0].settings.items[0].url).toBe('/pages/own'); expect(exported.sections[0].settings.items[0]).not.toHaveProperty('destination');
+    release(); expect(revoked).toHaveBeenCalledWith('blob:own');
+    anchorClick.mockRestore();
   });
 });
