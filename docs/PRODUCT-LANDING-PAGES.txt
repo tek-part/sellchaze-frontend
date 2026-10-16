@@ -115,6 +115,8 @@ from their own host, with the SIL Open Font License included in public/fonts/alm
 Scoped heading rules prevent theme fonts from overriding landing typography, as
 verified against the source public desktop/phone page. Purchase buttons retain
 their system font stack. The editor no longer downloads the remote font catalog.
+An explicitly selected general store font still takes precedence over the default
+landing font; clearing that choice restores the local Almarai default.
 Preset1 uses19.2px question text/16px padding and25.6px heading typography. The
 source builder blocks actual phone preview even in preview mode; acceptance of
 every source preset on phones remains separate from native390/320px QA.

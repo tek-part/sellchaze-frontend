@@ -1,8 +1,8 @@
 @font-face{font-family:Almarai;src:url('/fonts/almarai/Almarai-Regular.ttf') format('truetype');font-style:normal;font-weight:400;font-display:swap}
 @font-face{font-family:Almarai;src:url('/fonts/almarai/Almarai-Bold.ttf') format('truetype');font-style:normal;font-weight:700;font-display:swap}
-.sf-product-landing{font-family:Almarai,sans-serif;--font:Almarai,sans-serif;--heading:Almarai,sans-serif;--font-ar:Almarai,sans-serif;--font-arabic:Almarai,sans-serif;--font-sans:Almarai,sans-serif;--font-serif:Almarai,sans-serif}
-.sf-product-landing .sf-landing-block :where(h1,h2,h3,h4,h5,h6,p,label,input,select,textarea){font-family:Almarai,sans-serif}
-.lp-faq{width:100%;max-width:var(--faq-width);margin-inline:auto;color:var(--faq-color);min-width:0;container-type:inline-size;font-family:Almarai,sans-serif}
+.sf-product-landing{font-family:var(--store-identity-font,Almarai,sans-serif);--font:var(--store-identity-font,Almarai,sans-serif);--heading:var(--store-identity-font,Almarai,sans-serif);--font-ar:var(--store-identity-font,Almarai,sans-serif);--font-arabic:var(--store-identity-font,Almarai,sans-serif);--font-sans:var(--store-identity-font,Almarai,sans-serif);--font-serif:var(--store-identity-font,Almarai,sans-serif)}
+.sf-product-landing .sf-landing-block :where(h1,h2,h3,h4,h5,h6,p,label,input,select,textarea){font-family:var(--store-identity-font,Almarai,sans-serif)}
+.lp-faq{width:100%;max-width:var(--faq-width);margin-inline:auto;color:var(--faq-color);min-width:0;container-type:inline-size;font-family:var(--store-identity-font,Almarai,sans-serif)}
 .lp-faq .lp-faq-header{margin:0 0 30px;text-align:var(--faq-align)}
 .lp-faq .lp-faq-header h2{margin:0;font-size:var(--faq-heading-size);font-weight:700;line-height:1.35;color:var(--faq-color);overflow-wrap:anywhere}
 .lp-faq .lp-faq-header p{margin:0 0 16px;font-size:16px;line-height:1.6;color:var(--faq-accent);white-space:pre-wrap;overflow-wrap:anywhere}
