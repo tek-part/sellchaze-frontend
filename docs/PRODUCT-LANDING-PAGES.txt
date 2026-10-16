@@ -4,7 +4,8 @@ The merchant product editor opens /store/products/:productId/landing in a separa
 full-viewport editor. Admin store scope uses /stores/:id/products/:productId/landing.
 The shell requires products-edit in owner scope; it does not grant theme access.
 
-The editor uses a 73px toolbar, a 320px right pane, Almarai, and a 300ms pane
+The editor uses a 73px toolbar, a 320px right element pane, a separate 364px left
+properties pane, Almarai, and a 300ms pane
 transition with reduced-motion support. It provides eighteen element families,
 twenty-four render types, explicit save, undo/redo, movement, duplication, removal,
 read-only preview, a narrow canvas, and native Sellchaze JSON import/export.

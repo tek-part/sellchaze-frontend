@@ -12,7 +12,7 @@ export default function ProductLandingSettings({ section, product, onChange, onC
     const html = ['html', 'advanced', 'rich_text', 'content'].includes(section.type);
     const image = ['image', 'banner', 'simple', 'content', 'advanced'].includes(section.type);
     const updateItem = (index, key, value) => set('items', (s.items || []).map((item, position) => position === index ? { ...item, [key]: value } : item));
-    return <div className="pl-settings"><header><h2>{elementLabel(section.type)}</h2><button type="button" onClick={onClose} aria-label="إغلاق الإعدادات"><HiOutlineXMark /></button></header>
+    return <div className="pl-settings"><header><div><h2>الإعدادات</h2><small>{elementLabel(section.type)}</small></div><button type="button" onClick={onClose} aria-label="إغلاق الإعدادات"><HiOutlineXMark /></button></header>
         {!['image', 'buy_button', 'checkout'].includes(section.type) ? <label>العنوان<input maxLength={300} value={s.title || ''} onChange={e => set('title', e.target.value)} /></label> : null}
         {['heading', 'simple', 'banner', 'content', 'advanced', 'store_features', 'custom_reviews', 'product_features', 'promo_banners', 'how_to', 'countdown', 'billboard'].includes(section.type) ? <label>النص الفرعي<textarea maxLength={2000} value={s.description || ''} onChange={e => set('description', e.target.value)} rows={3} /></label> : null}
         {html ? <><label>محتوى HTML<textarea className="pl-code" dir="ltr" rows={12} maxLength={20000} value={s.html || ''} onChange={e => set('html', e.target.value)} /></label><label>تنسيق CSS مخصص<textarea className="pl-code" dir="ltr" rows={6} maxLength={12000} value={s.css || ''} onChange={e => set('css', e.target.value)} /></label></> : null}
