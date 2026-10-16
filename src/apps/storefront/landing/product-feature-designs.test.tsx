@@ -36,6 +36,15 @@ describe('product feature designs',()=>{
   const frame=host.querySelector('iframe')!,html=frame.getAttribute('srcdoc')!,dom=new DOMParser().parseFromString(html,'text/html');
   expect(html).toContain(css);expect(html).toContain('Own HTML');expect(html).toContain('@layer native');expect(html).not.toContain('bad()');expect(dom.querySelector('.lp-pf-purchase')).toBeNull();expect(frame.getAttribute('sandbox')).not.toContain('allow-same-origin');expect(dom.querySelectorAll('script')).toHaveLength(1);expect(dom.querySelector('h4')!.textContent).toBe('Own <heading>');
  });
+ it('renders every long owned item and the trailing purchase action without extending raw HTML limits',async()=>{
+  const text='Own & < > " '.repeat(450); const items=Array.from({length:30},(_,i)=>({title:`Long item ${i}`,text,html:'<p>Owned fragment</p><script>bad()</script>'+ 'x'.repeat(6100)+'<p>Outside item limit</p>'}));
+  const settings={variant:'product-features-44' as const,title:'Long content',items,css:'.lp-pf { color: blue }',button_text:'Trailing purchase',html:'<p>Root owner content</p>'+ 'x'.repeat(20100)+'<p>Outside root limit</p>'};
+  const before=JSON.stringify(settings);await act(async()=>root.render(<ProductFeatures settings={settings}/>));
+  const markup=host.querySelector('iframe')!.getAttribute('srcdoc')!;const dom=new DOMParser().parseFromString(markup,'text/html');
+  expect(markup.length).toBeGreaterThan(200000);expect(dom.querySelectorAll('.lp-pf-rich li')).toHaveLength(30);expect(dom.querySelectorAll('.lp-pf-rich li')[29]!.textContent).toBe('Long item 29'+text);expect(dom.querySelector('[data-purchase]')!.textContent).toBe('Trailing purchase');
+  expect(markup).toContain('Root owner content');expect(markup).not.toContain('Outside root limit');expect(markup).not.toContain('Outside item limit');expect(markup).not.toContain('bad()');expect(dom.querySelectorAll('script')).toHaveLength(1);expect(dom.querySelector('meta[http-equiv="Content-Security-Policy"]')!.getAttribute('content')).toContain("form-action 'none'");expect(JSON.stringify(settings)).toBe(before);
+  await act(async()=>root.render(<ProductFeatures settings={{...settings,variant:'product-features-1'}}/>));const cards=new DOMParser().parseFromString(host.querySelector('iframe')!.getAttribute('srcdoc')!,'text/html');expect(cards.querySelectorAll('.icon-container')).toHaveLength(30);expect(cards.querySelectorAll('.review-text')[29]!.textContent).toBe(text);expect(cards.querySelectorAll('script')).toHaveLength(1);expect(cards.body.textContent).not.toContain('Outside item limit');
+ });
  it('retains legacy rendering and scopes the variant family across import/export',()=>{
   const doc:LandingDocument={schema:1,mode:'standalone',sections:[{id:'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',type:'product_features',settings:{title:'Own legacy',items:[{title:'Own item'}]}}]};
   expect(renderToStaticMarkup(<LandingSections document={doc} context={context}/>)).toContain('Own legacy');

@@ -1,0 +1,39 @@
+.lp-native-reviews{display:flex;box-sizing:border-box;width:100%;min-width:0;text-align:right;isolation:isolate;color:#000;font:16px/24px -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Oxygen,Ubuntu,Cantarell,"Fira Sans","Droid Sans","Helvetica Neue",sans-serif}
+.lp-native-reviews *{box-sizing:border-box;min-width:0;border:0 solid #e5e7eb}
+.lp-native-reviews .rv-flow{display:flex;flex-direction:column;flex:1 1 0%;max-width:100%}
+.lp-native-reviews .rv-heading{display:flex;flex:1 1 0%;flex-direction:column;gap:8px;text-align:center}
+.lp-native-reviews.lp-native-reviews h3{font:700 25.6px/1.5 Almarai,sans-serif;margin:0}
+.lp-native-reviews .description{font:400 17px/25.5px Almarai,sans-serif;margin:0;color:var(--rv-body,inherit)}
+.lp-native-reviews .lp-native-reviews-grid{display:flex;flex-wrap:wrap;width:100%;max-width:1200px;padding:10px;margin:0 auto;gap:20px}
+.lp-native-reviews .icon-container{display:flex;flex:1 1 0%;flex-direction:column;align-items:center;text-align:center;position:relative;max-width:100%;background-color:var(--rv-card)}
+.lp-native-reviews .icon-image-container{width:100%;position:relative}
+.lp-native-reviews .rv-image-wrap{position:relative;overflow:hidden}
+.lp-native-reviews img{display:block;width:100%;height:auto;max-width:100%}
+.lp-native-reviews .icon-text-container{text-align:center;color:#000}
+.lp-native-reviews .author-name{font:600 20.8px/1.5 Almarai,sans-serif;margin:16px 0}
+.lp-native-reviews .review-text{font:400 16px/1.5 Almarai,sans-serif}
+.lp-native-reviews .rv-link{color:inherit;text-decoration:underline}
+.lp-native-reviews .rv-date{display:block;font:400 13px/1.5 Almarai,sans-serif}
+.lp-native-reviews .rv-select{position:absolute;inset:0;width:100%;height:100%;padding:0;background:transparent;cursor:pointer;z-index:3}
+.lp-native-reviews .rv-select:focus-visible{outline:3px solid #f59e0b;outline-offset:-3px}
+.lp-native-reviews .advanced-text{display:flex;gap:24px;width:100%;max-width:1170px;margin:0 auto}
+.lp-native-reviews .ql-editor{flex:1 1 0%;font:400 16px/30.4px -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;direction:ltr;text-align:left;white-space:normal;overflow-wrap:break-word}
+.lp-native-reviews .rv-rich{direction:rtl;text-align:right;width:100%}
+.lp-native-reviews.lp-native-reviews h1,.lp-native-reviews.lp-native-reviews h2,.lp-native-reviews.lp-native-reviews h6{font-family:Almarai,sans-serif;margin:0}
+.lp-native-reviews.lp-native-reviews--42 .rv-quote h3{font:600 22.4px/1.9 Almarai,sans-serif;flex-wrap:wrap}
+.lp-native-reviews--42 .rv-quote{position:relative;display:flex;flex-direction:column;align-items:center;gap:30px;width:100%}
+.lp-native-reviews--42 .rv-quote h3{display:flex;align-items:center;justify-content:center;flex-wrap:wrap}
+.lp-native-reviews--42 .rv-quote+.rv-quote{margin-top:50px}
+.lp-native-reviews--42 .rv-quote-image{margin:0;display:flex;justify-content:center}
+.lp-native-reviews--42 .rv-quote-image img{width:76px;height:58px;object-fit:contain}
+.lp-native-reviews--42 .rv-stars{font:400 20px/1.5 Almarai,sans-serif;color:#eab308}
+.lp-native-reviews[data-thumbnail]{pointer-events:none}
+.lp-native-reviews .icon-container:hover,.lp-native-reviews .icon-container:focus-within{background-color:var(--rv-hover-card,var(--rv-card))}
+.lp-native-reviews.rv-custom-hover-title .icon-container:hover .author-name,.lp-native-reviews.rv-custom-hover-title .icon-container:focus-within .author-name{color:var(--rv-hover-title)!important}
+.lp-native-reviews.rv-custom-hover-body .icon-container:hover .review-text,.lp-native-reviews.rv-custom-hover-body .icon-container:focus-within .review-text{color:var(--rv-hover-body)!important}
+.lp-native-reviews[data-motion="paused"] *, .lp-native-reviews[data-motion="paused"] *::before,.lp-native-reviews[data-motion="paused"] *::after{animation:none!important;transition:none!important}
+.sf-landing-block.sf-landing-block--native-reviews{padding:0!important}
+@media(max-width:700px){.lp-native-reviews{overflow-wrap:anywhere}.lp-native-reviews:not([data-thumbnail]) .lp-native-reviews-grid{max-width:100%!important}.lp-native-reviews:not([data-thumbnail]) .rv-image-wrap{max-width:100%}.lp-native-reviews--42 .advanced-text{max-width:100%;width:100%}.lp-native-reviews--42 .rv-quote h3{gap:8px}.lp-native-reviews--42 h3 strong::after{margin:0 12px}}
+@media(prefers-reduced-motion:reduce){.lp-native-reviews *,.lp-native-reviews *::before,.lp-native-reviews *::after{animation:none!important;transition:none!important}}
+
+.lp-native-reviews.lp-native-reviews--42 .rv-quote h3:not(:has(em)) strong::after{display:none}
