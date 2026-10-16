@@ -106,6 +106,31 @@ describe('product landing editor save recovery', () => {
     await act(async () => [...document.querySelectorAll('button')].find(el => el.getAttribute('aria-label')?.startsWith('استخدام تنسيق المميزات 42:')).click());
     await click('حفظ'); expect(api.put.mock.calls[3][1].document.sections[0].settings.items).toEqual(saved.settings.items);
   });
+  it('offers35 FAQ styles while preserving extra questions, answers, media, colors, ordering and undo', async () => {
+    const items = Array.from({ length: 9 }, (_, i) => ({ title: `Own question ${i}`, text: `Own answer ${i}`, html: '<p>Own rich answer</p>', image: { url: '/own-answer.png' }, url: '/pages/own-policy' }));
+    const faq = { id: crypto.randomUUID(), type: 'faq', settings: { variant: 'faq-1', title: 'Own FAQs', background: '#112233', question_background: '#abcdef', items } };
+    api.get.mockResolvedValue({ data: { data: { schema: 1, mode: 'standalone', sections: [faq] }, version, product } });
+    api.put.mockImplementation((_, payload) => Promise.resolve({ data: { data: payload.document, version: nextVersion } }));
+    await act(async () => root.render(<ProductLandingEditorPage />));
+    await act(async () => host.querySelector('.pl-section-title').click());
+    await click('تغيير تنسيق الأسئلة');
+    const choices = [...document.querySelectorAll('button')].filter(el => el.getAttribute('aria-label')?.startsWith('استخدام تنسيق الأسئلة ')); expect(choices).toHaveLength(35);
+    await act(async () => choices.find(el => el.getAttribute('aria-label').startsWith('استخدام تنسيق الأسئلة 34:')).click());
+    await click('حفظ'); const saved = api.put.mock.calls.at(-1)[1].document.sections[0];
+    expect(saved.settings).toEqual({ ...faq.settings, variant: 'faq-34' });
+    await click('تحريك العنصر 1 لأسفل'); await click('حفظ'); expect(api.put.mock.calls.at(-1)[1].document.sections[0].settings.items.slice(0, 2)).toEqual([items[1], items[0]]);
+    await click('تراجع'); await click('حفظ'); expect(api.put.mock.calls.at(-1)[1].document.sections[0].settings.items).toEqual(items);
+    await click('استعادة ألوان وتنسيق التصميم'); await click('حفظ'); expect(api.put.mock.calls.at(-1)[1].document.sections[0].settings).not.toHaveProperty('background');
+    await click('تراجع'); await click('حفظ'); expect(api.put.mock.calls.at(-1)[1].document.sections[0].settings).toEqual(saved.settings);
+  });
+  it('creates blank FAQ slots with preset paint defaults and never persists preview answers', async () => {
+    api.put.mockImplementation((_, payload) => Promise.resolve({ data: { data: payload.document, version: nextVersion } }));
+    await act(async () => root.render(<ProductLandingEditorPage />)); await click('الأسئلة الشائعة');
+    await act(async () => [...document.querySelectorAll('button')].find(el => el.getAttribute('aria-label')?.startsWith('استخدام تنسيق الأسئلة 5:')).click());
+    await click('حفظ'); const saved = api.put.mock.calls[0][1].document.sections[0];
+    expect(saved.settings.variant).toBe('faq-5'); expect(saved.settings.items).toEqual(Array.from({ length: 6 }, () => ({ title: '', text: '' })));
+    expect(saved.settings).not.toHaveProperty('background'); expect(saved.settings).not.toHaveProperty('foreground'); expect(JSON.stringify(saved)).not.toContain('أضف إجابتك');
+  });
   it('starts a narrow editor with an unobstructed canvas and closes the palette while choosing a design', async () => {
     vi.stubGlobal('matchMedia', () => ({ matches: true, addEventListener: vi.fn(), removeEventListener: vi.fn() }));
     api.put.mockImplementation((_, payload) => Promise.resolve({ data: { data: payload.document, version: nextVersion } }));
