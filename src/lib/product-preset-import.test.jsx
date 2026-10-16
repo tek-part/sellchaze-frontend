@@ -1,0 +1,40 @@
+// @vitest-environment jsdom
+import {act} from 'react';
+import {createRoot} from 'react-dom/client';
+import {afterEach,beforeEach,expect,it,vi} from 'vitest';
+import ProductLandingEditorPage from '../pages/ProductLandingEditorPage';
+import {createProductPreset} from '../apps/storefront/landing/product-presets';
+import api from '../api/client';
+vi.mock('../api/client',()=>({default:{get:vi.fn(),put:vi.fn(),post:vi.fn()}}));
+vi.mock('react-router-dom',()=>({useNavigate:()=>vi.fn(),useParams:()=>({productId:'50'}),useOutletContext:()=>({store:{name:'Own',currency:'EGP'}})}));
+vi.mock('../hooks/useStoreScope',()=>({default:()=>({apiBase:'/my-store',uiBase:'/store'})}));
+vi.mock('../apps/storefront/landing/LandingSections',()=>({LandingBlock:({section})=><div>{section.settings.title}</div>}));
+const product={id:50,name:'Own product',description:'<p>Actual description</p>',media:[{id:83,url:'/own.png',alt:'Actual image'}]};
+const initial={schema:1,mode:'below',sections:[{id:'00000000-0000-4000-8000-000000000001',type:'heading',settings:{title:'Preserved own document'}}]};
+let host,root;
+beforeEach(()=>{vi.clearAllMocks();globalThis.IS_REACT_ACT_ENVIRONMENT=true;vi.stubGlobal('IntersectionObserver',class{observe(){}disconnect(){}});vi.stubGlobal('ResizeObserver',class{observe(){}disconnect(){}});host=document.createElement('div');document.body.append(host);root=createRoot(host);api.get.mockResolvedValue({data:{data:initial,version:'a'.repeat(64),product}});api.put.mockImplementation((_url,body)=>Promise.resolve({data:{data:body.document,version:'b'.repeat(64),product}}));});
+afterEach(async()=>{await act(async()=>root.unmount());host.remove();vi.unstubAllGlobals();});
+const button=name=>[...host.querySelectorAll('button')].find(node=>(node.getAttribute('aria-label')||node.textContent).trim()===name);
+const click=async name=>act(async()=>button(name).click());
+it('imports a complete layout explicitly and restores the original through saved undo',async()=>{
+  await createProductPreset('product-page-03',product);
+  await act(async()=>root.render(<ProductLandingEditorPage/>));
+  await click('استيراد قالب');expect(host.querySelectorAll('.pl-page-preset-card')).toHaveLength(22);
+  await click('اختيار قالب الدراجة الكهربائية 2');await click('استخدام القالب');
+  expect(api.put).not.toHaveBeenCalled();expect(host.querySelectorAll('.pl-section-title')).toHaveLength(17);
+  await click('حفظ');const applied=api.put.mock.calls[0][1].document;
+  expect(applied.mode).toBe('standalone');expect(applied.sections.filter(section=>section.type==='checkout')).toHaveLength(1);
+  expect(applied.sections.some(section=>section.settings.image?.media_id===83)).toBe(true);
+  await click('تراجع');await click('حفظ');expect(api.put.mock.calls[1][1]).toEqual({version:'b'.repeat(64),document:initial});
+});
+it('changes a preset question layout without losing identity, owned content, CSS or saved undo',async()=>{
+  const doc=await createProductPreset('product-page-03',product),faq=doc.sections.find(section=>section.settings.preset_section==='product-page-03-14');
+  faq.settings={...faq.settings,title:'Own questions',css:'h3 { letter-spacing: 1px }',items:[{title:'Own question',text:'Own answer',image:{media_id:83,url:'/own.png'}}]};
+  api.get.mockResolvedValue({data:{data:doc,version:'a'.repeat(64),product}});
+  await act(async()=>root.render(<ProductLandingEditorPage/>));await act(async()=>host.querySelectorAll('.pl-section-title')[13].click());
+  await click('تغيير تنسيق القسم');expect(document.querySelectorAll('.pl-design-card')).toHaveLength(35);
+  await act(async()=>document.querySelectorAll('.pl-design-card')[1].click());await click('حفظ');
+  const saved=api.put.mock.calls[0][1].document.sections[13];
+  expect(saved.id).toBe(faq.id);expect(saved.type).toBe('faq');expect(saved.settings.variant).toBe('faq-2');expect(saved.settings.items[0]).toEqual(faq.settings.items[0]);expect(saved.settings.css).toBe(faq.settings.css);expect(saved.settings.preset_section).toBeUndefined();
+  await click('تراجع');await click('حفظ');expect(api.put.mock.calls[1][1].document).toEqual(doc);
+});

@@ -1,3 +1,4 @@
+import ProductPresetSettings from './ProductPresetSettings';
 import CountdownSettings from './CountdownSettings';
 import GallerySettings from './GallerySettings';
 import BillboardSettings from './BillboardSettings';
@@ -45,6 +46,7 @@ export default function ProductLandingSettings({ section, product, onChange, onC
     const image = ['image', 'banner', 'simple', 'content', 'advanced'].includes(section.type) && content?.kind !== 'cards' || howTo && ['overlap', 'accordion'].includes(howTo.kind) || buyButton?.icon || productFeature?.advanced || nativeReview?.advanced || nativeDescription?.advanced;
     const updateItem = (index, key, value) => set('items', (s.items || []).map((item, position) => { if (position !== index) return item; const next = { ...item, [key]: value }; if (value === undefined) delete next[key]; return next; }));
     const moveItem = (index, delta) => { const items = [...s.items || []]; const target = index + delta; if (target < 0 || target >= items.length) return; [items[index], items[target]] = [items[target], items[index]]; set('items', items); };
+    if(section.type==='product_preset')return <ProductPresetSettings onDesignChange={onDesignChange} onDescriptionEdit={onDescriptionEdit} section={section} product={product} onChange={onChange} onClose={onClose} onUpload={onUpload} focusedItem={focusedItem} focusedImage={focusedImage}/>;
     if(section.type==='countdown'&&s.variant)return <CountdownSettings section={section} product={product} onChange={onChange} onClose={onClose} onUpload={onUpload} onDesignChange={onDesignChange} onEdit={onCountdownEdit}/>;
     if(section.type==='gallery'&&s.variant)return <GallerySettings section={section} product={product} onChange={onChange} onClose={onClose} onUpload={onUpload} onDesignChange={onDesignChange} onEdit={onGalleryEdit}/>;
     if(section.type==='billboard'&&s.variant)return <BillboardSettings section={section} product={product} onChange={onChange} onClose={onClose} onUpload={onUpload} onDesignChange={onDesignChange} onDescriptionEdit={onDescriptionEdit} focusedImage={focusedImage}/>;

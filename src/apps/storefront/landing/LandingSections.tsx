@@ -1,4 +1,6 @@
 import { CountdownLayouts } from './CountdownLayouts';
+import { ProductPresetLayouts } from './ProductPresetLayouts';
+import { productPresetIndex } from './product-presets.generated';
 import { GalleryLayouts } from './GalleryLayouts';
 import { BillboardLayouts } from './BillboardLayouts';
 import { hasBillboardContent } from './billboard-rich';
@@ -57,6 +59,7 @@ export function LandingBlock({ section, context, preview = false, phonePreview =
   const title = s.title ?? ''; const buy = <button type="button" className="sf-landing-buy" onClick={preview ? undefined : scrollLandingPurchase}>{s.button_text || 'اضغط هنا للشراء'}</button>;
   let body: ReactNode = null;
   switch (section.type) {
+    case 'product_preset': body=<ProductPresetLayouts section={section} productId={product?.id??''} preview={preview} phonePreview={phonePreview} onItemSelect={onFeatureItemSelect} onImageSelect={onContentImageSelect} onTextSelect={onGalleryTextSelect} onEditPurchase={onBuySelect} onPurchase={scrollLandingPurchase}/>;break;
     case 'checkout': body = preview ? <div className="sf-landing-checkout-preview"><h3>{product?.title}</h3><p>نموذج الشراء</p><div>الاسم الكامل</div><div>رقم الهاتف</div><div>العنوان</div><button type="button" disabled>تأكيد الطلب — معاينة</button></div> : firstCheckout ? <div data-landing-checkout>{checkout}</div> : buy; break;
     case 'heading': body = <><h2>{title}</h2>{s.description ? <p>{s.description}</p> : null}</>; break;
     case 'rich_text': case 'html': case 'advanced': body = <><StaticLandingFrame title={title || 'محتوى صفحة المنتج'} html={s.html ?? ''} css={s.css} onPurchase={preview ? undefined : scrollLandingPurchase} />{!s.html ? <><h2>{title}</h2><p>{s.description}</p><LandingPhoto image={s.image} /></> : null}</>; break;
@@ -87,6 +90,7 @@ export function LandingBlock({ section, context, preview = false, phonePreview =
   if (!preview && section.type === 'faq' && !hasFaqContent(s)) return null;
   if (!preview && section.type === 'content' && s.variant && !hasContentLayout(s)) return null;
   if (!preview && section.type === 'buy_button' && s.variant && s.button_text !== undefined && !s.button_text.trim()) return null;
+  if(section.type==='product_preset')return <section className="sf-landing-block sf-landing-block--product-preset">{body}</section>;
   const content = section.type === 'content' && s.variant ? contentDesign(s.variant) : null;
   const howTo = section.type === 'how_to' && s.variant ? howToDesign(s.variant) : null;
   const style: CSSProperties = { ...(content ? { '--content-padding': s.padding !== undefined ? `${s.padding}px` : `${content.padding}px ${content.sidePadding}px` } : {}), ...(howTo ? { '--howto-padding': s.padding !== undefined ? `${s.padding}px` : `${howTo.padding}px ${howTo.sidePadding}px` } : {}), ...(section.type === 'video' && s.variant ? { '--landing-video-padding': `${s.padding ?? 40}px` } : {}), backgroundColor: s.background ?? (section.type === 'faq' ? faqDesign(s.variant).background : content?.background ?? howTo?.background ?? (section.type === 'buy_button' && s.variant ? '#ffffff' : undefined)), ...(s.background_image?.url && landingUrl(s.background_image.url) && !s.background_image.url.startsWith('#') ? { backgroundImage: `url(${JSON.stringify(s.background_image.url)})`, backgroundSize: 'cover', backgroundPosition: 'center' } : {}), color: s.foreground, textAlign: s.align, padding: `${Math.max(0, Math.min(160, s.padding ?? 32))}px`, borderRadius: `${Math.max(0, Math.min(48, s.radius ?? 0))}px`, ...(s.font_size ? { fontSize: Math.max(12, Math.min(96, s.font_size)) } : {}) };
@@ -96,4 +100,11 @@ export function LandingBlock({ section, context, preview = false, phonePreview =
 export function LandingSections({ document, context, checkout: form }: { document: LandingDocument; context: StorefrontContext; checkout?: ReactNode }) {
   const checkout = document.sections.find(section => section.type === 'checkout')?.id;
   return <div className="sf-product-landing">{document.sections.map(section => <LandingBlock key={section.id} section={section} context={context} firstCheckout={section.id === checkout} checkout={form} />)}</div>;
+}
+
+export function ProductPresetSurface({document,children}:{document:LandingDocument|null;children:ReactNode}){
+  const pageStyle=document?.sections.find(section=>section.type==='product_preset'&&productPresetIndex[section.settings.preset_section??'']?.pageStyle)?.settings;
+  if(!pageStyle)return <>{children}</>;
+  const style:CSSProperties={backgroundColor:pageStyle.background,...(pageStyle.background_image?.url&&landingUrl(pageStyle.background_image.url)?{backgroundImage:`url(${JSON.stringify(pageStyle.background_image.url)})`,backgroundRepeat:'repeat',backgroundSize:'320px',backgroundPosition:'center'}:{})};
+  return <div className="sf-preset-product-surface" style={style}>{children}</div>;
 }
