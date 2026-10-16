@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { toCategoryCard, toProductCard, toProductDetail } from './mappers';
+import { toCategoryCard, toProductCard, toProductDetail, toReview } from './mappers';
 import type { ApiProduct } from './types';
 
 const base: ApiProduct = {
@@ -78,4 +78,10 @@ describe('toCategoryCard', () => {
     expect(card.url).toBe('/collections/knitwear');
     expect(card.meta).toBe('12 pieces');
   });
+});
+
+it('retains both imported photo objects and legacy photo URLs without asserting a verified purchase', () => {
+  const review = toReview({ id: 1, rating: 5, author_name: 'Own reviewer', photos: [{ src: '/own.jpg', alt: 'Own image' }, '/legacy.jpg'] });
+  expect(review.photos).toEqual([{ src: '/own.jpg', alt: 'Own image' }, { src: '/legacy.jpg' }]);
+  expect(review.verified).toBeUndefined();
 });
