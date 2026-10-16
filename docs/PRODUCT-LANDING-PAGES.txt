@@ -67,3 +67,19 @@ Native page/catalog exports replace references with portable URLs. Exported file
 duplication retains existing links
 and remaps image ownership. Unavailable destinations must be fixed before native
 page export. The existing landing migration is required; this phase adds no tables.
+
+Forty-five store-feature presets now cover bordered cards, unboxed benefits,
+horizontal pills, a split heading/grid, logo rows, merchant-entered numbers,
+a standalone statement and three15-second tickers. The gallery is drawn natively;
+it contains no competitor images, CSS, brands, sample policies or fake metrics.
+Changing a design preserves item identity/order, text, icon, image and link, pads
+only blank editor slots and never truncates extra merchant items. Compact designs
+can omit descriptions/headings/images visually; their stored content is retained.
+Numbers are merchant-entered text, not inferred live statistics. Empty published
+presets never use the editor's neutral examples. Each item has a selectable symbol
+or owned image, optional link/colors and reorder controls; image clicks target the
+item inspector. Section colors include icon, card, description and hover states.
+Motion can be disabled; tickers offer pause/resume, keep copies inert/link-free,
+and wrap the real content under reduced motion. Native catalog/page transfer and
+product duplication retain all fields and remap owned images. No new migration.
+These presets do not establish full public/font/phone parity for the wider catalog.
