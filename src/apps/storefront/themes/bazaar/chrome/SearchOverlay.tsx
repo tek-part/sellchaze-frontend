@@ -1,3 +1,4 @@
+import { preservePreviewNavigation } from '../../../preview-session';
 /**
  * Bazaar SearchOverlay — thin wrapper over the shared overlay component (focus management, ESC,
  * animated presence) used on phones, where the inline header search is hidden.
@@ -18,7 +19,7 @@ export function SearchOverlay(props: SearchOverlayProps): ReactElement | null {
     const q = value.trim();
     if (!q) return;
     const preview = window.location.search.includes('preview=1') ? '&preview=1' : '';
-    window.location.assign(`/search?q=${encodeURIComponent(q)}${preview}`);
+    window.location.assign(preservePreviewNavigation(`/search?q=${encodeURIComponent(q)}${preview}`));
   };
   return <SharedSearchOverlay open={props.open} onClose={props.onClose} query={query} onQueryChange={setQuery} onSubmit={submit} placeholder={t('search.placeholder')} />;
 }
