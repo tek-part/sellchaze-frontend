@@ -27,6 +27,8 @@ export interface ApiQuantityOffer {
 }
 
 export interface ApiProduct {
+  catalog_hidden?: boolean;
+  product_preferences?: unknown;
   quantity_offers?: ReadonlyArray<ApiQuantityOffer> | null;
   auto_select_variant?: boolean;
   digital_pool_stock?: number | null;

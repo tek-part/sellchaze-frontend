@@ -1,3 +1,4 @@
+import { ProductHeaderChrome } from '../../../state/product-presentation';
 import { UiBlock } from '../../../ui-blocks/UiBlocks';
 /**
  * Fresh DefaultLayout — global chrome shell: AnnouncementBar → Header (with the delivery-promise
@@ -81,7 +82,7 @@ export function DefaultLayout(props: LayoutRenderProps): ReactElement {
           data-show-unit-label={showUnitLabel ? 'true' : 'false'}
           data-tabbar={showTabBar ? 'true' : 'false'}
         >
-          {messages.length > 0 ? <AnnouncementBar messages={messages} /> : null}
+          <ProductHeaderChrome>{messages.length > 0 ? <AnnouncementBar messages={messages} /> : null}
 
           <UiBlock slot="before_header" />
           <Header
@@ -94,7 +95,7 @@ export function DefaultLayout(props: LayoutRenderProps): ReactElement {
             onCartOpen={() => setCartOpen(true)}
             onMenuOpen={() => setMenuOpen(true)}
           />
-          <UiBlock slot="after_header" />
+          <UiBlock slot="after_header" /></ProductHeaderChrome>
 
           <main id="sf-main" className="fr-main">{children}</main>
 

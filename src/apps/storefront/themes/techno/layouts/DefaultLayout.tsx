@@ -1,3 +1,4 @@
+import { ProductHeaderChrome } from '../../../state/product-presentation';
 import { UiBlock } from '../../../ui-blocks/UiBlocks';
 /**
  * Techno DefaultLayout — global chrome shell: AnnouncementBar → Header → <main> → Footer, plus the
@@ -103,7 +104,7 @@ export function DefaultLayout(props: LayoutRenderProps): ReactElement {
             data-show-ratings={showRatings ? 'true' : 'false'}
             data-show-quick-add={showQuickAdd ? 'true' : 'false'}
           >
-            {messages.length > 0 ? <AnnouncementBar messages={messages} url={typeof settings['announcement_url'] === 'string' ? settings['announcement_url'] : ''} /> : null}
+            <ProductHeaderChrome>{messages.length > 0 ? <AnnouncementBar messages={messages} url={typeof settings['announcement_url'] === 'string' ? settings['announcement_url'] : ''} /> : null}
 
             <UiBlock slot="before_header" />
             <Header
@@ -118,7 +119,7 @@ export function DefaultLayout(props: LayoutRenderProps): ReactElement {
               onMenuOpen={() => setMenuOpen(true)}
               onCompareOpen={() => setCompareOpen(true)}
             />
-            <UiBlock slot="after_header" />
+            <UiBlock slot="after_header" /></ProductHeaderChrome>
 
             <main id="sf-main" className="tk-main">{children}</main>
 

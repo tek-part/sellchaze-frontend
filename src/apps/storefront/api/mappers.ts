@@ -19,6 +19,7 @@ import type {
 import type { ApiBrand, ApiCategory, ApiCollection, ApiCoupon, ApiProduct, ApiReview, ApiVariant } from './types';
 import { sanitizeHtml } from '../../../shared/utils/sanitizeHtml';
 import { validQuantityOffer } from '../types/quantity-offers';
+import { productPreferences } from '../types/product-preferences';
 
 function toNumber(value: string | number | null | undefined): number {
   if (typeof value === 'number') return value;
@@ -36,9 +37,11 @@ export function toProductCard(product: ApiProduct, currency: string, multiplier 
   const responsive = product.image_responsive ?? undefined;
   const hover = product.images && product.images.length > 1 ? product.images[1] : undefined;
   const tags = product.tags?.filter((t): t is string => typeof t === 'string' && t.trim().length > 0);
+  const preferences = productPreferences(product.product_preferences);
 
   return {
     id: String(product.id),
+    ...(Object.keys(preferences).length ? { productPreferences: preferences } : {}),
     digitalType: product.digital_type ?? 'physical',
     autoSelectVariants: product.auto_select_variant !== false,
     ...(product.order_quantity_limit != null && product.order_quantity_limit > 0 ? { orderMaxQuantity: product.order_quantity_limit } : {}),

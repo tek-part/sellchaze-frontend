@@ -1,0 +1,47 @@
+import { useMemo, useState, type FormEvent, type ReactElement } from 'react';
+import type { CheckoutItem } from '../api/storefront';
+import { quoteCheckout } from '../api/storefront';
+import { useAsync } from '../api/useAsync';
+import { Button, Input, Spinner } from '../foundation/components';
+import { useLocale } from '../i18n/useLocale';
+import { useCheckoutPaymentFlow } from './useCheckoutPaymentFlow';
+import { CheckoutFieldsForm, useCheckoutFields } from './CheckoutFields';
+import { CheckoutRecovery } from './CheckoutRecovery';
+import { PersonalizationSummary } from '../foundation/components/PersonalizationSummary';
+import { CheckoutMinimum } from './CheckoutMinimum';
+import { minimumOrderAllows } from './minimum-order';
+import { useCheckoutLead } from './useCheckoutLead';
+import { useCheckoutMetrics } from '../analytics/checkout-hooks';
+import { formatMoney } from '../utils/format';
+
+export default function ProductInlineCheckout({ productId, items, ready, buttonText }: { productId: string; items: ReadonlyArray<CheckoutItem>; ready: boolean; buttonText?: string }): ReactElement {
+  const { locale } = useLocale(); const ar = locale === 'ar'; const text = (a: string, e: string): string => ar ? a : e;
+  const stableItems = useMemo(() => items, [items]);
+  const payment = useCheckoutPaymentFlow({ items: stableItems, preserveCart: true, surface: 'product' });
+  const contact = useCheckoutFields(payment.paymentMethod, [Number(productId)]);
+  const [coupon, setCoupon] = useState(''); const [appliedCoupon, setAppliedCoupon] = useState('');
+  useCheckoutMetrics(ready ? stableItems : [], 'storefront', 'product');
+  const lead = useCheckoutLead({ contact: { ...contact.payload(), coupon_code: appliedCoupon }, items: stableItems, source: 'storefront', kind: `product:${productId}`, paymentMethod: payment.paymentMethod, enabled: ready && contact.ready && !payment.busy && !payment.completed && !payment.unresolved && !payment.paymentRetry });
+  const quoteKey = JSON.stringify([items, appliedCoupon, contact.shippingSelection, contact.shippingReady, ready]);
+  const quotes = useAsync(async () => ready && items.length && contact.shippingReady ? { key: quoteKey, data: (await quoteCheckout(items, appliedCoupon, contact.shippingSelection)).data } : null, [quoteKey, locale]);
+  const quote = !quotes.loading && !quotes.error && quotes.data?.key === quoteKey ? quotes.data.data : null;
+  const submit = async (event: FormEvent): Promise<void> => {
+    event.preventDefault();
+    if (!payment.paymentRetry && (!ready || !quote || !minimumOrderAllows(quote) || !contact.shippingReady || !contact.phoneVerification.ready || !contact.botProtection.ready)) return;
+    await payment.submit({ ...contact.payload(), coupon_code: appliedCoupon, lead_token: lead.submitToken() });
+  };
+  return <section className="sf-product-checkout" aria-label={text('الشراء من صفحة المنتج', 'Product checkout')}><h2>{text('أكمل طلبك', 'Complete your order')}</h2><CheckoutRecovery flow={payment} />
+    <form onSubmit={(event) => void submit(event)}><fieldset disabled={payment.busy || payment.unresolved} className="sf-product-checkout__fields"><CheckoutFieldsForm model={contact} />
+      <fieldset><legend>{text('طريقة الدفع', 'Payment method')}</legend>{payment.paymentMethods.map((method) => <label className="sf-product-checkout__payment" key={method.slug}><input type="radio" name={`product-payment-${productId}`} checked={payment.paymentMethod === method.slug} onChange={() => payment.setPaymentMethod(method.slug)} required />{method.slug === 'cod' ? text('الدفع عند الاستلام', 'Cash on delivery') : method.slug === 'bank_transfer' ? text('تحويل بنكي', 'Bank transfer') : method.name}{method.test_mode ? text(' (تجريبي)', ' (Test)') : ''}</label>)}</fieldset>
+      <div className="sf-product-checkout__coupon"><Input label={text('كود الخصم', 'Coupon code')} value={coupon} maxLength={100} onChange={(event) => setCoupon(event.target.value)} /><Button type="button" variant="secondary" disabled={!ready || quotes.loading} onClick={() => { setAppliedCoupon(coupon.trim()); quotes.reload(); }}>{text('تطبيق', 'Apply')}</Button>{appliedCoupon ? <Button type="button" variant="ghost" onClick={() => { setAppliedCoupon(''); setCoupon(''); }}>{text('إزالة', 'Remove')}</Button> : null}</div>
+    </fieldset>
+    {!ready ? <p role="status">{text('اختر الصنف وأكمل بيانات تخصيص المنتج.', 'Choose an available option and complete product personalization.')}</p> : null}
+    {quotes.loading ? <Spinner label={text('جارٍ حساب الإجمالي…', 'Calculating total…')} /> : null}
+    {quotes.error ? <div role="alert"><p>{quotes.error.message}</p><Button type="button" variant="secondary" onClick={quotes.reload}>{text('إعادة المحاولة', 'Try again')}</Button></div> : null}
+    {quote ? <div className="sf-product-checkout__selection">{quote.items.map((line) => <div key={`${line.product_id}:${line.variant_id}:${line.personalization_key ?? ''}:${line.quantity_offer?.id ?? ''}`}><p>{line.name} × {line.quantity} <strong>{formatMoney(Number(line.line_total), quote.currency, locale)}</strong></p><PersonalizationSummary entries={line.personalization} /></div>)}</div> : null}
+    {quote ? <dl className="sf-product-checkout__totals"><div><dt>{text('المنتجات', 'Products')}</dt><dd>{formatMoney(Number(quote.totals.subtotal), quote.currency, locale)}</dd></div>{Number(quote.totals.discount_total) > 0 ? <div><dt>{text('الخصم', 'Discount')}</dt><dd>−{formatMoney(Number(quote.totals.discount_total), quote.currency, locale)}</dd></div> : null}{quote.requires_shipping ? <div><dt>{text('الشحن', 'Shipping')}</dt><dd>{formatMoney(Number(quote.totals.shipping_total), quote.currency, locale)}</dd></div> : null}{Number(quote.totals.tax_total) > 0 ? <div><dt>{text('الضريبة', 'Tax')}</dt><dd>{formatMoney(Number(quote.totals.tax_total), quote.currency, locale)}</dd></div> : null}<div><dt>{text('الإجمالي', 'Total')}</dt><dd>{formatMoney(Number(quote.totals.grand_total), quote.currency, locale)}</dd></div></dl> : null}
+    {payment.error && !payment.unresolved ? <p role="alert">{payment.error}</p> : null}
+    {!payment.paymentRetry && !payment.unresolved ? <CheckoutMinimum quote={quote} /> : null}
+    {!payment.unresolved ? <Button type="submit" block loading={payment.busy} disabled={!payment.paymentMethod || !quote || !contact.shippingReady || (!payment.paymentRetry && (!ready || !minimumOrderAllows(quote) || !contact.phoneVerification.ready || !contact.botProtection.ready))}>{buttonText || text('تأكيد الطلب', 'Place order')}</Button> : null}
+    </form></section>;
+}

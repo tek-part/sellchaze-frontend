@@ -36,6 +36,8 @@ describe('initial editor save workflow', () => {
         api.post.mockRejectedValueOnce(new Error('Connection interrupted'));
         await submit(); const first = api.post.mock.calls[0][1];
         expect(JSON.parse(first.get('creation'))).toMatchObject({ inventory: { stock_quantity: 12 }, variants: [] });
+        expect(JSON.parse(first.get('product_preferences'))).toMatchObject({ is_one_page_checkout: false, is_skip_cart: false, buy_now_text: 'اضغط هنا للشراء' });
+        expect(first.has('preferences_version')).toBe(false);
         expect(first.get('creation_key')).toMatch(/^[a-f0-9-]{36}$/);
         expect(host.querySelector('[role=alert]').textContent).toContain('Connection interrupted');
         api.post.mockResolvedValueOnce(response); await submit();

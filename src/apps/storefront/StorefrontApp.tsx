@@ -1,5 +1,5 @@
+import { ProductHeaderChrome, ProductPresentationProvider } from './state/product-presentation';
 import { UiBlocksProvider } from './ui-blocks/UiBlocks';
-import { DesignAssetsHead } from './design-assets/DesignAssetsHead';
 /**
  * StorefrontApp — resolves the active theme's `default` layout (global chrome) and renders the
  * router inside it, so the header/footer/cart persist across navigations while the page content
@@ -10,7 +10,7 @@ import { DesignAssetsHead } from './design-assets/DesignAssetsHead';
  * nav/footer so the chrome is fully populated without a seeded backend.
  */
 import { previewOrDev } from './preview';
-import { useEffect, useMemo, useState, type ReactElement } from 'react';
+import { lazy, Suspense, useEffect, useMemo, useState, type ReactElement } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useLocale } from './i18n/useLocale';
 import { useDirection, useLayout, useThemeManifest, type StorefrontContext } from './theme-engine';
@@ -24,13 +24,14 @@ import { AppRoutes } from './pages/AppRoutes';
 import { AppErrorBoundary } from './AppErrorBoundary';
 import { NavigationInterceptor } from './pages/NavigationInterceptor';
 import { RouteAnnouncer } from './pages/RouteAnnouncer';
-import { CustomizeBridge } from './customize/CustomizeBridge';
 import { isCustomizeMode } from './customize/customizer-state';
 import { shippingThreshold } from './utils/shipping';
 import { StoreIdentityHead } from './seo/StoreIdentityHead';
 import { appendFooterPages, appendHeaderPages } from './shared-ui/automatic-page-navigation';
 
 type PreviewData = typeof import('./dev/sampleData');
+const CustomizeBridge = lazy(() => import('./customize/CustomizeBridge').then((module) => ({ default: module.CustomizeBridge })));
+const DesignAssetsHead = lazy(() => import('./design-assets/DesignAssetsHead').then((module) => ({ default: module.DesignAssetsHead })));
 
 /**
  * Copyright year for rendered chrome. A literal, not `new Date()`: engine invariant I4 requires
@@ -246,20 +247,20 @@ export function StorefrontApp(): ReactElement {
   }, [categoriesQ.data, navigation, store.name, store.currency, store.currencyMultipliers, store.shipping, store.description, store.defaultLocale, store.identity, manifest.id, t, locale, previewData]);
 
   return (
-    <UiBlocksProvider><div className="sf-root" data-theme-id={manifest.id}>
-      {store.supportedCurrencies.length > 1 ? (
+    <ProductPresentationProvider><UiBlocksProvider><div className="sf-root" data-theme-id={manifest.id}>
+      <ProductHeaderChrome>{store.supportedCurrencies.length > 1 ? (
         <label className="fixed bottom-4 end-4 z-[var(--z-toast,9999)] rounded-full border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 text-xs shadow-lg">
           <span className="sr-only">Display currency</span>
           <select aria-label="Display currency" value={store.currency} onChange={(event) => setCurrency(event.target.value)} className="bg-transparent font-semibold outline-none">
             {store.supportedCurrencies.map((currency) => <option key={currency} value={currency}>{currency}</option>)}
           </select>
         </label>
-      ) : null}
+      ) : null}</ProductHeaderChrome>
       <StoreIdentityHead />
-      <DesignAssetsHead />
+      <Suspense fallback={null}><DesignAssetsHead /></Suspense>
       <NavigationInterceptor />
       <RouteAnnouncer />
-      {isCustomizeMode() ? <CustomizeBridge /> : null}
+      {isCustomizeMode() ? <Suspense fallback={null}><CustomizeBridge /></Suspense> : null}
       <a
         href="#sf-main"
         className="sr-only focus:not-sr-only focus:absolute focus:start-4 focus:top-4 focus:z-50 focus:bg-ink focus:px-4 focus:py-2 focus:text-on-ink"
@@ -289,6 +290,6 @@ export function StorefrontApp(): ReactElement {
           </AppErrorBoundary>
         </main>
       )}
-    </div></UiBlocksProvider>
+    </div></UiBlocksProvider></ProductPresentationProvider>
   );
 }
