@@ -5,7 +5,7 @@ import { descriptionRichHtml } from '../../apps/storefront/landing/description-r
 import { HiOutlineXMark } from '../workspace/WorkspaceIcons';
 import './product-description-settings.css';
 
-function MediaField({label,value,media,onUpload,onChange}) {
+export function MediaField({label,value,media,onUpload,onChange}) {
     const url=value?.media_id?media.find(m=>m.id===value.media_id)?.url:value?.url;
     const pick=row=>onChange({...value,media_id:row.id,url:row.url,alt:value?.alt??row.alt??''});
     return <fieldset className="pd-media-field"><legend>{label}</legend><label className="pd-media-upload">{url?<img src={url} alt={value?.alt||''}/>:<span>رفع صورة</span>}<input type="file" aria-label={`رفع ${label}`} accept="image/png,image/jpeg,image/gif,image/webp" onChange={async e=>{const file=e.target.files?.[0];e.target.value='';if(file){const row=await onUpload?.(file);if(row)pick(row);}}}/></label><small>PNG, JPG, GIF حتى 10 ميجابايت</small><label>صور المنتج<select value={value?.media_id??''} onChange={e=>{const row=media.find(m=>m.id===Number(e.target.value));if(row)pick(row);}}><option value="">اختر صورة</option>{media.map((m,i)=><option key={m.id} value={m.id}>{m.alt||`صورة ${i+1}`}</option>)}</select></label><details><summary>الرابط والنص البديل</summary><label>رابط الصورة<input type="url" dir="ltr" value={url??''} onChange={e=>{const next={...value,url:e.target.value};delete next.media_id;onChange(next);}}/></label><label>النص البديل<input maxLength={300} value={value?.alt??''} onChange={e=>onChange({...value,alt:e.target.value})}/></label></details>{value?<button type="button" onClick={()=>onChange(undefined)}>حذف الصورة</button>:null}</fieldset>;

@@ -1,0 +1,9 @@
+.sf-landing-block.sf-landing-block--native-billboard{padding:0!important}
+.lp-pd[class*="lp-pd--billboard-"] .bb-extra{width:100%;display:grid;gap:8px;text-align:var(--pd-align,right)}
+.lp-pd[class*="lp-pd--billboard-"] .bb-extra p{margin:0;padding:0;white-space:pre-wrap;overflow-wrap:anywhere;font:400 16px/1.7 Almarai,sans-serif;color:var(--pd-body,inherit)}
+.lp-pd[class*="lp-pd--billboard-"] .bb-extra .bb-extra-title{font-weight:700}
+.lp-pd .bb-fade-hero.lp-reveal-pending{opacity:.01;transform:none}
+.lp-pd .bb-fade-hero.lp-reveal-entered{animation:bb-hero-fade .6s cubic-bezier(0,0,.3,1) both}
+.lp-pd[class*="lp-pd--billboard-"].pd-owner-hover-card .icon-container:hover,.lp-pd[class*="lp-pd--billboard-"].pd-owner-hover-card .icon-container:focus-within{background-color:var(--pd-hover-card)!important}
+@keyframes bb-hero-fade{from{opacity:.01;transform:none}to{opacity:1;transform:none}}
+@media(max-width:768px){.lp-pd--billboard-13:not(.pd-custom-css):not([data-thumbnail]) .pd-hero{overflow:hidden}.lp-pd--billboard-13:not(.pd-custom-css):not([data-thumbnail]) .pd-hero::before,.lp-pd--billboard-13:not(.pd-custom-css):not([data-thumbnail]) .pd-hero::after{font-size:clamp(14px,5vw,24px)}}
