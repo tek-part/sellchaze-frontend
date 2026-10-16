@@ -198,7 +198,7 @@ export function ProductDetailsSection(props: SectionRenderProps & { buyboxHeader
                 {outOfStock ? (ar ? 'هذا الاختيار غير متاح' : 'This selection is unavailable') : selectionRequired ? (ar ? 'اختر خيارات المنتج' : 'Choose product options') : remaining === 0 ? (ar ? 'الكمية المتاحة في السلة' : 'Available quantity is in your bag') : t('product.addToCart')}
               </Button> : null}
             </div>
-            <ProductPromotions id={product.id} preferences={preferences} selectedQuantity={cart.lines.filter((line) => line.productId === product.id).reduce((sum, line) => sum + line.quantity, 0)} ar={ar} />
+            <ProductPromotions id={product.id} preferences={preferences} storeId={store?.id ?? ''} ar={ar} />
 
             {product.lowStock && !outOfStock ? <span className="sf-pdp__stock sf-pdp__stock--low">{t('pdp.lowStockSoon')}</span> : null}
 

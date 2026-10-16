@@ -1,8 +1,10 @@
 import { useEffect, useState, type ReactElement } from 'react';
 import type { ProductPreferences } from '../../types/product-preferences';
+import { usePromotionPurchasedQuantity } from '../../state/product-promotion-purchases';
 
 const expires = new Map<string, number>();
-export function ProductPromotions({ id, preferences, selectedQuantity, ar }: { id: string; preferences: ProductPreferences; selectedQuantity: number; ar: boolean }): ReactElement | null {
+export function ProductPromotions({ id, storeId, preferences, ar }: { id: string; storeId: string; preferences: ProductPreferences; ar: boolean }): ReactElement | null {
+  const purchasedQuantity = usePromotionPurchasedQuantity(storeId, id);
   const low = preferences.fake_visitors_min ?? 20; const high = Math.max(low, preferences.fake_visitors_max ?? 70);
   const [visitors, setVisitors] = useState(low); const [seconds, setSeconds] = useState(0);
   useEffect(() => {
@@ -25,7 +27,7 @@ export function ProductPromotions({ id, preferences, selectedQuantity, ar }: { i
     tick(); const timer = window.setInterval(tick, 1000); return () => window.clearInterval(timer);
   }, [id, preferences.is_fake_timer, hours]);
   if (!preferences.is_fake_visitors && !preferences.is_fake_stock && !preferences.is_fake_timer && !preferences.is_free_shipping) return null;
-  const remaining = Math.max(0, (preferences.fake_stock_count ?? 5) - selectedQuantity);
+  const remaining = Math.max(0, (preferences.fake_stock_count ?? 5) - purchasedQuantity);
   const time = `${Math.floor(seconds / 3600).toString().padStart(2, '0')}:${Math.floor(seconds / 60 % 60).toString().padStart(2, '0')}:${(seconds % 60).toString().padStart(2, '0')}`;
   return <div className="sf-product-promotions">{preferences.is_free_shipping ? <p>{ar ? 'شحن مجاني لهذا المنتج' : 'Free shipping for this product'}</p> : null}{preferences.is_fake_visitors ? <p>{ar ? `يشاهد هذا المنتج الآن ${visitors} زائرًا` : `${visitors} visitors are viewing this product`}</p> : null}{preferences.is_fake_stock ? <p>{ar ? `تبقّى ${remaining} قطع` : `${remaining} pieces left`}</p> : null}{preferences.is_fake_timer && seconds > 0 ? <p>{ar ? 'الوقت المتبقي على العرض' : 'Offer countdown'} <time dir="ltr">{time}</time></p> : null}</div>;
 }

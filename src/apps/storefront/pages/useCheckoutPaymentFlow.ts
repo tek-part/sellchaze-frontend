@@ -20,6 +20,7 @@ import { metricsSession } from '../analytics/events';
 import { browserAdvertisingAllowed, sendAdvertisingEnvelope } from '../advertising/events';
 import { useStore } from '../state/store-context';
 import { abCheckoutToken } from './ab-assignment';
+import { recordPromotionPurchase } from '../state/product-promotion-purchases';
 
 export interface CheckoutContactPayload {
   customer_name?: string;
@@ -94,6 +95,7 @@ export function useCheckoutPaymentFlow(options?: { items: ReadonlyArray<Checkout
       // Keep its empty-cart redirect from preempting this successful order transition.
       completed.current = true;
       const saved = readCheckoutAttempt(scope);
+      recordPromotionPurchase(store.id, response.data.number, saved?.body.items ?? items ?? checkoutCartItems(cart.lines));
       try { retireLeadToken(window.sessionStorage, saved?.body.lead_token); } catch { /* optional browser persistence */ }
       if ((saved ? saved.body.cart_mode !== 'direct' : !preserveCart)) cart.clear();
       if (response.payment?.redirect_url) {
@@ -110,6 +112,7 @@ export function useCheckoutPaymentFlow(options?: { items: ReadonlyArray<Checkout
       if (requestError instanceof ApiError) {
         const body = requestError.payload as { checkout_rejected?: boolean; payment_retry?: { token?: string }; receipt?: { token?: string }; data?: { number?: string; tracking?: unknown }; message?: string } | undefined;
         if (body?.data?.number && body.receipt?.token) {
+          recordPromotionPurchase(store.id, body.data.number, readCheckoutAttempt(scope)?.body.items ?? items ?? checkoutCartItems(cart.lines));
           sendAdvertisingEnvelope(store.id, body.data.tracking);
           saveOrderReceipt(body.data.number, body.receipt.token);
           try { retireLeadToken(window.sessionStorage, readCheckoutAttempt(scope)?.body.lead_token); } catch { /* server already converted the lead */ }
@@ -130,7 +133,7 @@ export function useCheckoutPaymentFlow(options?: { items: ReadonlyArray<Checkout
       submitting.current = false;
       setBusy(false);
     }
-  }, [cart, preserveCart, navigate, paymentRetry, scope, t, store.id]);
+  }, [cart, items, preserveCart, navigate, paymentRetry, scope, t, store.id]);
 
   const submit = useCallback(async (payload: CheckoutContactPayload): Promise<void> => {
     if (submitting.current || completed.current) return;
