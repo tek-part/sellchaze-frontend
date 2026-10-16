@@ -1,0 +1,40 @@
+Product landing pages
+
+The merchant product editor opens /store/products/:productId/landing in a separate,
+full-viewport editor. Admin store scope uses /stores/:id/products/:productId/landing.
+The shell requires products-edit in owner scope; it does not grant theme access.
+
+The editor uses a 73px toolbar, a 320px right pane, Almarai, and a 300ms pane
+transition with reduced-motion support. It provides eighteen element families,
+twenty-four render types, explicit save, undo/redo, movement, duplication, removal,
+read-only preview, a narrow canvas, and native Sellchaze JSON import/export.
+Uploaded JPG/PNG/GIF/WebP images are product-owned and limited to 10MB each.
+
+Layout modes are standard (retain the document without displaying it), standalone,
+and below the conventional product presentation. Products without a document keep
+their existing theme presentation. A standalone layout without a checkout block
+retains the conventional purchase fallback. Multiple checkout blocks render one
+live form and subsequent purchase links, with shared variant, quantity, offer and
+personalization choices. Real checkout reuses authoritative quotes, shipping,
+inventory, payment recovery, contact fields, minimums, OTP and bot protection.
+The ordinary basket is preserved. A direct checkout URL reports the storefront
+surface; embedded product checkout reports the product surface for advertising.
+
+Static merchant HTML/CSS renders only in an opaque sandboxed frame with a CSP,
+not in the dashboard or storefront DOM. The trusted bridge accepts size/scroll
+messages only from its own frame. The purchase bridge only scrolls to the live
+purchase section. It never submits an order or uses HTML-provided prices.
+
+The API returns a version hash. Concurrent different edits fail without replacing
+the local draft. Retrying the exact accepted canonical document is safe. Product
+metadata and inventory do not change its document version. Export strips owned
+media identities into URLs; catalog duplication remaps owned media to the copy.
+
+Backend migration 2026_10_16_030000_add_product_landing_pages.php is required before
+this frontend. It adds a nullable document and leaves existing product rows intact.
+
+Scope still in progress: exact reference layouts for all twenty-two product
+templates, deeper per-family reference controls, source-format landing conversion,
+and activated AI authoring. Native page-file import is not a claim that competitor
+template files or private layouts can be imported. This change does not activate
+AI, billing, payments or production deployment.

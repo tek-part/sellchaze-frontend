@@ -1,0 +1,86 @@
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useNavigate, useOutletContext, useParams } from 'react-router-dom';
+import api from '../api/client';
+import useStoreScope from '../hooks/useStoreScope';
+import { emptyLanding, moveLanding, parseLanding } from '../apps/storefront/landing/document';
+import { LandingBlock } from '../apps/storefront/landing/LandingSections';
+import { identityFontStylesheet, loadIdentityFonts } from '../apps/storefront/store-identity';
+import { elementFamilies, elementLabel, newLandingSection } from '../components/editor/product-landing-elements';
+import ProductLandingSettings from '../components/editor/ProductLandingSettings';
+import { HiOutlineBuildingStorefront, HiOutlineChatBubbleLeftRight, HiOutlineCheckBadge, HiOutlineClock, HiOutlineCursorArrowRays, HiOutlineDocumentText, HiOutlineMegaphone, HiOutlinePencilSquare, HiOutlineQuestionMarkCircle, HiOutlineRectangleGroup, HiOutlineShoppingBag, HiOutlineShoppingCart, HiOutlineStar, HiOutlineVideoCamera } from '../components/workspace/WorkspaceIcons';
+import { HiOutlineArrowDown, HiOutlineArrowUp, HiOutlineArrowUturnLeft, HiOutlineArrowUturnRight, HiOutlineArrowRight, HiOutlineCheck, HiOutlineCommandLine, HiOutlineComputerDesktop, HiOutlineDevicePhoneMobile, HiOutlineDocumentDuplicate, HiOutlineEye, HiOutlinePhoto, HiOutlinePlus, HiOutlineSquares2X2, HiOutlineTrash, HiOutlineXMark, HiOutlineArrowUpTray, HiOutlineArrowDownTray } from '../components/workspace/WorkspaceIcons';
+import './store/product-landing-editor.css';
+
+const errorText = e => Object.values(e.response?.data?.errors || {}).flat().join(' ') || e.response?.data?.message || e.message;
+const imageTypes = new Set(['slider', 'image', 'banner', 'gallery', 'promo_banners', 'video', 'youtube']);
+const elementIcons = { heading: HiOutlinePencilSquare, rich_text: HiOutlinePencilSquare, checkout: HiOutlineShoppingBag, faq: HiOutlineQuestionMarkCircle, store_features: HiOutlineBuildingStorefront, custom_reviews: HiOutlineStar, promo_banners: HiOutlineMegaphone, countdown: HiOutlineClock, video: HiOutlineVideoCamera, youtube: HiOutlineVideoCamera, how_to: HiOutlineCursorArrowRays, content: HiOutlineDocumentText, buy_button: HiOutlineShoppingCart, product_features: HiOutlineCheckBadge, reviews: HiOutlineChatBubbleLeftRight, product_description: HiOutlineDocumentText, billboard: HiOutlineRectangleGroup };
+function BlockIcon({ type }) { const Icon = elementIcons[type] || (imageTypes.has(type) ? HiOutlinePhoto : ['html', 'advanced', 'rich_text'].includes(type) ? HiOutlineCommandLine : HiOutlineSquares2X2); return <Icon aria-hidden />; }
+function previewDocument(document, media) {
+    const next = structuredClone(document); const map = new Map(media.map(item => [item.id, item.url]));
+    const resolve = image => image?.media_id ? { ...image, url: map.get(image.media_id) || '' } : image;
+    next.sections.forEach(section => { const s = section.settings; if (s.image) s.image = resolve(s.image); if (s.images) s.images = s.images.map(resolve); if (s.items) s.items = s.items.map(item => ({ ...item, ...(item.image ? { image: resolve(item.image) } : {}) })); });
+    return next;
+}
+export default function ProductLandingEditorPage() {
+    const { productId } = useParams(); const { apiBase, uiBase } = useStoreScope(); const { store } = useOutletContext(); const navigate = useNavigate();
+    const endpoint = `${apiBase}/catalog/products/${productId}`;
+    const [product, setProduct] = useState(null); const [version, setVersion] = useState('');
+    const [history, setHistory] = useState({ past: [], present: emptyLanding(), future: [] });
+    const [savedDocument, setSavedDocument] = useState(''); const [loading, setLoading] = useState(true); const [busy, setBusy] = useState(false); const [error, setError] = useState(''); const [saved, setSaved] = useState(false);
+    const [selected, setSelected] = useState(null); const [palette, setPalette] = useState(null); const [mobile, setMobile] = useState(false); const [preview, setPreview] = useState(false); const [sidebar, setSidebar] = useState(true); const [reload, setReload] = useState(0);
+    const importInput = useRef(null); const inFlight = useRef(false); const generation = useRef(0);
+    const document = history.present; const dirty = !!savedDocument && JSON.stringify(document) !== savedDocument;
+    useEffect(() => {
+        let active = true; generation.current += 1; setLoading(true); setError(''); setProduct(null); setSavedDocument(''); setSelected(null); setPalette(null); setHistory({ past: [], present: emptyLanding(), future: [] });
+        api.get(`${endpoint}/landing-page`).then(d => {
+            if (!active) return; const doc = parseLanding(d.data.data); if (!doc) throw new Error('تعذّر قراءة محتوى الصفحة.');
+            setProduct(d.data.product); setVersion(d.data.version); setHistory({ past: [], present: doc, future: [] }); setSavedDocument(JSON.stringify(doc));
+        }).catch(e => { if (active) setError(errorText(e)); }).finally(() => { if (active) setLoading(false); });
+        return () => { active = false; generation.current += 1; };
+    }, [endpoint, reload]);
+    useEffect(() => { let active = true; let link; loadIdentityFonts('Almarai').then(() => { if (!active) return; const href = identityFontStylesheet('Almarai'); if (href) { link = window.document.createElement('link'); link.rel = 'stylesheet'; link.href = href; window.document.head.append(link); } }); return () => { active = false; link?.remove(); }; }, []);
+    useEffect(() => { const guard = event => { if (dirty) { event.preventDefault(); event.returnValue = ''; } }; window.addEventListener('beforeunload', guard); return () => window.removeEventListener('beforeunload', guard); }, [dirty]);
+    const change = useCallback(updater => { if (inFlight.current) return; setSaved(false); setError(''); setHistory(current => { const next = typeof updater === 'function' ? updater(current.present) : updater; if (JSON.stringify(next) === JSON.stringify(current.present)) return current; return { past: [...current.past, current.present].slice(-100), present: next, future: [] }; }); }, []);
+    function undo() { setSaved(false); setHistory(current => !current.past.length ? current : { past: current.past.slice(0, -1), present: current.past.at(-1), future: [current.present, ...current.future].slice(0, 100) }); }
+    function redo() { setSaved(false); setHistory(current => !current.future.length ? current : { past: [...current.past, current.present].slice(-100), present: current.future[0], future: current.future.slice(1) }); }
+    function add(type) { if (document.sections.length >= 60) return; const section = newLandingSection(type, product); change(current => ({ ...current, mode: current.mode === 'standard' ? 'standalone' : current.mode, sections: [...current.sections, section] })); setSelected(section.id); setPalette(null); }
+    async function save() {
+        if (inFlight.current || !product) return; inFlight.current = true; setBusy(true); setError(''); const attempt = generation.current;
+        try { const { data } = await api.put(`${endpoint}/landing-page`, { version, document }); if (attempt !== generation.current) return; const doc = parseLanding(data.data); if (!doc) throw new Error('تعذّر قراءة الصفحة المحفوظة.'); setVersion(data.version); setHistory(current => ({ ...current, present: doc })); setSavedDocument(JSON.stringify(doc)); setSaved(true); }
+        catch (e) { if (attempt === generation.current) setError(errorText(e)); }
+        finally { inFlight.current = false; if (attempt === generation.current) setBusy(false); }
+    }
+    async function importFile(event) {
+        const file = event.target.files?.[0]; event.target.value = ''; if (!file) return;
+        if (file.size > 750000) { setError('حجم الملف يجب ألّا يتجاوز 750 كيلوبايت.'); return; }
+        try { const doc = parseLanding(JSON.parse(await file.text())); if (!doc) throw new Error('الملف ليس صفحة منتج Sellchaze صالحة.'); if (!inFlight.current) { change(doc); setSelected(null); } } catch (e) { setError(e.message); }
+    }
+    async function upload(file) {
+        if (inFlight.current) return null;
+        if (!['image/jpeg', 'image/png', 'image/gif', 'image/webp'].includes(file.type) || file.size > 10 * 1024 * 1024) { setError('اختر صورة JPG أو PNG أو GIF أو WebP بحجم لا يتجاوز 10 ميجابايت.'); return null; }
+        inFlight.current = true; setBusy(true); setError(''); const attempt = generation.current;
+        try { const payload = new FormData(); payload.append('file', file); const { data } = await api.post(`${endpoint}/landing-page/media`, payload); if (attempt !== generation.current) return null; setProduct(current => ({ ...current, media: [...current.media || [], data.data] })); return data.data; }
+        catch (e) { if (attempt === generation.current) setError(errorText(e)); return null; }
+        finally { inFlight.current = false; if (attempt === generation.current) setBusy(false); }
+    }
+    function exportFile() { const data = previewDocument(document, product?.media || []); data.sections.forEach(section => { const walk = value => { if (!value || typeof value !== 'object') return; if ('media_id' in value) delete value.media_id; Object.values(value).forEach(walk); }; walk(section.settings); }); const url = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })); const a = window.document.createElement('a'); a.href = url; a.download = `product-${productId}-landing.json`; a.click(); setTimeout(() => URL.revokeObjectURL(url), 1000); }
+    function exit() { if (!dirty || window.confirm('لديك تعديلات غير محفوظة. هل تريد الخروج؟')) navigate(`${uiBase}/products/${productId}/edit`); }
+    const previews = useMemo(() => previewDocument(document, product?.media || []), [document, product]);
+    const context = useMemo(() => ({ store: { name: store?.name || '', currency: store?.currency || 'EGP' }, seo: {}, navigation: { header: [], footer: [] }, data: { reviews: [], product: product ? { id: String(product.id), title: product.name, price: Number(product.price), currency: store?.currency || 'EGP', url: `/products/${product.slug}`, images: [], descriptionHtml: product.description || '', productPreferences: product.product_preferences } : null } }), [product, store]);
+    const section = document.sections.find(item => item.id === selected);
+    return <main className="pl-editor" dir="rtl"><header className="pl-toolbar"><div className="pl-toolbar-group"><button type="button" onClick={exit} aria-label="العودة للمنتج"><HiOutlineArrowRight /></button><div className="pl-product-name"><strong>{product?.name || 'صفحة المنتج'}</strong><small>{dirty ? 'تعديلات غير محفوظة' : saved ? 'تم حفظ التعديلات' : 'محرّر صفحة المنتج'}</small></div></div><div className="pl-toolbar-group pl-tools"><button type="button" onClick={() => setSidebar(value => !value)} aria-label="عرض الأقسام" aria-pressed={sidebar}><HiOutlineSquares2X2 /></button><button type="button" disabled={busy || !history.past.length} onClick={undo} aria-label="تراجع"><HiOutlineArrowUturnRight /></button><button type="button" disabled={busy || !history.future.length} onClick={redo} aria-label="إعادة"><HiOutlineArrowUturnLeft /></button><span className="pl-divider" /><button type="button" onClick={() => setMobile(false)} aria-label="سطح المكتب" aria-pressed={!mobile}><HiOutlineComputerDesktop /></button><button type="button" onClick={() => setMobile(true)} aria-label="الهاتف" aria-pressed={mobile}><HiOutlineDevicePhoneMobile /></button><button type="button" disabled={busy || !product} onClick={() => importInput.current?.click()} title="استيراد ملف صفحة Sellchaze"><HiOutlineArrowUpTray /><span>استيراد صفحة</span></button><input ref={importInput} type="file" accept="application/json,.json" hidden onChange={event => void importFile(event)} /><button type="button" disabled={!product} onClick={exportFile} title="تصدير صفحة Sellchaze"><HiOutlineArrowDownTray /></button></div><div className="pl-toolbar-group"><button type="button" onClick={() => setPreview(value => !value)} aria-pressed={preview}><HiOutlineEye /><span>{preview ? 'تحرير' : 'معاينة'}</span></button><button type="button" className="pl-save" disabled={loading || busy || !product || !dirty} onClick={() => void save()}><HiOutlineCheck /><span>{busy ? 'جارٍ الحفظ…' : 'حفظ'}</span></button></div></header>
+        {error ? <div className="pl-error" role="alert"><p>{error}</p>{!product ? <button type="button" onClick={() => setReload(value => value + 1)}>إعادة المحاولة</button> : null}<button type="button" aria-label="إغلاق الرسالة" onClick={() => setError('')}><HiOutlineXMark /></button></div> : null}
+        {saved ? <p className="pl-saved" role="status">تم حفظ صفحة المنتج بنجاح.</p> : null}
+        {loading ? <div className="pl-loading" role="status">جارٍ تحميل صفحة المنتج…</div> : product ? <div className="pl-body">
+            <aside className={`pl-sidebar${sidebar && !preview ? '' : ' pl-sidebar--closed'}`} aria-hidden={!sidebar || preview}><fieldset disabled={busy}>
+                {section ? <ProductLandingSettings onUpload={upload} section={section} product={product} onClose={() => setSelected(null)} onChange={next => change(current => ({ ...current, sections: current.sections.map(item => item.id === next.id ? next : item) }))} /> : <><div className="pl-side-heading"><h1>{palette ? palette.label : 'العناصر'}</h1>{palette ? <button type="button" onClick={() => setPalette(null)} aria-label="العودة للعناصر"><HiOutlineArrowRight /></button> : null}</div>{palette ? <div className="pl-palette">{palette.types.map(([type, label]) => <button type="button" key={type} disabled={document.sections.length >= 60} onClick={() => add(type)}><BlockIcon type={type} /><span>{label}</span><HiOutlinePlus /></button>)}</div> : <><label className="pl-mode">عرض صفحة المنتج<select value={document.mode} onChange={event => change(current => ({ ...current, mode: event.target.value }))}><option value="standard">الشكل التقليدي</option><option value="standalone">صفحة مستقلة</option><option value="below">أسفل الشكل التقليدي</option></select></label><div className="pl-palette">{elementFamilies.map(family => <button type="button" key={family.label} disabled={document.sections.length >= 60} onClick={() => family.types.length > 1 ? setPalette(family) : add(family.types[0][0])}><BlockIcon type={family.types[0][0]} /><span>{family.label}</span><HiOutlinePlus /></button>)}</div></>}</>}
+            </fieldset></aside>
+            <div className={`pl-workspace${preview ? ' pl-workspace--preview' : ''}`}><div className={`pl-canvas${mobile ? ' pl-canvas--mobile' : ''}`}>
+                {!document.sections.length ? <div className="pl-empty"><HiOutlineSquares2X2 /><h2>ابدأ بتصميم صفحة منتجك</h2><p>أضف قسمًا من قائمة العناصر لتظهر معاينته هنا.</p><button type="button" onClick={() => { setSidebar(true); setPreview(false); }}><HiOutlinePlus /> إضافة عنصر</button></div> : previews.sections.map((item, index) => <div className={`pl-section${selected === item.id && !preview ? ' pl-section--selected' : ''}`} key={item.id}>
+                    {!preview ? <div className="pl-section-tools"><button type="button" className="pl-section-title" disabled={busy} onClick={() => { setSelected(item.id); setSidebar(true); }}>{elementLabel(item.type)}</button><button type="button" disabled={busy || index === 0} onClick={() => change(current => ({ ...current, sections: moveLanding(current.sections, item.id, -1) }))} aria-label="نقل لأعلى"><HiOutlineArrowUp /></button><button type="button" disabled={busy || index === document.sections.length - 1} onClick={() => change(current => ({ ...current, sections: moveLanding(current.sections, item.id, 1) }))} aria-label="نقل لأسفل"><HiOutlineArrowDown /></button><button type="button" disabled={busy || document.sections.length >= 60} onClick={() => change(current => { const next = [...current.sections]; next.splice(index + 1, 0, { ...structuredClone(current.sections[index]), id: crypto.randomUUID() }); return { ...current, sections: next }; })} aria-label="تكرار القسم"><HiOutlineDocumentDuplicate /></button><button type="button" disabled={busy} onClick={() => { change(current => ({ ...current, sections: current.sections.filter(row => row.id !== item.id) })); if (selected === item.id) setSelected(null); }} aria-label="حذف القسم"><HiOutlineTrash /></button></div> : null}
+                    <LandingBlock section={item} context={context} preview />
+                </div>)}
+            </div>{preview ? <p className="pl-preview-note">معاينة المحتوى الحالي. نموذج الشراء للعرض فقط؛ احفظ الصفحة لاختبار المنتج في متجرك.</p> : null}</div>
+        </div> : null}
+    </main>;
+}

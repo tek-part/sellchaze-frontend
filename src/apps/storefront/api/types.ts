@@ -27,6 +27,7 @@ export interface ApiQuantityOffer {
 }
 
 export interface ApiProduct {
+  landing_page?: unknown;
   catalog_hidden?: boolean;
   product_preferences?: unknown;
   quantity_offers?: ReadonlyArray<ApiQuantityOffer> | null;
