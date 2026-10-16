@@ -16,6 +16,7 @@ import { HowToSteps, hasHowToContent } from './HowToSteps';
 import { howToDesign } from './howto-designs';
 import { ContentLayouts, hasContentLayout } from './ContentLayouts';
 import { contentDesign } from './content-designs';
+import { ProductFeatures, hasProductFeatureContent } from './ProductFeatures';
 import { BuyButton } from './BuyButton';
 import './landing.css';
 
@@ -58,6 +59,7 @@ export function LandingBlock({ section, context, preview = false, firstCheckout 
     case 'slider': case 'gallery': body = <><h2>{title}</h2><div className={`sf-landing-images${section.type === 'slider' ? ' sf-landing-slider' : ''}`}>{s.images?.map((image, index) => <LandingPhoto key={index} image={image} />)}</div></>; break;
     case 'banner': case 'simple': case 'content': body = section.type === 'content' && s.variant ? <ContentLayouts settings={s} preview={preview} onItemSelect={onContentItemSelect} onImageSelect={onContentImageSelect} onPurchase={scrollLandingPurchase} /> : <div className={`sf-landing-content sf-landing-content--${s.layout ?? 'stack'}`}><LandingPhoto image={s.image} preview={preview} /><div><h2>{title}</h2><p>{s.description}</p>{s.html ? <StaticLandingFrame title={title || 'محتوى'} html={s.html} onPurchase={preview ? undefined : scrollLandingPurchase} /> : null}{s.button_text ? buy : null}</div>{section.type === 'content' ? <LandingPhoto image={s.secondary_image} preview={preview} /> : null}</div>; break;
     case 'faq': body = <Faq key={section.id} settings={s} preview={preview} onItemSelect={onFaqItemSelect} onPurchase={scrollLandingPurchase} />; break;
+    case 'product_features': if (s.variant) { body = <ProductFeatures settings={s} preview={preview} onItemSelect={onFeatureItemSelect} onImageSelect={onBuySelect} onPurchase={scrollLandingPurchase} />; break; } body = <><h2>{title}</h2>{s.description ? <p>{s.description}</p> : null}<div className="sf-landing-items sf-landing-items--product_features">{s.items?.map((item, index) => <article key={index}><LandingPhoto image={item.image} /><h3>{item.title}</h3><p>{item.text}</p>{item.html ? <StaticLandingFrame html={item.html} title={item.title || 'تفاصيل الميزة'} /> : null}{item.url && landingUrl(item.url) ? <a href={item.url} target="_blank" rel="noopener noreferrer">{item.title || 'عرض التفاصيل'}</a> : null}</article>)}</div></>; break;
     case 'buy_button': body = s.variant ? <BuyButton settings={s} preview={preview} onSelect={onBuySelect} onPurchase={scrollLandingPurchase} /> : buy; break;
     case 'countdown': body = <><h2>{title}</h2><p>{s.description}</p><LandingCountdown section={section} productId={product?.id ?? ''} />{s.button_text ? buy : null}</>; break;
     case 'reviews': body = product?.productPreferences?.is_reviews_enabled === false ? null : <><h2>{title}</h2><ReviewList reviews={reviews} /></>; break;
@@ -67,6 +69,7 @@ export function LandingBlock({ section, context, preview = false, firstCheckout 
   }
   if (!preview && section.type === 'promo_banners' && s.variant && !s.items?.some(item => item.image?.url || item.title?.trim() || item.text?.trim() || item.html?.trim())) return null;
   if (!preview && section.type === 'custom_reviews' && s.variant && !s.items?.length) return null;
+  if (!preview && section.type === 'product_features' && s.variant && !hasProductFeatureContent(s)) return null;
   if (!preview && section.type === 'store_features' && s.variant && !hasStoreFeatureContent(s)) return null;
   if (!preview && section.type === 'how_to' && s.variant && !hasHowToContent(s)) return null;
   if (!preview && section.type === 'faq' && !hasFaqContent(s)) return null;
@@ -75,7 +78,7 @@ export function LandingBlock({ section, context, preview = false, firstCheckout 
   const content = section.type === 'content' && s.variant ? contentDesign(s.variant) : null;
   const howTo = section.type === 'how_to' && s.variant ? howToDesign(s.variant) : null;
   const style: CSSProperties = { ...(content ? { '--content-padding': s.padding !== undefined ? `${s.padding}px` : `${content.padding}px ${content.sidePadding}px` } : {}), ...(howTo ? { '--howto-padding': s.padding !== undefined ? `${s.padding}px` : `${howTo.padding}px ${howTo.sidePadding}px` } : {}), ...(section.type === 'video' && s.variant ? { '--landing-video-padding': `${s.padding ?? 40}px` } : {}), backgroundColor: s.background ?? (section.type === 'faq' ? faqDesign(s.variant).background : content?.background ?? howTo?.background ?? (section.type === 'buy_button' && s.variant ? '#ffffff' : undefined)), ...(s.background_image?.url && landingUrl(s.background_image.url) && !s.background_image.url.startsWith('#') ? { backgroundImage: `url(${JSON.stringify(s.background_image.url)})`, backgroundSize: 'cover', backgroundPosition: 'center' } : {}), color: s.foreground, textAlign: s.align, padding: `${Math.max(0, Math.min(160, s.padding ?? 32))}px`, borderRadius: `${Math.max(0, Math.min(48, s.radius ?? 0))}px`, ...(s.font_size ? { fontSize: Math.max(12, Math.min(96, s.font_size)) } : {}) };
-  return <section className={`sf-landing-block sf-landing-block--${section.type}${section.type === 'buy_button' && s.variant ? ' sf-landing-block--native-buy' : ''}`} style={style}>{body}</section>;
+  return <section className={`sf-landing-block sf-landing-block--${section.type}${section.type === 'buy_button' && s.variant ? ' sf-landing-block--native-buy' : ''}${section.type === 'product_features' && s.variant ? ' sf-landing-block--native-product-features' : ''}`} style={style}>{body}</section>;
 }
 
 export function LandingSections({ document, context, checkout: form }: { document: LandingDocument; context: StorefrontContext; checkout?: ReactNode }) {

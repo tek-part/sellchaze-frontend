@@ -1,0 +1,3 @@
+Functional 24x24 outline checks used by product-feature designs 31 and 44.
+Paths preserved from the CSS exposed by the EasyOrders design controls, reviewed 2026-10-16.
+No merchant photography, branding or demo claims.
