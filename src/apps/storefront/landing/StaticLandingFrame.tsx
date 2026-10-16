@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 
 const tags = new Set('section article header footer main aside div span p h1 h2 h3 h4 h5 h6 b strong i em u s br hr ul ol li blockquote pre code figure figcaption table thead tbody tfoot tr td th details summary a button img video source small mark sup sub'.split(' '));
-const attributes = new Set('class style id title dir aria-label href rel target type data-purchase src alt width height controls playsinline preload poster colspan rowspan scope'.split(' '));
+const attributes = new Set('class style id title dir aria-label href rel target type data-purchase data-label data-effect-label data-motion data-design src alt width height controls playsinline preload poster colspan rowspan scope'.split(' '));
 const safeUrl = (value: string) => /^(https?:\/\/|\/(?!\/)|#[a-zA-Z0-9_-]+$)/i.test(value.trim()) && !/[<>]/.test(value) && !Array.from(value).some(char => char.charCodeAt(0) < 32);
 
 /** No merchant script, forms, styles or media ever enter the application document. */
@@ -16,15 +16,17 @@ export function landingStaticHtml(html: string): string {
   return doc.body.innerHTML;
 }
 
-export function StaticLandingFrame({ html, css = '', title, onPurchase }: { html: string; css?: string; title: string; onPurchase?: () => void }) {
+export function StaticLandingFrame({ html, css = '', baseCss = '', title, onPurchase }: { html: string; css?: string; baseCss?: string; title: string; onPurchase?: () => void }) {
   const frame = useRef<HTMLIFrameElement>(null); const [height, setHeight] = useState(160);
   const nonce = useMemo(() => crypto.randomUUID(), []);
   const srcDoc = useMemo(() => {
     const content = landingStaticHtml(html);
+    const fontOrigin = /^https?:$/.test(window.location.protocol) ? window.location.origin : '';
+    const trustedCss = baseCss.replace(/</g, '\\3c ');
     const safeCss = css.slice(0, 12000).replace(/</g, '\\3c ');
     const script = `const key=${JSON.stringify(nonce)};const send=()=>parent.postMessage({landing:key,height:Math.ceil(document.body.getBoundingClientRect().height)},'*');new ResizeObserver(send).observe(document.body);document.addEventListener('load',send,true);document.addEventListener('click',e=>{const a=e.target.closest('[data-purchase],a[href="#purchase"]');if(a){e.preventDefault();parent.postMessage({landing:key,purchase:true},'*')}});send();`;
-    return `<!doctype html><html dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'nonce-${nonce}'; style-src 'unsafe-inline' https://fonts.googleapis.com; img-src https: http:; media-src https: http:; font-src https:; connect-src 'none'; form-action 'none'; base-uri 'none'"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Almarai:wght@400;700&amp;display=swap"><style>html,body{margin:0;min-height:0;font-family:Almarai,Arial,sans-serif;overflow-wrap:anywhere}*{box-sizing:border-box}img,video{max-width:100%;height:auto}body{display:flow-root}a,button{cursor:pointer}${safeCss}</style></head><body>${content}<script nonce="${nonce}">${script}</script></body></html>`;
-  }, [html, css, nonce]);
+    return `<!doctype html><html dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'nonce-${nonce}'; style-src 'unsafe-inline' https://fonts.googleapis.com; img-src https: http:; media-src https: http:; font-src https: ${fontOrigin}; connect-src 'none'; form-action 'none'; base-uri 'none'"><style>@font-face{font-family:Almarai;src:url("/fonts/almarai/Almarai-Regular.ttf") format("truetype");font-weight:400;font-style:normal;font-display:swap}@font-face{font-family:Almarai;src:url("/fonts/almarai/Almarai-Bold.ttf") format("truetype");font-weight:700;font-style:normal;font-display:swap}html,body{margin:0;min-height:0;font-family:Almarai,Arial,sans-serif;overflow-wrap:anywhere}*{box-sizing:border-box}img,video{max-width:100%;height:auto}body{display:flow-root}a,button{cursor:pointer}${trustedCss}${safeCss}</style></head><body>${content}<script nonce="${nonce}">${script}</script></body></html>`;
+  }, [html, css, baseCss, nonce]);
   useEffect(() => {
     const receive = (event: MessageEvent) => {
       if (event.source !== frame.current?.contentWindow || event.data?.landing !== nonce) return;

@@ -1,0 +1,12 @@
+.sf-landing-block.sf-landing-block--native-buy{padding:0!important}
+.lp-buy{display:flex;position:relative;padding:var(--buy-padding,40px 15px);min-width:0;box-sizing:border-box;font:400 16px/24px -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Oxygen,Ubuntu,Cantarell,"Fira Sans","Droid Sans","Helvetica Neue",sans-serif}
+.lp-buy *,.lp-buy *::before,.lp-buy *::after{box-sizing:border-box}
+.lp-buy-inner{display:flex;flex-direction:column;align-items:center;flex:1 1 0%;min-width:0}
+.lp-buy .lp-buy-button{display:block;width:300px;min-width:300px;max-width:500px;margin:0;border:0;border-radius:var(--buy-radius,10px);padding:10px 20px;background:var(--buy-background,#000);color:var(--buy-foreground,#fff);font:700 var(--buy-font-size,20px)/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Oxygen,Ubuntu,Cantarell,"Fira Sans","Droid Sans","Helvetica Neue",sans-serif;text-align:center;cursor:pointer;text-decoration:none;white-space:pre-line}
+.lp-buy .lp-buy-button:focus-visible{outline:3px solid #2563eb;outline-offset:5px}
+.lp-buy[data-thumbnail]{height:100%;padding:0;align-items:center;pointer-events:none}
+.lp-buy[data-thumbnail] .lp-buy-button{cursor:inherit}
+.lp-buy[data-motion=paused] .lp-buy-button,.lp-buy[data-motion=paused] .lp-buy-inner,.lp-buy[data-motion=paused] .lp-buy-button::before,.lp-buy[data-motion=paused] .lp-buy-button::after,.lp-buy[data-motion=paused] .lp-buy-inner::before,.lp-buy[data-motion=paused] .lp-buy-inner::after{animation:none!important;transition:none!important}
+@media(max-width:640px){.lp-buy:not([data-thumbnail]) .lp-buy-button{width:300px!important;min-width:0!important;max-width:100%!important}.lp-buy:not([data-thumbnail]) .lp-buy-inner{max-width:100%}}
+@container(max-width:640px){.lp-buy:not([data-thumbnail]) .lp-buy-button{width:300px!important;min-width:0!important;max-width:100%!important}.lp-buy:not([data-thumbnail]) .lp-buy-inner{max-width:100%}}
+@media(prefers-reduced-motion:reduce){.lp-buy *,.lp-buy *::before,.lp-buy *::after{animation:none!important;transition:none!important}}

@@ -19,6 +19,26 @@ const button = name => [...host.querySelectorAll('button')].find(el => (el.getAt
 const click = async name => act(async () => button(name).click());
 
 describe('product landing editor save recovery', () => {
+  it('preserves purchase labels alternate text images styles and isolated CSS through all34 choices, retry and saved undo', async () => {
+    const own = { id: crypto.randomUUID(), type: 'buy_button', settings: { variant: 'buy-14', button_text: ' Own action ', caption: ' Own alternate ', image: { url: '/own-icon.png' }, background: '#123456', card_background: '#654321', foreground: '#ffffff', padding: 40, align: 'end', css: 'button { letter-spacing: 1px }' } };
+    const initial = { schema: 1, mode: 'standalone', sections: [own] }; api.get.mockResolvedValue({ data: { data: initial, version, product } });
+    await act(async () => root.render(<ProductLandingEditorPage />)); await act(async () => host.querySelector('.pl-section-title').click()); await click('تغيير تنسيق زر الشراء');
+    expect(document.querySelectorAll('.pl-design-card')).toHaveLength(34); expect(document.querySelectorAll('.pl-design-card button')).toHaveLength(0);
+    await act(async () => [...document.querySelectorAll('button')].find(el => el.getAttribute('aria-label')?.startsWith('استخدام تنسيق زر الشراء 34:')).click());
+    api.put.mockRejectedValueOnce({ response: { status: 409, data: { message: 'Changed elsewhere' } } }); await click('حفظ'); const payload = api.put.mock.calls[0][1];
+    expect(payload.document.sections[0]).toEqual({ ...own, settings: { ...own.settings, variant: 'buy-34', items: [] } });
+    api.put.mockImplementation((_, request) => Promise.resolve({ data: { data: request.document, version: nextVersion } })); await click('حفظ'); expect(api.put.mock.calls[1][1]).toEqual(payload);
+    await click('تراجع'); await click('حفظ'); expect(api.put.mock.calls[2][1].document).toEqual(initial); expect(api.post).not.toHaveBeenCalled();
+  });
+  it('adds purchase designs without demo offer claims or forced paint', async () => {
+    await act(async () => root.render(<ProductLandingEditorPage />)); await click('زر الشراء');
+    await act(async () => [...document.querySelectorAll('button')].find(el => el.getAttribute('aria-label')?.startsWith('استخدام تنسيق زر الشراء 18:')).click());
+    api.put.mockImplementation((_, payload) => Promise.resolve({ data: { data: payload.document, version: nextVersion } })); await click('حفظ'); const saved = api.put.mock.calls[0][1].document.sections[0];
+    expect(saved.type).toBe('buy_button'); expect(saved.settings.variant).toBe('buy-18'); expect(saved.settings.button_text).toBe('الشراء الان'); expect(saved.settings).not.toHaveProperty('caption');
+    for (const key of ['background','foreground','align','padding']) expect(saved.settings).not.toHaveProperty(key);
+    expect(JSON.stringify(saved)).not.toContain('عرض محدود'); expect(JSON.stringify(saved)).not.toContain('الحق العرض');
+  });
+
   it('retains all content fields and image links through a design change, failed save, retry and saved undo', async () => {
     const own = { id: crypto.randomUUID(), type: 'content', settings: { variant: 'content-1', title: 'Own heading', description: ' Own quote ', author: ' Own author ', caption: ' Own source ', image: { url: '/own-primary.png', link_url: '/products/own' }, secondary_image: { url: '/own-secondary.png', link_url: '/pages/own' }, images: [{ url: '/own-extra.png' }], padding: 44, align: 'end', items: Array.from({ length: 7 }, (_, i) => ({ title: `Own ${i}`, text: 'Own value ', image: { url: '/own-icon.png' } })) } };
     const initial = { schema: 1, mode: 'standalone', sections: [own] }; api.get.mockResolvedValue({ data: { data: initial, version, product } });
@@ -108,7 +128,7 @@ describe('product landing editor save recovery', () => {
     expect(host.querySelectorAll('.pl-section')).toHaveLength(1);
     api.put.mockResolvedValueOnce({ data: { data: first.document, version: nextVersion } });
     await click('حفظ'); expect(api.put.mock.calls[1][1]).toEqual(first); expect(host.querySelector('[role=status]').textContent).toContain('تم حفظ');
-    await click('زر الشراء'); await click('إغلاق الإعدادات');
+    await click('زر الشراء'); await act(async () => [...document.querySelectorAll('button')].find(el => el.getAttribute('aria-label')?.startsWith('استخدام تنسيق زر الشراء 1:')).click()); await click('إغلاق الإعدادات');
     api.put.mockResolvedValueOnce({ data: { data: { ...first.document, sections: [] }, version: 'c'.repeat(64) } });
     await click('حفظ'); expect(api.put.mock.calls[2][1].version).toBe(nextVersion);
   });
