@@ -13,3 +13,11 @@
 .pl-design-name{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap;padding:0;border:0}
 .pl-design-hint{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);margin:0}
 @media(max-width:600px){.pl-design-dialog-scroll{padding:12px}.pl-design-panel{max-height:calc(100dvh - 24px)}.pl-design-panel>header{padding:24px}.pl-design-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;padding:8px}.pl-design-panel h2{font-size:20px}}
+
+/* Short galleries keep their natural row heights and the remaining panel white. */
+.pl-design-grid{flex:0 1 auto}
+.pl-design-card{border-radius:8px}
+.pl-gallery-visual{display:grid;place-items:center;width:100%;min-width:0;overflow:hidden;flex:none}
+.pl-gallery-visual>.pl-design-preview{max-height:100%}
+.pl-gallery-visual>:not(.pl-design-preview){width:100%;height:100%;min-height:0;box-sizing:border-box}
+.pl-design-grid{grid-auto-rows:max-content}
