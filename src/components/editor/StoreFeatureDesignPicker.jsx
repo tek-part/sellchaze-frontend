@@ -1,3 +1,4 @@
+import ElementDesignPreview from './ElementDesignPreview';
 import { Dialog, DialogPanel, DialogTitle } from '@headlessui/react';
 import { storeFeatureDesigns } from '../../apps/storefront/landing/store-feature-designs';
 import { StoreFeatureIcon } from '../../apps/storefront/landing/StoreFeatureIcon';
@@ -15,5 +16,5 @@ function FeatureDiagram({ design: d }) {
     </span>;
 }
 export default function StoreFeatureDesignPicker({ selected, onSelect, onClose }) {
-    return <Dialog open onClose={onClose} className="pl-design-dialog" dir="rtl"><div className="pl-design-backdrop" /><div className="pl-design-dialog-scroll"><DialogPanel className="pl-design-panel"><header><DialogTitle>اختر تنسيق مميزات المتجر</DialogTitle><button type="button" onClick={onClose} aria-label="إغلاق تنسيقات المميزات"><HiOutlineXMark /></button></header><div className="pl-design-grid">{storeFeatureDesigns.map((design, index) => <button type="button" className="pl-design-card" key={design.id} aria-label={`استخدام تنسيق المميزات ${index + 1}: ${design.name}`} aria-pressed={selected === design.id} onClick={() => onSelect(design.id)}><FeatureDiagram design={design} /><span className="pl-design-name">{design.name}<small>تنسيق {index + 1}{design.kind === 'ticker' ? ' · متحرك' : ''}</small></span></button>)}</div></DialogPanel></div></Dialog>;
+    return <Dialog open onClose={onClose} className="pl-design-dialog" dir="rtl"><div className="pl-design-backdrop" /><div className="pl-design-dialog-scroll"><DialogPanel className="pl-design-panel"><header><DialogTitle>اختر تنسيق مميزات المتجر</DialogTitle><button type="button" onClick={onClose} aria-label="إغلاق تنسيقات المميزات"><HiOutlineXMark /></button></header><div className="pl-design-grid">{storeFeatureDesigns.map((design, index) => <button type="button" className="pl-design-card" key={design.id} aria-label={`استخدام تنسيق المميزات ${index + 1}: ${design.name}`} aria-pressed={selected === design.id} onClick={() => onSelect(design.id)}><ElementDesignPreview family="features" index={index}><FeatureDiagram design={design} /></ElementDesignPreview><span className="pl-design-name">{design.name}<small>تنسيق {index + 1}{design.kind === 'ticker' ? ' · متحرك' : ''}</small></span></button>)}</div></DialogPanel></div></Dialog>;
 }
