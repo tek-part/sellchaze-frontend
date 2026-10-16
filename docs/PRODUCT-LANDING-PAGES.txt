@@ -83,3 +83,24 @@ Motion can be disabled; tickers offer pause/resume, keep copies inert/link-free,
 and wrap the real content under reduced motion. Native catalog/page transfer and
 product duplication retain all fields and remap owned images. No new migration.
 These presets do not establish full public/font/phone parity for the wider catalog.
+
+Thirty-five FAQ presets add single-column, two-column and split heading/group
+structures, capsules, dashed outlines, bottom rules, offset shadows, gradient
+headings and distinct section/group/card paints. The native accessible diagram
+gallery includes no reference images or sample commercial policies. Blank slots
+remain blank in saved data. Existing FAQ sections without a variant keep their
+original rendering. Changing a FAQ preset retains all questions, answers, rich
+HTML, owned images, URLs, colors and extra items; an explicit reset restores the
+preset colors/typography. Presets1/34 start with3/4 slots; the others start with6.
+Each accordion opens one answer at a time, supports Enter/Space and arrow/Home/End
+focus navigation, and associates each question with a unique answer region.
+Closed answers are inert and hidden from assistive technology. Intrinsic-height
+expansion uses250ms easing; reduced motion or the section motion setting disables
+transitions. Clicking a question in the editor opens its own question/answer
+inspector without blocking the accordion. Save, undo, reordering and native page/
+catalog transfer preserve the document and remap owned images. The purchase form
+remains singular. FAQ colors and static answer HTML use existing validation and
+isolation; no new migration. Source phone/public typography fidelity remains an
+explicit separate acceptance task for the broader catalog.
+Paired backend text handling retains leading/trailing whitespace and newlines in
+landing document text so saving and undoing edits cannot rewrite untouched answers.
