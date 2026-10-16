@@ -7390,7 +7390,7 @@
   gap: 10px;
   max-width: 100% !important;
   border-radius: 24px;
-  background: #fff;
+  background: var(--pf-card, #fff);
   padding: 13px;
 }
 
@@ -7524,7 +7524,7 @@
   gap: 10px;
   max-width: 100% !important;
   border-radius: 24px;
-  background: #fff;
+  background: var(--pf-card, #fff);
   padding: 13px;
 }
 
@@ -8359,7 +8359,7 @@ font-weight: 400;
   max-width: 100% !important;
   gap: 10px;
   border-radius: 35px;
-  background: #fff;
+  background: var(--pf-card, #fff);
   overflow: hidden;
 }
 .lp-pf.lp-pf--36 .icon-text-container {
@@ -8467,7 +8467,7 @@ font-weight: 400;
   max-width: 100% !important;
   gap: 10px;
   border-radius: 35px;
-  background: #fff;
+  background: var(--pf-card, #fff);
   overflow: hidden;
 }
 .lp-pf.lp-pf--36[data-thumbnail] .icon-text-container {
@@ -8549,7 +8549,7 @@ font-weight: 400;
   justify-content: space-between;
   gap: 0;
   min-width: 100%;
-  background: #f9f5ea;
+  background: var(--pf-card, #f9f5ea);
 }
 
 .lp-pf.lp-pf--37 .icon-container div {
@@ -8715,7 +8715,7 @@ font-weight: 400;
   justify-content: space-between;
   gap: 0;
   min-width: 100%;
-  background: #f9f5ea;
+  background: var(--pf-card, #f9f5ea);
 }
 
 .lp-pf.lp-pf--37[data-thumbnail] .icon-container div {
@@ -9527,7 +9527,7 @@ font-weight: 400;
   gap: 10px;
   max-width: 100% !important;
   border-radius: 24px;
-  background: #fff;
+  background: var(--pf-card, #fff);
   padding: 16px;
 }
 
@@ -9660,7 +9660,7 @@ font-weight: 400;
   gap: 10px;
   max-width: 100% !important;
   border-radius: 24px;
-  background: #fff;
+  background: var(--pf-card, #fff);
   padding: 16px;
 }
 
@@ -9772,7 +9772,7 @@ font-weight: 400;
   gap: 10px;
   max-width: 100% !important;
   border-radius: 24px;
-  background: #fff;
+  background: var(--pf-card, #fff);
   padding: 13px;
 }
 
@@ -9906,7 +9906,7 @@ font-weight: 400;
   gap: 10px;
   max-width: 100% !important;
   border-radius: 24px;
-  background: #fff;
+  background: var(--pf-card, #fff);
   padding: 13px;
 }
 
