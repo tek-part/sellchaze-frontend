@@ -1,0 +1,19 @@
+.sf-landing-block.sf-landing-block--native-countdown{padding:0!important}
+.lp-countdown{font:400 16px/1.5 Almarai,Arial,sans-serif;position:relative;min-width:0;display:flex;flex-direction:row;background-color:white;color:#000;padding:0}
+.lp-countdown.cd-has-extra{flex-direction:column}
+.lp-countdown *{box-sizing:border-box}
+.lp-countdown .cd-shell{flex:1;display:flex;flex-direction:column;min-width:0;width:100%}
+.lp-countdown .cd-heading{display:flex;flex-direction:column;gap:8px;width:100%;align-self:center}
+.lp-countdown .cd-heading h3{font-size:25.6px;line-height:1.5;font-weight:700;margin:0;text-align:var(--cd-title-align,center);color:var(--cd-title,inherit);white-space:pre-wrap;overflow-wrap:anywhere}
+.lp-countdown .cd-description{font-size:17px;line-height:1.5;margin:0;white-space:pre-wrap;overflow-wrap:anywhere;text-align:var(--cd-description-align,center);color:var(--cd-description,inherit)}
+.lp-countdown .counter p,.lp-countdown .counter span{margin:0;line-height:inherit}
+.lp-countdown .counter{color:var(--cd-foreground,inherit)}
+.lp-countdown.cd-owned-card .counter>div{background-color:var(--cd-card)!important}
+.lp-countdown .cd-text-edit{border:0;background:transparent;padding:0;margin:0;color:inherit;font:inherit;text-align:inherit;line-height:inherit;white-space:inherit;cursor:pointer}
+.lp-countdown .cd-text-edit:focus-visible{outline:2px solid #22c55e;outline-offset:3px}
+.lp-countdown .cd-extra{width:100%;max-width:1200px;margin:0 auto;overflow-wrap:anywhere}.lp-countdown .cd-extra img{max-width:100%;height:auto}.lp-countdown .cd-extra p{white-space:pre-wrap}
+.lp-countdown .cd-purchase{display:block;margin:16px auto;padding:12px 24px;background:#22c55e;color:white;border:0;border-radius:8px;font:inherit;cursor:pointer;max-width:100%;overflow-wrap:anywhere}
+@media(min-width:768px){.lp-countdown .cd-shell{margin:0 auto;max-width:70%}}
+.lp-countdown[data-motion=paused] *,.lp-countdown[data-motion=paused] *::before,.lp-countdown[data-motion=paused] *::after{animation:none!important;transition:none!important}
+@media(prefers-reduced-motion:reduce){.lp-countdown *,.lp-countdown *::before,.lp-countdown *::after{animation:none!important;transition:none!important}}
+.lp-countdown[data-thumbnail] .cd-shell{margin:0 auto;max-width:70%}
