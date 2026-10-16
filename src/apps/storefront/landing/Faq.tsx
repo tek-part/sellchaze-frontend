@@ -5,9 +5,9 @@ import { StaticLandingFrame } from './StaticLandingFrame';
 import './faq.css';
 
 const populated = (item: LandingItem) => !!(item.title?.trim() || item.text?.trim() || item.html?.trim() || item.image?.url && landingUrl(item.image.url));
-export const hasFaqContent = (settings: LandingSettings) => !!(settings.title?.trim() || settings.description?.trim() || settings.items?.some(populated));
+export const hasFaqContent = (settings: LandingSettings) => !!(settings.title?.trim() || settings.description?.trim() || settings.items?.some(populated) || faqDesign(settings.variant).purchase && settings.button_text?.trim());
 
-export function Faq({ settings: s, preview = false, onItemSelect }: { settings: LandingSettings; preview?: boolean; onItemSelect?: (index: number) => void }) {
+export function Faq({ settings: s, preview = false, onItemSelect, onPurchase }: { settings: LandingSettings; preview?: boolean; onItemSelect?: (index: number) => void; onPurchase?: () => void }) {
   const d = faqDesign(s.variant); const uid = useId();
   const [open, setOpen] = useState<number | null>(null);
   const buttons = useRef<(HTMLButtonElement | null)[]>([]);
@@ -24,12 +24,13 @@ export function Faq({ settings: s, preview = false, onItemSelect }: { settings: 
     '--faq-group-radius': `${d.groupRadius}px`, '--faq-group-shadow': d.groupShadow, '--faq-mobile-padding': d.groupPadding === '0px' ? '0px' : 'min(20px,5cqw)',
     '--faq-accent': s.accent ?? d.eyebrow, '--faq-icon': s.icon_color ?? d.iconColor,
     '--faq-heading-size': `${s.font_size ?? d.headingSize}px`, '--faq-align': s.align ?? d.headingAlign,
+    '--faq-question-size': `${d.questionSize ?? 18}px`, '--faq-question-padding': `${d.questionPadding ?? 18}px`,
   } as CSSProperties;
   function keyboard(event: KeyboardEvent<HTMLButtonElement>, position: number) {
     const target = event.key === 'Home' ? 0 : event.key === 'End' ? items.length - 1 : event.key === 'ArrowDown' ? (position + 1) % items.length : event.key === 'ArrowUp' ? (position - 1 + items.length) % items.length : null;
     if (target !== null) { event.preventDefault(); buttons.current[target]?.focus(); }
   }
-  return <div className={`lp-faq lp-faq--${d.id}${d.split ? ' lp-faq--split' : ''}${d.gradient && !s.foreground ? ' lp-faq--gradient' : ''}${d.badge ? ' lp-faq--badge' : ''}${d.frame ? ' lp-faq--frame' : ''}`} style={style} data-motion={s.motion === false ? 'paused' : 'playing'}>
+  return <div className={`lp-faq lp-faq--${d.id}${d.split ? ' lp-faq--split' : ''}${d.gradient && !s.foreground ? ' lp-faq--gradient' : ''}${d.badge ? ' lp-faq--badge' : ''}${d.frame ? ' lp-faq--frame' : ''}${d.headerFrame ? ' lp-faq--header-frame' : ''}`} style={style} data-motion={s.motion === false ? 'paused' : 'playing'}>
     {s.title || s.description || preview ? <header className={`lp-faq-header${d.descriptionBelow ? ' lp-faq-header--description-below' : ''}`}>{s.description && !d.descriptionBelow ? <p>{s.description}</p> : null}{s.title || preview ? <h2>{s.title || 'الأسئلة الشائعة'}</h2> : null}{s.description && d.descriptionBelow ? <p>{s.description}</p> : null}</header> : null}
     <div className="lp-faq-group">{items.map(({ item, index }, position) => {
       const expanded = open === index; const panelId = `${uid}-answer-${index}`; const buttonId = `${uid}-question-${index}`;
@@ -45,5 +46,6 @@ export function Faq({ settings: s, preview = false, onItemSelect }: { settings: 
         </div>
       </article>;
     })}</div>
+    {d.purchase && s.button_text !== '' ? <button type="button" className="lp-faq-buy" onClick={preview ? undefined : onPurchase}>{s.button_text ?? 'الشراء الآن'}</button> : null}
   </div>;
 }

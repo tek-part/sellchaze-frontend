@@ -4,7 +4,6 @@ import api from '../api/client';
 import useStoreScope from '../hooks/useStoreScope';
 import { emptyLanding, moveLanding, parseLanding } from '../apps/storefront/landing/document';
 import { LandingBlock } from '../apps/storefront/landing/LandingSections';
-import { identityFontStylesheet, loadIdentityFonts } from '../apps/storefront/store-identity';
 import { elementFamilies, elementLabel, newLandingSection } from '../components/editor/product-landing-elements';
 import ProductLandingSettings from '../components/editor/ProductLandingSettings';
 import FaqDesignPicker from '../components/editor/FaqDesignPicker';
@@ -53,7 +52,6 @@ export default function ProductLandingEditorPage() {
         }).catch(e => { if (active) setError(errorText(e)); }).finally(() => { if (active) setLoading(false); });
         return () => { active = false; generation.current += 1; };
     }, [endpoint, reload]);
-    useEffect(() => { let active = true; let link; loadIdentityFonts('Almarai').then(() => { if (!active) return; const href = identityFontStylesheet('Almarai'); if (href) { link = window.document.createElement('link'); link.rel = 'stylesheet'; link.href = href; window.document.head.append(link); } }); return () => { active = false; link?.remove(); }; }, []);
     useEffect(() => { const guard = event => { if (dirty) { event.preventDefault(); event.returnValue = ''; } }; window.addEventListener('beforeunload', guard); return () => window.removeEventListener('beforeunload', guard); }, [dirty]);
     const change = useCallback(updater => { if (inFlight.current) return; setSaved(false); setError(''); setHistory(current => { const next = typeof updater === 'function' ? updater(current.present) : updater; if (JSON.stringify(next) === JSON.stringify(current.present)) return current; return { past: [...current.past, current.present].slice(-100), present: next, future: [] }; }); }, []);
     function undo() { setSaved(false); setHistory(current => !current.past.length ? current : { past: current.past.slice(0, -1), present: current.past.at(-1), future: [current.present, ...current.future].slice(0, 100) }); }

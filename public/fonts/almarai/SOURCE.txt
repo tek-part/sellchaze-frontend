@@ -1,0 +1,6 @@
+Almarai Regular and Bold, unmodified upstream files.
+Source: https://github.com/google/fonts/tree/main/ofl/almarai
+License and copyright: OFL.txt in this directory.
+Almarai-Regular.ttf Git blob 1ce664a9cfdae4295e58a630be9be21e6a781f0c
+Almarai-Bold.ttf Git blob 3713a46800cbb0c76bb249300ebe7701d7d870ca
+OFL.txt Git blob 64d2c284b0e3aa76c15540d7265102ff2b8ebf7e

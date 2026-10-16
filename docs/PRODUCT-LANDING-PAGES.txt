@@ -104,3 +104,17 @@ isolation; no new migration. Source phone/public typography fidelity remains an
 explicit separate acceptance task for the broader catalog.
 Paired backend text handling retains leading/trailing whitespace and newlines in
 landing document text so saving and undoing edits cannot rewrite untouched answers.
+
+FAQ fidelity follow-up: live desktop measurements confirm two600px columns for
+presets6-9, and44px frames containing both heading and questions for18/25. The
+gallery reflects those compositions. Preset22 includes its300px gold purchase
+button, with an editable label; clearing the label hides it. The button scrolls
+to the existing purchase form and never submits it, while editor clicks are inert.
+Landing content and the editor load unmodified official Almarai Regular/Bold files
+from their own host, with the SIL Open Font License included in public/fonts/almarai.
+Scoped heading rules prevent theme fonts from overriding landing typography, as
+verified against the source public desktop/phone page. Purchase buttons retain
+their system font stack. The editor no longer downloads the remote font catalog.
+Preset1 uses19.2px question text/16px padding and25.6px heading typography. The
+source builder blocks actual phone preview even in preview mode; acceptance of
+every source preset on phones remains separate from native390/320px QA.

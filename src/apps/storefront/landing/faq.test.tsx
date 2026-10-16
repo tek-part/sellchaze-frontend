@@ -59,6 +59,23 @@ describe('native FAQ designs', () => {
     expect(host.querySelector<HTMLElement>('.lp-faq')!.style.getPropertyValue('--faq-card')).toBe('#abcdef');
     expect(host.querySelector('iframe')).not.toBeNull(); expect(host.querySelector('script')).toBeNull(); expect(host.querySelector('style')).toBeNull();
   });
+  it('shows the source22 purchase action, supports clearing its label, and keeps editor clicks inert', async () => {
+    const purchase = vi.fn();
+    await act(async () => root.render(<Faq settings={{ variant: 'faq-22', title: 'Own FAQs', items: own }} onPurchase={purchase} />));
+    const buy = host.querySelector<HTMLButtonElement>('.lp-faq-buy')!; expect(buy.type).toBe('button'); expect(buy.textContent).toBe('الشراء الآن');
+    await act(async () => buy.click()); expect(purchase).toHaveBeenCalledTimes(1);
+    await act(async () => root.render(<Faq settings={{ variant: 'faq-22', button_text: 'Own purchase label' }} preview onPurchase={purchase} />));
+    await act(async () => host.querySelector<HTMLButtonElement>('.lp-faq-buy')!.click()); expect(purchase).toHaveBeenCalledTimes(1);
+    await act(async () => root.render(<Faq settings={{ variant: 'faq-22', button_text: '' }} onPurchase={purchase} />)); expect(host.querySelector('.lp-faq-buy')).toBeNull();
+  });
+  it('routes the FAQ purchase action to the existing single checkout without submitting a form', async () => {
+    const context = { store: {}, data: {} } as unknown as StorefrontContext; const submit = vi.fn(event => event.preventDefault());
+    const document = { schema: 1 as const, mode: 'standalone' as const, sections: [{ id: '1', type: 'faq' as const, settings: { variant: 'faq-22' as const, title: 'Own heading' } }, { id: '2', type: 'checkout' as const, settings: {} }] };
+    await act(async () => root.render(<LandingSections document={document} context={context} checkout={<form onSubmit={submit}><button type="submit">Submit own order</button></form>} />));
+    const scroll = vi.fn(); Object.assign(host.querySelector('[data-landing-checkout]')!, { scrollIntoView: scroll }); vi.stubGlobal('matchMedia', () => ({ matches: true }));
+    await act(async () => host.querySelector<HTMLButtonElement>('.lp-faq-buy')!.click());
+    expect(scroll).toHaveBeenCalledWith({ behavior: 'auto', block: 'start' }); expect(submit).not.toHaveBeenCalled(); expect(host.querySelectorAll('form')).toHaveLength(1); vi.unstubAllGlobals();
+  });
   it('validates the complete variant family and rejects crossed or unknown designs', () => {
     const section = { id: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', type: 'faq', settings: {} };
     for (const d of faqDesigns) expect(parseLanding({ schema: 1, mode: 'standalone', sections: [{ ...section, settings: faqDefaults(d.id) }] })).not.toBeNull();
