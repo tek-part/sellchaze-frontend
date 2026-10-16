@@ -14,8 +14,8 @@ const version = 'a'.repeat(64); const nextVersion = 'b'.repeat(64);
 const product = { id: 33, name: 'Own product', slug: 'own-product', price: 150, media: [] };
 let host, root;
 beforeEach(() => { vi.clearAllMocks(); globalThis.IS_REACT_ACT_ENVIRONMENT = true; host = document.createElement('div'); document.body.append(host); root = createRoot(host); api.get.mockImplementation(url => Promise.resolve({ data: url.endsWith('/landing-page') ? { data: { schema: 1, mode: 'standard', sections: [] }, version, product } : { data: product } })); });
-afterEach(async () => { await act(async () => root.unmount()); host.remove(); });
-const button = name => [...host.querySelectorAll('button')].find(el => (el.getAttribute('aria-label') || el.textContent).trim() === name);
+afterEach(async () => { await act(async () => root.unmount()); host.remove(); vi.unstubAllGlobals(); vi.restoreAllMocks(); });
+const button = name => [...host.querySelectorAll('button')].find(el => (el.getAttribute('aria-label') || el.getAttribute('title') || el.textContent).trim() === name);
 const click = async name => act(async () => button(name).click());
 
 describe('product landing editor save recovery', () => {
@@ -55,5 +55,23 @@ describe('product landing editor save recovery', () => {
     await click('تراجع'); await click('حفظ');
     // Undo restores the accepted document, so no second save is necessary.
     expect(api.put).toHaveBeenCalledTimes(1);
+  });
+  it('preserves banner images and destinations when applying a different layout and exports portable links', async () => {
+    const banner = { id: crypto.randomUUID(), type: 'promo_banners', settings: { variant: 'banners-1', items: [{ image: { url: '/own.png' }, destination: { type: 'page', id: 23 } }] } };
+    api.get.mockResolvedValue({ data: { data: { schema: 1, mode: 'standalone', sections: [banner] }, version, product, destination_urls: { 'page:23': '/pages/own' } } });
+    api.put.mockImplementation((_, payload) => Promise.resolve({ data: { data: payload.document, version: nextVersion, destination_urls: { 'page:23': '/pages/own' } } }));
+    await act(async () => root.render(<ProductLandingEditorPage />));
+    // The palette and existing section each have this label; select the section tool.
+    await act(async () => [...host.querySelectorAll('button')].filter(el => el.textContent.trim() === 'لافتات ترويجية مخصصة').at(-1).click());
+    await click('تغيير تنسيق اللافتات');
+    await act(async () => [...document.querySelectorAll('button')].find(el => el.getAttribute('aria-label')?.startsWith('استخدام تنسيق اللافتات 4:')).click());
+    await click('حفظ'); const saved = api.put.mock.calls[0][1].document.sections[0];
+    expect(saved.settings.variant).toBe('banners-4'); expect(saved.settings.items).toHaveLength(5);
+    expect(saved.settings.items[0]).toEqual(banner.settings.items[0]);
+    let blob; vi.stubGlobal('URL', class extends URL { static createObjectURL(value) { blob = value; return 'blob:own'; } static revokeObjectURL() {} });
+    const anchorClick = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {});
+    await click('تصدير صفحة Sellchaze');
+    const exported = JSON.parse(await new Promise(resolve => { const reader = new FileReader(); reader.onload = () => resolve(reader.result); reader.readAsText(blob); })); expect(exported.sections[0].settings.items[0].url).toBe('/pages/own'); expect(exported.sections[0].settings.items[0]).not.toHaveProperty('destination');
+    anchorClick.mockRestore();
   });
 });

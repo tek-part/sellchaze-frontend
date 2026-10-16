@@ -38,7 +38,7 @@ function featuredInk(accent: string): string {
 }
 
 export function Testimonials({ settings, preview = false, interactive = true }: { settings: LandingSettings; preview?: boolean; interactive?: boolean }) {
-  const variant = settings.variant ?? 'testimonials-1'; const design = testimonialDesign(variant);
+  const variant = settings.variant?.startsWith('testimonials-') ? settings.variant as TestimonialVariant : 'testimonials-1'; const design = testimonialDesign(variant);
   const supplied = (settings.items ?? []).filter(item => item.author?.trim() || item.title?.trim() || item.text?.trim() || item.html?.trim() || item.image?.url || typeof item.rating === 'number');
   const examples = preview && !supplied.length;
   const items = examples ? testimonialExamples(variant) : supplied;

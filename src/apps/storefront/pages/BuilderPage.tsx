@@ -59,7 +59,7 @@ export function BuilderPage({ funnel = false }: { funnel?: boolean }): ReactElem
   }
 
   // No published builder page → the policy/static page for this slug (or its not-found state).
-  if (!page) return funnel ? <NotFoundPage /> : <PolicyPage />;
+  if (!page && !api) return funnel ? <NotFoundPage /> : <PolicyPage />;
 
   const title = api ? pickLocalized(api.title, locale, store.defaultLocale) : '';
   const seo = api?.seo ?? null;
@@ -71,7 +71,7 @@ export function BuilderPage({ funnel = false }: { funnel?: boolean }): ReactElem
         {...(seo?.description ? { description: seo.description } : {})}
         {...(seo?.image ? { image: seo.image } : {})}
       />
-      <ThemeRenderer page={page} context={context} selectedSectionId={customizer.active ? customizer.selectedId : null} />
+      {page ? <ThemeRenderer page={page} context={context} selectedSectionId={customizer.active ? customizer.selectedId : null} /> : <Section><Container><h1>{title}</h1></Container></Section>}
       {!customizer.active && api?.funnel_product_slug !== undefined ? <FunnelCheckout key={api.funnel_product_slug} productSlug={api.funnel_product_slug} /> : null}
     </>
   );
