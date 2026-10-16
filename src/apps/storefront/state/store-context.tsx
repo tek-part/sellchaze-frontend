@@ -6,7 +6,7 @@
  */
 import { previewOrDev } from '../preview';
 import { previewStore } from '../dev/preview-store';
-import { createContext, useContext, useEffect, useState, type ReactElement, type ReactNode } from 'react';
+import { createContext, useContext, useState, type ReactElement, type ReactNode } from 'react';
 import { loadStorefrontBootstrap } from '../api/bootstrap';
 import type { ApiStorefrontBootstrap } from '../api/storefront';
 import type { ApiStorefrontNavigation } from '../api/types';
@@ -14,6 +14,7 @@ import { useAsync } from '../api/useAsync';
 import { selectionAutomatic } from './variant-selection';
 
 export interface StoreInfo {
+  paymentMethods?: ReadonlyArray<string>;
   bannerUrl?: string;
   email?: string;
   phone?: string;
@@ -71,19 +72,26 @@ interface StoreContextValue {
 
 const StoreContext = createContext<StoreContextValue | null>(null);
 
+function manualCurrency(storeId: string): string {
+  try { return typeof window === 'undefined' ? '' : window.localStorage.getItem(`sf:currency:manual:${storeId}`) || ''; }
+  catch { return ''; }
+}
+
 export function StoreProvider(props: { children: ReactNode; initialData?: ApiStorefrontBootstrap }): ReactElement {
   // Shares the entry's cached bootstrap request (api/bootstrap.ts): with `initialData` supplied no
   // fetch happens at all; without it (the entry's request failed) this retries once and falls back.
   const { data, loading, error } = useAsync(() => loadStorefrontBootstrap(), [], props.initialData);
 
   const apiOk = Boolean(data && !error);
-  const [selectedCurrency, setSelectedCurrency] = useState<string>(() => typeof window === 'undefined' ? '' : window.localStorage.getItem('sf:currency') || '');
+  const [selectedCurrency, setSelectedCurrency] = useState({ storeId: '', currency: '' });
   let store: StoreInfo;
   if (data) {
     const s = data.store;
     const baseCurrency = s.currency || 'USD';
     const supportedCurrencies = s.supported_currencies?.length ? s.supported_currencies : [baseCurrency];
-    const currency = supportedCurrencies.includes(selectedCurrency) ? selectedCurrency : baseCurrency;
+    const manual = (selectedCurrency.storeId === String(s.id) ? selectedCurrency.currency : '') || manualCurrency(String(s.id));
+    const automatic = s.auto_currency_by_country && s.visitor_currency ? s.visitor_currency : baseCurrency;
+    const currency = supportedCurrencies.includes(manual) ? manual : supportedCurrencies.includes(automatic) ? automatic : baseCurrency;
     // `locale.fallback` is the server's view of the store default; the StoreResource field is the
     // same value and wins when present so an older API without `locale` still resolves correctly.
     const defaultLocale = s.default_locale || data.locale?.fallback || 'en';
@@ -91,6 +99,7 @@ export function StoreProvider(props: { children: ReactNode; initialData?: ApiSto
       : s.supported_locales?.length ? s.supported_locales : [defaultLocale];
     store = {
       id: String(s.id),
+      paymentMethods: s.payment_methods ?? [],
       autoSelectVariants: s.auto_select_variants,
       trackingEnabled: s.tracking_enabled,
       downsellEnabled: s.downsell_enabled,
@@ -122,11 +131,12 @@ export function StoreProvider(props: { children: ReactNode; initialData?: ApiSto
     ? { header: data.navigation.header ?? [], footer: data.navigation.footer ?? [] }
     : EMPTY_NAVIGATION;
 
-  useEffect(() => {
-    if (typeof window !== 'undefined' && store.currency) window.localStorage.setItem('sf:currency', store.currency);
-  }, [store.currency]);
-
-  return <StoreContext.Provider value={{ store, loading, apiOk, navigation, setCurrency: setSelectedCurrency }}>{props.children}</StoreContext.Provider>;
+  const setCurrency = (currency: string): void => {
+    if (!store.supportedCurrencies.includes(currency)) return;
+    setSelectedCurrency({ storeId: store.id, currency });
+    try { window.localStorage.setItem(`sf:currency:manual:${store.id}`, currency); } catch { /* The current selection still works without storage. */ }
+  };
+  return <StoreContext.Provider value={{ store, loading, apiOk, navigation, setCurrency }}>{props.children}</StoreContext.Provider>;
 }
 
 export function useOptionalStore(): StoreContextValue | null { return useContext(StoreContext); }

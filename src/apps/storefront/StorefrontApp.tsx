@@ -240,11 +240,14 @@ export function StorefrontApp(): ReactElement {
         // Resolved once here, at the app boundary, so rendered chrome carries no request-time clock
         // (engine invariant I4) while never going stale in source.
         year: BUILD_YEAR,
-        payments: ['Visa', 'Mastercard', 'American Express', 'PayPal', 'Apple Pay'],
+        payments: (store.paymentMethods ?? []).map(method => method === 'cod'
+          ? locale === 'ar' ? 'الدفع عند الاستلام' : 'Cash on delivery'
+          : method === 'bank_transfer' ? locale === 'ar' ? 'تحويل بنكي' : 'Bank transfer'
+            : method.charAt(0).toUpperCase() + method.slice(1)),
         social: store.identity?.social ?? (dev && previewData ? previewData.sampleSocial() : []),
       },
     };
-  }, [categoriesQ.data, navigation, store.name, store.currency, store.currencyMultipliers, store.shipping, store.description, store.defaultLocale, store.identity, manifest.id, t, locale, previewData]);
+  }, [categoriesQ.data, navigation, store.name, store.currency, store.currencyMultipliers, store.paymentMethods, store.shipping, store.description, store.defaultLocale, store.identity, manifest.id, t, locale, previewData]);
 
   return (
     <ProductPresentationProvider><UiBlocksProvider><div className="sf-root" data-theme-id={manifest.id}>

@@ -238,6 +238,7 @@ export function toReview(review: ApiReview): ReviewModel {
     body: review.body ?? review.title ?? '',
     ...(review.created_at ? { createdAt: review.created_at } : {}),
     ...(review.is_verified ? { verified: true } : {}),
+    ...(review.photos?.length ? { photos: review.photos.map(photo => typeof photo === 'string' ? { src: photo } : photo) } : {}),
   };
 }
 

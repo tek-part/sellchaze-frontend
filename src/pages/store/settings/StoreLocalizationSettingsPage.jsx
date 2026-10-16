@@ -32,6 +32,7 @@ function fromStore(store) {
         supported_locales: [...new Set([defaultLocale, ...(store?.supported_locales || [])])],
         currency,
         supported_currencies: [...new Set([currency, ...(store?.supported_currencies || [])])],
+        auto_currency_by_country: Boolean(store?.auto_currency_by_country),
         timezone: store?.timezone || 'UTC',
     };
 }
@@ -133,6 +134,7 @@ export default function StoreLocalizationSettingsPage() {
                 supported_locales: [...new Set([values.default_locale, ...values.supported_locales])],
                 currency: values.currency,
                 supported_currencies: [...new Set([values.currency, ...values.supported_currencies])],
+                auto_currency_by_country: values.auto_currency_by_country,
                 timezone: values.timezone,
             });
             clearStoreLocalesCache(apiBase);
@@ -197,6 +199,14 @@ export default function StoreLocalizationSettingsPage() {
                         />
                     </FormField>
                 </div>
+            </SettingsCard>
+
+            <SettingsCard title={t('store_locale_auto_currency', 'Automatic currency')}>
+                <label className="flex items-start gap-3 font-semibold">
+                    <input type="checkbox" className="mt-1" checked={values.auto_currency_by_country} onChange={(event) => setValues((value) => ({ ...value, auto_currency_by_country: event.target.checked }))} aria-describedby="automatic-currency-help" />
+                    {t('store_locale_auto_currency_label', 'Choose the display currency from the visitor’s country')}
+                </label>
+                <p id="automatic-currency-help" className="mt-3 text-sm text-slate-600">{t('store_locale_auto_currency_help', 'Only enabled currencies are used. A shopper’s manual selection takes priority; the store currency is the fallback.')}</p>
             </SettingsCard>
 
             <SettingsCard title={t('store_timezone', 'Timezone')} description={t('store_locale_timezone_hint', 'Order timestamps, scheduled pages and reports use this timezone.')}>

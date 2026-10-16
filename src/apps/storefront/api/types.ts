@@ -127,6 +127,9 @@ export interface ApiCoupon {
 export interface ApiMerchantInformation { email: string; phone: string; address: string; policies: ReadonlyArray<{ kind: 'shipping' | 'returns' | 'cod'; title: string; content_html: string; url: string }> }
 
 export interface ApiStoreSummary {
+  auto_currency_by_country?: boolean;
+  visitor_currency?: string;
+  payment_methods?: ReadonlyArray<string>;
   email?: string | null;
   phone?: string | null;
   identity?: import('../store-identity').StoreIdentity;
@@ -193,6 +196,7 @@ export interface ApiPaginated<T> {
 }
 
 export interface ApiReview {
+  photos?: ReadonlyArray<string | { src: string; alt?: string }>;
   id: number;
   author_name?: string;
   customer?: { name?: string } | null;
