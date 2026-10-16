@@ -1,4 +1,8 @@
-.lp-faq{width:100%;max-width:var(--faq-width);margin-inline:auto;color:var(--faq-color);min-width:0;container-type:inline-size}
+@font-face{font-family:Almarai;src:url('/fonts/almarai/Almarai-Regular.ttf') format('truetype');font-style:normal;font-weight:400;font-display:swap}
+@font-face{font-family:Almarai;src:url('/fonts/almarai/Almarai-Bold.ttf') format('truetype');font-style:normal;font-weight:700;font-display:swap}
+.sf-product-landing{font-family:var(--store-identity-font,Almarai,sans-serif);--font:var(--store-identity-font,Almarai,sans-serif);--heading:var(--store-identity-font,Almarai,sans-serif);--font-ar:var(--store-identity-font,Almarai,sans-serif);--font-arabic:var(--store-identity-font,Almarai,sans-serif);--font-sans:var(--store-identity-font,Almarai,sans-serif);--font-serif:var(--store-identity-font,Almarai,sans-serif)}
+.sf-product-landing .sf-landing-block :where(h1,h2,h3,h4,h5,h6,p,label,input,select,textarea){font-family:var(--store-identity-font,Almarai,sans-serif)}
+.lp-faq{width:100%;max-width:var(--faq-width);margin-inline:auto;color:var(--faq-color);min-width:0;container-type:inline-size;font-family:var(--store-identity-font,Almarai,sans-serif)}
 .lp-faq .lp-faq-header{margin:0 0 30px;text-align:var(--faq-align)}
 .lp-faq .lp-faq-header h2{margin:0;font-size:var(--faq-heading-size);font-weight:700;line-height:1.35;color:var(--faq-color);overflow-wrap:anywhere}
 .lp-faq .lp-faq-header p{margin:0 0 16px;font-size:16px;line-height:1.6;color:var(--faq-accent);white-space:pre-wrap;overflow-wrap:anywhere}
@@ -7,8 +11,8 @@
 .lp-faq--gradient .lp-faq-header h2{background:linear-gradient(90deg,#365486,#88aff1,#ccbdff);background-clip:text;color:transparent}
 .lp-faq-group{display:grid;grid-template-columns:repeat(var(--faq-columns),minmax(0,1fr));align-items:start;gap:var(--faq-gap);padding:var(--faq-group-padding);background:var(--faq-group);border-radius:var(--faq-group-radius);box-shadow:var(--faq-group-shadow);min-width:0}
 .lp-faq-item{min-width:0;border:var(--faq-border);border-bottom:var(--faq-rule);border-radius:var(--faq-radius);background:var(--faq-card);box-shadow:var(--faq-shadow);color:var(--faq-question);overflow-wrap:anywhere}
-.lp-faq .lp-faq-item h3{margin:0;font-size:18px;line-height:1.5;font-weight:600}
-.lp-faq-item h3>button{display:flex;align-items:center;justify-content:space-between;gap:16px;width:100%;min-height:62px;padding:18px;background:transparent;color:inherit;border:0;font:inherit;text-align:start;cursor:pointer;border-radius:inherit}
+.lp-faq .lp-faq-item h3{margin:0;font-size:var(--faq-question-size);line-height:1.5;font-weight:600}
+.lp-faq-item h3>button{display:flex;align-items:center;justify-content:space-between;gap:16px;width:100%;min-height:44px;padding:var(--faq-question-padding);background:transparent;color:inherit;border:0;font:inherit;text-align:start;cursor:pointer;border-radius:inherit}
 .lp-faq-item h3>button>span{min-width:0;white-space:pre-wrap}
 .lp-faq-item h3>button:focus-visible{outline:3px solid #2563eb;outline-offset:3px}
 .lp-faq-icon{flex:none;width:24px;height:24px;color:var(--faq-icon);transition:rotate 250ms cubic-bezier(0,0,.1,1)}
@@ -24,9 +28,16 @@
 .lp-faq-answer-content img{max-width:100%;max-height:360px;object-fit:contain;margin-block:12px}
 .lp-faq--split{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,450px);gap:40px;align-items:start}
 .lp-faq--split .lp-faq-group{border:1px solid #eeeeee}
-.lp-faq--frame.lp-faq--faq-25 .lp-faq-group{border:1px solid #141414}
+.lp-faq--header-frame{position:relative;isolation:isolate;background:var(--faq-group);padding:44px;border-radius:var(--faq-group-radius);box-shadow:var(--faq-group-shadow)}
+.lp-faq--header-frame .lp-faq-group{background:transparent;border-radius:0;box-shadow:none}
+.lp-faq--header-frame .lp-faq-header{margin-bottom:25px}
+.lp-faq--header-frame .lp-faq-header p{padding:4px 18px 3px;margin-bottom:15px;font-size:18px;line-height:1.6;font-weight:700}
+.lp-faq--header-frame .lp-faq-header h2{line-height:1.5}
+.lp-faq--header-frame.lp-faq--faq-25{border:2px solid #141414}
+.lp-faq-buy{display:block;margin:20px auto 0;width:min(300px,100%);max-width:500px;padding:12px 24px;border:0;border-radius:999px;background:#ddb76a;color:#ffffff;box-shadow:0 1px 3px #0000001a,0 1px 3px #00000014;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Oxygen,Ubuntu,Cantarell,"Fira Sans","Droid Sans","Helvetica Neue",sans-serif;font-size:20px;font-weight:500;line-height:30px;cursor:pointer;white-space:pre-wrap;overflow-wrap:anywhere}
+.lp-faq-buy:focus-visible{outline:3px solid #2563eb;outline-offset:4px}
 .lp-faq--frame.lp-faq--faq-27{border:20px solid #d92d36;padding:25px}
 .lp-faq[data-motion=paused] *{transition:none}
-@container(max-width:640px){.lp-faq-group{grid-template-columns:minmax(0,1fr);padding:var(--faq-mobile-padding)}.lp-faq .lp-faq-header h2{font-size:clamp(24px,7cqw,36px)}.lp-faq--split{display:block}.lp-faq-item h3>button{padding:16px;gap:12px}.lp-faq--frame.lp-faq--faq-27{border-width:10px;padding:12px}}
-@media(max-width:640px){.lp-faq--split{display:block}.lp-faq-group{grid-template-columns:minmax(0,1fr)}.lp-faq .lp-faq-header h2{font-size:clamp(24px,7vw,36px)}}
+@container(max-width:640px){.lp-faq-group{grid-template-columns:minmax(0,1fr);padding:var(--faq-mobile-padding)}.lp-faq .lp-faq-header h2{font-size:clamp(24px,7cqw,36px)}.lp-faq--split{display:block}.lp-faq-item h3>button{padding:16px;gap:12px}.lp-faq--header-frame{padding:20px}.lp-faq--frame.lp-faq--faq-27{border-width:10px;padding:12px}}
+@media(max-width:640px){.lp-faq--split{display:block}.lp-faq--header-frame{padding:20px}.lp-faq-group{grid-template-columns:minmax(0,1fr)}.lp-faq .lp-faq-header h2{font-size:clamp(24px,7vw,36px)}}
 @media(prefers-reduced-motion:reduce){.lp-faq *{transition:none!important}}

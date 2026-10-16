@@ -123,6 +123,17 @@ describe('product landing editor save recovery', () => {
     await click('استعادة ألوان وتنسيق التصميم'); await click('حفظ'); expect(api.put.mock.calls.at(-1)[1].document.sections[0].settings).not.toHaveProperty('background');
     await click('تراجع'); await click('حفظ'); expect(api.put.mock.calls.at(-1)[1].document.sections[0].settings).toEqual(saved.settings);
   });
+  it('edits and clears the FAQ purchase label without losing the saved answer or undo history', async () => {
+    const faq = { id: crypto.randomUUID(), type: 'faq', settings: { variant: 'faq-22', items: [{ title: 'Own question', text: 'Own answer', image: { url: '/own.png' } }] } };
+    api.get.mockResolvedValue({ data: { data: { schema: 1, mode: 'standalone', sections: [faq] }, version, product } });
+    api.put.mockImplementation((_, payload) => Promise.resolve({ data: { data: payload.document, version: nextVersion } }));
+    await act(async () => root.render(<ProductLandingEditorPage />)); await act(async () => host.querySelector('.pl-section-title').click());
+    const field = [...host.querySelectorAll('label')].find(el => el.textContent.startsWith('نص زر الشراء')).querySelector('input');
+    expect(field.value).toBe('الشراء الآن');
+    await act(async () => { Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set.call(field, ''); field.dispatchEvent(new Event('input', { bubbles: true })); });
+    await click('حفظ'); expect(api.put.mock.calls.at(-1)[1].document.sections[0].settings.button_text).toBe(''); expect(api.put.mock.calls.at(-1)[1].document.sections[0].settings.items).toEqual(faq.settings.items);
+    await click('تراجع'); await click('حفظ'); expect(api.put.mock.calls.at(-1)[1].document.sections[0].settings).toEqual(faq.settings);
+  });
   it('creates blank FAQ slots with preset paint defaults and never persists preview answers', async () => {
     api.put.mockImplementation((_, payload) => Promise.resolve({ data: { data: payload.document, version: nextVersion } }));
     await act(async () => root.render(<ProductLandingEditorPage />)); await click('الأسئلة الشائعة');

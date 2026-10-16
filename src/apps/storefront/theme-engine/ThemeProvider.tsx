@@ -142,8 +142,13 @@ export function ThemeProvider(props: ThemeProviderProps): ReactElement | null {
     if (!el || !tokens) return;
     applyTokensToElement(el, tokens, colorScheme);
     const font = identityFontStack(props.identity);
-    if (font) el.style.setProperty('--font-arabic', font);
-    else el.style.removeProperty('--font-arabic');
+    if (font) {
+      el.style.setProperty('--font-arabic', font);
+      el.style.setProperty('--store-identity-font', font);
+    } else {
+      el.style.removeProperty('--font-arabic');
+      el.style.removeProperty('--store-identity-font');
+    }
     el.setAttribute('dir', direction);
 
     let active = true;
