@@ -9,7 +9,7 @@ import './testimonial-design-picker.css';
 function DesignPreview({ design }) {
     const host = useRef(null); const [width, setWidth] = useState(300); const [contentHeight, setContentHeight] = useState(1);
     useEffect(() => { const measure = () => { if (host.current) { setWidth(host.current.getBoundingClientRect().width); const root = host.current.querySelector('.lp-countdown'); if (root) setContentHeight(root.offsetHeight); } }; measure(); if (typeof ResizeObserver === 'undefined') return; const observer = new ResizeObserver(measure); observer.observe(host.current); const root = host.current.querySelector('.lp-countdown'); if (root) observer.observe(root); return () => observer.disconnect(); }, []);
-    const canvasWidth = 1268; const canvasHeight = design.preview.height / design.preview.width * canvasWidth;
+    const canvasWidth = design.preview.width; const canvasHeight = design.preview.height / design.preview.width * canvasWidth;
     const height = canvasHeight * width / canvasWidth;
     const scale = Math.min(width / canvasWidth, height / Math.max(1, contentHeight));
     return <div ref={host} className="pl-design-preview" style={{ height }} aria-hidden><div style={{ width: canvasWidth, height: canvasHeight, transform: `scale(${scale})`, insetInlineStart: (width - canvasWidth * scale) / 2 }}><CountdownLayouts settings={{ variant: design.id }} preview thumbnail /></div></div>;
