@@ -3,16 +3,16 @@ import { HiOutlinePhoto, HiOutlineTrash, HiOutlineXMark } from '../workspace/Wor
 import './landing-card-popover.css';
 
 // Edits stay in the page's undo history; only the page toolbar publishes a save.
-export default function LandingCardPopover({ item, media = [], disabled, onChange, onUpload, onRemove, onClose }) {
+export default function LandingCardPopover({ imageOnly = false, item, media = [], disabled, onChange, onUpload, onRemove, onClose }) {
     const panel = useRef(null); const trigger = useRef(null); const [replace, setReplace] = useState(false);
     const image = item.image; const url = image?.media_id ? media.find(row => row.id === image.media_id)?.url : image?.url;
     const setImage = value => { const next = { ...item }; if (value) next.image = value; else delete next.image; onChange(next); };
     const selectImage = row => setImage({ ...image, media_id: row.id, url: row.url, alt: image?.alt ?? row.alt ?? '' });
     useEffect(() => {
         trigger.current = document.activeElement;
-        panel.current?.querySelector('input[type="text"]')?.focus({ preventScroll: true });
+        panel.current?.querySelector(imageOnly?'.pl-card-image':'input[type="text"]')?.focus({ preventScroll: true });
         return () => trigger.current?.isConnected && trigger.current.focus({ preventScroll: true });
-    }, []);
+    }, [imageOnly]);
     function keyDown(event) {
         if (event.key === 'Escape') { event.stopPropagation(); onClose(); }
         if (event.key !== 'Tab') return;
@@ -22,8 +22,8 @@ export default function LandingCardPopover({ item, media = [], disabled, onChang
         else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first?.focus(); }
     }
     return <div className="pl-card-overlay" onClick={event => { if (event.target === event.currentTarget) onClose(); }} onKeyDown={keyDown}>
-        <div ref={panel} className="pl-card-popover" role="dialog" aria-modal="true" aria-label="تحرير البطاقة" dir="rtl">
-            <button type="button" className="pl-card-close" aria-label="إغلاق تحرير البطاقة" onClick={onClose}><HiOutlineXMark /></button>
+        <div ref={panel} className="pl-card-popover" role="dialog" aria-modal="true" aria-label={imageOnly?"تحرير صورة المعرض":"تحرير البطاقة"} dir="rtl">
+            <button type="button" className="pl-card-close" aria-label={imageOnly?"إغلاق تحرير الصورة":"إغلاق تحرير البطاقة"} onClick={onClose}><HiOutlineXMark /></button>
             <fieldset disabled={disabled}>
                 <p className="pl-card-image-label">صورة</p>
                 <button type="button" className="pl-card-image" aria-label="استبدال الصورة" onClick={() => setReplace(value => !value)}>{url ? <img src={url} alt={image.alt || 'معاينة الصورة'} /> : <HiOutlinePhoto />}<span>استبدال الصورة</span></button>
@@ -35,9 +35,9 @@ export default function LandingCardPopover({ item, media = [], disabled, onChang
                     <label>النص البديل<input type="text" maxLength={300} value={image?.alt || ''} onChange={event => setImage({ ...image, alt: event.target.value })} /></label>
                     {image ? <button type="button" onClick={() => setImage(undefined)}>إزالة الصورة</button> : null}
                 </div> : null}
-                <label>النص الاساسي<input type="text" maxLength={300} value={item.title || ''} onChange={event => onChange({ ...item, title: event.target.value })} /></label>
+                {!imageOnly?<><label>النص الاساسي<input type="text" maxLength={300} value={item.title || ''} onChange={event => onChange({ ...item, title: event.target.value })} /></label>
                 <label>النص الفرعي<textarea rows={3} maxLength={6000} value={item.text || ''} onChange={event => onChange({ ...item, text: event.target.value })} /></label>
-                <button type="button" className="pl-card-remove" aria-label="حذف البطاقة" onClick={onRemove}><HiOutlineTrash /></button>
+                </>:null}<button type="button" className="pl-card-remove" aria-label={imageOnly?"حذف صورة المعرض":"حذف البطاقة"} onClick={onRemove}><HiOutlineTrash /></button>
             </fieldset>
         </div>
     </div>;

@@ -133,6 +133,6 @@ const aspects = {
   ]
 };
 
-export default function ElementDesignPreview({ family, index, children }) {
-    return <div className="pl-gallery-visual" aria-hidden style={{ aspectRatio: aspects[family]?.[index] ?? '16 / 9' }}>{children}</div>;
+export default function ElementDesignPreview({ family, index, aspect, children }) {
+    return <div className="pl-gallery-visual" aria-hidden style={{ aspectRatio: aspect ?? aspects[family]?.[index] ?? '16 / 9' }}>{children}</div>;
 }
