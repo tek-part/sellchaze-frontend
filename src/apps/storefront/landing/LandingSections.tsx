@@ -7,6 +7,7 @@ import { StaticLandingFrame } from './StaticLandingFrame';
 import { landingUrl, type LandingDocument, type LandingImage, type LandingSection } from './document';
 import { Testimonials } from './Testimonials';
 import { PromoBanners } from './PromoBanners';
+import { hasStoreFeatureContent, StoreFeatures } from './StoreFeatures';
 import './landing.css';
 
 export function scrollLandingPurchase(): void {
@@ -47,7 +48,7 @@ function LandingCountdown({ section, productId }: { section: LandingSection; pro
   return <div className="sf-landing-countdown" role="timer" aria-label="الوقت المتبقي">{[Math.floor(seconds / 86400), Math.floor(seconds / 3600) % 24, Math.floor(seconds / 60) % 60, seconds % 60].map((value, index) => <div key={index}><strong>{String(value).padStart(2, '0')}</strong><span>{['يوم', 'ساعة', 'دقيقة', 'ثانية'][index]}</span></div>)}</div>;
 }
 
-export function LandingBlock({ section, context, preview = false, firstCheckout = true, checkout, onPromoImageSelect }: { section: LandingSection; context: StorefrontContext; preview?: boolean; firstCheckout?: boolean; checkout?: ReactNode; onPromoImageSelect?: (index: number) => void }) {
+export function LandingBlock({ section, context, preview = false, firstCheckout = true, checkout, onPromoImageSelect, onFeatureItemSelect }: { section: LandingSection; context: StorefrontContext; preview?: boolean; firstCheckout?: boolean; checkout?: ReactNode; onPromoImageSelect?: (index: number) => void; onFeatureItemSelect?: (index: number) => void }) {
   const product = productDetailOf(context); const s = section.settings; const reviews = reviewsFor(context);
   const title = s.title ?? ''; const buy = <button type="button" className="sf-landing-buy" onClick={preview ? undefined : scrollLandingPurchase}>{s.button_text || 'اضغط هنا للشراء'}</button>;
   let body: ReactNode = null;
@@ -65,10 +66,11 @@ export function LandingBlock({ section, context, preview = false, firstCheckout 
     case 'reviews': body = product?.productPreferences?.is_reviews_enabled === false ? null : <><h2>{title}</h2><ReviewList reviews={reviews} /></>; break;
     case 'product_description': body = <><h2>{title}</h2><ProductDescription html={product?.descriptionHtml ?? ''} /></>; break;
     case 'billboard': body = <div className="sf-landing-billboard"><strong>{title}</strong><span>{s.description}</span>{s.items?.map((item, index) => <span key={index}>{item.title}</span>)}</div>; break;
-    default: body = section.type === 'promo_banners' && s.variant ? <PromoBanners settings={s} preview={preview} onImageSelect={onPromoImageSelect} /> : section.type === 'custom_reviews' && s.variant ? <Testimonials settings={s} preview={preview} /> : <><h2>{title}</h2>{s.description ? <p>{s.description}</p> : null}<div className={`sf-landing-items sf-landing-items--${section.type}`}>{s.items?.map((item, index) => <article key={index}><LandingPhoto image={item.image} />{section.type === 'how_to' ? <span className="sf-landing-step">{index + 1}</span> : null}{section.type === 'custom_reviews' ? <span className="sf-landing-stars" aria-label={`${item.rating ?? 5} / 5`}>{'★'.repeat(Math.max(0, Math.min(5, Math.round(item.rating ?? 5))))}</span> : null}<h3>{item.title}</h3><p>{item.text}</p>{item.html ? <StaticLandingFrame title={item.title || 'محتوى'} html={item.html} /> : null}{item.url && landingUrl(item.url) ? <a href={item.url} target="_blank" rel="noopener noreferrer">{item.title || 'عرض التفاصيل'}</a> : null}</article>)}</div></>;
+    default: body = section.type === 'store_features' && s.variant ? <StoreFeatures settings={s} preview={preview} onItemSelect={onFeatureItemSelect} /> : section.type === 'promo_banners' && s.variant ? <PromoBanners settings={s} preview={preview} onImageSelect={onPromoImageSelect} /> : section.type === 'custom_reviews' && s.variant ? <Testimonials settings={s} preview={preview} /> : <><h2>{title}</h2>{s.description ? <p>{s.description}</p> : null}<div className={`sf-landing-items sf-landing-items--${section.type}`}>{s.items?.map((item, index) => <article key={index}><LandingPhoto image={item.image} />{section.type === 'how_to' ? <span className="sf-landing-step">{index + 1}</span> : null}{section.type === 'custom_reviews' ? <span className="sf-landing-stars" aria-label={`${item.rating ?? 5} / 5`}>{'★'.repeat(Math.max(0, Math.min(5, Math.round(item.rating ?? 5))))}</span> : null}<h3>{item.title}</h3><p>{item.text}</p>{item.html ? <StaticLandingFrame title={item.title || 'محتوى'} html={item.html} /> : null}{item.url && landingUrl(item.url) ? <a href={item.url} target="_blank" rel="noopener noreferrer">{item.title || 'عرض التفاصيل'}</a> : null}</article>)}</div></>;
   }
   if (!preview && section.type === 'promo_banners' && s.variant && !s.items?.some(item => item.image?.url || item.title?.trim() || item.text?.trim() || item.html?.trim())) return null;
   if (!preview && section.type === 'custom_reviews' && s.variant && !s.items?.length) return null;
+  if (!preview && section.type === 'store_features' && s.variant && !hasStoreFeatureContent(s)) return null;
   const style: CSSProperties = { backgroundColor: s.background, ...(s.background_image?.url && landingUrl(s.background_image.url) && !s.background_image.url.startsWith('#') ? { backgroundImage: `url(${JSON.stringify(s.background_image.url)})`, backgroundSize: 'cover', backgroundPosition: 'center' } : {}), color: s.foreground, textAlign: s.align, padding: `${Math.max(0, Math.min(160, s.padding ?? 32))}px`, borderRadius: `${Math.max(0, Math.min(48, s.radius ?? 0))}px`, ...(s.font_size ? { fontSize: Math.max(12, Math.min(96, s.font_size)) } : {}) };
   return <section className={`sf-landing-block sf-landing-block--${section.type}`} style={style}>{body}</section>;
 }

@@ -5,11 +5,14 @@ export type TestimonialVariant = `testimonials-${1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 |
 export const testimonialVariants: TestimonialVariant[] = Array.from({ length: 11 }, (_, index) => `testimonials-${index + 1}` as TestimonialVariant);
 export type BannerVariant = `banners-${1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9}`;
 export const bannerVariants: BannerVariant[] = Array.from({ length: 9 }, (_, index) => `banners-${index + 1}` as BannerVariant);
+export type StoreFeatureVariant = `features-${number}`;
+export const storeFeatureVariants: StoreFeatureVariant[] = Array.from({ length: 45 }, (_, index) => `features-${index + 1}` as StoreFeatureVariant);
 export interface LandingDestination { type: 'product' | 'category' | 'page'; id: number }
-export interface LandingItem { title?: string; text?: string; html?: string; image?: LandingImage; url?: string; icon?: string; rating?: number; author?: string; caption?: string; date?: string | null; platform?: string; destination?: LandingDestination }
+export interface LandingItem { title?: string; text?: string; html?: string; image?: LandingImage; url?: string; icon?: string; accent?: string; background?: string; foreground?: string; rating?: number; author?: string; caption?: string; date?: string | null; platform?: string; destination?: LandingDestination }
 export interface LandingSettings {
   title?: string; description?: string; html?: string; image?: LandingImage; background_image?: LandingImage; images?: LandingImage[]; video?: string;
-  variant?: TestimonialVariant | BannerVariant; accent?: string; card_background?: string; question_background?: string;
+  variant?: TestimonialVariant | BannerVariant | StoreFeatureVariant; accent?: string; card_background?: string; question_background?: string;
+  hover_background?: string; hover_foreground?: string; secondary_foreground?: string; hover_secondary_foreground?: string; icon_background?: string; icon_color?: string; motion?: boolean;
   button_text?: string; button_target?: 'purchase' | 'product'; background?: string; foreground?: string; align?: 'start' | 'center' | 'end';
   layout?: 'stack' | 'split' | 'reverse' | 'tiles' | 'columns' | 'overlay' | 'carousel' | 'grid'; items?: LandingItem[];
   hours?: number; ends_at?: string | null; rating?: number; css?: string; padding?: number; radius?: number; font_size?: number;
@@ -32,13 +35,14 @@ export function parseLanding(value: unknown): LandingDocument | null {
     const s = object(section.settings) ? section.settings : {};
     for (const key of ['title', 'description', 'html', 'css', 'button_text', 'video']) if (key in s && typeof s[key] !== 'string') return null;
     for (const key of ['padding', 'radius', 'font_size', 'hours', 'rating']) if (key in s && (typeof s[key] !== 'number' || !Number.isFinite(s[key]))) return null;
-    for (const key of ['background', 'foreground', 'accent', 'card_background', 'question_background']) if (key in s && (typeof s[key] !== 'string' || !/^(#(?:[a-f0-9]{3}|[a-f0-9]{4}|[a-f0-9]{6}|[a-f0-9]{8})|transparent)$/i.test(s[key]))) return null;
-    if (s.variant !== undefined && !(section.type === 'custom_reviews' && testimonialVariants.includes(s.variant as TestimonialVariant) || section.type === 'promo_banners' && bannerVariants.includes(s.variant as BannerVariant))) return null;
+    for (const key of ['background', 'foreground', 'accent', 'card_background', 'question_background', 'hover_background', 'hover_foreground', 'secondary_foreground', 'hover_secondary_foreground', 'icon_background', 'icon_color']) if (key in s && (typeof s[key] !== 'string' || !/^(#(?:[a-f0-9]{3}|[a-f0-9]{4}|[a-f0-9]{6}|[a-f0-9]{8})|transparent)$/i.test(s[key]))) return null;
+    if (s.motion !== undefined && typeof s.motion !== 'boolean') return null;
+    if (s.variant !== undefined && !(section.type === 'custom_reviews' && testimonialVariants.includes(s.variant as TestimonialVariant) || section.type === 'promo_banners' && bannerVariants.includes(s.variant as BannerVariant) || section.type === 'store_features' && storeFeatureVariants.includes(s.variant as StoreFeatureVariant))) return null;
     const validImage = (image: unknown) => object(image) && (landingUrl(image.url) || Number.isSafeInteger(image.media_id) && Number(image.media_id) > 0) && (image.alt === undefined || typeof image.alt === 'string');
     if (s.image !== undefined && !validImage(s.image)) return null;
     if (s.background_image !== undefined && !validImage(s.background_image)) return null;
     if (s.images !== undefined && (!Array.isArray(s.images) || s.images.length > 30 || !s.images.every(validImage))) return null;
-    if (s.items !== undefined && (!Array.isArray(s.items) || s.items.length > 30 || !s.items.every((item) => object(item) && ['title', 'text', 'html', 'icon', 'author', 'caption', 'platform'].every(key => item[key] === undefined || typeof item[key] === 'string') && (item.date === undefined || item.date === null || typeof item.date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(item.date)) && (item.image === undefined || validImage(item.image)) && (item.destination === undefined || section.type === 'promo_banners' && object(item.destination) && ['product', 'category', 'page'].includes(String(item.destination.type)) && Number.isSafeInteger(item.destination.id) && Number(item.destination.id) > 0) && (item.url === undefined || item.url === '' || landingUrl(item.url)) && (item.rating === undefined || typeof item.rating === 'number' && Number.isFinite(item.rating))))) return null;
+    if (s.items !== undefined && (!Array.isArray(s.items) || s.items.length > 30 || !s.items.every((item) => object(item) && ['title', 'text', 'html', 'icon', 'author', 'caption', 'platform'].every(key => item[key] === undefined || typeof item[key] === 'string') && ['accent', 'background', 'foreground'].every(key => item[key] === undefined || typeof item[key] === 'string' && /^(#(?:[a-f0-9]{3}|[a-f0-9]{4}|[a-f0-9]{6}|[a-f0-9]{8})|transparent)$/i.test(item[key])) && (item.date === undefined || item.date === null || typeof item.date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(item.date)) && (item.image === undefined || validImage(item.image)) && (item.destination === undefined || section.type === 'promo_banners' && object(item.destination) && ['product', 'category', 'page'].includes(String(item.destination.type)) && Number.isSafeInteger(item.destination.id) && Number(item.destination.id) > 0) && (item.url === undefined || item.url === '' || landingUrl(item.url)) && (item.rating === undefined || typeof item.rating === 'number' && Number.isFinite(item.rating))))) return null;
   }
   return { ...value, sections: value.sections.map(section => ({ ...section, settings: object(section.settings) ? section.settings : {} })) } as unknown as LandingDocument;
 }
