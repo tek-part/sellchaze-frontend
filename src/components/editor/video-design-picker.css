@@ -1,0 +1,21 @@
+.pl-video-diagram{display:grid;grid-template-rows:auto 1fr;gap:16px;height:230px;padding:20px;background:#fff;color:#45566c;overflow:hidden;position:relative;isolation:isolate}
+.pl-video-diagram-heading{display:flex;flex-direction:column;gap:7px;align-items:center}
+.pl-video-diagram-heading b{height:8px;width:65%;background:#25333b;border-radius:3px}
+.pl-video-diagram-heading i{height:4px;width:45%;background:#9aa6af;border-radius:3px}
+.pl-video-diagram-media{display:grid;place-items:center;background:#e7edf2;border-radius:24px;border:5px solid #b8edab;min-height:0}
+.pl-video-diagram-media svg{width:38px;height:38px}
+.pl-video-diagram--offset{padding:20px 30px 30px}
+.pl-video-diagram--offset:before{content:'';position:absolute;inset:62px 15px 12px auto;width:50%;background:#e3f7dd;border-radius:24px;z-index:-1}
+.pl-video-diagram--offset .pl-video-diagram-heading{align-items:flex-start}
+.pl-video-diagram--offset .pl-video-diagram-media{border:0;border-radius:20px}
+.pl-video-diagram--benefits{grid-template-rows:auto 1fr 35px}
+.pl-video-diagram--benefits .pl-video-diagram-media{border:0;border-radius:10px}
+.pl-video-diagram-benefits{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.pl-video-diagram-benefits i{border:1px solid #dbe1e7;border-radius:7px;background:linear-gradient(#83c16d,#83c16d) center 7px/8px 8px no-repeat}
+.pl-video-diagram--split{grid-template-columns:1fr 1fr;grid-template-rows:1fr auto;align-items:center}
+.pl-video-diagram--split .pl-video-diagram-heading{align-items:flex-start;gap:12px}
+.pl-video-diagram--split .pl-video-diagram-heading b{width:90%;height:25px}
+.pl-video-diagram--split .pl-video-diagram-media{grid-column:2;grid-row:1/3;height:150px;border:0;border-radius:10px}
+.pl-video-diagram-buy{grid-column:1;height:14px;width:85%;background:#111;border-radius:4px;align-self:start}
+.pl-video-diagram--portrait{grid-template-rows:auto 1fr;gap:10px}
+.pl-video-diagram--portrait .pl-video-diagram-media{width:77px;justify-self:center;aspect-ratio:9/16;border:0;border-radius:8px}

@@ -13,6 +13,7 @@ export function newLandingSection(type, product) {
     if (['image', 'banner', 'simple', 'content'].includes(type) && images[0]) settings.image = images[0];
     if (['gallery', 'slider'].includes(type)) settings.images = images;
     if (['faq', 'custom_reviews', 'store_features', 'product_features', 'promo_banners', 'how_to'].includes(type)) settings.items = [];
+    if (type === 'video') settings.padding = 40;
     if (type === 'countdown') { settings.title = 'الوقت المتبقي'; settings.hours = 1; }
     if (type === 'buy_button') settings.button_text = 'اضغط هنا للشراء';
     return { id: crypto.randomUUID(), type, settings };
