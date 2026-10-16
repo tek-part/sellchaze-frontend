@@ -1,0 +1,5 @@
+Cart confirmation functional icon, observed in the referenced buy-button template14.
+Source: https://files.easy-orders.net/1746716952482090905.png
+Captured unmodified through the browser asset inventory,2026-10-16.
+SHA256 b76a292d1e2d6c5fe5b691aa9394841344eeb0552f8c1d26bca1a76315236c90
+No product photography or merchant data included.
