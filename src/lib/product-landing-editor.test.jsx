@@ -113,5 +113,9 @@ describe('product landing editor save recovery', () => {
     expect(button('عرض الأقسام').getAttribute('aria-pressed')).toBe('false');
     await click('حفظ'); expect(api.put.mock.calls[0][1].document.sections).toHaveLength(1);
     expect(api.put.mock.calls[0][1].document.sections[0].settings.variant).toBe('features-1');
+    await click('إغلاق الإعدادات');
+    await act(async () => host.querySelector('.pl-section-title').click());
+    expect(button('عرض الأقسام').getAttribute('aria-pressed')).toBe('false');
+    await click('إغلاق الإعدادات'); expect(button('عرض الأقسام').getAttribute('aria-pressed')).toBe('false');
   });
 });
