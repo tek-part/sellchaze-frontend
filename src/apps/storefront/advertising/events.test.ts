@@ -13,13 +13,18 @@ const envelope = { configuration: { version: 1, facebook: ['1234567890'], tiktok
 
 it('suppresses duplicate purchase envelopes across completion and receipt refresh while keeping store scopes separate', async () => {
   const { sendAdvertisingEnvelope } = await import('./events');
-  sendAdvertisingEnvelope('1', envelope); sendAdvertisingEnvelope('1', envelope); expect(sendTrackingCommand).toHaveBeenCalledTimes(2);
-  sendAdvertisingEnvelope('2', envelope); expect(sendTrackingCommand).toHaveBeenCalledTimes(4);
+  sendAdvertisingEnvelope('1', envelope); sendAdvertisingEnvelope('1', envelope); await vi.waitFor(() => expect(sendTrackingCommand).toHaveBeenCalledTimes(2));
+  sendAdvertisingEnvelope('2', envelope); await vi.waitFor(() => expect(sendTrackingCommand).toHaveBeenCalledTimes(4));
 });
 it('does not initialize or call providers while a private receipt token remains in the URL', async () => {
   const { sendAdvertisingEnvelope, browserAdvertisingAllowed } = await import('./events');
   window.location.hash = '#receipt=PRIVATE'; expect(browserAdvertisingAllowed()).toBe(false); sendAdvertisingEnvelope('1', envelope);
-  expect(sendTrackingCommand).not.toHaveBeenCalled(); window.location.hash = ''; sendAdvertisingEnvelope('1', envelope); expect(sendTrackingCommand).toHaveBeenCalledTimes(2);
+  expect(sendTrackingCommand).not.toHaveBeenCalled(); window.location.hash = ''; sendAdvertisingEnvelope('1', envelope); await vi.waitFor(() => expect(sendTrackingCommand).toHaveBeenCalledTimes(2));
+});
+it('rechecks privacy before a delayed advertising adapter loads', async () => {
+  const { sendAdvertisingEnvelope } = await import('./events');
+  sendAdvertisingEnvelope('1', envelope); window.location.hash = '#receipt=PRIVATE';
+  await vi.dynamicImportSettled(); expect(sendTrackingCommand).not.toHaveBeenCalled();
 });
 it('posts only catalog selections and uses the server response rather than client values before calling providers', async () => {
   const { recordAdvertising, flushAdvertising } = await import('./events');

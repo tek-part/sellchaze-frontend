@@ -23,6 +23,7 @@ import { catalogVariantSelection, resolveVariant, selectionAutomatic, variantAva
 import { variantImage } from '../utils/variant-image';
 import { recordReferral } from '../analytics/events';
 import { referralFromSearch } from '../../../shared/marketing/referral';
+import { useProductPresentation } from '../state/product-presentation';
 
 export function ProductPage(): ReactElement | null {
   const manifest = useThemeManifest();
@@ -45,8 +46,9 @@ export function ProductPage(): ReactElement | null {
   const { record } = useRecentlyViewed();
   const dev = previewOrDev();
   const multiplier = store.currencyMultipliers[currency] ?? 1;
-  let detail: ProductDetailModel | null = productQ.data ? toProductDetail(productQ.data.data, currency, multiplier) : null;
+  let detail: ProductDetailModel | null = productQ.data?.data.slug === slug && !productQ.error ? toProductDetail(productQ.data.data, currency, multiplier) : null;
   if (dev && !detail && !productQ.loading) detail = sampleProductDetail(slug, manifest.id, locale);
+  useProductPresentation(detail?.id, detail?.productPreferences);
 
   // Record the view (client-side history) once the product resolves.
   const viewedId = detail?.id;
@@ -60,7 +62,7 @@ export function ProductPage(): ReactElement | null {
   }, [viewedId]);
 
   const context = useMemo<StorefrontContext>(() => {
-    const reviews: ReviewModel[] = reviewsQ.data ? reviewsQ.data.data.map(toReview) : [];
+    const reviews: ReviewModel[] = detail?.productPreferences?.is_reviews_enabled === false ? [] : reviewsQ.data ? reviewsQ.data.data.map(toReview) : [];
     let related: ProductCardModel[] = relatedQ.data ? relatedQ.data.data.map((p) => toProductCard(p, currency, multiplier)) : [];
     if (dev && !relatedQ.data) related = sampleNewest(manifest.id, locale).slice(0, 6);
     related = related.filter((product) => product.id !== detail?.id).map((product) => ({ ...product, analyticsSource: 'cross_sell' }));
@@ -136,7 +138,7 @@ export function ProductPage(): ReactElement | null {
           ]}
         />
       ) : null}
-      {template ? <ThemeRenderer page={template} context={context} /> : null}
+      {template ? <ThemeRenderer page={detail?.productPreferences?.hide_related_products ? { ...template, sections: template.sections.filter((section) => section.type !== 'related-products') } : template} context={context} /> : null}
     </>
   );
 }

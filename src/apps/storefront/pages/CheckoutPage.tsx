@@ -25,8 +25,14 @@ import { useCheckoutLead } from './useCheckoutLead';
 import { checkoutCartItems } from './checkout-cart-items';
 import { useCheckoutMetrics } from '../analytics/checkout-hooks';
 import { chosenOfferCoupon, clearOfferCoupon } from '../downsell/offer-session';
+import ProductDirectCheckout from './ProductDirectCheckout';
 
 export function CheckoutPage(): ReactElement {
+  const [search] = useSearchParams(); const id = search.get('product');
+  return id && /^[1-9]\d*$/.test(id) && Number.isSafeInteger(Number(id)) ? <ProductDirectCheckout productId={Number(id)} /> : <BasketCheckout />;
+}
+
+function BasketCheckout(): ReactElement {
   const { t } = useTranslation();
   const { locale } = useLocale();
   const ar = locale === 'ar';

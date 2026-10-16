@@ -1,3 +1,4 @@
+import { ProductHeaderChrome } from '../../../state/product-presentation';
 import { UiBlock } from '../../../ui-blocks/UiBlocks';
 /**
  * Bazaar DefaultLayout — global chrome shell: top utility bar (AnnouncementBar) → two-row Header
@@ -86,7 +87,7 @@ export function DefaultLayout(props: LayoutRenderProps): ReactElement {
           data-show-quick-add={showQuickAdd ? 'true' : 'false'}
           data-show-discount-badge={showDiscount ? 'true' : 'false'}
         >
-          <div className={settings['sticky_header'] !== false ? 'bz-chrome bz-chrome--sticky' : 'bz-chrome'}>
+          <ProductHeaderChrome><div className={settings['sticky_header'] !== false ? 'bz-chrome bz-chrome--sticky' : 'bz-chrome'}>
             {showTopBar ? <AnnouncementBar messages={messages} url={str(settings['announcement_url'])} /> : null}
             <UiBlock slot="before_header" />
             <Header
@@ -101,7 +102,7 @@ export function DefaultLayout(props: LayoutRenderProps): ReactElement {
               onMenuOpen={() => setMenuOpen(true)}
             />
             <UiBlock slot="after_header" />
-          </div>
+          </div></ProductHeaderChrome>
 
           <main id="sf-main" className="bz-main">{children}</main>
 

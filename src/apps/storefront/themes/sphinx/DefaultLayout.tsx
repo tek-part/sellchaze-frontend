@@ -1,3 +1,4 @@
+import { ProductHeaderChrome } from '../../state/product-presentation';
 import { useEffect, useState, type CSSProperties, type ReactElement } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useInRouterContext, useLocation } from 'react-router-dom';
@@ -69,7 +70,7 @@ function Chrome({ context, children, checkout = false }: LayoutRenderProps & { c
   </div>;
   return <div className="sph-root" style={{ '--font': tokens.typography.fontSans, '--heading': tokens.typography.fontSerif, '--font-arabic': tokens.typography.fontSerif } as CSSProperties}>
     {settings['show_announcement'] !== false && settings['announcement_text'] ? <div className="sph-announcement">{String(settings['announcement_text'])}</div> : null}
-    <UiBlock slot="before_header" />
+    <ProductHeaderChrome><UiBlock slot="before_header" />
     <header className="sph-header">
       <div className="sph-container sph-header__row">
         {brand}
@@ -78,7 +79,7 @@ function Chrome({ context, children, checkout = false }: LayoutRenderProps & { c
       </div>
       <div className="sph-header__navigation">{navigation.length ? <nav className="sph-header__nav sph-container" aria-label={text('القائمة الرئيسية', 'Main navigation')}><ul>{navigation.map((item) => <li key={`${item.url}-${item.label}`}><a href={item.url}>{item.label}</a>{item.children?.length ? <ul>{item.children.map((child) => <li key={child.url}><a href={child.url}>{child.label}</a></li>)}</ul> : null}</li>)}</ul></nav> : <div className="sph-header__nav" />}</div>
     </header>
-    <UiBlock slot="after_header" />
+    <UiBlock slot="after_header" /></ProductHeaderChrome>
     <main id="sf-main">{children}</main>
     <UiBlock slot="before_footer" />
     <SphinxNewsletter />

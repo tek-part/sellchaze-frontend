@@ -46,7 +46,7 @@ interface CheckoutResponse {
   payment?: { redirect_url?: string | null };
 }
 
-export function useCheckoutPaymentFlow(options?: { items: ReadonlyArray<CheckoutItem>; preserveCart?: boolean }) {
+export function useCheckoutPaymentFlow(options?: { items: ReadonlyArray<CheckoutItem>; preserveCart?: boolean; surface?: 'product' }) {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const cart = useCart();
@@ -63,6 +63,7 @@ export function useCheckoutPaymentFlow(options?: { items: ReadonlyArray<Checkout
   const items = options?.items;
   const paymentBasketKey = JSON.stringify([...new Set(items ? items.map((item) => item.product_id) : cart.lines.map((line) => Number(line.productId)))].sort((a, b) => a - b));
   const preserveCart = options?.preserveCart ?? false;
+  const surface = options?.surface;
 
   useEffect(() => {
     let active = true;
@@ -153,12 +154,13 @@ export function useCheckoutPaymentFlow(options?: { items: ReadonlyArray<Checkout
       advertising_allowed: browserAdvertisingAllowed(),
       payment_method: paymentMethod,
       ...(preserveCart ? { cart_mode: 'direct' } : {}),
+      ...(surface ? { checkout_surface: surface } : {}),
       items: items ?? checkoutCartItems(cart.lines),
     } };
     saveCheckoutAttempt(scope, next);
     setAttempt(next);
     await run(() => submitCheckout(next.body, next.key) as Promise<CheckoutResponse>);
-  }, [attempt, cart.lines, items, paymentMethod, paymentRetry, preserveCart, run, scope, store.id]);
+  }, [attempt, cart.lines, items, paymentMethod, paymentRetry, preserveCart, run, scope, store.id, surface]);
 
   const recover = useCallback(async (): Promise<void> => {
     if (!attempt) return;
