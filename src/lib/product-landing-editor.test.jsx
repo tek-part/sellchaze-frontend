@@ -8,7 +8,7 @@ import api from '../api/client';
 vi.mock('../api/client', () => ({ default: { get: vi.fn(), put: vi.fn(), post: vi.fn() } }));
 vi.mock('react-router-dom', () => ({ useNavigate: () => vi.fn(), useParams: () => ({ productId: '33' }), useOutletContext: () => ({ store: { name: 'Own', currency: 'EGP' } }) }));
 vi.mock('../hooks/useStoreScope', () => ({ default: () => ({ apiBase: '/my-store', uiBase: '/store' }) }));
-vi.mock('../apps/storefront/store-identity', () => ({ loadIdentityFonts: vi.fn().mockResolvedValue(), identityFontStylesheet: () => undefined }));
+vi.mock('../apps/storefront/store-identity', () => ({ loadIdentityFonts: vi.fn().mockResolvedValue(), identityFontStylesheet: () => undefined, identityForeground: () => '#ffffff' }));
 vi.mock('../apps/storefront/landing/LandingSections', () => ({ LandingBlock: ({ section }) => <div>{section.settings.title}</div> }));
 const version = 'a'.repeat(64); const nextVersion = 'b'.repeat(64);
 const product = { id: 33, name: 'Own product', slug: 'own-product', price: 150, media: [] };
@@ -39,5 +39,21 @@ describe('product landing editor save recovery', () => {
     await click('تراجع'); expect(host.querySelectorAll('.pl-section')).toHaveLength(1);
     await click('إعادة'); expect(host.querySelectorAll('.pl-section')).toHaveLength(0);
     expect(api.put).not.toHaveBeenCalled(); expect(api.post).not.toHaveBeenCalled();
+  });
+  it('applies and undoes a testimonial design without persisting gallery examples', async () => {
+    await act(async () => root.render(<ProductLandingEditorPage />)); await click('تقييمات مخصصة');
+    expect(document.querySelector('[role=dialog]')).not.toBeNull();
+    const preset = [...document.querySelectorAll('button')].find(el => el.getAttribute('aria-label')?.startsWith('استخدام التنسيق 3:'));
+    await act(async () => preset.click());
+    expect(document.querySelector('[role=dialog]')).toBeNull();
+    api.put.mockImplementation((_, payload) => Promise.resolve({ data: { data: payload.document, version: nextVersion } }));
+    await click('حفظ'); const saved = api.put.mock.calls[0][1].document.sections[0];
+    expect(saved.settings.variant).toBe('testimonials-3'); expect(saved.settings.items).toEqual([]);
+    expect(JSON.stringify(saved)).not.toContain('اسم العميل');
+    await click('تغيير تنسيق التقييمات');
+    await act(async () => [...document.querySelectorAll('button')].find(el => el.getAttribute('aria-label')?.startsWith('استخدام التنسيق 11:')).click());
+    await click('تراجع'); await click('حفظ');
+    // Undo restores the accepted document, so no second save is necessary.
+    expect(api.put).toHaveBeenCalledTimes(1);
   });
 });

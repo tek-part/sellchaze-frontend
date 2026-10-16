@@ -5,6 +5,7 @@ import { ReviewList } from '../foundation/components/Reviews';
 import { ProductDescription } from '../foundation/components/ProductDescription';
 import { StaticLandingFrame } from './StaticLandingFrame';
 import { landingUrl, type LandingDocument, type LandingImage, type LandingSection } from './document';
+import { Testimonials } from './Testimonials';
 import './landing.css';
 
 export function scrollLandingPurchase(): void {
@@ -57,15 +58,16 @@ export function LandingBlock({ section, context, preview = false, firstCheckout 
     case 'image': body = <LandingPhoto image={s.image} />; break;
     case 'slider': case 'gallery': body = <><h2>{title}</h2><div className={`sf-landing-images${section.type === 'slider' ? ' sf-landing-slider' : ''}`}>{s.images?.map((image, index) => <LandingPhoto key={index} image={image} />)}</div></>; break;
     case 'banner': case 'simple': case 'content': body = <div className={`sf-landing-content sf-landing-content--${s.layout ?? 'stack'}`}><LandingPhoto image={s.image} /><div><h2>{title}</h2><p>{s.description}</p>{s.html ? <StaticLandingFrame title={title || 'محتوى'} html={s.html} onPurchase={preview ? undefined : scrollLandingPurchase} /> : null}{s.button_text ? buy : null}</div></div>; break;
-    case 'faq': body = <><h2>{title}</h2><div className="sf-landing-faq">{s.items?.map((item, index) => <details key={index}><summary>{item.title}</summary><p>{item.text}</p>{item.html ? <StaticLandingFrame title={item.title || 'إجابة'} html={item.html} /> : null}</details>)}</div></>; break;
+    case 'faq': body = <><h2>{title}</h2><div className="sf-landing-faq" style={{ '--lp-faq-background': s.question_background } as CSSProperties}>{s.items?.map((item, index) => <details key={index}><summary>{item.title}</summary><p>{item.text}</p>{item.html ? <StaticLandingFrame title={item.title || 'إجابة'} html={item.html} /> : null}</details>)}</div></>; break;
     case 'buy_button': body = buy; break;
     case 'countdown': body = <><h2>{title}</h2><p>{s.description}</p><LandingCountdown section={section} productId={product?.id ?? ''} />{s.button_text ? buy : null}</>; break;
     case 'reviews': body = product?.productPreferences?.is_reviews_enabled === false ? null : <><h2>{title}</h2><ReviewList reviews={reviews} /></>; break;
     case 'product_description': body = <><h2>{title}</h2><ProductDescription html={product?.descriptionHtml ?? ''} /></>; break;
     case 'billboard': body = <div className="sf-landing-billboard"><strong>{title}</strong><span>{s.description}</span>{s.items?.map((item, index) => <span key={index}>{item.title}</span>)}</div>; break;
-    default: body = <><h2>{title}</h2>{s.description ? <p>{s.description}</p> : null}<div className={`sf-landing-items sf-landing-items--${section.type}`}>{s.items?.map((item, index) => <article key={index}><LandingPhoto image={item.image} />{section.type === 'how_to' ? <span className="sf-landing-step">{index + 1}</span> : null}{section.type === 'custom_reviews' ? <span className="sf-landing-stars" aria-label={`${item.rating ?? 5} / 5`}>{'★'.repeat(Math.max(0, Math.min(5, Math.round(item.rating ?? 5))))}</span> : null}<h3>{item.title}</h3><p>{item.text}</p>{item.html ? <StaticLandingFrame title={item.title || 'محتوى'} html={item.html} /> : null}{item.url && landingUrl(item.url) ? <a href={item.url} target="_blank" rel="noopener noreferrer">{item.title || 'عرض التفاصيل'}</a> : null}</article>)}</div></>;
+    default: body = section.type === 'custom_reviews' && s.variant ? <Testimonials settings={s} preview={preview} /> : <><h2>{title}</h2>{s.description ? <p>{s.description}</p> : null}<div className={`sf-landing-items sf-landing-items--${section.type}`}>{s.items?.map((item, index) => <article key={index}><LandingPhoto image={item.image} />{section.type === 'how_to' ? <span className="sf-landing-step">{index + 1}</span> : null}{section.type === 'custom_reviews' ? <span className="sf-landing-stars" aria-label={`${item.rating ?? 5} / 5`}>{'★'.repeat(Math.max(0, Math.min(5, Math.round(item.rating ?? 5))))}</span> : null}<h3>{item.title}</h3><p>{item.text}</p>{item.html ? <StaticLandingFrame title={item.title || 'محتوى'} html={item.html} /> : null}{item.url && landingUrl(item.url) ? <a href={item.url} target="_blank" rel="noopener noreferrer">{item.title || 'عرض التفاصيل'}</a> : null}</article>)}</div></>;
   }
-  const style: CSSProperties = { background: s.background, color: s.foreground, textAlign: s.align, padding: `${Math.max(0, Math.min(160, s.padding ?? 32))}px`, borderRadius: `${Math.max(0, Math.min(48, s.radius ?? 0))}px`, ...(s.font_size ? { fontSize: Math.max(12, Math.min(96, s.font_size)) } : {}) };
+  if (!preview && section.type === 'custom_reviews' && s.variant && !s.items?.length) return null;
+  const style: CSSProperties = { backgroundColor: s.background, ...(s.background_image?.url && landingUrl(s.background_image.url) && !s.background_image.url.startsWith('#') ? { backgroundImage: `url(${JSON.stringify(s.background_image.url)})`, backgroundSize: 'cover', backgroundPosition: 'center' } : {}), color: s.foreground, textAlign: s.align, padding: `${Math.max(0, Math.min(160, s.padding ?? 32))}px`, borderRadius: `${Math.max(0, Math.min(48, s.radius ?? 0))}px`, ...(s.font_size ? { fontSize: Math.max(12, Math.min(96, s.font_size)) } : {}) };
   return <section className={`sf-landing-block sf-landing-block--${section.type}`} style={style}>{body}</section>;
 }
 

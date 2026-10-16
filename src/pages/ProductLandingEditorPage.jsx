@@ -7,6 +7,8 @@ import { LandingBlock } from '../apps/storefront/landing/LandingSections';
 import { identityFontStylesheet, loadIdentityFonts } from '../apps/storefront/store-identity';
 import { elementFamilies, elementLabel, newLandingSection } from '../components/editor/product-landing-elements';
 import ProductLandingSettings from '../components/editor/ProductLandingSettings';
+import TestimonialDesignPicker from '../components/editor/TestimonialDesignPicker';
+import { testimonialDefaults } from '../apps/storefront/landing/testimonial-designs';
 import { HiOutlineBuildingStorefront, HiOutlineChatBubbleLeftRight, HiOutlineCheckBadge, HiOutlineClock, HiOutlineCursorArrowRays, HiOutlineDocumentText, HiOutlinePencilSquare, HiOutlinePlayCircle, HiOutlineQuestionMarkCircle, HiOutlineRectangleGroup, HiOutlineShoppingCart, HiOutlineStar } from '../components/workspace/WorkspaceIcons';
 import { HiOutlineArrowDown, HiOutlineArrowUp, HiOutlineArrowUturnLeft, HiOutlineArrowUturnRight, HiOutlineArrowRight, HiOutlineCheck, HiOutlineCommandLine, HiOutlineComputerDesktop, HiOutlineDevicePhoneMobile, HiOutlineDocumentDuplicate, HiOutlineEye, HiOutlinePhoto, HiOutlinePlus, HiOutlineSquares2X2, HiOutlineTrash, HiOutlineXMark, HiOutlineArrowUpTray, HiOutlineArrowDownTray } from '../components/workspace/WorkspaceIcons';
 import './store/product-landing-editor.css';
@@ -20,7 +22,7 @@ function PaletteChevron() { return <svg viewBox="0 0 24 24" fill="none" stroke="
 function previewDocument(document, media) {
     const next = structuredClone(document); const map = new Map(media.map(item => [item.id, item.url]));
     const resolve = image => image?.media_id ? { ...image, url: map.get(image.media_id) || '' } : image;
-    next.sections.forEach(section => { const s = section.settings; if (s.image) s.image = resolve(s.image); if (s.images) s.images = s.images.map(resolve); if (s.items) s.items = s.items.map(item => ({ ...item, ...(item.image ? { image: resolve(item.image) } : {}) })); });
+    next.sections.forEach(section => { const s = section.settings; if (s.image) s.image = resolve(s.image); if (s.background_image) s.background_image = resolve(s.background_image); if (s.images) s.images = s.images.map(resolve); if (s.items) s.items = s.items.map(item => ({ ...item, ...(item.image ? { image: resolve(item.image) } : {}) })); });
     return next;
 }
 export default function ProductLandingEditorPage() {
@@ -31,9 +33,10 @@ export default function ProductLandingEditorPage() {
     const [savedDocument, setSavedDocument] = useState(''); const [loading, setLoading] = useState(true); const [busy, setBusy] = useState(false); const [error, setError] = useState(''); const [saved, setSaved] = useState(false);
     const [selected, setSelected] = useState(null); const [palette, setPalette] = useState(null); const [mobile, setMobile] = useState(false); const [preview, setPreview] = useState(false); const [sidebar, setSidebar] = useState(true); const [reload, setReload] = useState(0);
     const importInput = useRef(null); const inFlight = useRef(false); const generation = useRef(0);
+    const [designTarget, setDesignTarget] = useState(null);
     const document = history.present; const dirty = !!savedDocument && JSON.stringify(document) !== savedDocument;
     useEffect(() => {
-        let active = true; generation.current += 1; setLoading(true); setError(''); setProduct(null); setSavedDocument(''); setSelected(null); setPalette(null); setHistory({ past: [], present: emptyLanding(), future: [] });
+        let active = true; generation.current += 1; setLoading(true); setError(''); setProduct(null); setSavedDocument(''); setSelected(null); setPalette(null); setDesignTarget(null); setHistory({ past: [], present: emptyLanding(), future: [] });
         api.get(`${endpoint}/landing-page`).then(d => {
             if (!active) return; const doc = parseLanding(d.data.data); if (!doc) throw new Error('تعذّر قراءة محتوى الصفحة.');
             setProduct(d.data.product); setVersion(d.data.version); setHistory({ past: [], present: doc, future: [] }); setSavedDocument(JSON.stringify(doc));
@@ -45,7 +48,13 @@ export default function ProductLandingEditorPage() {
     const change = useCallback(updater => { if (inFlight.current) return; setSaved(false); setError(''); setHistory(current => { const next = typeof updater === 'function' ? updater(current.present) : updater; if (JSON.stringify(next) === JSON.stringify(current.present)) return current; return { past: [...current.past, current.present].slice(-100), present: next, future: [] }; }); }, []);
     function undo() { setSaved(false); setHistory(current => !current.past.length ? current : { past: current.past.slice(0, -1), present: current.past.at(-1), future: [current.present, ...current.future].slice(0, 100) }); }
     function redo() { setSaved(false); setHistory(current => !current.future.length ? current : { past: [...current.past, current.present].slice(-100), present: current.future[0], future: current.future.slice(1) }); }
-    function add(type) { if (document.sections.length >= 60) return; const section = newLandingSection(type, product); change(current => ({ ...current, mode: current.mode === 'standard' ? 'standalone' : current.mode, sections: [...current.sections, section] })); setSelected(section.id); setPalette(null); }
+    function add(type, variant) { if (document.sections.length >= 60) return; if (type === 'custom_reviews' && !variant) { setDesignTarget('new'); return; } const section = newLandingSection(type, product); if (variant) section.settings = { ...section.settings, title: 'آراء العملاء', description: 'تقييمات المتجر', ...testimonialDefaults(variant) }; change(current => ({ ...current, mode: current.mode === 'standard' ? 'standalone' : current.mode, sections: [...current.sections, section] })); setSelected(section.id); setPalette(null); }
+    function selectDesign(variant) {
+        if (inFlight.current) return;
+        if (designTarget === 'new') add('custom_reviews', variant);
+        else change(current => ({ ...current, sections: current.sections.map(item => item.id === designTarget ? { ...item, settings: { ...item.settings, ...testimonialDefaults(variant) } } : item) }));
+        setDesignTarget(null);
+    }
     async function save() {
         if (inFlight.current || !product) return; inFlight.current = true; setBusy(true); setError(''); const attempt = generation.current;
         try { const { data } = await api.put(`${endpoint}/landing-page`, { version, document }); if (attempt !== generation.current) return; const doc = parseLanding(data.data); if (!doc) throw new Error('تعذّر قراءة الصفحة المحفوظة.'); setVersion(data.version); setHistory(current => ({ ...current, present: doc })); setSavedDocument(JSON.stringify(doc)); setSaved(true); }
@@ -103,7 +112,8 @@ export default function ProductLandingEditorPage() {
                     <LandingBlock section={item} context={context} preview />
                 </div>)}
             </div>{preview ? <p className="pl-preview-note">معاينة المحتوى الحالي. نموذج الشراء للعرض فقط؛ احفظ الصفحة لاختبار المنتج في متجرك.</p> : null}</div>
-            <aside className={`pl-inspector${section && !preview ? '' : ' pl-inspector--closed'}`} aria-label="خصائص القسم" aria-hidden={!section || preview}>{section ? <fieldset disabled={busy}><ProductLandingSettings onUpload={upload} section={section} product={product} onClose={() => setSelected(null)} onChange={next => change(current => ({ ...current, sections: current.sections.map(item => item.id === next.id ? next : item) }))} /></fieldset> : null}</aside>
+            <aside className={`pl-inspector${section && !preview ? '' : ' pl-inspector--closed'}`} aria-label="خصائص القسم" aria-hidden={!section || preview}>{section ? <fieldset disabled={busy}><ProductLandingSettings onDesignChange={() => setDesignTarget(section.id)} onUpload={upload} section={section} product={product} onClose={() => setSelected(null)} onChange={next => change(current => ({ ...current, sections: current.sections.map(item => item.id === next.id ? next : item) }))} /></fieldset> : null}</aside>
         </div> : null}
+        {designTarget ? <TestimonialDesignPicker selected={document.sections.find(item => item.id === designTarget)?.settings.variant} onSelect={selectDesign} onClose={() => setDesignTarget(null)} /> : null}
     </main>;
 }
