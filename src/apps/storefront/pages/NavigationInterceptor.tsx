@@ -44,7 +44,7 @@ export function NavigationInterceptor(): ReactElement | null {
       if (!anchor) return;
       const href = anchor.getAttribute('href');
       const target = anchor.getAttribute('target');
-      if (!href || (target && target !== '_self') || anchor.hasAttribute('download')) return;
+      if (!href || (target && target !== '_self') || anchor.hasAttribute('download') || anchor.hasAttribute('data-preview-exit')) return;
       // Only same-site absolute paths (not protocol-relative or hash-only).
       if (href.startsWith('/') && !href.startsWith('//')) {
         event.preventDefault();
