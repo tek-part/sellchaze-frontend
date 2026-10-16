@@ -19,6 +19,47 @@ const button = name => [...host.querySelectorAll('button')].find(el => (el.getAt
 const click = async name => act(async () => button(name).click());
 
 describe('product landing editor save recovery', () => {
+  it('retains all content fields and image links through a design change, failed save, retry and saved undo', async () => {
+    const own = { id: crypto.randomUUID(), type: 'content', settings: { variant: 'content-1', title: 'Own heading', description: ' Own quote ', author: ' Own author ', caption: ' Own source ', image: { url: '/own-primary.png', link_url: '/products/own' }, secondary_image: { url: '/own-secondary.png', link_url: '/pages/own' }, images: [{ url: '/own-extra.png' }], padding: 44, align: 'end', items: Array.from({ length: 7 }, (_, i) => ({ title: `Own ${i}`, text: 'Own value ', image: { url: '/own-icon.png' } })) } };
+    const initial = { schema: 1, mode: 'standalone', sections: [own] }; api.get.mockResolvedValue({ data: { data: initial, version, product } });
+    await act(async () => root.render(<ProductLandingEditorPage />)); await act(async () => host.querySelector('.pl-section-title').click()); await click('تغيير تنسيق المحتوى');
+    expect(document.querySelectorAll('.pl-design-card')).toHaveLength(5); expect(document.querySelectorAll('.pl-design-card button')).toHaveLength(0);
+    await act(async () => [...document.querySelectorAll('button')].find(el => el.getAttribute('aria-label')?.startsWith('استخدام تنسيق المحتوى 3:')).click());
+    api.put.mockRejectedValueOnce({ response: { status: 409, data: { message: 'Changed elsewhere' } } }); await click('حفظ'); const payload = api.put.mock.calls[0][1];
+    expect(payload.document.sections[0]).toEqual({ ...own, settings: { ...own.settings, variant: 'content-3' } });
+    api.put.mockImplementation((_, request) => Promise.resolve({ data: { data: request.document, version: nextVersion } })); await click('حفظ'); expect(api.put.mock.calls[1][1]).toEqual(payload);
+    await click('تراجع'); await click('حفظ'); expect(api.put.mock.calls[2][1].document).toEqual(initial); expect(api.post).not.toHaveBeenCalled();
+  });
+  it('adds native content sections without persisting preview examples or statistics', async () => {
+    await act(async () => root.render(<ProductLandingEditorPage />)); await click('المحتوى');
+    await act(async () => [...document.querySelectorAll('button')].find(el => el.getAttribute('aria-label')?.startsWith('استخدام تنسيق المحتوى 5:')).click());
+    api.put.mockImplementation((_, payload) => Promise.resolve({ data: { data: payload.document, version: nextVersion } })); await click('حفظ'); const saved = api.put.mock.calls[0][1].document.sections[0];
+    expect(saved.type).toBe('content'); expect(saved.settings.variant).toBe('content-5'); expect(saved.settings.items).toEqual(Array.from({ length: 4 }, () => ({ title: '', text: '' })));
+    for (const key of ['background','foreground','align','padding']) expect(saved.settings).not.toHaveProperty(key);
+    expect(JSON.stringify(saved)).not.toContain('عنوان العنصر'); expect(saved.settings).not.toHaveProperty('author'); expect(saved.settings).not.toHaveProperty('caption');
+  });
+  it('blocks incomplete image destinations, retains the target when replacing a photo and exports portable image links', async () => {
+    const own = { id: crypto.randomUUID(), type: 'content', settings: { variant: 'content-2', title: 'Own heading', image: { url: '/own-first.png' }, secondary_image: { url: '/own-second.png' } } };
+    const initial = { schema: 1, mode: 'standalone', sections: [own] }; const replacement = { id: 501, type: 'gallery', url: '/own-replacement.png' };
+    api.get.mockImplementation(url => Promise.resolve({ data: url.endsWith('/destinations') ? { data: [{ id: 3, name: 'Own category', url: '/collections/own-category' }], selected: null, meta: {} } : { data: initial, version, product: { ...product, media: [replacement] } } }));
+    api.put.mockImplementation((_, payload) => Promise.resolve({ data: { data: payload.document, version: nextVersion, destination_urls: { 'category:3': '/collections/own-category' } } }));
+    await act(async () => root.render(<ProductLandingEditorPage />)); await act(async () => host.querySelector('.pl-section-title').click()); vi.useFakeTimers();
+    let controls = host.querySelector('.pl-image-field .pl-destination-controls');
+    await act(async () => { const select = controls.querySelector('select'); select.value = 'category'; select.dispatchEvent(new Event('change', { bubbles: true })); });
+    await click('حفظ'); expect(api.put).not.toHaveBeenCalled(); expect(host.querySelector('[role=alert]').textContent).toContain('اختر وجهة');
+    await act(async () => { await vi.advanceTimersByTimeAsync(250); });
+    controls = host.querySelector('.pl-image-field .pl-destination-controls');
+    await act(async () => { const select = controls.querySelectorAll('select')[1]; select.value = '3'; select.dispatchEvent(new Event('change', { bubbles: true })); });
+    await act(async () => { const select = host.querySelector('.pl-image-field select'); select.value = '501'; select.dispatchEvent(new Event('change', { bubbles: true })); });
+    await click('حفظ'); const image = api.put.mock.calls[0][1].document.sections[0].settings.image;
+    expect(image.media_id).toBe(501); expect(image.destination).toEqual({ type: 'category', id: 3 }); expect(api.put.mock.calls[0][1].document.sections[0].settings.secondary_image).toEqual(own.settings.secondary_image);
+    vi.useRealTimers(); let blob; vi.stubGlobal('URL', class extends URL { static createObjectURL(value) { blob = value; return 'blob:own-content'; } static revokeObjectURL() {} });
+    vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {}); let release; const schedule = vi.spyOn(globalThis, 'setTimeout').mockImplementationOnce(callback => { release = callback; return 0; });
+    await click('تصدير صفحة Sellchaze'); schedule.mockRestore();
+    const exported = JSON.parse(await new Promise(resolve => { const reader = new FileReader(); reader.onload = () => resolve(reader.result); reader.readAsText(blob); })); const portable = exported.sections[0].settings.image;
+    expect(portable.url).toBe('/own-replacement.png'); expect(portable.link_url).toBe('/collections/own-category'); expect(portable).not.toHaveProperty('media_id'); expect(portable).not.toHaveProperty('destination'); release();
+  });
+
   it('changes all six how-to designs without losing merchant content, retries a conflict and restores a saved document', async () => {
     const own = { id: crypto.randomUUID(), type: 'how_to', settings: { variant: 'howto-1', eyebrow: ' Own intro ', title: 'Own instructions', description: 'Own subtitle', image: { url: '/storage/own-hero.png' }, button_text: ' Own action ', padding: 72, align: 'end', accent: '#123456', items: Array.from({ length: 7 }, (_, i) => ({ title: `Own ${i}`, caption: ' Own caption ', text: 'Own detail ', image: { url: '/storage/own.png', alt: 'Own image' } })) } };
     const initial = { schema: 1, mode: 'standalone', sections: [own] };
