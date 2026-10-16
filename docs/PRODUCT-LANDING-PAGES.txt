@@ -148,3 +148,13 @@ Section and button colors, alternate text, typography, spacing, motion and the o
 Public actions scroll to the existing checkout without submitting. Editor clicks select properties. Reduced motion and the motion checkbox stop button and pseudo-element effects. Keyboard focus has a visible outline and the same optional hover state. Native responsive rules constrain buttons to their container.
 Merchant CSS runs in a separate sandboxed document containing only this button, its native layers and public text/media. Trusted native CSS is layered below merchant rules; the complete12000-character merchant CSS allowance remains available. Script/form injection is stripped, scripts are restricted to the internal nonce, and purchase messages must originate in the matching frame. Frames use the same local licensed Almarai files. Custom CSS does not enter the application document.
 Native desktop/RTL/390/320px verification is separate from exact reference phone parity. All321 element designs,22 product templates,152themes/84funnels and remaining merchant/page/feature fidelity remain part of the active project. No production deployment or migration is introduced here.
+
+Product-feature design pass (2026-10-16)
+44 product-features-1..44 variants belong exclusively to product_features.
+No migration or change to orders, pricing, inventory or existing landing documents.
+Versioned saves retain owned media, extra items, explicit clears and custom styles.
+Native layouts cover photo cards, alternating image rows, icon grids and advanced image/text designs30,31,44. Only44 includes a purchase action; it uses the existing landing checkout. A cleared label hides the action.
+The gallery uses inert neutral drawings with the observed44 frame proportions. Merchant photography and demo sales claims are not included. Two functional outline-check vectors are bundled with provenance.
+The editor preserves all existing items and media when switching designs. Direct card selection opens that item's fields. Advanced layouts expose their hero image and text/list fields.
+Merchant HTML and CSS run inside the existing sandboxed frame. Native styles use a separate layer, leaving the12000-character owner CSS allowance intact. No owner script or form enters the host page.
+Desktop structures, typography and gallery geometry were measured against the reference preview. Exact reference phone behavior, every hover/motion frame and omitted decorative remote patterns/avatar assets are not established as pixel parity. Responsive Sellchaze layouts are checked at390/320px.
