@@ -6,8 +6,9 @@
  * equivalent admin store scope), so onboarding and the public storefront see
  * exactly the same active theme as this screen.
  */
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
+import { Dialog, DialogBackdrop, DialogPanel, DialogTitle } from '@headlessui/react';
 import { Navigate, NavLink, useNavigate, useOutletContext } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
@@ -25,6 +26,7 @@ import {
 } from '../components/workspace/WorkspaceIcons';
 import useStoreScope from '../hooks/useStoreScope';
 import api from '../api/client';
+import MerchantThemeGallery from '../components/store/MerchantThemeGallery';
 
 /* ------------------------------------------------------------------ helpers */
 
@@ -191,29 +193,16 @@ function ThemeCard({ theme, isActive, canManage, busy, onPreview, onActivate, on
 function ActivateDialog({ theme, busy, onConfirm, onClose }) {
     const { t } = useTranslation();
     if (!theme) return null;
-    const checks = [
-        t('theme_check_license', 'License validated'),
-        t('theme_check_compat', 'Compatibility verified'),
-        t('theme_check_signature', 'Package signature verified'),
-    ];
     // Portal to <body>: the page content is wrapped in an animated (transformed) element, which
     // would otherwise become the containing block of this `fixed` overlay and trap it inside the
     // store content column.
-    return createPortal(
-        <div className="fixed inset-0 z-[70] flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-label={t('theme_activate', 'Activate')}>
-            <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onClick={onClose} aria-hidden />
-            <div className="relative w-full max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl">
-                <h2 className="text-lg font-semibold text-slate-900">{t('theme_activate_title', 'Publish this theme?')}</h2>
+    return <Dialog open onClose={onClose} className="ws-theme-activation-dialog">
+            <DialogBackdrop className="ws-theme-activation-backdrop" />
+            <div className="ws-theme-activation-position"><DialogPanel className="ws-theme-activation-panel">
+                <DialogTitle>{t('theme_activate_title', 'Publish this theme?')}</DialogTitle>
                 <p className="mt-1 text-sm text-slate-500">
                     {t('theme_activate_body', 'This will make')} <strong className="text-slate-800">{theme.name}</strong> {t('theme_activate_body2', 'your live storefront theme. Your current theme stays installed and can be restored.')}
                 </p>
-                <ul className="mt-4 space-y-2 rounded-xl bg-slate-50 p-3">
-                    {checks.map((c) => (
-                        <li key={c} className="flex items-center gap-2 text-sm text-slate-600">
-                            <HiOutlineCheckBadge className="h-4 w-4 text-emerald-500" /> {c}
-                        </li>
-                    ))}
-                </ul>
                 <div className="mt-6 flex justify-end gap-2">
                     <button type="button" onClick={onClose} className="rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">
                         {t('cancel', 'Cancel')}
@@ -223,10 +212,8 @@ function ActivateDialog({ theme, busy, onConfirm, onClose }) {
                         {t('theme_confirm_activate', 'Activate & publish')}
                     </button>
                 </div>
-            </div>
-        </div>,
-        document.body,
-    );
+            </DialogPanel></div>
+        </Dialog>;
 }
 
 /* ------------------------------------------------------------------ details drawer */
@@ -349,13 +336,16 @@ function ThemesManager({ mode = 'installed' }) {
     const { id, apiBase, uiBase } = useStoreScope();
     const { t } = useTranslation();
     const navigate = useNavigate();
-    const { permissions } = useOutletContext();
+    const { permissions = [], access } = useOutletContext();
     const can = (p) => permissions.includes(p);
-    const canManage = can('store.themes.manage') || can('stores-edit');
+    const canManage = Boolean(access?.canStoreThemes || can('store.themes.manage') || can('stores-edit'));
     const [rows, setRows] = useState([]);
     const [activeThemeId, setActiveThemeId] = useState(null);
     const [loading, setLoading] = useState(true);
     const [loadError, setLoadError] = useState('');
+    const loaded = useRef(false);
+    const loadRevision = useRef(0);
+    const invalidateLoads = useCallback(() => { loadRevision.current++; }, []);
     const [pending, setPending] = useState(() => new Set());
     const [confirmTheme, setConfirmTheme] = useState(null);
     const [detailTheme, setDetailTheme] = useState(null);
@@ -367,7 +357,7 @@ function ThemesManager({ mode = 'installed' }) {
     const isMarketplace = mode === 'marketplace';
 
     useEffect(() => {
-        if (!isMarketplace) return undefined;
+        if (!isMarketplace || !id) return undefined;
         let cancelled = false;
         api.get('/marketplace/themes')
             .then(({ data }) => {
@@ -377,25 +367,34 @@ function ThemesManager({ mode = 'installed' }) {
             })
             .catch(() => { if (!cancelled) setCategories([]); });
         return () => { cancelled = true; };
-    }, [isMarketplace]);
+    }, [isMarketplace, id]);
 
     const load = useCallback(async () => {
-        setLoading(true);
+        const revision = ++loadRevision.current;
+        if (!loaded.current) setLoading(true);
+        setLoadError('');
         try {
             const { data } = await api.get(`${apiBase}/themes`);
+            if (revision !== loadRevision.current) return;
+            loaded.current = true;
             setRows(Array.isArray(data?.data) ? data.data : []);
             setActiveThemeId(data?.active_theme_id ?? null);
             setLoadError('');
         } catch (error) {
+            if (revision !== loadRevision.current) return;
             setLoadError(error.response?.data?.message || error.message);
         } finally {
-            setLoading(false);
+            if (revision === loadRevision.current) setLoading(false);
         }
     }, [apiBase]);
 
     useEffect(() => {
+        loaded.current = false;
+        setRows([]);
+        setActiveThemeId(null);
         void load();
-    }, [load]);
+        return invalidateLoads;
+    }, [load, invalidateLoads]);
 
     useEffect(() => {
         const currentUrl = new URL(window.location.href);
@@ -477,6 +476,9 @@ function ThemesManager({ mode = 'installed' }) {
                 preview_image: entry.preview_image,
                 latest_version: entry.latest_version,
                 category: entry.category,
+                galleryCollection: entry.gallery_collection,
+                galleryCategories: entry.gallery_categories,
+                galleryRank: entry.gallery_rank,
                 minEngineVersion: '1.0.0',
                 accent,
                 accentAlt,
@@ -550,17 +552,19 @@ function ThemesManager({ mode = 'installed' }) {
                 throw new Error(t('theme_checkout_missing', 'Checkout URL was not returned.'));
             }
             window.location.assign(data.checkout_url);
-        });
+        }).catch(() => {});
     };
 
     const doActivate = async (theme) => {
         setConfirmTheme(null);
-        await run(theme, async () => {
-            await installIfNeeded(theme);
-            await api.post(`${apiBase}/themes/activate`, { theme_id: theme.id });
-            toast.success(t('theme_activated', 'Theme activated and published.'));
-            await load();
-        });
+        try {
+            await run(theme, async () => {
+                await installIfNeeded(theme);
+                await api.post(`${apiBase}/themes/activate`, { theme_id: theme.id });
+                toast.success(t('theme_activated', 'Theme activated and published.'));
+                await load();
+            });
+        } catch { await load(); /* run already presents the actionable error. */ }
     };
 
     const doUpdate = (theme) => {
@@ -568,7 +572,7 @@ function ThemesManager({ mode = 'installed' }) {
             await api.post(`${apiBase}/themes/upgrade`, { theme_id: theme.id });
             toast.success(t('theme_updated', 'Theme updated.'));
             await load();
-        });
+        }).catch(() => {});
     };
 
     const doCustomize = (theme) => navigate(`${uiBase}/customize?theme=${theme.id}&tab=theme`);
@@ -597,6 +601,10 @@ function ThemesManager({ mode = 'installed' }) {
     }
 
     /* ---- render ---- */
+
+    if (!id) return <MerchantThemeGallery themes={themes} activeTheme={activeTheme} canManage={canManage} pending={pending} loading={loading} error={loadError} onRetry={() => void load()} onPreview={doPreview} onActivate={setConfirmTheme} onPurchase={doPurchase} onUpdate={doUpdate}>
+        {confirmTheme ? <ActivateDialog theme={confirmTheme} busy={pending.has(confirmTheme.id)} onConfirm={doActivate} onClose={() => setConfirmTheme(null)} /> : null}
+    </MerchantThemeGallery>;
 
     return (
         <div className="mx-auto max-w-6xl space-y-6">

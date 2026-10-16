@@ -7,6 +7,7 @@ import { useState, type ReactElement } from 'react';
 import { useTranslation } from 'react-i18next';
 import { cn } from '../../../../shared/utils/cn';
 import { IconShare } from './icons';
+import { publicStorefrontUrl } from '../../preview-session';
 
 export type ShareOutcome = 'shared' | 'copied' | 'unsupported' | 'error';
 
@@ -27,15 +28,16 @@ export function ShareButton(props: ShareButtonProps): ReactElement {
   const handleShare = async (): Promise<void> => {
     if (busy) return;
     setBusy(true);
+    const publicUrl = publicStorefrontUrl(url);
     try {
       const nav = navigator as Navigator & {
         share?: (data: ShareData) => Promise<void>;
       };
       if (typeof nav.share === 'function') {
-        await nav.share({ url, title, text });
+        await nav.share({ url: publicUrl, title, text });
         onResult?.('shared');
       } else if (nav.clipboard?.writeText) {
-        await nav.clipboard.writeText(url);
+        await nav.clipboard.writeText(publicUrl);
         onResult?.('copied');
       } else {
         onResult?.('unsupported');

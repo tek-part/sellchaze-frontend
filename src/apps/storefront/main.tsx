@@ -77,6 +77,9 @@ const schemeOverride =
 const settingsParam = params.get('settings');
 
 async function bootstrap(): Promise<void> {
+  // Owner-only navigation/notice code is unnecessary on ordinary customer visits.
+  const PreviewNavigation = params.has('__preview')
+    ? (await import('./SignedPreviewNavigation')).SignedPreviewNavigation : null;
   // i18n first: it seeds the API client's locale so the bootstrap request carries `?lang=` (the
   // navigation labels and theme copy it returns are language-resolved server-side).
   const i18n = storefrontI18n();
@@ -165,10 +168,10 @@ async function bootstrap(): Promise<void> {
         storefront and the dashboard from one Vite origin; a dev-only middleware now disambiguates
         on `preview=1` instead (see vite.config.js), so both routers can own real paths.
 
-        `preview` and `theme` are query params, which BrowserRouter preserves across navigation
-        automatically — no special handling needed to keep a preview session alive.
+        SignedPreviewNavigation preserves the owner capability across internal navigation.
       */}
       <BrowserRouter>
+        {PreviewNavigation ? <PreviewNavigation verified={initialData?.preview?.valid} /> : null}
         <StoreProvider {...(initialData ? { initialData } : {})}>
           <AuthProvider>
             <WishlistProvider>

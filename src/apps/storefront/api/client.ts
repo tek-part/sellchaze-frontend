@@ -6,6 +6,8 @@
  * Base defaults to `/api/v1` (all Laravel API routes live under the `v1` group — the dashboard client
  * uses the same). Override with VITE_API_BASE only when the API is mounted elsewhere.
  */
+import { withPreviewRead } from '../preview-session';
+
 const API_BASE = (import.meta.env.VITE_API_BASE as string | undefined) ?? '/api/v1';
 
 /**
@@ -80,7 +82,8 @@ export class ApiError extends Error {
 
 export async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
   const hasBody = init?.body !== undefined && init.body !== null;
-  const response = await fetch(`${API_BASE}/storefront${withLang(path)}`, {
+  const previewPath = withPreviewRead(path, init?.method ?? 'GET', typeof window !== 'undefined' ? window.location.search : '');
+  const response = await fetch(`${API_BASE}/storefront${withLang(previewPath)}`, {
     credentials: 'include',
     ...init,
     headers: {
