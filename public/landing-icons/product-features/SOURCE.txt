@@ -1,3 +1,4 @@
 Functional 24x24 outline checks used by product-feature designs 31 and 44.
 Paths preserved from the CSS exposed by the EasyOrders design controls, reviewed 2026-10-16.
 No merchant photography, branding or demo claims.
+Concentric gradient-ring vector for designs26,27 and29, preserved from the same visible CSS and decoded to a local SVG so it works inside the existing sandbox without a data-image allowance.
