@@ -19,6 +19,18 @@ const button = name => [...host.querySelectorAll('button')].find(el => (el.getAt
 const click = async name => act(async () => button(name).click());
 
 describe('product landing editor save recovery', () => {
+  it('changes video layouts and undoes a saved change without losing URLs, extra benefits or merchant styling', async () => {
+    const own = { id: crypto.randomUUID(), type: 'video', settings: { variant: 'video-3', title: 'Own film', description: 'Own caption', video: '/storage/own.mp4', button_text: 'Own action', accent: '#123456', css: '.own { color: red }', items: Array.from({ length: 7 }, (_, i) => ({ title: `Own ${i}`, text: 'Own detail ', image: { url: '/storage/own.png', alt: 'Own image' } })) } };
+    const initial = { schema: 1, mode: 'standalone', sections: [own] };
+    api.get.mockResolvedValue({ data: { data: initial, version, product } });
+    api.put.mockImplementation((_, payload) => Promise.resolve({ data: { data: payload.document, version: nextVersion } }));
+    await act(async () => root.render(<ProductLandingEditorPage />)); await act(async () => host.querySelector('.pl-section-title').click()); await click('تغيير تنسيق الفيديو');
+    expect(document.querySelectorAll('.pl-video-diagram')).toHaveLength(5);
+    await act(async () => [...document.querySelectorAll('button')].find(el => el.getAttribute('aria-label')?.startsWith('استخدام تنسيق الفيديو 5:')).click());
+    await click('حفظ'); expect(api.put.mock.calls[0][1].document.sections[0]).toEqual({ ...own, settings: { ...own.settings, variant: 'video-5' } });
+    await click('تراجع'); await click('حفظ'); expect(api.put.mock.calls[1][1].document).toEqual(initial);
+    expect(api.post).not.toHaveBeenCalled();
+  });
   it('retains edits after a conflict and retries with the same document and version until accepted', async () => {
     await act(async () => root.render(<ProductLandingEditorPage />));
     await click('نموذج الشراء'); await click('إغلاق الإعدادات');

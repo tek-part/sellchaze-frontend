@@ -120,3 +120,9 @@ landing font; clearing that choice restores the local Almarai default.
 Preset1 uses19.2px question text/16px padding and25.6px heading typography. The
 source builder blocks actual phone preview even in preview mode; acceptance of
 every source preset on phones remains separate from native390/320px QA.
+
+VIDEO TEMPLATE DESIGNS
+Five video-1 through video-5 presets belong exclusively to the video family. Their native gallery shows framed landscape, offset tint, video plus benefit cards, side-by-side purchase copy, and portrait layouts. Basic YouTube and variant-free legacy video keep their existing rendering.
+Presets preserve existing title/subtitle/provider URL, button label, colors, items, owned images, rich details and opaque custom CSS across design changes. Only preset3 displays benefit cards; extra cards are retained without truncation. Preset4 uses the existing single purchase scroll action; an explicitly empty label hides its button.
+Editor preview uses neutral media slots and never loads a provider or plays a video. Public playback reuses allowlisted YouTube no-cookie/Vimeo embeds and controlled, inline MP4 players without autoplay. No provider account, external payment or order is required to edit.
+Preset dimensions use measured desktop geometry. Responsive container rules and actual320/390px review establish native fit, not exact Source phone parity. Header motion is0.6s and disabled for reduced motion and editor previews. Merchant custom CSS remains preserved as opaque data rather than being injected into the host document.
