@@ -14,14 +14,17 @@ import { LandingVideo } from './LandingVideo';
 import { VideoTemplates } from './VideoTemplates';
 import { HowToSteps, hasHowToContent } from './HowToSteps';
 import { howToDesign } from './howto-designs';
+import { ContentLayouts, hasContentLayout } from './ContentLayouts';
+import { contentDesign } from './content-designs';
 import './landing.css';
 
 export function scrollLandingPurchase(): void {
   document.querySelector('[data-landing-checkout], [data-landing-fallback]')?.scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' });
 }
 
-export function LandingPhoto({ image }: { image?: LandingImage }) {
-  return image?.url && landingUrl(image.url) ? <img src={image.url} alt={image.alt ?? ''} loading="lazy" /> : null;
+export function LandingPhoto({ image, preview = false }: { image?: LandingImage; preview?: boolean }) {
+  const photo = image?.url && landingUrl(image.url) ? <img src={image.url} alt={image.alt ?? ''} loading="lazy" /> : null;
+  return photo && !preview && image?.link_url && landingUrl(image.link_url) ? <a href={image.link_url} aria-label={image.alt || 'عرض الوجهة'}>{photo}</a> : photo;
 }
 
 function LandingCountdown({ section, productId }: { section: LandingSection; productId: string }) {
@@ -40,7 +43,7 @@ function LandingCountdown({ section, productId }: { section: LandingSection; pro
   return <div className="sf-landing-countdown" role="timer" aria-label="الوقت المتبقي">{[Math.floor(seconds / 86400), Math.floor(seconds / 3600) % 24, Math.floor(seconds / 60) % 60, seconds % 60].map((value, index) => <div key={index}><strong>{String(value).padStart(2, '0')}</strong><span>{['يوم', 'ساعة', 'دقيقة', 'ثانية'][index]}</span></div>)}</div>;
 }
 
-export function LandingBlock({ section, context, preview = false, firstCheckout = true, checkout, onPromoImageSelect, onFeatureItemSelect, onFaqItemSelect, onHowToItemSelect }: { section: LandingSection; context: StorefrontContext; preview?: boolean; firstCheckout?: boolean; checkout?: ReactNode; onPromoImageSelect?: (index: number) => void; onFeatureItemSelect?: (index: number) => void; onFaqItemSelect?: (index: number) => void; onHowToItemSelect?: (index: number) => void }) {
+export function LandingBlock({ section, context, preview = false, firstCheckout = true, checkout, onPromoImageSelect, onFeatureItemSelect, onFaqItemSelect, onHowToItemSelect, onContentItemSelect, onContentImageSelect }: { section: LandingSection; context: StorefrontContext; preview?: boolean; firstCheckout?: boolean; checkout?: ReactNode; onPromoImageSelect?: (index: number) => void; onFeatureItemSelect?: (index: number) => void; onFaqItemSelect?: (index: number) => void; onHowToItemSelect?: (index: number) => void; onContentItemSelect?: (index: number) => void; onContentImageSelect?: (index: number | 'hero' | 'secondary') => void }) {
   const product = productDetailOf(context); const s = section.settings; const reviews = reviewsFor(context);
   const title = s.title ?? ''; const buy = <button type="button" className="sf-landing-buy" onClick={preview ? undefined : scrollLandingPurchase}>{s.button_text || 'اضغط هنا للشراء'}</button>;
   let body: ReactNode = null;
@@ -52,7 +55,7 @@ export function LandingBlock({ section, context, preview = false, firstCheckout 
     case 'youtube': body = <><h2>{title}</h2><LandingVideo url={s.video} title={title || 'فيديو المنتج'} /></>; break;
     case 'image': body = <LandingPhoto image={s.image} />; break;
     case 'slider': case 'gallery': body = <><h2>{title}</h2><div className={`sf-landing-images${section.type === 'slider' ? ' sf-landing-slider' : ''}`}>{s.images?.map((image, index) => <LandingPhoto key={index} image={image} />)}</div></>; break;
-    case 'banner': case 'simple': case 'content': body = <div className={`sf-landing-content sf-landing-content--${s.layout ?? 'stack'}`}><LandingPhoto image={s.image} /><div><h2>{title}</h2><p>{s.description}</p>{s.html ? <StaticLandingFrame title={title || 'محتوى'} html={s.html} onPurchase={preview ? undefined : scrollLandingPurchase} /> : null}{s.button_text ? buy : null}</div></div>; break;
+    case 'banner': case 'simple': case 'content': body = section.type === 'content' && s.variant ? <ContentLayouts settings={s} preview={preview} onItemSelect={onContentItemSelect} onImageSelect={onContentImageSelect} onPurchase={scrollLandingPurchase} /> : <div className={`sf-landing-content sf-landing-content--${s.layout ?? 'stack'}`}><LandingPhoto image={s.image} preview={preview} /><div><h2>{title}</h2><p>{s.description}</p>{s.html ? <StaticLandingFrame title={title || 'محتوى'} html={s.html} onPurchase={preview ? undefined : scrollLandingPurchase} /> : null}{s.button_text ? buy : null}</div>{section.type === 'content' ? <LandingPhoto image={s.secondary_image} preview={preview} /> : null}</div>; break;
     case 'faq': body = <Faq key={section.id} settings={s} preview={preview} onItemSelect={onFaqItemSelect} onPurchase={scrollLandingPurchase} />; break;
     case 'buy_button': body = buy; break;
     case 'countdown': body = <><h2>{title}</h2><p>{s.description}</p><LandingCountdown section={section} productId={product?.id ?? ''} />{s.button_text ? buy : null}</>; break;
@@ -66,8 +69,10 @@ export function LandingBlock({ section, context, preview = false, firstCheckout 
   if (!preview && section.type === 'store_features' && s.variant && !hasStoreFeatureContent(s)) return null;
   if (!preview && section.type === 'how_to' && s.variant && !hasHowToContent(s)) return null;
   if (!preview && section.type === 'faq' && !hasFaqContent(s)) return null;
+  if (!preview && section.type === 'content' && s.variant && !hasContentLayout(s)) return null;
+  const content = section.type === 'content' && s.variant ? contentDesign(s.variant) : null;
   const howTo = section.type === 'how_to' && s.variant ? howToDesign(s.variant) : null;
-  const style: CSSProperties = { ...(howTo ? { '--howto-padding': s.padding !== undefined ? `${s.padding}px` : `${howTo.padding}px ${howTo.sidePadding}px` } : {}), ...(section.type === 'video' && s.variant ? { '--landing-video-padding': `${s.padding ?? 40}px` } : {}), backgroundColor: s.background ?? (section.type === 'faq' ? faqDesign(s.variant).background : howTo?.background), ...(s.background_image?.url && landingUrl(s.background_image.url) && !s.background_image.url.startsWith('#') ? { backgroundImage: `url(${JSON.stringify(s.background_image.url)})`, backgroundSize: 'cover', backgroundPosition: 'center' } : {}), color: s.foreground, textAlign: s.align, padding: `${Math.max(0, Math.min(160, s.padding ?? 32))}px`, borderRadius: `${Math.max(0, Math.min(48, s.radius ?? 0))}px`, ...(s.font_size ? { fontSize: Math.max(12, Math.min(96, s.font_size)) } : {}) };
+  const style: CSSProperties = { ...(content ? { '--content-padding': s.padding !== undefined ? `${s.padding}px` : `${content.padding}px ${content.sidePadding}px` } : {}), ...(howTo ? { '--howto-padding': s.padding !== undefined ? `${s.padding}px` : `${howTo.padding}px ${howTo.sidePadding}px` } : {}), ...(section.type === 'video' && s.variant ? { '--landing-video-padding': `${s.padding ?? 40}px` } : {}), backgroundColor: s.background ?? (section.type === 'faq' ? faqDesign(s.variant).background : content?.background ?? howTo?.background), ...(s.background_image?.url && landingUrl(s.background_image.url) && !s.background_image.url.startsWith('#') ? { backgroundImage: `url(${JSON.stringify(s.background_image.url)})`, backgroundSize: 'cover', backgroundPosition: 'center' } : {}), color: s.foreground, textAlign: s.align, padding: `${Math.max(0, Math.min(160, s.padding ?? 32))}px`, borderRadius: `${Math.max(0, Math.min(48, s.radius ?? 0))}px`, ...(s.font_size ? { fontSize: Math.max(12, Math.min(96, s.font_size)) } : {}) };
   return <section className={`sf-landing-block sf-landing-block--${section.type}`} style={style}>{body}</section>;
 }
 
