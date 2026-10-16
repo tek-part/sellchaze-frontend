@@ -19,6 +19,32 @@ const button = name => [...host.querySelectorAll('button')].find(el => (el.getAt
 const click = async name => act(async () => button(name).click());
 
 describe('product landing editor save recovery', () => {
+  it('changes all six how-to designs without losing merchant content, retries a conflict and restores a saved document', async () => {
+    const own = { id: crypto.randomUUID(), type: 'how_to', settings: { variant: 'howto-1', eyebrow: ' Own intro ', title: 'Own instructions', description: 'Own subtitle', image: { url: '/storage/own-hero.png' }, button_text: ' Own action ', padding: 72, align: 'end', accent: '#123456', items: Array.from({ length: 7 }, (_, i) => ({ title: `Own ${i}`, caption: ' Own caption ', text: 'Own detail ', image: { url: '/storage/own.png', alt: 'Own image' } })) } };
+    const initial = { schema: 1, mode: 'standalone', sections: [own] };
+    api.get.mockResolvedValue({ data: { data: initial, version, product } });
+    await act(async () => root.render(<ProductLandingEditorPage />)); await act(async () => host.querySelector('.pl-section-title').click()); await click('تغيير تنسيق الخطوات');
+    expect(document.querySelectorAll('.pl-design-card')).toHaveLength(6);
+    expect(document.querySelectorAll('.pl-design-card button')).toHaveLength(0);
+    await act(async () => [...document.querySelectorAll('button')].find(el => el.getAttribute('aria-label')?.startsWith('استخدام تنسيق الخطوات 6:')).click());
+    api.put.mockRejectedValueOnce({ response: { status: 409, data: { message: 'Changed elsewhere' } } });
+    await click('حفظ'); const payload = api.put.mock.calls[0][1];
+    expect(payload.document.sections[0]).toEqual({ ...own, settings: { ...own.settings, variant: 'howto-6' } });
+    api.put.mockImplementation((_, request) => Promise.resolve({ data: { data: request.document, version: nextVersion } }));
+    await click('حفظ'); expect(api.put.mock.calls[1][1]).toEqual(payload);
+    await click('تراجع'); await click('حفظ'); expect(api.put.mock.calls[2][1].document).toEqual(initial);
+    expect(api.post).not.toHaveBeenCalled();
+  });
+  it('adds how-to sections with blank owned steps and measured design defaults, never gallery samples', async () => {
+    await act(async () => root.render(<ProductLandingEditorPage />)); await click('طريقة الاستخدام');
+    await act(async () => [...document.querySelectorAll('button')].find(el => el.getAttribute('aria-label')?.startsWith('استخدام تنسيق الخطوات 2:')).click());
+    api.put.mockImplementation((_, payload) => Promise.resolve({ data: { data: payload.document, version: nextVersion } }));
+    await click('حفظ'); const saved = api.put.mock.calls[0][1].document.sections[0];
+    expect(saved.type).toBe('how_to'); expect(saved.settings.variant).toBe('howto-2'); expect(saved.settings.items).toEqual(Array.from({ length: 3 }, () => ({ title: '', text: '' })));
+    for (const key of ['background', 'foreground', 'align', 'padding']) expect(saved.settings).not.toHaveProperty(key);
+    expect(JSON.stringify(saved)).not.toContain('عنوان الخطوة');
+  });
+
   it('changes video layouts and undoes a saved change without losing URLs, extra benefits or merchant styling', async () => {
     const own = { id: crypto.randomUUID(), type: 'video', settings: { variant: 'video-3', title: 'Own film', description: 'Own caption', video: '/storage/own.mp4', button_text: 'Own action', accent: '#123456', css: '.own { color: red }', items: Array.from({ length: 7 }, (_, i) => ({ title: `Own ${i}`, text: 'Own detail ', image: { url: '/storage/own.png', alt: 'Own image' } })) } };
     const initial = { schema: 1, mode: 'standalone', sections: [own] };
