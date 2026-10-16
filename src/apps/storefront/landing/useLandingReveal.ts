@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react';
 import './landing-reveal.css';
 
 /** Entry motion stays independent of preset-specific animation selectors. */
-export function useLandingReveal(active: boolean, design: string) {
+export function useLandingReveal(active: boolean, design: string, contentKey?: string) {
   const ref=useRef<HTMLDivElement>(null);
   useEffect(()=>{
     const host=ref.current;
@@ -18,6 +18,6 @@ export function useLandingReveal(active: boolean, design: string) {
     const failed=(event:Event)=>{const target=event.target;if(target instanceof HTMLImageElement){target.classList.remove('lp-image-pending');observer.unobserve(target);}};
     host.addEventListener('load',loaded,true);host.addEventListener('error',failed,true);
     return()=>{observer.disconnect();host.removeEventListener('load',loaded,true);host.removeEventListener('error',failed,true);for(const target of targets)target.classList.remove('lp-reveal-pending','lp-image-pending');};
-  },[active,design]);
+  },[active,design,contentKey]);
   return ref;
 }
