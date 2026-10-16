@@ -20,7 +20,7 @@ it('imports a complete layout explicitly and restores the original through saved
   await createProductPreset('product-page-03',product);
   await act(async()=>root.render(<ProductLandingEditorPage/>));
   await click('استيراد قالب');expect(host.querySelectorAll('.pl-page-preset-card')).toHaveLength(22);
-  await click('اختيار قالب الدراجة الكهربائية 2');await click('استخدام القالب');
+  await act(async()=>{button('اختيار قالب الدراجة الكهربائية 2').click();button('استخدام القالب').click();});
   expect(api.put).not.toHaveBeenCalled();expect(host.querySelectorAll('.pl-section-title')).toHaveLength(17);
   await click('حفظ');const applied=api.put.mock.calls[0][1].document;
   expect(applied.mode).toBe('standalone');expect(applied.sections.filter(section=>section.type==='checkout')).toHaveLength(1);
@@ -37,4 +37,10 @@ it('changes a preset question layout without losing identity, owned content, CSS
   const saved=api.put.mock.calls[0][1].document.sections[13];
   expect(saved.id).toBe(faq.id);expect(saved.type).toBe('faq');expect(saved.settings.variant).toBe('faq-2');expect(saved.settings.items[0]).toEqual(faq.settings.items[0]);expect(saved.settings.css).toBe(faq.settings.css);expect(saved.settings.preset_section).toBeUndefined();
   await click('تراجع');await click('حفظ');expect(api.put.mock.calls[1][1].document).toEqual(doc);
+});
+it('honors immediate append selection without replacing existing content or duplicating the below-page checkout',async()=>{
+  await createProductPreset('product-page-03',product);await act(async()=>root.render(<ProductLandingEditorPage/>));await click('استيراد قالب');
+  await act(async()=>{button('اختيار قالب الدراجة الكهربائية 2').click();const select=host.querySelector('.pl-page-presets-dialog footer select');select.value='append';select.dispatchEvent(new Event('change',{bubbles:true}));button('استخدام القالب').click();});
+  await click('حفظ');const doc=api.put.mock.calls[0][1].document;
+  expect(doc.mode).toBe('below');expect(doc.sections[0]).toEqual(initial.sections[0]);expect(doc.sections).toHaveLength(17);expect(doc.sections.some(section=>section.type==='checkout')).toBe(false);
 });
