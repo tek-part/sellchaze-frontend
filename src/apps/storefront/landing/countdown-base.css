@@ -17,3 +17,4 @@
 .lp-countdown[data-motion=paused] *,.lp-countdown[data-motion=paused] *::before,.lp-countdown[data-motion=paused] *::after{animation:none!important;transition:none!important}
 @media(prefers-reduced-motion:reduce){.lp-countdown *,.lp-countdown *::before,.lp-countdown *::after{animation:none!important;transition:none!important}}
 .lp-countdown[data-thumbnail] .cd-shell{margin:0 auto;max-width:100%}
+.lp-countdown[data-thumbnail] .counter{flex-wrap:nowrap!important}
