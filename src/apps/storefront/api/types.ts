@@ -130,6 +130,7 @@ export interface ApiStoreSummary {
   auto_currency_by_country?: boolean;
   visitor_currency?: string;
   payment_methods?: ReadonlyArray<string>;
+  payment_marks?: ReadonlyArray<{ name: string; logo_url?: string | null }>;
   email?: string | null;
   phone?: string | null;
   identity?: import('../store-identity').StoreIdentity;

@@ -1,3 +1,4 @@
+import { PaymentMark } from '../../../shared-ui/PaymentMarks';
 import { MerchantContact } from '../../../shared-ui/MerchantContact';
 /**
  * Naseem Footer — brand + blurb, link columns from `navigation.footer`, a newsletter form
@@ -91,8 +92,8 @@ export function Footer(props: FooterProps): ReactElement {
           <span>© {year} {storeName}</span>
           {payments.length > 0 ? (
             <ul className="nsm-footer__payments" aria-label={t('footer.payments')}>
-              {payments.map((p) => (
-                <li key={p} className={cn('nsm-footer__pay', `nsm-footer__pay--${p.toLowerCase().replace(/\s+/g, '-')}`)} title={p}>{PAYMENT_SHORT[p] ?? p}</li>
+              {payments.map((p, index) => (
+                <li key={p} className={cn('nsm-footer__pay', `nsm-footer__pay--${p.toLowerCase().replace(/\s+/g, '-')}`)} title={p}><PaymentMark index={index} fallback={PAYMENT_SHORT[p] ?? p} /></li>
               ))}
             </ul>
           ) : null}

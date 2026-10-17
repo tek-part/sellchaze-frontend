@@ -15,6 +15,7 @@ import { selectionAutomatic } from './variant-selection';
 
 export interface StoreInfo {
   paymentMethods?: ReadonlyArray<string>;
+  paymentMarks?: ReadonlyArray<{ name: string; logo_url?: string | null }>;
   bannerUrl?: string;
   email?: string;
   phone?: string;
@@ -100,6 +101,7 @@ export function StoreProvider(props: { children: ReactNode; initialData?: ApiSto
     store = {
       id: String(s.id),
       paymentMethods: s.payment_methods ?? [],
+      paymentMarks: s.payment_marks ?? [],
       autoSelectVariants: s.auto_select_variants,
       trackingEnabled: s.tracking_enabled,
       downsellEnabled: s.downsell_enabled,

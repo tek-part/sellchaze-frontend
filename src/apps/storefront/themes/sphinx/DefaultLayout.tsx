@@ -1,3 +1,4 @@
+import { StorePaymentMarks } from '../../shared-ui/PaymentMarks';
 import { ProductHeaderChrome } from '../../state/product-presentation';
 import { useEffect, useState, type CSSProperties, type ReactElement } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -86,7 +87,7 @@ function Chrome({ context, children, checkout = false }: LayoutRenderProps & { c
     <footer className="sph-footer"><div className="sph-container sph-footer__grid"><div className="sph-footer__brand">{brand}{context.store.description ? <p>{context.store.description}</p> : null}{settings['address'] ? <p>{String(settings['address'])}</p> : null}{store.phone ? <a href={`tel:${store.phone.replace(/[^+\d]/g, '')}`} dir="ltr">{store.phone}</a> : null}{store.email ? <a href={`mailto:${store.email}`}>{store.email}</a> : null}</div>
       {(data.allCategoryNavigation ?? []).length ? <details open className="sph-footer__links"><summary>{text('الأقسام', 'Categories')}</summary><nav aria-label={text('أقسام المتجر', 'Store categories')}><ul>{data.allCategoryNavigation?.map((item) => <li key={item.url}><a href={item.url}>{item.label}</a></li>)}</ul></nav></details> : null}
       {footerGroups.map((group) => <details open className="sph-footer__links" key={group.title}><summary>{group.title}</summary><nav aria-label={group.title}><ul>{group.links.map((link) => <li key={`${link.url}-${link.label}`}><a href={link.url}>{link.label}</a></li>)}</ul></nav></details>)}
-    </div><div className="sph-container sph-footer__legal">© {data.year ?? 2026} {store.name}</div></footer>
+    </div><div className="sph-container sph-footer__legal"><StorePaymentMarks label={text('وسائل الدفع المقبولة', 'Accepted payment methods')} />© {data.year ?? 2026} {store.name}</div></footer>
     <UiBlock slot="after_footer" />
     <nav className="sph-mobile-nav" aria-label={text('التنقل السريع', 'Quick navigation')}><a href="/"><HomeIcon /><span>{text('الرئيسية', 'Home')}</span></a><a href="/categories"><GridIcon /><span>{text('الأقسام', 'Categories')}</span></a><button type="button" onClick={() => setCartOpen(true)}><BagIcon /><span>{text('السلة', 'Cart')}{totals.count ? ` (${totals.count})` : ''}</span></button><button type="button" onClick={() => setMoreOpen(true)}><MoreIcon /><span>{text('المزيد', 'More')}</span></button></nav>
     <SphinxCart open={cartOpen} close={() => setCartOpen(false)} />
