@@ -206,15 +206,16 @@ export const submitCheckout = (body: unknown, key: string): Promise<{ data: unkn
 export const recoverCheckout = (key: string): Promise<{ data: unknown }> => apiFetch('/checkout/recover', { method: 'POST', headers: { 'Idempotency-Key': key }, body: '{}' });
 export interface CheckoutItem { product_id: number; variant_id?: number; quantity: number; personalization?: import('../types/personalization').PersonalizationValues; quantity_offer_id?: string; quantity_offer_version?: number }
 export interface CheckoutQuote {
+  payment_adjustment_token?: string | null;
   order_minimum?: { amount: string; merchandise_total: string; remaining: string; eligible: boolean };
   requires_shipping: boolean;
   offer_free_shipping?: boolean;
   items: ReadonlyArray<{ product_id: number; variant_id: number | null; name: string; unit_price: string; quantity: number; line_total: string; quantity_offer?: import('./types').ApiQuantityOffer | null; personalization_key?: string; personalization?: ReadonlyArray<import('../types/personalization').PersonalizationEntry> }>;
   currency: string;
-  totals: { subtotal: string; discount_total: string; shipping_total: string; tax_total: string; grand_total: string };
+  totals: { subtotal: string; discount_total: string; shipping_total: string; tax_total: string; grand_total: string; payment_adjustment_total?: string };
 }
-export const quoteCheckout = (items: ReadonlyArray<CheckoutItem>, coupon_code: string, selection: import('../types/shipping').ShippingSelection = {}): Promise<{ data: CheckoutQuote }> =>
-  apiSend('/checkout/quote', 'POST', { items, coupon_code, ...selection });
+export const quoteCheckout = (items: ReadonlyArray<CheckoutItem>, coupon_code: string, selection: import('../types/shipping').ShippingSelection = {}, payment_method?: string): Promise<{ data: CheckoutQuote }> =>
+  apiSend('/checkout/quote', 'POST', { items, coupon_code, ...selection, ...(payment_method ? { payment_method } : {}) });
 export const retryCheckoutPayment = (token: string): Promise<{ data: unknown; payment?: { redirect_url?: string | null } }> =>
   apiSend('/checkout/payment/retry', 'POST', { token });
 
@@ -253,6 +254,7 @@ export interface ApiOrderItem {
   image_url?: string | null;
 }
 export interface ApiOrder {
+  payment_adjustment_total?: string;
   id: number;
   number: string;
   status: string;

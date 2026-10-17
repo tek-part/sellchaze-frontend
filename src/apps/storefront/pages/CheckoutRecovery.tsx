@@ -1,4 +1,6 @@
 import type { ReactElement } from 'react';
+import { PaymentAdjustmentLine } from './PaymentAdjustmentLine';
+import { formatMoney } from '../utils/format';
 import { Button } from '../foundation/components';
 import { useLocale } from '../i18n/useLocale';
 import type { useCheckoutPaymentFlow } from './useCheckoutPaymentFlow';
@@ -13,6 +15,10 @@ export function CheckoutRecovery({ flow }: { flow: ReturnType<typeof useCheckout
       ? (ar ? `تم حفظ طلبك${flow.paymentRetry.orderNumber ? ` ${flow.paymentRetry.orderNumber}` : ''}. يمكنك متابعة الدفع لنفس الطلب.` : `Your order${flow.paymentRetry.orderNumber ? ` ${flow.paymentRetry.orderNumber}` : ''} is saved. Continue payment for this order.`)
       : (ar ? 'لديك محاولة طلب لم تصل نتيجتها بعد. استعد نتيجتها قبل إرسال طلب آخر.' : 'A checkout attempt is awaiting confirmation. Recover its result before placing another order.')}</p>
     {flow.error ? <p className="sf-field__error" role="alert">{flow.error}</p> : null}
+    {flow.paymentRetry?.total !== undefined && flow.paymentRetry.currency ? <>
+      <p>{ar ? 'المبلغ المحفوظ لهذا الطلب' : 'Saved total for this order'}: {formatMoney(Number(flow.paymentRetry.total), flow.paymentRetry.currency, locale)}</p>
+      <PaymentAdjustmentLine amount={flow.paymentRetry.adjustment} currency={flow.paymentRetry.currency} />
+    </> : null}
     <Button type="button" block loading={flow.busy} disabled={flow.busy} onClick={() => void (flow.paymentRetry ? flow.submit({}) : flow.recover())}>
       {flow.paymentRetry ? (ar ? 'متابعة الدفع لنفس الطلب' : 'Continue payment for this order') : (ar ? 'استعادة نتيجة الطلب' : 'Recover checkout result')}
     </Button>

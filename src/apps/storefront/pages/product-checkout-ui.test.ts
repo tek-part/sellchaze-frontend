@@ -23,12 +23,20 @@ const render = async (items: ReadonlyArray<CheckoutItem>, ready = true) => { awa
 const submit = async () => { await act(async () => host.querySelector('form')!.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }))); };
 
 describe('same-page checkout', () => {
+  it('shows the server payment discount and submits its reviewed quote token', async () => {
+    fixture.quote.mockResolvedValue({ data: { currency: 'EGP', requires_shipping: false, payment_adjustment_token: 'b'.repeat(64), items: [{ product_id: 4, name: 'Selection', quantity: 1, line_total: '80' }], totals: { subtotal: '80', discount_total: '0', shipping_total: '0', tax_total: '0', payment_adjustment_total: '-8.00', grand_total: '72.00' } } });
+    await render([{ product_id: 4, quantity: 1 }]);
+    expect(host.textContent).toContain('Payment method discount');
+    expect(host.querySelector('[data-payment-adjustment]')?.textContent).toContain('8.00');
+    await submit();
+    expect(fixture.submit).toHaveBeenCalledWith(expect.objectContaining({ payment_adjustment_token: 'b'.repeat(64) }));
+  });
   it('quotes the live variant, quantity, offer and personalization without using or clearing the ordinary basket', async () => {
     const item = { product_id: 4, variant_id: 5, quantity: 2, personalization: { note: 'Review' }, quantity_offer_id: 'fa8f41e8-4944-4847-86f5-8a27cf65ee33', quantity_offer_version: 2 };
-    await render([item]); expect(fixture.quote).toHaveBeenLastCalledWith([item], '', {}); expect(host.textContent).toContain('Selection L × 2');
+    await render([item]); expect(fixture.quote).toHaveBeenLastCalledWith([item], '', {}, 'cod'); expect(host.textContent).toContain('Selection L × 2');
     expect(fixture.flow).toHaveBeenLastCalledWith({ items: [item], preserveCart: true, surface: 'product' });
     await render([{ ...item, variant_id: 6, quantity: 4 }]);
-    expect(fixture.quote).toHaveBeenLastCalledWith([{ ...item, variant_id: 6, quantity: 4 }], '', {});
+    expect(fixture.quote).toHaveBeenLastCalledWith([{ ...item, variant_id: 6, quantity: 4 }], '', {}, 'cod');
     await submit(); expect(fixture.submit).toHaveBeenCalledExactlyOnceWith({ customer_name: 'Local buyer', coupon_code: '', lead_token: 'local-lead' });
   });
   it('does not quote or submit an unavailable or incomplete selection', async () => {

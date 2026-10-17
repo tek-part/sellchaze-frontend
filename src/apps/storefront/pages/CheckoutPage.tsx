@@ -1,4 +1,5 @@
 import PaymentMethodLogo from '../../../shared/payments/PaymentMethodLogo';
+import { PaymentAdjustmentLine } from './PaymentAdjustmentLine';
 import { UiBlock } from '../ui-blocks/UiBlocks';
 import { useEffect, useMemo, useState, type FormEvent, type ReactElement } from 'react';
 import { Navigate, useSearchParams } from 'react-router-dom';
@@ -47,13 +48,13 @@ function BasketCheckout(): ReactElement {
   useCheckoutMetrics(items, 'storefront');
   const contact = useCheckoutFields(checkout.paymentMethod, items.map((item) => item.product_id));
   const lead = useCheckoutLead({ contact: { ...contact.payload(), coupon_code: appliedCoupon }, items, source: 'storefront', kind: 'cart', paymentMethod: checkout.paymentMethod, enabled: contact.ready && !checkout.busy && !checkout.completed && !checkout.unresolved && !checkout.paymentRetry });
-  const quoteKey = JSON.stringify([items, appliedCoupon, contact.shippingSelection, contact.shippingReady]);
-  const quoteQ = useAsync(async () => items.length && contact.shippingReady ? { key: quoteKey, data: (await quoteCheckout(items, appliedCoupon, contact.shippingSelection)).data } : null, [quoteKey, locale]);
+  const quoteKey = JSON.stringify([items, appliedCoupon, contact.shippingSelection, contact.shippingReady, checkout.paymentMethod, checkout.unresolved]);
+  const quoteQ = useAsync(async () => !checkout.unresolved && items.length && contact.shippingReady ? { key: quoteKey, data: (await quoteCheckout(items, appliedCoupon, contact.shippingSelection, checkout.paymentMethod)).data } : null, [quoteKey, locale]);
   const quote = !quoteQ.loading && !quoteQ.error && quoteQ.data?.key === quoteKey ? quoteQ.data.data : null;
   const placeOrder = async (event: FormEvent): Promise<void> => {
     event.preventDefault();
     if (!checkout.paymentRetry && (!minimumOrderAllows(quote) || !contact.shippingReady || !contact.phoneVerification.ready || !contact.botProtection.ready)) return;
-    await checkout.submit({ ...contact.payload(), coupon_code: appliedCoupon, lead_token: lead.submitToken() });
+    await checkout.submit({ ...contact.payload(), coupon_code: appliedCoupon, lead_token: lead.submitToken(), ...(quote?.payment_adjustment_token ? { payment_adjustment_token: quote.payment_adjustment_token } : {}) });
   };
   if (!cart.lines.length && !checkout.completed && !checkout.busy && !checkout.unresolved) return <Navigate to="/cart" replace />;
   return <>
@@ -100,6 +101,7 @@ function BasketCheckout(): ReactElement {
               {Number(quote.totals.discount_total) > 0 ? <div className="sf-cart-summary__row"><span>{t('checkout.discount')}</span><span>−{formatMoney(Number(quote.totals.discount_total), quote.currency, locale)}</span></div> : null}
               {quote.requires_shipping ? <div className="sf-cart-summary__row"><span>{t('checkout.shipping')}</span><span>{formatMoney(Number(quote.totals.shipping_total), quote.currency, locale)}</span></div> : null}
               {Number(quote.totals.tax_total) > 0 ? <div className="sf-cart-summary__row"><span>{ar ? 'الضريبة' : 'Tax'}</span><span>{formatMoney(Number(quote.totals.tax_total), quote.currency, locale)}</span></div> : null}
+              <PaymentAdjustmentLine amount={quote.totals.payment_adjustment_total} currency={quote.currency} />
               <div className="sf-cart-summary__total"><span>{t('checkout.total')}</span><span className="sf-cart-summary__total-value">{formatMoney(Number(quote.totals.grand_total), quote.currency, locale)}</span></div>
             </> : null}
           </div>

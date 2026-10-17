@@ -1,4 +1,5 @@
 import PaymentMethodLogo from '../../../shared/payments/PaymentMethodLogo';
+import { PaymentAdjustmentLine } from './PaymentAdjustmentLine';
 import { UiBlock } from '../ui-blocks/UiBlocks';
 import { useMemo, useState, type FormEvent, type ReactElement } from 'react';
 import { Button, Container, ErrorState, Input, Section, Spinner } from '../foundation/components';
@@ -66,13 +67,13 @@ export function FunnelCheckout({ productSlug }: { productSlug: string | null }):
   useCheckoutMetrics(items, 'funnel');
   const contact = useCheckoutFields(payment.paymentMethod, product ? [product.id] : []);
   const lead = useCheckoutLead({ contact: { ...contact.payload(), coupon_code: appliedCoupon }, items, source: 'funnel', paymentMethod: payment.paymentMethod, kind: `funnel:${productSlug ?? ''}`, enabled: contact.ready && !payment.busy && !payment.completed && !payment.unresolved && !payment.paymentRetry });
-  const quoteKey = JSON.stringify([items, appliedCoupon, contact.shippingSelection, contact.shippingReady]);
-  const quoteQ = useAsync(async () => items.length && contact.shippingReady ? { key: quoteKey, quote: (await quoteCheckout(items, appliedCoupon, contact.shippingSelection)).data } : null, [quoteKey, locale]);
+  const quoteKey = JSON.stringify([items, appliedCoupon, contact.shippingSelection, contact.shippingReady, payment.paymentMethod, payment.unresolved]);
+  const quoteQ = useAsync(async () => !payment.unresolved && items.length && contact.shippingReady ? { key: quoteKey, quote: (await quoteCheckout(items, appliedCoupon, contact.shippingSelection, payment.paymentMethod)).data } : null, [quoteKey, locale]);
   const quote = !quoteQ.loading && !quoteQ.error && quoteQ.data?.key === quoteKey ? quoteQ.data.quote : null;
   const submit = async (event: FormEvent): Promise<void> => {
     event.preventDefault();
     if (!payment.paymentRetry && (!minimumOrderAllows(quote) || !selectionReady || !contact.shippingReady || !contact.phoneVerification.ready || !contact.botProtection.ready)) return;
-    await payment.submit({ ...contact.payload(), coupon_code: appliedCoupon, lead_token: lead.submitToken() });
+    await payment.submit({ ...contact.payload(), coupon_code: appliedCoupon, lead_token: lead.submitToken(), ...(quote?.payment_adjustment_token ? { payment_adjustment_token: quote.payment_adjustment_token } : {}) });
   };
 
   return <Section id="funnel-checkout" className="sf-funnel-checkout"><Container narrow>
@@ -124,6 +125,7 @@ export function FunnelCheckout({ productSlug }: { productSlug: string | null }):
           {Number(quote.totals.discount_total) > 0 ? <div><dt>{label('الخصم', 'Discount')}</dt><dd>−{formatMoney(Number(quote.totals.discount_total), quote.currency, locale)}</dd></div> : null}
           {quote.requires_shipping ? <div><dt>{label('الشحن', 'Shipping')}</dt><dd>{formatMoney(Number(quote.totals.shipping_total), quote.currency, locale)}</dd></div> : null}
           {Number(quote.totals.tax_total) > 0 ? <div><dt>{label('الضريبة', 'Tax')}</dt><dd>{formatMoney(Number(quote.totals.tax_total), quote.currency, locale)}</dd></div> : null}
+          <PaymentAdjustmentLine amount={quote.totals.payment_adjustment_total} currency={quote.currency} definition />
           <div className="sf-funnel-checkout__grand"><dt>{label('الإجمالي', 'Total')}</dt><dd>{formatMoney(Number(quote.totals.grand_total), quote.currency, locale)}</dd></div>
         </dl> : null}
       </div>
