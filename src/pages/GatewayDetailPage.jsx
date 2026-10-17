@@ -1,8 +1,9 @@
+import PaymentMethodLogo from '../shared/payments/PaymentMethodLogo';
 import { useCallback, useEffect, useState } from 'react';
 import { Link, Navigate, useParams } from 'react-router-dom';
 import { useOutletContext } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { HiOutlineArrowLeft, HiOutlineWallet } from '../components/workspace/WorkspaceIcons';
+import { HiOutlineArrowLeft } from '../components/workspace/WorkspaceIcons';
 import api from '../api/client';
 import PaginationBar from '../components/table/PaginationBar';
 import TableLoadingOverlay from '../components/table/TableLoadingOverlay';
@@ -119,7 +120,7 @@ export default function GatewayDetailPage() {
                 <div className="relative flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                     <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:gap-4">
                         <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-brand text-white shadow-lg shadow-brand/25">
-                            <HiOutlineWallet className="h-6 w-6" aria-hidden />
+                            <PaymentMethodLogo slug={row?.slug || ''} width={44} height={36} />
                         </span>
                         <div>
                             <h1 className="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">

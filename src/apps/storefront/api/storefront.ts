@@ -196,7 +196,7 @@ export function submitProductReview(slug: string, review: { rating: number; titl
  * checkout; the server-cart endpoints (/cart/*) are intentionally not wrapped here. */
 export const applyCoupon = (code: string): Promise<{ data: unknown }> => apiSend('/checkout/coupon/apply', 'POST', { code });
 export const removeCoupon = (): Promise<{ data: unknown }> => apiSend('/checkout/coupon', 'DELETE');
-export interface StorefrontPaymentMethod { slug: string; name: string; test_mode: boolean }
+export interface StorefrontPaymentMethod { slug: string; name: string; test_mode: boolean; logo_url?: string | null; description?: string }
 export const getPaymentMethods = (productIds: ReadonlyArray<number> = []): Promise<{ data: ReadonlyArray<StorefrontPaymentMethod> }> => {
   const params = new URLSearchParams();
   [...new Set(productIds)].forEach((id) => params.append('product_ids[]', String(id)));

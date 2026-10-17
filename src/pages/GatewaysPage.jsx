@@ -1,3 +1,4 @@
+import PaymentMethodLogo from '../shared/payments/PaymentMethodLogo';
 import { useCallback, useEffect, useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useOutletContext } from 'react-router-dom';
@@ -238,7 +239,7 @@ export default function GatewaysPage() {
                                             />
                                         </td>
                                     ) : null}
-                                    <td className="px-4 py-3 font-medium text-slate-900">{row.name}</td>
+                                    <td className="px-4 py-3 font-medium text-slate-900"><span className="flex items-center gap-3"><PaymentMethodLogo slug={row.slug} />{row.name}</span></td>
                                     <td className="px-4 py-3 text-slate-700">{row.slug}</td>
                                     <td className="px-4 py-3 tabular-nums text-slate-700">
                                         {formatCount(row.paid_orders_count ?? 0, numberLocale)}

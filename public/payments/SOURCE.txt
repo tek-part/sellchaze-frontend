@@ -1,0 +1,28 @@
+Payment provider identity assets
+
+These marks identify the named payment providers. Their trademarks remain with the respective owners. No ownership or new license is claimed. The20reference marks were visible on the EasyOrders payment-methods page and were saved through its rendered-page asset inventory on2026-10-18, as requested for matching payment-method identities. No EasyOrders platform logo or store/customer artwork was included.
+
+cod | cod.png | https://app.easy-orders.net/img/cod.png | SHA256 2ba06da141ac61b2eef503468f092af780f41a462ad434e6ef1ec536095ce002
+paymob | paymob.png | https://app.easy-orders.net/img/paymob.png | SHA256 8e3a3c9e11d5ff1ae51c080457e89f61e0e36ebef642374b4b8867c48ed58915
+kashier | kashier.png | https://app.easy-orders.net/img/kashier.png | SHA256 6592e592f1f294b66653dd642144ea83a499978de7438ecd5ff828d345614a8e
+stripe | stripe.png | https://app.easy-orders.net/img/stripe.png | SHA256 bff05d724c54ac0b08189b3da85c6917d169434eb6899ea18ef8dfed9d1abfa9
+paypal | paypal.png | https://app.easy-orders.net/img/paypal.png | SHA256 a180dd63fd66ebb81efe3cdb63525d134458289e411ecc72d5a3c1c431bbaabf
+paytabs | paytabs.png | https://app.easy-orders.net/img/paytabs.png | SHA256 e566bc0dc77d6a5238545fd0d918d2393a0305415ea9c1029a757269dbb5d4d4
+moyasar | moyasar.png | https://app.easy-orders.net/img/moyasar.png | SHA256 b244d2db7b0af20ffbc3b0a1f81fdb07984e9f84fea797269073bf188450ef7b
+paylink | paylink.png | https://app.easy-orders.net/img/paylink.png | SHA256 27cdabace5cdff47725036c19876e3dc56f177872a4dbfd670fca10ecbe976ca
+tap | tap.png | https://app.easy-orders.net/img/tap_logo.png | SHA256 89e7966edb196822e21cfa4cdd4272762e58a57e41cf18e6f097ab3f23b3b9a9
+tabby | tabby.png | https://files.easy-orders.net/tabby-new.png | SHA256 92acbda6410394c83e0989af33591e749a4dfe6f15b5f62fa4804e471ffacc47
+taager | taager.png | https://app.easy-orders.net/img/taager-logo.png | SHA256 e873764d3e723cf1177f595c8188a11cffe650879f98a23c49f6d62fa2997e3b
+myfatoorah | myfatoorah.png | https://app.easy-orders.net/img/my_fatoorah.png | SHA256 c717bbe5a872eceea345bb290eae5338e5d1e6814dfa100f28ca1fb1525e21ea
+fawaterak | fawaterak.webp | https://app.easy-orders.net/img/fawaterk.webp | SHA256 3b23a49af78b2488d4d7dcec12b2d77af3f97fc9fb0d1abea979ae112b3a48b8
+xpay | xpay.png | https://files.easy-orders.net/1761765583830623367.png | SHA256 2dc523b566ebdb3f6d0e0e88e5e2cdb7ed6ebfc7336102dd1123f770dec6de94
+ziina | ziina.svg | https://app.easy-orders.net/img/ziina.svg | SHA256 af74d6cc7d22d7b6340d73396193c26931b5869c6efe05c80fe7a67562727f33
+tamara | tamara.png | https://files.easy-orders.net/1760990219351495253.png | SHA256 b4c745c33e268bd37729ff5998d63e3aa0c1bcc20d44a3cf43ba83088419d8a0
+easykash | easykash.png | https://files.easy-orders.net/1761142514087753725.png | SHA256 acb141eb9a28318ac06a80a9f383569c09d2c79544e73be7d563337a0c016059
+upayments | upayments.svg | https://files.easy-orders.net/1761148779419046650UPayments-Logo.svg | SHA256 9e73da6104cad2d381947f399dcefe5e4a6313293cb18b4f3fb0252fbc4492fd
+transfer_receipt | transfer_receipt.png | https://files.easy-orders.net/1763562980130575678.png | SHA256 a306195fdf0d007fecb20996fd87c66c914738331b869f90253a0df0599fa936
+fabmisr | fabmisr.png | https://files.easy-orders.net/1765748769859488311.png | SHA256 8ce111fd7b09f1258ccb850373d4ec9d80bada22cf9aa7d4488cae44740a0df5
+
+Fawry: https://www.fawry.com/wp-content/uploads/2023/05/fawry-Logo.png
+HyperPay: https://www.hyperpay.com/wp-content/themes/hyperpaycustomtheme/assets/logo.svg
+Bank transfer: original generic bank icon created for Sellchaze.

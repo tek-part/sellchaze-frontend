@@ -1,3 +1,4 @@
+import PaymentMethodLogo from '../shared/payments/PaymentMethodLogo';
 import { useEffect, useState } from 'react';
 import { Navigate, useNavigate, useParams } from 'react-router-dom';
 import { useOutletContext } from 'react-router-dom';
@@ -59,7 +60,7 @@ export default function GatewayFormPage() {
     return (
         <div className="mx-auto max-w-lg space-y-5">
             <div className="border-s-4 border-brand ps-4">
-                <h1 className="text-2xl font-semibold tracking-tight text-slate-900">{t('gateway_form_edit')}</h1>
+                <PaymentMethodLogo slug={slug} width={120} height={48} /><h1 className="text-2xl font-semibold tracking-tight text-slate-900">{t('gateway_form_edit')}</h1>
             </div>
             {err && (
                 <p className="rounded-lg border border-red-100 bg-red-50 px-3 py-2 text-sm text-red-700">{err}</p>
