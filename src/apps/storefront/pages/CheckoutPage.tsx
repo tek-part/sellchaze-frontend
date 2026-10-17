@@ -1,3 +1,4 @@
+import PaymentMethodLogo from '../../../shared/payments/PaymentMethodLogo';
 import { UiBlock } from '../ui-blocks/UiBlocks';
 import { useEffect, useMemo, useState, type FormEvent, type ReactElement } from 'react';
 import { Navigate, useSearchParams } from 'react-router-dom';
@@ -69,7 +70,7 @@ function BasketCheckout(): ReactElement {
               <legend>{t('checkout.payment')}</legend>
               {checkout.paymentMethods.map((method) => <label key={method.slug} className="sf-card-row" style={{ cursor: 'pointer' }}>
                 <input type="radio" name="payment_method" checked={checkout.paymentMethod === method.slug} onChange={() => checkout.setPaymentMethod(method.slug)} required />
-                <span>{method.slug === 'cod' ? (ar ? 'الدفع عند الاستلام' : 'Cash on delivery') : method.slug === 'bank_transfer' ? (ar ? 'تحويل بنكي' : 'Bank transfer') : method.name}{method.test_mode ? (ar ? ' (تجريبي)' : ' (Test)') : ''}</span>
+                <PaymentMethodLogo slug={method.slug} src={method.logo_url} /><span>{method.slug === 'cod' && method.name === 'Cash on delivery' ? (ar ? 'الدفع عند الاستلام' : 'Cash on delivery') : method.slug === 'bank_transfer' && method.name === 'Bank transfer' ? (ar ? 'تحويل بنكي' : 'Bank transfer') : method.name}{method.test_mode ? (ar ? ' (تجريبي)' : ' (Test)') : ''}{method.description ? <small style={{ display: 'block', whiteSpace: 'pre-wrap' }}>{method.description}</small> : null}</span>
               </label>)}
               {!checkout.paymentMethods.length ? <p className="sf-field__error">{ar ? 'لا توجد طريقة دفع متاحة حاليًا.' : 'No payment method is currently available.'}</p> : null}
             </fieldset>

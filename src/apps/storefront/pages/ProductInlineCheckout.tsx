@@ -1,3 +1,4 @@
+import PaymentMethodLogo from '../../../shared/payments/PaymentMethodLogo';
 import { useMemo, useState, type FormEvent, type ReactElement } from 'react';
 import type { CheckoutItem } from '../api/storefront';
 import { quoteCheckout } from '../api/storefront';
@@ -32,7 +33,7 @@ export default function ProductInlineCheckout({ productId, items, ready, buttonT
   };
   return <section className="sf-product-checkout" aria-label={text('الشراء من صفحة المنتج', 'Product checkout')}><h2>{text('أكمل طلبك', 'Complete your order')}</h2><CheckoutRecovery flow={payment} />
     <form onSubmit={(event) => void submit(event)}><fieldset disabled={payment.busy || payment.unresolved} className="sf-product-checkout__fields"><CheckoutFieldsForm model={contact} />
-      <fieldset><legend>{text('طريقة الدفع', 'Payment method')}</legend>{payment.paymentMethods.map((method) => <label className="sf-product-checkout__payment" key={method.slug}><input type="radio" name={`product-payment-${productId}`} checked={payment.paymentMethod === method.slug} onChange={() => payment.setPaymentMethod(method.slug)} required />{method.slug === 'cod' ? text('الدفع عند الاستلام', 'Cash on delivery') : method.slug === 'bank_transfer' ? text('تحويل بنكي', 'Bank transfer') : method.name}{method.test_mode ? text(' (تجريبي)', ' (Test)') : ''}</label>)}</fieldset>
+      <fieldset><legend>{text('طريقة الدفع', 'Payment method')}</legend>{payment.paymentMethods.map((method) => <label className="sf-product-checkout__payment" key={method.slug}><input type="radio" name={`product-payment-${productId}`} checked={payment.paymentMethod === method.slug} onChange={() => payment.setPaymentMethod(method.slug)} required /><PaymentMethodLogo slug={method.slug} src={method.logo_url} />{method.slug === 'cod' && method.name === 'Cash on delivery' ? text('الدفع عند الاستلام', 'Cash on delivery') : method.slug === 'bank_transfer' && method.name === 'Bank transfer' ? text('تحويل بنكي', 'Bank transfer') : method.name}{method.test_mode ? text(' (تجريبي)', ' (Test)') : ''}</label>)}</fieldset>
       <div className="sf-product-checkout__coupon"><Input label={text('كود الخصم', 'Coupon code')} value={coupon} maxLength={100} onChange={(event) => setCoupon(event.target.value)} /><Button type="button" variant="secondary" disabled={!ready || quotes.loading} onClick={() => { setAppliedCoupon(coupon.trim()); quotes.reload(); }}>{text('تطبيق', 'Apply')}</Button>{appliedCoupon ? <Button type="button" variant="ghost" onClick={() => { setAppliedCoupon(''); setCoupon(''); }}>{text('إزالة', 'Remove')}</Button> : null}</div>
     </fieldset>
     {!ready ? <p role="status">{text('اختر الصنف وأكمل بيانات تخصيص المنتج.', 'Choose an available option and complete product personalization.')}</p> : null}

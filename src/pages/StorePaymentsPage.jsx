@@ -1,63 +1,28 @@
-import { useEffect, useMemo, useState } from 'react';
-import { Disclosure, DisclosureButton, DisclosurePanel } from '@headlessui/react';
+import { useEffect, useState } from 'react';
+import { Dialog, DialogPanel, DialogTitle } from '@headlessui/react';
 import { useTranslation } from 'react-i18next';
-import {
-    HiOutlineArrowPath,
-    HiOutlineCheck,
-    HiOutlineCheckBadge,
-    HiOutlineChevronDown,
-    HiOutlineClipboard,
-    HiOutlineEye,
-    HiOutlineEyeSlash,
-} from '../components/workspace/WorkspaceIcons';
+import { HiOutlineCheck, HiOutlineClipboard, HiOutlineEye, HiOutlineEyeSlash, HiOutlineXMark } from '../components/workspace/WorkspaceIcons';
+import { Navigate } from 'react-router-dom';
 import api from '../api/client';
-import PageHeader from '../components/PageHeader';
 import FormField, { INPUT_CLASS } from '../components/ui/FormField';
 import { notify } from '../components/ui/notify';
-import SaveBar from '../components/ui/SaveBar';
 import Toggle from '../components/ui/Toggle';
+import StoreMediaPicker from '../components/store/StoreMediaPicker';
+import MerchantSettingsHeading from '../components/store/MerchantSettingsHeading';
+import PaymentMethodLogo from '../shared/payments/PaymentMethodLogo';
 import useStoreContext from '../hooks/useStoreContext';
-import { useDirty } from '../hooks/useStoreSettings';
-
+import './store-payments.css';
 const MASK = '********';
-
-/**
- * Normalise one gateway from `GET {apiBase}/payments`. Saved credentials come
- * back masked, so the form keeps them as "configured" flags and only sends the
- * values the user actually typed (blank = keep the stored secret).
- */
-function normalizeGateway(row) {
-    const fields = Array.isArray(row?.credential_fields) ? row.credential_fields : [];
-    const masked = row?.credentials && typeof row.credentials === 'object' ? row.credentials : {};
-    return {
-        slug: row?.slug || row?.gateway || '',
-        name: row?.name || row?.slug || '',
-        icon_class: row?.icon_class || '',
-        credential_fields: fields,
-        enabled: Boolean(row?.enabled),
-        test_mode: Boolean(row?.test_mode),
-        order: Number.isFinite(Number(row?.order)) ? Number(row.order) : 0,
-        notes: row?.notes ?? '',
-        configured: Boolean(row?.configured),
-        webhook_url: row?.webhook_url || null,
-        // Which fields already hold a secret server-side (masked in the response).
-        stored: Object.fromEntries(fields.map((key) => [key, masked[key] === MASK || (typeof masked[key] === 'string' && masked[key] !== '')])),
-        // Values typed in this session; empty means "leave unchanged".
-        credentials: Object.fromEntries(fields.map((key) => [key, ''])),
-    };
+function normalize(row) {
+    const fields = row.credential_fields || [];
+    return { ...row, available: row.available !== false, order: Number(row.order || 0), notes: row.notes || '',
+        provider_name: row.provider_name || row.name,
+        presentation: { name: row.name || '', description: row.description || '', logo_asset_id: row.logo_asset_id || null },
+        stored: Object.fromEntries(fields.map(key => [key, Boolean(row.credentials?.[key])])),
+        credentials: Object.fromEntries(fields.map(key => [key, (row.visible_fields || []).includes(key) ? (row.credentials?.[key] || '') : ''])) };
 }
-
-function unwrapRows(response) {
-    const rows = Array.isArray(response?.data)
-        ? response.data
-        : (Array.isArray(response?.data?.data) ? response.data.data : []);
-    return rows.map(normalizeGateway);
-}
-
-function fieldLabel(t, key) {
-    return t(`payment_field_${key}`, key.replaceAll('_', ' ').replace(/\b\w/g, (letter) => letter.toUpperCase()));
-}
-
+function rowsFrom(data) { return (Array.isArray(data?.data) ? data.data : []).map(normalize); }
+function fieldLabel(t, key) { return t(`payment_field_${key}`, key.replaceAll('_', ' ').replace(/\b\w/g, letter => letter.toUpperCase())); }
 function SecretInput({ id, value, onChange, stored, placeholder }) {
     const { t } = useTranslation();
     const [reveal, setReveal] = useState(false);
@@ -114,220 +79,90 @@ function CopyField({ value }) {
     );
 }
 
-function GatewayCard({ gateway, onChange, onCredential }) {
-    const { t } = useTranslation();
-    const hasFields = gateway.credential_fields.length > 0;
-    const monogram = gateway.name.slice(0, 2).toUpperCase();
-
-    return (
-        <Disclosure as="section" defaultOpen={gateway.enabled} className={`overflow-hidden rounded-2xl border bg-white shadow-card transition ${gateway.enabled ? 'border-brand/30' : 'border-slate-200/80'}`}>
-            {({ open }) => (
-                <>
-                    <div className="flex items-center gap-3 px-4 py-3.5 sm:px-5">
-                        <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-xs font-bold ${gateway.enabled ? 'bg-brand text-white' : 'bg-slate-100 text-slate-500'}`} aria-hidden>
-                            {monogram}
-                        </span>
-                        <DisclosureButton className="flex min-w-0 flex-1 items-center gap-3 text-start outline-none">
-                            <span className="min-w-0 flex-1">
-                                <span className="flex flex-wrap items-center gap-2">
-                                    <span className="text-sm font-semibold text-slate-900">{gateway.name}</span>
-                                    <span className="rounded-full bg-slate-100 px-2 py-0.5 font-mono text-[10px] text-slate-500">{gateway.slug}</span>
-                                    {gateway.configured ? (
-                                        <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-semibold text-emerald-700 ring-1 ring-emerald-200">
-                                            <HiOutlineCheckBadge className="h-3.5 w-3.5" aria-hidden />
-                                            {t('store_payments_configured', 'Configured')}
-                                        </span>
-                                    ) : hasFields ? (
-                                        <span className="rounded-full bg-amber-50 px-2 py-0.5 text-[11px] font-semibold text-amber-700 ring-1 ring-amber-200">
-                                            {t('store_payments_needs_setup', 'Needs credentials')}
-                                        </span>
-                                    ) : null}
-                                    {gateway.enabled && gateway.test_mode ? (
-                                        <span className="rounded-full bg-violet-50 px-2 py-0.5 text-[11px] font-semibold text-violet-700 ring-1 ring-violet-200">
-                                            {t('store_payments_test_badge', 'Test mode')}
-                                        </span>
-                                    ) : null}
-                                </span>
-                                <span className="mt-0.5 block text-xs text-slate-500">
-                                    {gateway.enabled ? t('store_payments_enabled_hint', 'Offered at checkout') : t('store_payments_disabled_hint', 'Hidden from checkout')}
-                                </span>
-                            </span>
-                            <HiOutlineChevronDown className={`h-5 w-5 shrink-0 text-slate-400 transition-transform ${open ? 'rotate-180' : ''}`} aria-hidden />
-                        </DisclosureButton>
-                        <Toggle checked={gateway.enabled} onChange={(v) => onChange({ enabled: v })} size="sm" />
-                    </div>
-
-                    <DisclosurePanel className="border-t border-slate-100 bg-slate-50/40 px-4 py-4 sm:px-5">
-                        <div className="grid gap-4 sm:grid-cols-2">
-                            <Toggle
-                                checked={gateway.test_mode}
-                                onChange={(v) => onChange({ test_mode: v })}
-                                label={t('store_payments_test_mode', 'Test mode')}
-                                description={t('store_payments_test_mode_hint', 'Use sandbox credentials; no real charges.')}
-                                className="rounded-xl border border-slate-200 bg-white px-4 py-3"
-                            />
-                            <div className="grid grid-cols-2 gap-3">
-                                <FormField label={t('store_payments_order', 'Order')} htmlFor={`${gateway.slug}-order`} hint={t('store_payments_order_hint', 'Lower shows first')}>
-                                    <input
-                                        id={`${gateway.slug}-order`}
-                                        type="number"
-                                        min="0"
-                                        value={gateway.order}
-                                        onChange={(e) => onChange({ order: Number(e.target.value) })}
-                                        className={INPUT_CLASS}
-                                        dir="ltr"
-                                    />
-                                </FormField>
-                                <FormField label={t('store_payments_notes', 'Note')} htmlFor={`${gateway.slug}-notes`} hint={t('store_payments_notes_hint', 'Shown at checkout')}>
-                                    <input
-                                        id={`${gateway.slug}-notes`}
-                                        value={gateway.notes}
-                                        onChange={(e) => onChange({ notes: e.target.value })}
-                                        placeholder={t('optional', 'Optional')}
-                                        className={INPUT_CLASS}
-                                        maxLength={2000}
-                                    />
-                                </FormField>
-                            </div>
-                        </div>
-
-                        {hasFields ? (
-                            <div className="mt-4">
-                                <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">{t('store_payments_credentials', 'Credentials')}</p>
-                                <div className="grid gap-3 sm:grid-cols-2">
-                                    {gateway.credential_fields.map((key) => (
-                                        <FormField
-                                            key={key}
-                                            label={fieldLabel(t, key)}
-                                            htmlFor={`${gateway.slug}-${key}`}
-                                            hint={gateway.stored[key] ? t('store_payments_keep_hint', 'Saved — leave blank to keep the current value.') : undefined}
-                                        >
-                                            <SecretInput
-                                                id={`${gateway.slug}-${key}`}
-                                                value={gateway.credentials[key] ?? ''}
-                                                stored={gateway.stored[key]}
-                                                placeholder={key}
-                                                onChange={(e) => onCredential(key, e.target.value)}
-                                            />
-                                        </FormField>
-                                    ))}
-                                </div>
-                            </div>
-                        ) : null}
-
-                        {gateway.webhook_url ? (
-                            <div className="mt-4">
-                                <FormField label={t('store_payments_webhook', 'Webhook URL')} hint={t('store_payments_webhook_hint', 'Paste this into the gateway dashboard so payment events reach your store.')}>
-                                    <CopyField value={gateway.webhook_url} />
-                                </FormField>
-                            </div>
-                        ) : null}
-                    </DisclosurePanel>
-                </>
-            )}
-        </Disclosure>
-    );
-}
 
 export default function StorePaymentsPage() {
-    const { t } = useTranslation();
-    const { apiBase } = useStoreContext();
-    const [initial, setInitial] = useState([]);
-    const [gateways, setGateways] = useState([]);
+    const context = useStoreContext();
+    return <PaymentMethods key={context.apiBase} context={context} />;
+}
+function PaymentMethods({ context: { apiBase, uiBase, access } }) {
+    const { t, i18n } = useTranslation();
+    const ar = i18n.language.startsWith('ar');
+    const text = (a, e) => ar ? a : e;
+    const [rows, setRows] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [saving, setSaving] = useState(false);
     const [error, setError] = useState('');
-
+    const [attempt, setAttempt] = useState(0);
+    const [draft, setDraft] = useState(null);
+    const [saving, setSaving] = useState(false);
+    const [filter, setFilter] = useState('');
     useEffect(() => {
-        let cancel = false;
+        if (!access.canStoreSettings) return;
+        let active = true;
         setLoading(true);
-        api.get(`${apiBase}/payments`)
-            .then(({ data }) => {
-                if (cancel) return;
-                const rows = unwrapRows(data);
-                setInitial(rows);
-                setGateways(rows);
-                setError('');
-            })
-            .catch((e) => { if (!cancel) setError(e.response?.data?.message || e.message); })
-            .finally(() => { if (!cancel) setLoading(false); });
-        return () => { cancel = true; };
-    }, [apiBase]);
-
-    const dirty = useDirty(initial, gateways);
-    const enabledCount = useMemo(() => gateways.filter((g) => g.enabled).length, [gateways]);
-
-    const updateGateway = (slug, patch) => setGateways((rows) => rows.map((row) => (row.slug === slug ? { ...row, ...patch } : row)));
-    const updateCredential = (slug, key, value) => setGateways((rows) => rows.map((row) => (
-        row.slug === slug ? { ...row, credentials: { ...row.credentials, [key]: value } } : row
-    )));
-
-    const submit = async (e) => {
-        e.preventDefault();
-        setSaving(true);
-        setError('');
+        api.get(`${apiBase}/payments`).then(({ data }) => { if (active) { setRows(rowsFrom(data)); setError(''); } })
+            .catch(failure => { if (active) setError(failure.response?.data?.message || failure.message); })
+            .finally(() => { if (active) setLoading(false); });
+        return () => { active = false; };
+    }, [apiBase, access.canStoreSettings, attempt]);
+    if (!access.canStoreSettings) return <Navigate to={`${uiBase}/overview`} replace />;
+    const providerName = row => row.slug === 'cod' ? text('دفع عند الاستلام', 'Cash on delivery') : row.slug === 'bank_transfer' ? text('تحويل بنكي', 'Bank transfer') : row.slug === 'transfer_receipt' ? text('تحويل مع إيصال', 'Transfer with receipt') : row.provider_name;
+    const patch = value => setDraft(current => ({ ...current, ...value }));
+    const presentation = value => setDraft(current => ({ ...current, presentation: { ...current.presentation, ...value } }));
+    const save = async (event, gateway = draft) => {
+        event?.preventDefault();
+        if (saving) return;
+        setSaving(true); setError('');
         try {
-            const payload = gateways.map((gateway) => ({
-                slug: gateway.slug,
-                enabled: Boolean(gateway.enabled),
-                test_mode: Boolean(gateway.test_mode),
-                order: Number(gateway.order || 0),
-                notes: gateway.notes || '',
-                credentials: Object.fromEntries(
-                    Object.entries(gateway.credentials || {}).filter(([, value]) => typeof value === 'string' && value.trim() !== ''),
-                ),
-            }));
-            const { data } = await api.put(`${apiBase}/payments`, { gateways: payload });
-            const rows = unwrapRows(data);
-            setInitial(rows);
-            setGateways(rows);
-            notify.success(t('ui_changes_saved', 'Changes saved'));
-        } catch (err) {
-            const first = err.response?.data?.errors ? Object.values(err.response.data.errors)?.[0]?.[0] : null;
-            const msg = first || err.response?.data?.message || err.message;
-            setError(msg);
-            notify.error(t('ui_save_failed', 'Could not save changes'), msg);
-        } finally {
-            setSaving(false);
-        }
+            const { data } = await api.put(`${apiBase}/payments`, { gateways: [{ slug: gateway.slug,
+                enabled: Boolean(gateway.enabled), test_mode: Boolean(gateway.test_mode), order: Number(gateway.order || 0), notes: gateway.notes,
+                presentation: gateway.presentation,
+                credentials: Object.fromEntries(Object.entries(gateway.credentials).filter(([, value]) => value.trim() && value !== MASK)) }] });
+            setRows(rowsFrom(data)); setDraft(null);
+            notify.success(text('تم حفظ طريقة الدفع', 'Payment method saved'));
+        } catch (failure) {
+            const message = Object.values(failure.response?.data?.errors || {}).flat().join(' ') || failure.response?.data?.message || failure.message;
+            setError(message); notify.error(text('تعذر الحفظ', 'Could not save'), message);
+        } finally { setSaving(false); }
     };
-
-    return (
-        <form onSubmit={submit} className="mx-auto max-w-4xl space-y-5">
-            <PageHeader
-                title={t('store_payments_title', 'Payment gateways')}
-                subtitle={t('store_payments_subtitle', 'Choose how customers pay and connect each provider with its own keys.')}
-                badge={!loading ? (
-                    <span className="rounded-full bg-brand-light px-2.5 py-1 text-xs font-semibold text-brand">
-                        {t('store_payments_enabled_count', '{{count}} enabled', { count: enabledCount })}
-                    </span>
-                ) : null}
-            />
-
-            {error ? <p className="rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</p> : null}
-
-            {loading ? (
-                <div className="flex items-center justify-center rounded-2xl border border-slate-200/80 bg-white py-16 shadow-card">
-                    <HiOutlineArrowPath className="h-7 w-7 animate-spin text-brand" aria-hidden />
-                </div>
-            ) : gateways.length === 0 ? (
-                <p className="rounded-2xl border border-slate-200/80 bg-white p-8 text-center text-sm text-slate-500 shadow-card">{t('store_payments_empty', 'No payment providers are available for this store.')}</p>
-            ) : (
-                <div className="space-y-3">
-                    {gateways.map((gateway) => (
-                        <GatewayCard
-                            key={gateway.slug}
-                            gateway={gateway}
-                            onChange={(patch) => updateGateway(gateway.slug, patch)}
-                            onCredential={(key, value) => updateCredential(gateway.slug, key, value)}
-                        />
-                    ))}
-                </div>
-            )}
-
-            <p className="text-xs text-slate-400">{t('store_payments_secrets_hint', 'Secrets are encrypted at rest and never shown again after saving.')}</p>
-
-            <SaveBar dirty={dirty} saving={saving} onReset={() => setGateways(initial)} />
-        </form>
-    );
+    return <div className="ws-payments">
+        <MerchantSettingsHeading title={text('طرق الدفع', 'Payment methods')} description={text('اختر طرق الدفع المناسبة لمتجرك، ورتّب ظهورها للعملاء.', 'Choose how customers pay and set their display order.')} />
+        {error && !draft ? <div role="alert" className="ws-payments-error">{error}<button type="button" onClick={() => setAttempt(n => n + 1)}>{text('إعادة المحاولة', 'Retry')}</button></div> : null}
+        <div className="ws-payments-toolbar"><span>{text('طرق الدفع المفعّلة', 'Enabled payment methods')}: {rows.filter(row => row.enabled).length}</span><label><span className="sr-only">{text('بحث عن طريقة دفع', 'Search payment methods')}</span><input type="search" value={filter} onChange={event => setFilter(event.target.value)} placeholder={text('بحث عن طريقة دفع', 'Search payment methods')} /></label></div>
+        {loading ? <p role="status">{text('جارٍ تحميل طرق الدفع…', 'Loading payment methods…')}</p> : <div className="ws-payments-grid">{rows.filter(row => `${row.name} ${row.provider_name} ${row.slug}`.toLowerCase().includes(filter.toLowerCase())).map(row => <section className="ws-payment-card" key={row.slug}>
+            <div className="ws-payment-card-logo"><PaymentMethodLogo slug={row.slug} src={row.logo_url} width={120} height={64} /></div>
+            <h2>{providerName(row)}</h2>
+            <span className={`ws-payment-state ${row.enabled ? 'is-enabled' : ''}`}>{row.enabled ? text('مفعّل', 'Enabled') : text('غير مفعّل', 'Disabled')}</span>
+            {!row.available ? <p className="ws-payment-setup">{text('الربط قيد الاستكمال', 'Connection in progress')}</p> : null}
+            <div className="ws-payment-actions"><button type="button" className="ws-payment-toggle" disabled={saving || !row.available} onClick={() => {
+                if (!row.enabled && row.credential_fields.length && !row.configured) { setError(''); setDraft({ ...row, enabled: true }); }
+                else void save(null, { ...row, enabled: !row.enabled });
+            }}>{row.enabled ? text('إلغاء التفعيل', 'Deactivate') : text('تفعيل طريقة الدفع', 'Activate payment method')}</button><button type="button" disabled={saving} onClick={() => { setError(''); setDraft(structuredClone(row)); }}>{text('تعديل', 'Edit')}</button></div>
+        </section>)}</div>}
+        <Dialog open={Boolean(draft)} onClose={() => { if (!saving) { setDraft(null); setError(''); } }} className="ws-payment-dialog">
+            <div className="ws-payment-backdrop" aria-hidden="true" /><div className="ws-payment-dialog-wrap"><DialogPanel className="ws-payment-dialog-panel">
+                {draft ? <form onSubmit={save}>
+                    <header><div><PaymentMethodLogo slug={draft.slug} src={draft.logo_url} width={90} height={40} /><DialogTitle>{text('تعديل', 'Edit')} {providerName(draft)}</DialogTitle></div><button type="button" disabled={saving} aria-label={text('إغلاق', 'Close')} onClick={() => setDraft(null)}><HiOutlineXMark aria-hidden /></button></header>
+                    <div className="ws-payment-dialog-body">
+                        {error ? <p role="alert" className="ws-payments-error">{error}</p> : null}
+                        {!draft.available ? <p role="status" className="ws-payments-error">{text('يمكن تجهيز بيانات الطريقة؛ سيُتاح تفعيلها عند اكتمال الربط.', 'You can prepare these settings. Activation will be available when the connection is complete.')}</p> : null}
+                        <Toggle label={text('تفعيل طريقة الدفع', 'Enable payment method')} checked={draft.enabled} disabled={!draft.available || saving} onChange={enabled => patch({ enabled })} />
+                        <FormField label={text('اسم طريقة الدفع', 'Customer-facing name')} htmlFor="payment-name"><input id="payment-name" className={INPUT_CLASS} value={draft.presentation.name} maxLength={120} onChange={event => presentation({ name: event.target.value })} /></FormField>
+                        <FormField label={text('وصف طريقة الدفع', 'Customer-facing description')} htmlFor="payment-description"><textarea id="payment-description" className={INPUT_CLASS} value={draft.presentation.description} maxLength={2000} onChange={event => presentation({ description: event.target.value })} /></FormField>
+                        <FormField label={text('أولوية الظهور', 'Display priority')} htmlFor="payment-order"><input id="payment-order" type="number" min="0" max="100000" className={INPUT_CLASS} value={draft.order} onChange={event => patch({ order: event.target.value })} /></FormField>
+                        <FormField label={text('شعار طريقة الدفع', 'Payment method logo')}><StoreMediaPicker apiBase={apiBase} value={draft.presentation.logo_asset_id ? draft.logo_url : ''} onChange={logo_url => patch({ logo_url })} onSelectAsset={asset => presentation({ logo_asset_id: asset?.id || null })} /><small>{text('دون صورة مخصصة، يظهر الشعار الأصلي لطريقة الدفع.', 'Without a custom image, the original provider logo is used.')}</small></FormField>
+                        {draft.credential_fields.length ? <>
+                            <h3>{text('بيانات الربط', 'Connection settings')}</h3>
+                            {draft.slug === 'easykash' ? <p>{text('يعمل هذا الربط بالجنيه المصري، ولا توفر الواجهة بيئة اختبار. اترك وضع الاختبار مغلقًا عند التفعيل.', 'This connection uses EGP. The API has no sandbox; turn test mode off before activation.')}</p> : draft.slug === 'myfatoorah' ? <p>{text('اختر دولة حسابك وعملتها الأساسية. بيئة الاختبار تعمل بالدينار الكويتي.', 'Choose your account country and base currency. The sandbox uses KWD.')}</p> : null}
+                            <Toggle checked={draft.test_mode} onChange={test_mode => patch({ test_mode })} label={text('وضع الاختبار', 'Test mode')} />
+                            {draft.credential_fields.map(key => <FormField key={key} label={fieldLabel(t, key)} htmlFor={`payment-${key}`} hint={draft.stored[key] && !(draft.visible_fields || []).includes(key) ? text('محفوظ — اتركه فارغًا للاحتفاظ بالقيمة الحالية.', 'Saved — leave blank to keep the current value.') : undefined}>{key === 'country' ? <select id={`payment-${key}`} className={INPUT_CLASS} value={draft.credentials[key]} onChange={event => patch({ credentials: { ...draft.credentials, [key]: event.target.value } })}><option value="">{text('اختر دولة الحساب', 'Choose account country')}</option>{[['KW','الكويت','Kuwait'],['SA','السعودية','Saudi Arabia'],['AE','الإمارات','UAE'],['EG','مصر','Egypt'],['QA','قطر','Qatar'],['BH','البحرين','Bahrain'],['JO','الأردن','Jordan'],['OM','عمان','Oman']].map(([value,a,e]) => <option key={value} value={value}>{text(a,e)}</option>)}</select> : (draft.visible_fields || []).includes(key) ? <input id={`payment-${key}`} className={INPUT_CLASS} dir="ltr" value={draft.credentials[key]} onChange={event => patch({ credentials: { ...draft.credentials, [key]: event.target.value } })} /> : <SecretInput id={`payment-${key}`} stored={draft.stored[key]} value={draft.credentials[key]} placeholder={key} onChange={event => patch({ credentials: { ...draft.credentials, [key]: event.target.value } })} />}</FormField>)}
+                        </> : null}
+                        {draft.return_url ? <FormField label={text('رابط العودة وإشعارات XPay', 'XPay return and callback URL')} hint={text('أنشئ API Payment في لوحة XPay وأدخل هذا الرابط في Redirect URL وCallback URL، ثم أدخل رقم القالب أعلاه. يدعم الربط حسابات خصم رسوم المعالجة من قيمة الدفع.', 'Create an API Payment in XPay, use this URL for both Redirect URL and Callback URL, then enter its template ID above. This connection supports processing fees included in the payment amount.')}><CopyField value={draft.return_url} /></FormField> : null}
+                        {draft.webhook_url ? <FormField label={text('رابط إشعارات الدفع', 'Payment webhook URL')}><CopyField value={draft.webhook_url} /></FormField> : null}
+                        <p className="ws-payment-secret-note">{text('تُحفظ بيانات الربط مشفّرة، ولا تُعرض المفاتيح المحفوظة مجددًا.', 'Credentials are encrypted. Saved keys are never displayed again.')}</p>
+                    </div>
+                    <footer><button type="button" disabled={saving} onClick={() => setDraft(null)}>{text('إلغاء', 'Cancel')}</button><button type="submit" disabled={saving}>{saving ? text('جارٍ الحفظ…', 'Saving…') : text('حفظ التغييرات', 'Save changes')}</button></footer>
+                </form> : null}
+            </DialogPanel></div>
+        </Dialog>
+    </div>;
 }
