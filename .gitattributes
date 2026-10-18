@@ -1,0 +1,4 @@
+# Preserve the verified bytes and content hashes of locally hosted font assets.
+/public/media/fonts/storefront/*.css -text
+/public/media/fonts/storefront/*.woff2 binary
+/public/media/fonts/storefront/*-OFL.txt -text

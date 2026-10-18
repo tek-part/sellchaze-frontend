@@ -13,10 +13,9 @@
  * Fonts. The theme's stacks lead with licensed display faces (Söhne, Canela, Ogg) and fall
  * back to open equivalents — we self-serve the OPEN fallbacks so the theme renders faithfully
  * without shipping unlicensed fonts: Inter (sans), Cormorant Garamond (serif display),
- * IBM Plex Mono (mono), Rubik (Arabic). `display=swap` avoids invisible text; Phase 9 may
- * migrate these to self-hosted woff2 + preload for performance. Must precede all other rules.
+ * IBM Plex Mono (mono), Rubik (Arabic). Both entry documents load the local WOFF2 stylesheet
+ * from /media/fonts/storefront, preserving display=swap without a remote CSS dependency.
  */
-@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@400;500;600;700&family=Rubik:wght@400;500;600&display=swap');
 @import 'tailwindcss';
 
 @theme {
