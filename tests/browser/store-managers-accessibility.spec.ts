@@ -35,9 +35,85 @@ async function workspace(page: Page, locale: 'ar' | 'en', manager = false, appea
     if (path === '/my-store/managers') {
       await route.fulfill({ json: { data: [row], meta: { current_page: 1, last_page: 1, total: 1 }, permissions: keys.map((key, index) => ({ key: `store.${key}`, required: key === 'view', label: { ar: labels[index]![0], en: labels[index]![1] } })) }, headers }); return;
     }
+    if (path === '/auth/sessions') {
+      await route.fulfill({ json: { data: Array.from({ length: 24 }, (_, index) => ({ id: index + 1, current: index === 0, device_name: `Isolated device ${index + 1}`, email: 'fixture@example.test', ip_address: '192.0.2.1', created_at: '2026-10-01T12:00:00Z' })) }, headers }); return;
+    }
     await route.fulfill({ json: { data: [], unread: 0, count: 0 }, headers });
   });
   return { mutations, reads };
+}
+
+async function selectedSettingsVisible(page: Page) {
+  await expect.poll(() => page.locator('.ws-settings-navigation').evaluate(element => {
+    const active = element.querySelector('[aria-current="page"]');
+    if (!active) return false;
+    const strip = element.getBoundingClientRect(); const item = active.getBoundingClientRect();
+    const left = strip.left + element.clientLeft; const right = left + element.clientWidth;
+    return item.width > element.clientWidth
+      ? (getComputedStyle(element).direction === 'rtl' ? Math.abs(item.right - right) <= 1 : Math.abs(item.left - left) <= 1)
+      : item.left >= left - 1 && item.right <= right + 1;
+  })).toBe(true);
+}
+
+for (const locale of ['ar', 'en'] as const) for (const width of [320, 390, 900]) {
+  test(`Settings navigation reveals the selected section without moving the page in ${locale} at ${width}px`, async ({ page }) => {
+    const api = await workspace(page, locale);
+    await page.setViewportSize({ width, height: 844 });
+    await page.goto('/store/settings/login-sessions');
+    const navigation = page.locator('.ws-settings-navigation');
+    const selected = navigation.locator('[aria-current="page"]');
+    await expect(selected).toHaveAttribute('href', '/store/settings/login-sessions');
+    await selectedSettingsVisible(page);
+    await expect(page.getByText('Isolated device 24', { exact: true })).toBeVisible();
+    await expect.poll(() => page.evaluate(() => window.scrollY)).toBe(0);
+    expect(await page.evaluate(() => document.activeElement?.tagName)).toBe('BODY');
+    // Scrolling the menu manually must remain possible, without snapping back on scroll.
+    await navigation.hover(); await page.mouse.wheel(locale === 'ar' ? 1800 : -1800, 0);
+    await expect.poll(() => navigation.evaluate(element => {
+      const current = element.querySelector('[aria-current="page"]')!.getBoundingClientRect();
+      const bounds = element.getBoundingClientRect();
+      return current.right < bounds.left || current.left > bounds.right;
+    })).toBe(true);
+    await page.setViewportSize({ width: width === 320 ? 390 : 320, height: 844 });
+    await selectedSettingsVisible(page);
+    await page.locator('.ws-login-table').hover();
+    const start = await page.evaluate(() => window.scrollY);
+    await page.mouse.wheel(0, 500);
+    await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThanOrEqual(start + 499);
+    const anchor = page.locator('.ws-login-table tbody tr').first();
+    const before = await anchor.evaluate(element => element.getBoundingClientRect().top);
+    await page.setViewportSize({ width: 390, height: 844 });
+    await selectedSettingsVisible(page);
+    // Browser scroll anchoring may change scrollY when text wraps at the new width.
+    // The content stays at the same visible position; revealing the menu must not reset it.
+    await expect.poll(() => anchor.evaluate((element, top) => Math.abs(element.getBoundingClientRect().top - top), before)).toBeLessThanOrEqual(1);
+    expect(await page.evaluate(() => window.scrollY)).toBeGreaterThan(200);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)).toBe(true);
+    expect(api.mutations).toEqual([]);
+  });
+}
+
+for (const locale of ['ar', 'en'] as const) {
+  test(`Settings API links survive desktop, phone and locale changes in ${locale}`, async ({ page }) => {
+    const api = await workspace(page, locale);
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto('/store/settings/managers');
+    const navigation = page.locator('.ws-settings-navigation');
+    await navigation.getByRole('button', { name: 'Public API', exact: true }).click();
+    await navigation.getByRole('link', { name: 'Webhooks', exact: true }).click();
+    await expect(page).toHaveURL(/\/settings\/webhooks$/);
+    await expect(navigation.getByRole('button', { name: 'Public API', exact: true })).toHaveAttribute('aria-expanded', 'true');
+    await page.setViewportSize({ width: 320, height: 844 });
+    await selectedSettingsVisible(page);
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.getByRole('button', { name: locale === 'ar' ? 'تغيير اللغة' : 'Change language', exact: true }).click();
+    await expect(page.locator('html')).toHaveAttribute('dir', locale === 'ar' ? 'ltr' : 'rtl');
+    await page.setViewportSize({ width: 390, height: 844 });
+    await selectedSettingsVisible(page);
+    const results = await new AxeBuilder({ page }).include('.ws-settings-navigation').withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']).analyze();
+    expect(results.violations.filter(v => ['serious', 'critical'].includes(v.impact ?? ''))).toEqual([]);
+    expect(api.mutations).toEqual([]);
+  });
 }
 
 for (const width of [1440, 390]) {
