@@ -29,7 +29,7 @@ export function HypeCategories(props: SectionRenderProps): ReactElement {
 export const hypeMarqueeSchema = defineSection({ type: 'hype-marquee', label: 'Perfume scrolling message', category: 'content', settings: [fields.text('text', 'Message', tr('اكتشف مجموعة العطور', 'Discover our fragrance collection'))] });
 export function HypeMarquee(props: SectionRenderProps): ReactElement {
   const s = useSectionSettings(hypeMarqueeSchema, props.settings); const text = str(s, 'text');
-  return <div className="hyp-marquee" aria-label={text}><div aria-hidden>{Array.from({ length: 8 }, (_, index) => <span key={index}>{text}<b>•</b></span>)}</div></div>;
+  return <div className="hyp-marquee"><p className="lib-sr-only">{text}</p><div aria-hidden>{Array.from({ length: 8 }, (_, index) => <span key={index}>{text}<b>•</b></span>)}</div></div>;
 }
 export const hypeShelfSchema = defineSection({ type: 'hype-shelf', label: 'Perfume collection rail or grid', category: 'products', settings: [fields.text('title', 'Heading', tr('اختيارات المتجر', 'Store selection')), fields.collection('collection', 'Products', 'featured'), fields.category('category', 'Filter by category'), fields.range('limit', 'Products', 8, 1, 24), fields.select('layout', 'Layout', [{ value: 'carousel', label: 'Four-card carousel' }, { value: 'grid', label: 'Four-column grid' }, { value: 'banner', label: 'Photo and compact carousel' }], 'carousel'), fields.image('image', 'Banner photo', HYPE_BOTANICAL), fields.text('banner_title', 'Banner heading', tr('اكتشف المزيد', 'Explore more')), fields.text('button', 'Button', ''), fields.url('url', 'Link', '/shop')] });
 export function HypeShelf(props: SectionRenderProps): ReactElement {
