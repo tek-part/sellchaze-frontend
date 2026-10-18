@@ -1,6 +1,7 @@
 import type { StoreInfo } from '../state/store-context';
 /** Align isolated previews with their demo prices; resolved merchant stores use API currency. */
 export function previewStore(base: StoreInfo, themeId: string | null): StoreInfo {
+  if (themeId === 'hype-fashion') return { ...base, name: 'Sellchaze Apparel', logoUrl: undefined };
   const store = ['sphinx-v3', 'elite-furniture', 'pure-furniture', 'nature-kids', 'blast-pets', 'nature-pets', 'hype-perfumes'].includes(themeId ?? '')
     ? { ...base, currency: 'EGP', baseCurrency: 'EGP', supportedCurrencies: ['EGP'], currencyMultipliers: { EGP: 1 } }
     : base;

@@ -448,6 +448,8 @@ body[data-workspace-merchant='true'] .ws-sidebar-compact .ws-sidebar-brand>.ws-i
 body[data-workspace-merchant='true'] .ws-sidebar-compact .ws-sidebar-scroll{padding:4px 14px 12px;scrollbar-width:none}
 body[data-workspace-merchant='true'] .ws-sidebar-compact .ws-compact-nav{gap:0}
 body[data-workspace-merchant='true'] .ws-sidebar-compact .ws-compact-nav :is(a,button){width:36px;height:36px;min-height:36px;padding:8px;border-radius:6.4px}
+body[data-workspace-merchant='true'] .ws-sidebar-compact .ws-sidebar-scroll .ws-compact-nav button[aria-current='location']{background:var(--ws-panel);color:var(--ws-text);box-shadow:0 1px 2px #1018280f,0 1px 3px #1018280d}
+body[data-workspace-merchant='true'] .ws-sidebar-compact .ws-sidebar-scroll .ws-compact-nav button[aria-current='location']>svg{color:var(--ws-green)}
 .ws-sidebar-rail{position:absolute;inset-block:0;inset-inline-end:-8px;width:16px;z-index:35;border:0;background:transparent;cursor:w-resize}
 .ws-sidebar-rail::after{content:'';position:absolute;inset-block:0;inset-inline-start:7px;width:1px;background:transparent;transition:background .15s}
 .ws-sidebar-rail:hover::after{background:var(--ws-border)}
