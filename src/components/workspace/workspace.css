@@ -435,3 +435,22 @@ body[data-workspace-merchant='true'][data-workspace-theme='light'] .ws-sidebar-s
 body[data-workspace-merchant='true'][data-workspace-theme='light'] .ws-sidebar-scroll nav :is(a,button):not([aria-current='page']):hover svg{color:#303030}
 
 body[data-workspace-merchant='true'] .ws-sidebar-scroll nav:not(.ws-compact-nav) button>span:first-child{gap:10px}
+
+/* Compact merchant rail measured against the current reference, 2026-10-18. */
+body[data-workspace-merchant='true'] .ws-sidebar-container{overflow:visible}
+body[data-workspace-merchant='true'] .ws-sidebar-container[data-collapsed]{margin-inline-end:0}
+body[data-workspace-merchant='true'] .ws-sidebar-container>.ws-sidebar{width:100%;overflow:hidden}
+body[data-workspace-merchant='true'] .ws-sidebar-compact .ws-sidebar-brand{height:89px;padding:12px 8px;flex-direction:column;justify-content:flex-start;gap:8px}
+body[data-workspace-merchant='true'] .ws-sidebar-compact .ws-compact-brand{width:24px;height:24px;flex-shrink:0}
+body[data-workspace-merchant='true'] .ws-sidebar-compact .ws-compact-brand img{width:24px;height:24px}
+body[data-workspace-merchant='true'] .ws-sidebar-compact .ws-sidebar-brand>.ws-icon-button{width:32px;height:32px;padding:6px;flex-shrink:0}
+body[data-workspace-merchant='true'] .ws-sidebar-compact .ws-sidebar-scroll{padding:4px 14px 12px;scrollbar-width:none}
+body[data-workspace-merchant='true'] .ws-sidebar-compact .ws-compact-nav{gap:0}
+body[data-workspace-merchant='true'] .ws-sidebar-compact .ws-compact-nav :is(a,button){width:36px;height:36px;min-height:36px;padding:8px;border-radius:6.4px}
+.ws-sidebar-rail{position:absolute;inset-block:0;inset-inline-end:-8px;width:16px;z-index:35;border:0;background:transparent;cursor:w-resize}
+.ws-sidebar-rail::after{content:'';position:absolute;inset-block:0;inset-inline-start:7px;width:1px;background:transparent;transition:background .15s}
+.ws-sidebar-rail:hover::after{background:var(--ws-border)}
+[dir='rtl'] .ws-sidebar-rail{cursor:e-resize}
+.ws-sidebar-container[data-collapsed]>.ws-sidebar-rail{cursor:e-resize}
+[dir='rtl'] .ws-sidebar-container[data-collapsed]>.ws-sidebar-rail{cursor:w-resize}
+@media(max-width:767px){.ws-sidebar-rail{display:none}}

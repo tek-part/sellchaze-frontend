@@ -11,11 +11,14 @@ export default function MerchantSidebar({ me, permissions, storeUrl, onCollapse,
     const { t } = useTranslation(); const ws = useWorkspaceCopy();
     const [expandedGroup, setExpandedGroup] = useState('');
     if (collapsed) return <aside className="ws-sidebar ws-sidebar-compact ws-desktop-sidebar" aria-label={ws('navigation')}>
-        <div className="ws-sidebar-brand"><button ref={toggleButtonRef} type="button" onClick={onExpand} className="ws-icon-button" aria-label={ws('expand')} title={ws('expand')} aria-expanded="false" aria-controls="workspace-sidebar"><HiOutlineBars3 aria-hidden /></button></div>
-        <div className="ws-sidebar-tools">
+        <div className="ws-sidebar-brand">
+            {!admin ? <Link to="/dashboard" aria-label={t('dashboard')} className="ws-compact-brand"><img src="/icon.png" alt="" /></Link> : null}
+            <button ref={toggleButtonRef} type="button" onClick={onExpand} className="ws-icon-button" aria-label={ws('expand')} title={ws('expand')} aria-expanded="false" aria-controls="workspace-sidebar"><HiOutlineBars3 aria-hidden /></button>
+        </div>
+        {admin ? <div className="ws-sidebar-tools">
             {storeUrl ? <a href={storeUrl} target="_blank" rel="noopener noreferrer" className="ws-icon-button" aria-label={t('view_store', 'View store')} title={t('view_store', 'View store')}><HiOutlineEye aria-hidden /></a> : null}
             <button type="button" className="ws-icon-button" onClick={onSearch} aria-label={ws('searchTitle')} title={ws('searchTitle')}><HiOutlineMagnifyingGlass aria-hidden /></button>
-        </div>
+        </div> : null}
         <div className="ws-sidebar-scroll"><SidebarNav exclusive={admin} isAdmin={me.roles?.includes('Admin')} isSupplier={me.roles?.includes('Supplier')} roles={me.roles ?? []} permissions={permissions} compact onExpand={(key) => { setExpandedGroup(key); onExpand(); }} /></div>
     </aside>;
     return <aside className="ws-sidebar ws-desktop-sidebar" aria-label={ws('navigation')}>
