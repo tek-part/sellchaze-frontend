@@ -21,6 +21,7 @@ import type { CategoryCardModel, ProductCardModel } from '../types/catalog';
 import { CardVariantPicker, useCardPurchase } from '../foundation/components/CardVariantPicker';
 import { useWishlist } from '../state/wishlist';
 import { useLibT, useLocaleCode } from './i18n';
+import { themeCampaignAsset } from '../theme-campaign-asset';
 
 /* ------------------------------------------------------------------ frame + head */
 
@@ -246,8 +247,9 @@ export interface LibImageProps {
 
 export function LibImage(props: LibImageProps): ReactElement {
   const { src, alt, className, eager = false, sizes, srcSet, monogram } = props;
-  const [failed, setFailed] = useState(false);
-  if (!src || failed) {
+  const resolvedSrc = themeCampaignAsset(src);
+  const [failed, setFailed] = useState<string>();
+  if (!resolvedSrc || failed === resolvedSrc) {
     const letter = (monogram ?? alt.trim().charAt(0) ?? '').toUpperCase();
     return (
       <span className={cn('lib-img lib-img--fallback', className)} role={alt ? 'img' : undefined} aria-label={alt || undefined} aria-hidden={alt ? undefined : true}>
@@ -257,7 +259,7 @@ export function LibImage(props: LibImageProps): ReactElement {
   }
   return (
     <img
-      src={src}
+      src={resolvedSrc}
       alt={alt}
       className={cn('lib-img', className)}
       loading={eager ? 'eager' : 'lazy'}
@@ -265,7 +267,7 @@ export function LibImage(props: LibImageProps): ReactElement {
       fetchPriority={eager ? 'high' : 'auto'}
       sizes={sizes}
       srcSet={srcSet}
-      onError={() => setFailed(true)}
+      onError={() => setFailed(resolvedSrc)}
     />
   );
 }
