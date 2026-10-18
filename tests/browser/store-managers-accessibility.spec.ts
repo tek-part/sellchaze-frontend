@@ -47,7 +47,7 @@ for (const width of [1440, 390]) {
     await page.setViewportSize({ width, height: 900 });
     await page.goto('/store/settings/managers');
     await expect(page.getByRole('button', { name: 'Add manager', exact: true })).toBeVisible();
-    if (width < 768) await page.getByRole('button', { name: 'Open menu', exact: true }).click();
+    if (width < 768) await page.getByRole('button', { name: 'Open navigation', exact: true }).click();
     const navigation = page.locator(width < 768 ? '.ws-drawer' : '.ws-desktop-sidebar');
     const products = navigation.getByRole('button', { name: 'Products', exact: true });
     await products.click();
@@ -58,7 +58,7 @@ for (const width of [1440, 390]) {
       await expect(navigation).toHaveCSS('transition-duration', '0s');
       await page.keyboard.press('Escape');
       await expect(page.getByRole('dialog')).not.toBeVisible();
-      await expect(page.getByRole('button', { name: 'Open menu', exact: true })).toBeFocused();
+      await expect(page.getByRole('button', { name: 'Open navigation', exact: true })).toBeFocused();
     }
     expect(api.mutations).toEqual([]);
   });
