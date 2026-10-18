@@ -9,7 +9,16 @@ export function buildWorkspaceStoreNav(t, access, permissions = []) {
     const groups = buildStoreNav(t, access);
     const items = groups.flatMap((group) => group.items);
     const item = (key) => items.find((row) => row.key === key);
-    const absolute = (row) => row ? { ...row, to: `/store/${row.to}`, label: row.key === 'products' ? t('workspace_all_products', 'All products') : row.key === 'orders' ? t('workspace_all_orders', 'All orders') : row.label, ...(row.key === 'newsletter' ? { badge: t('workspace_new', 'New') } : {}) } : null;
+    const menuLabels = {
+        products: t('workspace_all_products', 'All products'),
+        orders: t('workspace_all_orders', 'All orders'),
+        themes: t('workspace_menu_themes', 'Themes'),
+        customize: t('workspace_menu_homepage', 'Edit homepage'),
+        'thanks-edit': t('workspace_menu_thank_you', 'Edit thank-you page'),
+        'ui-blocks': 'UI Blocks',
+        'upload-assets': t('workspace_menu_upload_designs', 'Upload design files'),
+    };
+    const absolute = (row) => row ? { ...row, to: `/store/${row.to}`, label: menuLabels[row.key] ?? row.label } : null;
     const route = (key, to, label, Icon, show) => show ? { key, to, label, Icon } : null;
     const app = (key, label) => route(key, `/store/apps/${key}`, label, HiOutlineCog6Tooth, access.canStoreSettings);
     const can = (permission) => permissions.includes(permission);
@@ -48,7 +57,7 @@ export function buildWorkspaceStoreNav(t, access, permissions = []) {
         { ...route('service-marketplace', '/services', t('service_marketplace_nav', 'Service marketplace'), ServiceMarketplaceIcon, access.isStoreOwner), badge: t('workspace_new', 'New'), single: true, section: 'other' },
         { ...absolute(item('marketing-services')), Icon: MarketingServicesIcon, badge: t('workspace_new', 'New'), single: true, section: 'other' },
         { ...route('platform-referral', '/referral', t('platform_referral_nav', 'Affiliate program'), AffiliateReferenceIcon, access.isStoreOwner), single: true, section: 'other' },
-        { ...group('settings', t('nav_store_settings', 'Store settings'), HiOutlineCog6Tooth, settingsItems), single: true, section: 'other', to: settingsItems[0]?.to },
+        { ...group('settings', t('workspace_menu_settings', 'Settings'), HiOutlineCog6Tooth, settingsItems), single: true, section: 'other', to: settingsItems[0]?.to },
     ].filter((row) => row.single ? Boolean(row.to) : row.items.length > 0);
 }
 
