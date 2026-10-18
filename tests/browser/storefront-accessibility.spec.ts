@@ -36,6 +36,8 @@ for (const locale of ['en', 'ar'] as const) {
         await toggle.click();
       }
       await page.getByRole('link', { name: locale === 'ar' ? 'أسئلة وأجوبة' : 'Questions & answers', exact: true }).filter({ visible: true }).click();
+      await expect(page).toHaveURL(/#eb-section-10$/);
+      await expect(page.getByRole('dialog')).not.toBeVisible();
       const questions = page.locator('.eb-faq button');
       await questions.nth(0).click(); await questions.nth(1).click();
       await expect(page.locator('.eb-faq button[aria-expanded=true]')).toHaveCount(1);
