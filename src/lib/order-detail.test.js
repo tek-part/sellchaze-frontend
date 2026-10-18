@@ -37,6 +37,13 @@ beforeEach(() => {
 afterEach(async () => { await act(async () => root.unmount()); host.remove(); vi.unstubAllGlobals(); });
 
 describe('merchant order detail asynchronous actions', () => {
+    it.each([[true, 'Bot check passed at checkout'], [false, 'Bot check was not performed at checkout'], [null, 'Unknown — no recorded check result']])('shows the recorded bot result %s without changing the payment or order state', async (verified, label) => {
+        api.get.mockResolvedValue({ data: { data: { ...row(1, 'Verification fixture'), bot_verified: verified } } });
+        await act(async () => render());
+        expect(host.textContent).toContain(label);
+        expect(host.textContent).toContain('Awaiting payment');
+        expect(api.post).not.toHaveBeenCalled();
+    });
     it('does not expose a previous store response when the selected order and store change', async () => {
         const old = deferred(); const current = deferred(); api.get.mockReturnValueOnce(old.promise).mockReturnValueOnce(current.promise);
         await act(async () => render());

@@ -30,6 +30,18 @@ afterEach(async () => { await act(async () => root.unmount()); host.remove(); vi
 async function render() { await act(async () => root.render(createElement(MemoryRouter, null, createElement(StoreOrdersPage)))); }
 
 describe('merchant order list lifecycle and review actions', () => {
+    it('warns only from an explicit unchecked snapshot, keeping unknown and passed orders unflagged in the same8 columns', async () => {
+        api.get.mockResolvedValue({ data: { data: [
+            { ...fixture, id: 1, bot_verified: false }, { ...fixture, id: 2, bot_verified: true },
+            { ...fixture, id: 3, bot_verified: null }, { ...fixture, id: 4 },
+        ], meta: { total: 4, last_page: 1 } } });
+        await render();
+        expect(host.querySelectorAll('thead th')).toHaveLength(8);
+        const rows = host.querySelectorAll('tbody tr');
+        expect(rows[0].cells[1].textContent).toContain('Bot check not performed');
+        expect(rows[0].cells[1].querySelector('a').getAttribute('href')).toBe('/store/orders/1');
+        expect([...rows].slice(1).every(row => !row.querySelector('.ws-order-bot-warning'))).toBe(true);
+    });
     it('renders all17 tabs and8 real columns, and sends risk filters independently of fulfillment', async () => {
         await render();
         expect(host.querySelectorAll('[role="tab"]')).toHaveLength(17);
