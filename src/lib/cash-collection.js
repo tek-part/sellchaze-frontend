@@ -10,7 +10,7 @@ export function cashCollectionRequest(order, reference, amount, collected, note 
     const normalized = decimal(amount);
     const ref = reference.trim();
     if (order.payment_method !== 'cod' || !['pending', 'unpaid'].includes(order.payment_status)
-        || order.status === 'cancelled' || !collected || !ref || ref.length > 200 || note.length > 2000
+        || ['cancelled', 'returning_from_delivery', 'request_refund', 'refund_in_progress', 'refunded'].includes(order.status) || !collected || !ref || ref.length > 200 || note.length > 2000
         || !normalized || normalized !== decimal(order.grand_total) || !/^[A-Za-z]{3}$/.test(order.currency || '')) return null;
     return { reference: ref, amount: normalized, currency: order.currency.toUpperCase(), collected: true, note: note.trim() || null };
 }
