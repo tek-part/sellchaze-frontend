@@ -52,7 +52,8 @@ describe('payment methods', () => {
         await click(button(card('Stripe'), 'Edit'));
         await click(document.querySelector('.ws-payment-price-adjustment [role="switch"]'));
         const next = document.querySelector('[role="dialog"] form');
-        expect(next.querySelector('#payment-adjustment-value')).toBeNull();
+        expect(next.querySelector('#payment-adjustment-value').value).toBe('12.50');
+        expect(next.querySelector('#payment-adjustment-value').required).toBe(false);
         await act(async () => next.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true })));
         expect(api.put.mock.calls[1][1].gateways[0].presentation.price_adjustment.enabled).toBe(false);
     });
