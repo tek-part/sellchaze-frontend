@@ -9,6 +9,19 @@ export function funnelError(error) {
 }
 
 Object.assign(funnelCopy.ar, {
+    editTitle: 'تعديل الـ Funnel', backToList: 'العودة للمسارات', saveDetails: 'حفظ البيانات', openDesign: 'تعديل التصميم', detailsSaved: 'تم حفظ بيانات المسار.',
+    editConflict: 'تغيّرت بيانات هذا المسار في جلسة أخرى. أعد تحميل البيانات قبل حفظ تعديل جديد.', reloadDetails: 'إعادة تحميل البيانات وتجاهل التعديلات', saveBeforeDesign: 'احفظ البيانات لفتح محرر التصميم.',
+    editPublishedNote: 'تغيير المنتج يحدّث المنتج المرتبط بالمسار المنشور فور الحفظ. تعديل الاسم والرابط يبقى في المسودة حتى النشر من محرر التصميم.',
+    editDraftNote: 'حفظ البيانات لا ينشر المسار. يمكنك تعديل الأقسام ومعاينتها ونشرها من محرر التصميم.',
+});
+Object.assign(funnelCopy.en, {
+    editTitle: 'Edit funnel', backToList: 'Back to funnels', saveDetails: 'Save details', openDesign: 'Edit design', detailsSaved: 'Funnel details saved.',
+    editConflict: 'This funnel changed in another session. Reload its details before saving again.', reloadDetails: 'Reload details and discard edits', saveBeforeDesign: 'Save the details to open the design editor.',
+    editPublishedNote: 'Changing the product updates the published funnel’s linked product when saved. Name and URL edits stay in the draft until you publish from the design editor.',
+    editDraftNote: 'Saving details does not publish the funnel. Edit sections, preview and publish from the design editor.',
+});
+
+Object.assign(funnelCopy.ar, {
     enableLocale: 'فعّل لغة المتجر لاستخدام هذا القالب:', manageLanguages: 'إعدادات اللغات',
     title: 'Product Funnels', subtitle: 'يمكنك من هنا إنشاء Product Funnels لزيادة مبيعاتك', create: 'إنشاء', name: 'اسم الـ Funnel', slug: 'رابط الـ Funnel', code: 'كود الـ Funnel', status: 'الحالة', view: 'مشاهدة', edit: 'تعديل', duplicate: 'استنساخ',
     selectAll: 'اختيار الكل', selectRow: 'اختيار المسار', clearSelection: 'إلغاء التحديد', selectedCount: 'العناصر المحددة', delete: 'حذف', deleteTitle: 'حذف المسارات المحددة؟', deleteBody: 'سيُحذف كل مسار محدد وصفحته وأقسامه وإصداراته نهائيًا. لن تُحذف المنتجات أو الطلبات.', cancel: 'إلغاء', copied: 'تم نسخ الكود', copyCode: 'نسخ كود المسار', copyFailed: 'تعذر نسخ الكود. يمكنك تحديده ونسخه يدويًا.',
