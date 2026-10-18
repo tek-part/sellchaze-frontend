@@ -70,5 +70,7 @@ test('Native catalog paints with external font services unavailable', async ({pa
   await page.goto('/funnel-templates/electric-biker-ar?preview=1&lang=ar');
   await expect(page.locator('.eb-hero h1')).toBeVisible();
   expect(await page.evaluate(() => document.fonts.load('400 16px "IBM Plex Sans Arabic"', 'متجر').then(faces => faces.length))).toBeGreaterThan(0);
+  expect(await page.evaluate(() => document.fonts.load('700 32px "Readex Pro"', 'دراجة').then(faces => faces.length))).toBeGreaterThan(0);
+  expect(await page.evaluate(() => document.fonts.load('400 16px "DM Sans"', 'Bicycle').then(faces => faces.length))).toBeGreaterThan(0);
   expect(await page.evaluate(() => performance.getEntriesByType('resource').some(item => /\/media\/fonts\/storefront\/fonts-[a-f0-9]+\.css/.test(item.name)))).toBe(true);
 });
