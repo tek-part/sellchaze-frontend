@@ -1,4 +1,4 @@
-import { useEffect, useId, useState } from 'react';
+import { useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { HiOutlineChevronDown } from '../workspace/WorkspaceIcons';
@@ -30,12 +30,39 @@ function ApiNavigation({ items, uiBase, rel }) {
 export default function StoreSettingsNavigation({ items, uiBase, rel, label }) {
     const { t, i18n } = useTranslation();
     const ar = i18n.language.startsWith('ar');
+    const navigation = useRef(null);
+    useLayoutEffect(() => {
+        const strip = navigation.current;
+        const selected = strip?.querySelector('[aria-current="page"]');
+        if (!strip || !selected) return;
+        const reveal = () => {
+            if (getComputedStyle(strip).flexDirection !== 'row' || !strip.clientWidth) return;
+            const bounds = strip.getBoundingClientRect();
+            const item = selected.getBoundingClientRect();
+            const left = bounds.left + strip.clientLeft;
+            const right = left + strip.clientWidth;
+            const delta = item.width > strip.clientWidth
+                ? (ar ? item.right - right : item.left - left)
+                : item.left < left ? item.left - left : item.right > right ? item.right - right : 0;
+            // Reveal only this strip: scrollIntoView would also move the settings form.
+            if (Math.abs(delta) > 1) strip.scrollBy({ left: delta, behavior: 'instant' });
+        };
+        reveal();
+        if (typeof ResizeObserver === 'undefined') {
+            window.addEventListener('resize', reveal);
+            return () => window.removeEventListener('resize', reveal);
+        }
+        const observer = new ResizeObserver(reveal);
+        observer.observe(strip);
+        observer.observe(selected);
+        return () => observer.disconnect();
+    }, [rel, ar]);
     const referenceLabels = { general: 'اعدادات المتجر', domains: 'اعدادات الدومين', 'store-info': 'سياسات المتجر',
         'head-code': 'اضافة كود للهيد', 'seo-settings': 'اعدادات ال SEO', payments: 'بوابات الدفع',
         'digital-delivery': 'إعدادات تسليم المنتجات الرقمية', 'order-push': 'اشعارات الطلبات', shipping: 'اعدادات الشحن',
         'social-links': 'روابط التواصل الاجتماعي', managers: 'اعدادات المديرين', 'login-sessions': 'جلسات الدخول', 'phone-verification': 'رقم الهاتف' };
     const apiItems = items.filter(item => ['webhooks', 'public-api'].includes(item.key));
-    return <nav className="ws-settings-navigation" aria-label={label}>{items.map(item => {
+    return <nav ref={navigation} className="ws-settings-navigation" aria-label={label}>{items.map(item => {
         if (apiItems.includes(item)) return item === apiItems[0] ? <ApiNavigation key="public-api-group" items={apiItems} uiBase={uiBase} rel={rel} /> : null;
         return <Link key={item.key} to={`${uiBase}/${item.to}`} aria-current={item.isActive(rel) ? 'page' : undefined}>
             <StoreSettingsReferenceIcon itemKey={item.key} fallback={item.Icon} aria-hidden />
