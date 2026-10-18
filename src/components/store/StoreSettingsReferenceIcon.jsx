@@ -1,4 +1,5 @@
 import { HugeiconsIcon } from '@hugeicons/react';
+import UserGroupIcon from '@hugeicons/core-free-icons/UserGroupIcon';
 import StoreIcon from '@hugeicons/core-free-icons/Store01Icon';
 import WebValidationIcon from '@hugeicons/core-free-icons/WebValidationIcon';
 import StoreVerifiedIcon from '@hugeicons/core-free-icons/StoreVerified01Icon';
@@ -17,7 +18,7 @@ import SmartPhone01Icon from '@hugeicons/core-free-icons/SmartPhone01Icon';
 // Geometry matched against the reference DOM and the installed Hugeicons package.
 const icons = { general: StoreIcon, domains: WebValidationIcon, 'store-info': StoreVerifiedIcon, 'head-code': CommandLineIcon,
     'seo-settings': SeoIcon, payments: CreditCardPosIcon, 'digital-delivery': MailSetting02Icon, 'order-push': Notification03Icon,
-    shipping: DeliveryTruck02Icon, 'social-links': InstagramIcon, 'public-api-group': SourceCodeSquareIcon,
+    managers: UserGroupIcon, shipping: DeliveryTruck02Icon, 'social-links': InstagramIcon, 'public-api-group': SourceCodeSquareIcon,
     webhooks: WebhookIcon, 'login-sessions': LockPasswordIcon, 'phone-verification': SmartPhone01Icon };
 
 export default function StoreSettingsReferenceIcon({ itemKey, fallback: Fallback, ...props }) {

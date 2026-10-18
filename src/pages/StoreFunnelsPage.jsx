@@ -40,7 +40,7 @@ function CreateFunnel({ c, lang, apiBase, uiBase, locales, onClose }) {
         let active = true;
         setLoading(true);
         const timer = setTimeout(() => {
-            api.get(`${apiBase}/catalog/products`, { params: { search: query, per_page: 50 } })
+            api.get(`${apiBase}/funnels/products`, { params: { search: query } })
                 .then(({ data }) => { if (active) setProducts(data.data || []); })
                 .catch((e) => { if (active) { setProducts([]); setError(errorText(e)); } })
                 .finally(() => { if (active) setLoading(false); });

@@ -470,7 +470,7 @@ function SidebarNavInner({ isAdmin = false, isSupplier = false, roles = [], perm
                 })}
             </div>
 
-            {hasStoreAccess ? <div className={sec('mt-5 flex flex-col gap-1.5')}>
+            {workspaceStoreGroups.some((group) => group.section === 'other') ? <div className={sec('mt-5 flex flex-col gap-1.5')}>
                 <SectionLabel>{i18n.language.startsWith('ar') ? 'خدمات مجتمع سيلشيز' : 'Sellchaze community services'}</SectionLabel>
                 {workspaceStoreGroups.filter((group) => group.section === 'other').map((group) => {
                     const active = group.items ? group.items.some((item) => workspaceStoreItemActive(item, location.pathname)) : workspaceStoreItemActive(group, location.pathname);
