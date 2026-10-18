@@ -165,7 +165,7 @@ export function StorefrontApp(): ReactElement {
   const { locale } = useLocale();
   const direction = useDirection();
   const Layout = useLayout('default');
-  const { store, navigation, setCurrency } = useStore();
+  const { store, navigation, setCurrency, apiOk } = useStore();
   // Re-fetched per locale: category names in the chrome come back translated by the API (`?lang=`).
   const categoriesQ = useAsync(() => getCategories(), [locale]);
   const [previewData, setPreviewData] = useState<PreviewData | null>(null);
@@ -188,7 +188,8 @@ export function StorefrontApp(): ReactElement {
   }, [direction]);
 
   const context = useMemo<StorefrontContext>(() => {
-    const dev = previewOrDev();
+    // A resolved merchant, including an empty catalog, never inherits isolated demo navigation.
+    const dev = previewOrDev() && !apiOk;
     const categoryNav: NavItem[] = categoriesQ.data
       ? categoriesQ.data.data.map((c) => ({ label: c.name, url: `/collections/${c.slug}` }))
       : [];
@@ -248,7 +249,7 @@ export function StorefrontApp(): ReactElement {
         social: store.identity?.social ?? (dev && previewData ? previewData.sampleSocial() : []),
       },
     };
-  }, [categoriesQ.data, navigation, store.name, store.currency, store.currencyMultipliers, store.paymentMethods, store.shipping, store.description, store.defaultLocale, store.identity, manifest.id, t, locale, previewData]);
+  }, [categoriesQ.data, navigation, store.name, store.currency, store.currencyMultipliers, store.paymentMethods, store.shipping, store.description, store.defaultLocale, store.identity, manifest.id, t, locale, previewData, apiOk]);
 
   return (
     <ProductPresentationProvider><UiBlocksProvider><div className="sf-root" data-theme-id={manifest.id}>

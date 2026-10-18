@@ -1,5 +1,6 @@
-import { useId, useState, type CSSProperties, type ReactElement } from 'react';
+import { useId, useState, type CSSProperties, type ComponentType, type ReactElement } from 'react';
 import type { SectionRenderProps } from '../../theme-engine/rendering';
+import type { ProductCardModel } from '../../types/catalog';
 import type { ProductSort } from '../../api/storefront';
 import { defineSection, fields, tr } from '../../sections-lib/schema';
 import { str, num, list, useSectionSettings } from '../../sections-lib/use-section';
@@ -32,10 +33,11 @@ export function HypeMarquee(props: SectionRenderProps): ReactElement {
   return <div className="hyp-marquee"><p className="lib-sr-only">{text}</p><div aria-hidden>{Array.from({ length: 8 }, (_, index) => <span key={index}>{text}<b>•</b></span>)}</div></div>;
 }
 export const hypeShelfSchema = defineSection({ type: 'hype-shelf', label: 'Perfume collection rail or grid', category: 'products', settings: [fields.text('title', 'Heading', tr('اختيارات المتجر', 'Store selection')), fields.collection('collection', 'Products', 'featured'), fields.category('category', 'Filter by category'), fields.range('limit', 'Products', 8, 1, 24), fields.select('layout', 'Layout', [{ value: 'carousel', label: 'Four-card carousel' }, { value: 'grid', label: 'Four-column grid' }, { value: 'banner', label: 'Photo and compact carousel' }], 'carousel'), fields.image('image', 'Banner photo', HYPE_BOTANICAL), fields.text('banner_title', 'Banner heading', tr('اكتشف المزيد', 'Explore more')), fields.text('button', 'Button', ''), fields.url('url', 'Link', '/shop')] });
-export function HypeShelf(props: SectionRenderProps): ReactElement {
+export function HypeShelf(props: SectionRenderProps & { CardComponent?: ComponentType<{ product: ProductCardModel; compact?: boolean }> }): ReactElement {
   const s = useSectionSettings(hypeShelfSchema, props.settings); const data = useSectionData(props.context); const t = useLibT(); const ar = useLocaleCode() === 'ar'; const key = str(s, 'collection', 'featured'); const categoryKey = str(s, 'category'); const category = categoryKey ? data.category(categoryKey) : undefined;
   const products = petProducts(props.context, key, num(s, 'limit', 8), categoryKey ? category?.url.split('/').pop() ?? categoryKey : undefined); const layout = str(s, 'layout', 'carousel');
-  const cards = products.map(product => <HypeCard key={product.id} product={product} compact={layout === 'banner'} />);
+  const Card = props.CardComponent ?? HypeCard;
+  const cards = products.map(product => <Card key={product.id} product={product} compact={layout === 'banner'} />);
   const title = str(s, 'title');
   return <section className={`hyp-section hyp-container hyp-shelf hyp-shelf--${layout}`}>{title.trim() ? <h2>{title}</h2> : null}<div className="hyp-shelf-content">{layout === 'banner' ? <a className="hyp-shelf-banner" href={str(s, 'url', '/shop')}><LibImage src={str(s, 'image')} alt="" /><strong>{str(s, 'banner_title')}</strong></a> : null}{layout === 'grid' ? <div className="hyp-product-grid">{cards}</div> : <LibCarousel className="hyp-product-rail" ariaLabel={title || (ar ? 'منتجات المتجر' : 'Store products')} showArrows>{cards}</LibCarousel>}</div>{!products.length ? <LibEmpty message={data.loading ? ar ? 'جارٍ التحميل…' : 'Loading…' : data.error ? t('loadFailed') : t('emptyProducts')} /> : null}{str(s, 'button') ? <a className="hyp-button hyp-view-all" href={str(s, 'url', '/shop')}>{str(s, 'button')}</a> : null}</section>;
 }

@@ -22,6 +22,7 @@ import { Seo } from '../seo/Seo';
 import { breadcrumbSchema, collectionSchema } from '../seo/schema';
 import { sampleCategory, sampleNewest } from '../dev/sampleData';
 import { curatedView, isCuratedSlug } from './curated';
+import { useProductListingPages } from './useProductListingPages';
 
 export function CategoryPage(): ReactElement | null {
   const manifest = useThemeManifest();
@@ -30,7 +31,9 @@ export function CategoryPage(): ReactElement | null {
   // `/shop` has no :slug segment; it is the shop-all view, same as /collections/all.
   const { slug = 'all' } = useParams();
   const [searchParams, setSearchParams] = useSearchParams();
-  const kids = ['nature-kids', 'blast-pets', 'nature-pets', 'hype-perfumes'].includes(manifest.id);
+  const wallets = manifest.id === 'elite-wallets';
+  const kids = ['nature-kids', 'blast-pets', 'nature-pets', 'hype-perfumes', 'hype-fashion', 'elite-wallets'].includes(manifest.id);
+  const perPage = wallets ? 20 : kids ? 24 : 60;
   const listing = kidsListingSearch(searchParams);
   const { store } = useStore();
   const currency = store.currency;
@@ -38,19 +41,23 @@ export function CategoryPage(): ReactElement | null {
   const curated = isCuratedSlug(slug) ? curatedView(slug) : null;
   // Keyed on the locale as well: the API returns translated names per `?lang=`.
   const category = useAsync(() => (curated ? Promise.resolve(null) : getCategory(slug)), [slug, locale]);
-  const productScope = `${store.id}:${slug}:${locale}:${kids ? listing.sort : "default"}:${kids ? listing.page : 1}`;
+  const listingScope = `${store.id}:${slug}:${locale}:${kids ? listing.sort : "default"}:${perPage}`;
+  const productScope = `${listingScope}:${kids ? listing.page : 1}`;
   const productsQ = useAsync(
-    async () => ({ scope: productScope, payload: await getProducts({ ...(curated ? {} : { category: slug }), perPage: kids ? 24 : 60, ...(kids ? listing : {}) }) }),
+    async () => ({ scope: productScope, listingScope, payload: await getProducts({ ...(curated ? {} : { category: slug }), perPage, ...(kids ? listing : {}) }) }),
     [productScope],
   );
 
   const productsData = productsQ.data?.scope === productScope ? productsQ.data.payload : null;
+  const loadedProducts = useProductListingPages(wallets, `${store.id}:${slug}:${locale}:${listing.sort}`, listing.page, productsData?.data);
   const dev = previewOrDev();
-  let products: ProductCardModel[] = productsData ? productsData.data.map((p) => toProductCard(p, currency, store.currencyMultipliers[currency] ?? 1)) : [];
-  if (dev && !productsData) {
+  let products: ProductCardModel[] = loadedProducts.map((p) => toProductCard(p, currency, store.currencyMultipliers[currency] ?? 1));
+  let previewTotal = 0;
+  if (dev && !productsData && (!wallets || (!productsQ.loading && !loadedProducts.length))) {
     products = sampleNewest(manifest.id, locale);
     if (kids && !curated) products = products.filter(product => product.categorySlug === slug);
-    if (kids) products = sortKidsPreview(products, listing.sort).slice((listing.page - 1) * 24, listing.page * 24);
+    previewTotal = products.length;
+    if (kids) products = sortKidsPreview(products, listing.sort).slice(wallets ? 0 : (listing.page - 1) * perPage, listing.page * perPage);
   }
   if (curated?.rank && !kids) products = [...curated.rank(products)];
 
@@ -73,7 +80,7 @@ export function CategoryPage(): ReactElement | null {
         // could only tell "loading" from "empty", and a failed request looked like an empty shelf.
         ...(productsQ.error ? { error: productsQ.error } : {}),
         products,
-        ...(kids ? { listing: { ...listing, lastPage: productsData?.meta.last_page ?? 1, loading: productsQ.loading,
+        ...(kids ? { listing: { ...listing, lastPage: productsData?.meta.last_page ?? (wallets && productsQ.data?.listingScope === listingScope ? productsQ.data.payload.meta.last_page : wallets ? Math.max(1, Math.ceil(previewTotal / perPage)) : 1), loading: productsQ.loading, retry: productsQ.reload,
           change: (sort: typeof listing.sort, page: number): void => { const next = new URLSearchParams(searchParams); next.set('sort', sort); next.set('page', String(page)); setSearchParams(next); } } } : {}),
         pageHeader: {
           title,

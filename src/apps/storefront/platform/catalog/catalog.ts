@@ -14,6 +14,15 @@ import { THEME_LOADERS } from './loaders';
 
 export const THEME_CATALOG: ThemeCatalog = [
   {
+    id: 'elite-wallets', name: 'Elite Wallets', version: '1.0.0', archetype: 'Accessories',
+    description: 'Centered overlay navigation, numbered campaigns, category tiles, collection grids, image comparison and linked looks.',
+    author: 'Sellchaze', tags: ['accessories', 'wallets', 'bags', 'modern', 'rtl'], accent: '#111111',
+    previewImage: '/media/theme-previews/elite-wallets.png', minEngineVersion: '1.0.0',
+    capabilities: ['rtl', 'cart-drawer', 'quick-add', 'newsletter'], license: { type: 'free', sku: 'theme-elite-wallets' }, featured: true,
+    changelog: [{ version: '1.0.0', date: '2026-10-18', notes: ['Native accessories composition and ten editable home sections.'] }],
+    load: THEME_LOADERS['elite-wallets'],
+  },
+  {
     id: 'hype-fashion', name: 'Hype Fashion', version: '1.0.0', archetype: 'Fashion',
     description: 'Black navigation, editorial campaigns, collection rails, linked looks, image comparison and merchant review photos.',
     author: 'Sellchaze', tags: ['fashion', 'clothing', 'modern', 'rtl'], accent: '#000000',

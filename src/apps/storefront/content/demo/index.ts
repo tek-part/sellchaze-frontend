@@ -22,6 +22,7 @@ import { SPHINX_CATALOG, SPHINX_AR } from './sphinx';
 import { KIDS_CATALOG, KIDS_AR } from './kids';
 import { PETS_CATALOG, PETS_AR } from './pets';
 import { NATURE_PETS_CATALOG, NATURE_PETS_AR } from './nature-pets';
+import { WALLET_CATALOG, WALLET_AR } from './elite-wallets';
 import { HYPE_CATALOG, HYPE_AR } from './hype-perfumes';
 
 export type { DemoCatalog, DemoBrand, DemoFaq, DemoTestimonial } from './types';
@@ -30,6 +31,7 @@ export type { DemoCatalog, DemoBrand, DemoFaq, DemoTestimonial } from './types';
 const DEFAULT_THEME = 'naseem';
 
 const BY_THEME: Readonly<Record<string, DemoCatalog>> = {
+  'elite-wallets': WALLET_CATALOG,
   'hype-fashion': LUXURY_CATALOG,
   'hype-perfumes': HYPE_CATALOG,
   'nature-pets': NATURE_PETS_CATALOG,
@@ -50,6 +52,7 @@ const BY_THEME: Readonly<Record<string, DemoCatalog>> = {
  * images, ratings and ids stay canonical, so a fact corrected once is correct in both languages.
  */
 const AR_OVERLAY: Readonly<Record<string, CatalogOverlay>> = {
+  'elite-wallets': WALLET_AR,
   'hype-fashion': LUXURY_AR,
   'hype-perfumes': HYPE_AR,
   'nature-pets': NATURE_PETS_AR,
