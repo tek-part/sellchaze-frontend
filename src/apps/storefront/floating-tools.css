@@ -1,0 +1,8 @@
+/* Shared tools must leave the theme's phone navigation available. */
+@media(max-width:767px){
+  #storefront-root:has(.hpf-mobile-navigation){--sf-mobile-bottom-clearance:calc(62px + env(safe-area-inset-bottom,0px))}
+  #storefront-root .sf-currency-widget{bottom:calc(16px + var(--sf-mobile-bottom-clearance,0px))}
+  #storefront-root .sf-signed-preview{bottom:calc(12px + var(--sf-mobile-bottom-clearance,0px))}
+  #storefront-root:has(.sf-currency-widget) .sf-signed-preview{bottom:calc(64px + var(--sf-mobile-bottom-clearance,0px))}
+}
+html:has([role='dialog'][aria-modal='true']) :is(.sf-currency-widget,.sf-signed-preview){visibility:hidden;pointer-events:none}
