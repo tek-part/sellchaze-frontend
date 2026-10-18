@@ -19,6 +19,7 @@ const localizedFailure = (error, ar) => !ar ? failureMessage(error) : ({
     409: 'تغيّرت بيانات الدفع أو تفاصيل المراجعة. أعد تحميلها قبل التأكيد.',
     422: 'راجع المبلغ الكامل والعملة ومرجع التحصيل وتأكيد الاستلام وسبب التحديث لكل طلب مؤهل.',
 }[error.response?.status] || 'لم نتمكن من تأكيد نتيجة الطلب. أعد المحاولة أو حمّل المراجعة للتحقق من حالته.');
+const manualMethodNames = { cod: ['الدفع عند الاستلام', 'Cash on delivery'], bank_transfer: ['تحويل بنكي', 'Bank transfer'], transfer_receipt: ['تحويل بنكي بإيصال', 'Transfer with receipt'] };
 
 export default function OrderBulkPaymentReview({ ids, target, apiBase, uiBase, ar, onCancel, onComplete, onBusy }) {
     const text = (a, e) => ar ? a : e; const idsKey = ids.join(',');
@@ -64,7 +65,7 @@ export default function OrderBulkPaymentReview({ ids, target, apiBase, uiBase, a
             <p className="ws-bulk-payment-counts">{text('مؤهل', 'Eligible')}: {eligible.length} · {text('دون تغيير', 'Unchanged')}: {rows.filter(row => row.state === 'unchanged').length} · {text('غير مؤهل', 'Ineligible')}: {rows.filter(row => row.state === 'skipped').length}</p>
             <div className="ws-bulk-payment-rows">{rows.map(row => <fieldset key={row.id} disabled={busy} className="ws-bulk-payment-row" data-state={row.state}>
                 <legend><a href={`${uiBase}/orders/${row.id}`} target="_blank" rel="noopener noreferrer">#{row.order_number || row.id}</a></legend>
-                <div className="ws-bulk-payment-summary"><PaymentMethodLogo slug={row.payment_method} /><span>{row.customer_name || '—'}</span><bdi>{row.amount} {row.currency}</bdi></div>
+                <div className="ws-bulk-payment-summary"><PaymentMethodLogo slug={row.payment_method} /><div className="ws-bulk-payment-identity"><span>{row.customer_name || '—'}</span><small>{manualMethodNames[row.payment_method]?.[ar ? 0 : 1] || row.payment_method.replaceAll('_', ' ')}</small></div><bdi>{row.amount} {row.currency}</bdi></div>
                 {row.state === 'eligible' ? <>
                     {target === 'paid' ? <>
                         <div className="ws-bulk-payment-fields"><label>{text('مرجع التحصيل', 'Collection reference')}<input required maxLength={200} value={fields[row.id]?.reference || ''} onChange={e => setField(row.id, 'reference', e.target.value)} /></label>
