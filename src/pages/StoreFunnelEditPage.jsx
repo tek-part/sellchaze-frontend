@@ -53,7 +53,7 @@ function FunnelDetails({ apiBase, uiBase, funnelId }) {
         const timer = setTimeout(() => {
             api.get(`${apiBase}/funnels/products`, { params: { search: query }, signal: controller.signal })
                 .then(({ data }) => { if (active) setProducts(data.data || []); })
-                .catch(e => { if (active) setError(requestError(e)); }).finally(() => { if (active) setProductLoading(false); });
+                .catch(e => { if (active) setError({ key: 'editRequestFailed', detail: funnelError(e) }); }).finally(() => { if (active) setProductLoading(false); });
         }, 200);
         return () => { active = false; clearTimeout(timer); controller.abort(); };
     }, [apiBase, query, record]);
