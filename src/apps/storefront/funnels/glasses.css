@@ -2,7 +2,7 @@
 @font-face{font-family:'DM Sans';src:url('/fonts/dmsans/dmsans-variable.woff2') format('woff2');font-weight:100 1000;font-display:swap}
 @font-face{font-family:Cairo;src:url('/fonts/cairo/cairo-variable.woff2') format('woff2');font-weight:200 1000;font-display:swap}
 .gf-root{--gf-gold:#e4bd6a;--gf-cream:#ded8d0;--color-primary:#c6a75e;--color-on-primary:#141414;--color-text:#181818;--color-surface:#fff;--color-border:#c6c1ba;--bg:#ded8d0;--text:#181818;--surface:#fff;--surface-2:#f8f6f3;--border:#c6c1ba;background:var(--gf-cream);color:#181818;font-family:'DM Sans',Alexandria,system-ui,sans-serif;line-height:1.5;padding-bottom:140px;overflow:clip}
-.gf-root[dir=rtl]{font-family:'DM Sans',system-ui,-apple-system,'Segoe UI',sans-serif}
+.gf-root[dir=rtl]{--font-arabic:Alexandria,Cairo,system-ui,sans-serif;font-family:'DM Sans',system-ui,-apple-system,'Segoe UI',sans-serif}
 .gf-root *{box-sizing:border-box}
 .gf-root :is(a,button,input,select,textarea,summary):focus-visible{outline:3px solid #876720;outline-offset:4px}
 .gf-root :is(h1,h2,h3,p,figure){margin:0}

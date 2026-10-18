@@ -29,6 +29,7 @@ for (const locale of ['en', 'ar'] as const) {
       await page.goto(`/funnel-templates/glasses-${locale}?preview=1&lang=${locale}&theme=${locale === 'ar' ? 'sahra' : 'elite-wallets'}`, { waitUntil: 'networkidle' });
       await expect(page.locator('.gf-root')).toBeVisible();
       await expect(page.locator('.gf-root')).toHaveAttribute('dir', locale === 'ar' ? 'rtl' : 'ltr');
+      await expect(page.locator('.gf-hero h1')).toHaveCSS('font-family', /^Alexandria/);
       await expect(page.locator('form')).toHaveCount(0);
       await expect(page.locator('.gf-purchase-panel input').first()).toBeDisabled();
       await expect(page.locator('.gf-purchase-panel button')).toBeDisabled();
