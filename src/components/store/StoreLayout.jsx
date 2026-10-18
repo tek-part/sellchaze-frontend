@@ -79,7 +79,7 @@ export default function StoreLayout() {
 
     const context = useMemo(() => ({
         ...parent,
-        permissions: storeUiPermissions(parent.permissions ?? []),
+        permissions: storeUiPermissions(parent.permissions ?? [], parent.me?.roles ?? []),
         store,
         setStore,
         refreshStore,

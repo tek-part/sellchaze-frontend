@@ -9,6 +9,7 @@
  */
 export function storeAccess(roles = [], permissions = []) {
     const can = (p) => permissions.includes(p);
+    const manager = roles.includes('StoreManager');
     const isStoreOwner = Array.isArray(roles) && roles.some((r) => ['Merchant', 'Supplier'].includes(r));
     const canStoreView = isStoreOwner || can('store.view');
     const canStoreProducts = isStoreOwner || can('store.products.manage');
@@ -19,7 +20,7 @@ export function storeAccess(roles = [], permissions = []) {
     const canStoreAnalytics = isStoreOwner || can('store.analytics.view');
     const canStoreThemes = isStoreOwner || can('store.themes.manage');
     const canStorePages = isStoreOwner || can('store.pages.manage');
-    const canStoreMenus = isStoreOwner || can('store.menus.manage') || can('store.themes.manage');
+    const canStoreMenus = isStoreOwner || can('store.menus.manage') || (manager && can('store.themes.manage'));
     const canStoreSettings = isStoreOwner || can('store.settings.manage');
     const canStorePayments = isStoreOwner || can('store.settings.manage');
     const storeMyGroup = canStoreSettings || canStorePayments || canStoreThemes || canStorePages || canStoreMenus;
@@ -33,7 +34,7 @@ export function storeAccess(roles = [], permissions = []) {
         canStoreManagers: isStoreOwner,
         canStoreView,
         canStoreProducts,
-        canStoreInventory: can('products-list') || can('store.products.manage'),
+        canStoreInventory: can('products-list') || (manager && can('store.products.manage')),
         canStoreCategories,
         canStoreOrders,
         canStoreCoupons,
@@ -66,7 +67,8 @@ export function fullStoreAccess() {
 export default storeAccess;
 
 /** UI aliases stay inside store layouts; account/API permissions are never expanded. */
-export function storeUiPermissions(permissions = []) {
+export function storeUiPermissions(permissions = [], roles = []) {
+    if (!roles.includes('StoreManager')) return [...permissions];
     const result = new Set(permissions);
     if (result.has('store.products.manage')) {
         for (const action of ['list', 'create', 'edit', 'delete']) result.add(`products-${action}`);

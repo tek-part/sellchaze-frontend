@@ -16,7 +16,7 @@ describe('Store manager navigation and catalog controls', () => {
     });
     it('maps a store product grant to complete controls only within a store layout', () => {
         const account = ['store.view', 'store.products.manage'];
-        const ui = storeUiPermissions(account);
+        const ui = storeUiPermissions(account, ['StoreManager']);
         expect(account).toEqual(['store.view', 'store.products.manage']);
         expect(ui).toEqual(expect.arrayContaining(['products-list', 'products-create', 'products-edit', 'products-delete', 'categories-list']));
         expect(storeAccess(['StoreManager'], account).canStoreInventory).toBe(true);
@@ -31,16 +31,17 @@ describe('Store manager navigation and catalog controls', () => {
         const categories = ['store.view', 'store.categories.manage'];
         const categoryNav = buildWorkspaceStoreNav(t, storeAccess(['StoreManager'], categories), categories);
         expect(categoryNav.find(group => group.key === 'products').items.some(item => item.key === 'categories')).toBe(true);
-        expect(storeUiPermissions(categories)).toContain('categories-edit');
-        expect(storeUiPermissions(categories)).not.toContain('products-edit');
+        expect(storeUiPermissions(categories, ['StoreManager'])).toContain('categories-edit');
+        expect(storeUiPermissions(categories, ['StoreManager'])).not.toContain('products-edit');
     });
     it('keeps theme navigation editing within the theme grant', () => {
         expect(storeAccess(['StoreManager'], ['store.themes.manage']).canStoreMenus).toBe(true);
-        expect(storeUiPermissions(['store.themes.manage'])).toContain('store.menus.manage');
-        expect(storeUiPermissions(['store.pages.manage'])).not.toContain('store.menus.manage');
+        expect(storeUiPermissions(['store.themes.manage'], ['StoreManager'])).toContain('store.menus.manage');
+        expect(storeUiPermissions(['store.pages.manage'], ['StoreManager'])).not.toContain('store.menus.manage');
     });
     it('keeps legacy permissions and does not manufacture controls for a view-only account', () => {
         expect(storeUiPermissions(['products-list'])).toEqual(['products-list']);
+        for (const role of ['Merchant', 'Employee']) expect(storeUiPermissions(['store.products.manage'], [role])).toEqual(['store.products.manage']);
         expect(storeUiPermissions(['store.view'])).toEqual(['store.view']);
         expect(storeUiPermissions([])).toEqual([]);
     });

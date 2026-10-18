@@ -39,7 +39,7 @@ export default function EditorLayout({ product = false }) {
         return () => { cancelled = true; window.removeEventListener('sellchase:session-expired', onSessionExpired); };
     }, [navigate]);
 
-    const permissions = useMemo(() => storeUiPermissions(Array.isArray(me?.permissions) ? me.permissions : []), [me?.permissions]);
+    const permissions = useMemo(() => storeUiPermissions(Array.isArray(me?.permissions) ? me.permissions : [], me?.roles ?? []), [me?.permissions, me?.roles]);
     const roles = useMemo(() => (Array.isArray(me?.roles) ? me.roles : []), [me?.roles]);
     const canAdminEdit = permissions.includes('stores-edit');
     const access = useMemo(() => (isAdminScope && canAdminEdit ? fullStoreAccess() : storeAccess(roles, permissions)), [isAdminScope, canAdminEdit, roles, permissions]);
