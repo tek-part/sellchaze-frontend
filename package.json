@@ -21,7 +21,7 @@
     "typecheck:storefront": "tsc -p tsconfig.storefront.json --noEmit",
     "test": "vitest run",
     "test:a11y": "playwright test tests/browser/storefront-accessibility.spec.ts tests/browser/store-managers-accessibility.spec.ts --config=playwright.config.ts",
-    "test:perf": "playwright test tests/browser/storefront-performance.spec.ts tests/browser/storefront-home-loading.spec.ts --config=playwright.config.ts --repeat-each=3 --retries=0",
+    "test:perf": "playwright test tests/browser/storefront-performance.spec.ts tests/browser/storefront-home-loading.spec.ts tests/browser/litter-robot-performance.spec.ts --config=playwright.config.ts --repeat-each=3 --retries=0",
     "test:visual": "playwright test tests/browser/storefront-visual-regression.spec.ts --config=playwright.config.ts",
     "test:pwa": "playwright test tests/browser/storefront-pwa.spec.ts --config=playwright.config.ts",
     "theme:dev": "node scripts/theme-dev.mjs",
