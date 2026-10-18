@@ -5,6 +5,12 @@ const example: TrackingEnvelope = { configuration: { version: 2, facebook: ['123
   event: { event: 'purchase', event_id: 'a'.repeat(64), currency: 'EGP', value: '500.00', gross_value: '525.00', shipping: '25.00', tax: '0.00', transaction_id: 'OWN-ORDER', items: [{ item_id: '12', item_name: 'Bag', quantity: 2, price: '250.00' }], page_location: 'https://own-store.example/checkout' } };
 
 describe('advertising provider contract', () => {
+  it('accepts the bounded union of store and funnel pixels without relaxing Google or ID validation', () => {
+    const facebook = Array.from({ length: 20 }, (_, i) => String(1234567890 + i));
+    expect(trackingConfiguration({ ...example.configuration, facebook })?.facebook).toHaveLength(20);
+    expect(trackingConfiguration({ ...example.configuration, facebook: [...facebook, '2345678901'] })).toBeUndefined();
+    expect(trackingConfiguration({ ...example.configuration, google: Array(11).fill('G-Y1F28T2SY8') })).toBeUndefined();
+  });
   it('matches variant catalog IDs and uses group matching only for a parent product view', () => {
     const parsed = trackingEnvelope({ ...example, event: { ...example.event, items: [{ ...example.event.items[0], item_id: 'p12-v5' }] } });
     expect(parsed).toBeDefined(); expect(trackingCommands(parsed!)[0]?.data.content_ids).toEqual(['p12-v5']);

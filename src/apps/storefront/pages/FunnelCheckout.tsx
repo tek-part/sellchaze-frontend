@@ -25,6 +25,7 @@ import { minimumOrderAllows } from './minimum-order';
 import { useCheckoutLead } from './useCheckoutLead';
 import { useCheckoutMetrics } from '../analytics/checkout-hooks';
 import type { ApiProduct } from '../api/types';
+import { useProductAdvertising } from '../advertising/hooks';
 
 export interface FunnelPresentation {
   product: ApiProduct | null;
@@ -73,7 +74,8 @@ export function FunnelCheckout({ productSlug, renderLayout, compactHeader = fals
   const selectionReady = !!product && product.is_active !== false && !custom.busy && personalizationReady(product.personalization_fields ?? [], custom.values) && !staleOffer && (activeOffer?.unitPrice ?? basePrice) <= basePrice && quantity >= step && quantity % step === 0 && quantity <= purchaseLimit && (!variants.length || selectedVariant?.available === true);
   const customKey = JSON.stringify(custom.values);
   const items = useMemo<ReadonlyArray<CheckoutItem>>(() => selectionReady && product ? [{ product_id: product.id, quantity, personalization: normalizedPersonalization(JSON.parse(customKey) as Record<string, string>), ...(variantId ? { variant_id: Number(variantId) } : {}), ...(offerId ? { quantity_offer_id: offerId, quantity_offer_version: offerVersion } : {}) }] : [], [product, selectionReady, quantity, variantId, customKey, offerId, offerVersion]);
-  const payment = useCheckoutPaymentFlow({ items, preserveCart: true });
+  const payment = useCheckoutPaymentFlow({ items, preserveCart: true, surface: 'funnel' });
+  useProductAdvertising(product ? String(product.id) : undefined, variantId || undefined);
   useCheckoutMetrics(items, 'funnel');
   const contact = useCheckoutFields(payment.paymentMethod, product ? [product.id] : []);
   const lead = useCheckoutLead({ contact: { ...contact.payload(), coupon_code: appliedCoupon }, items, source: 'funnel', paymentMethod: payment.paymentMethod, kind: `funnel:${productSlug ?? ''}`, enabled: contact.ready && !payment.busy && !payment.completed && !payment.unresolved && !payment.paymentRetry });

@@ -51,7 +51,7 @@ interface CheckoutResponse {
   payment?: { redirect_url?: string | null };
 }
 
-export function useCheckoutPaymentFlow(options?: { items: ReadonlyArray<CheckoutItem>; preserveCart?: boolean; surface?: 'product' | 'storefront' }) {
+export function useCheckoutPaymentFlow(options?: { items: ReadonlyArray<CheckoutItem>; preserveCart?: boolean; surface?: 'product' | 'storefront' | 'funnel' }) {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const cart = useCart();
@@ -162,6 +162,7 @@ export function useCheckoutPaymentFlow(options?: { items: ReadonlyArray<Checkout
       payment_method: paymentMethod,
       ...(preserveCart ? { cart_mode: 'direct' } : {}),
       ...(surface ? { checkout_surface: surface } : {}),
+      ...(surface === 'funnel' && /^\/(?:funnels|pages)\/[a-z0-9]+(?:-[a-z0-9]+)*\/?$/.test(window.location.pathname) ? { funnel_path: window.location.pathname } : {}),
       items: items ?? checkoutCartItems(cart.lines),
     } };
     saveCheckoutAttempt(scope, next);

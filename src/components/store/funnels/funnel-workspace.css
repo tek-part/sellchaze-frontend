@@ -130,4 +130,13 @@ html:has(.fw-create){overflow:hidden}
 .fw-details-actions{display:flex;flex-wrap:wrap;gap:12px}
 .fw-details-actions [aria-disabled=true]{opacity:.4;cursor:default}
 .fw-details-saved{color:var(--ws-green-ink);font-size:13px;margin:0}
+.fw-advanced{border:1px solid var(--ws-border);border-radius:8px;min-width:0;background:var(--ws-panel)}
+.fw-advanced>summary{padding:16px;cursor:pointer;font-size:13px;font-weight:500;list-style-position:inside}
+.fw-advanced>section{padding:0 16px 16px;display:flex;flex-direction:column;gap:16px}
+.fw-advanced h2{font-size:15px;margin:0;font-weight:600}
+.fw-pixel-fields{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+.fw-pixel-field{display:flex;min-width:0;flex-direction:column;gap:6px;font-size:12.5px}
+.fw-pixel-fields textarea{resize:vertical;min-height:90px;line-height:1.6}
+.fw-advanced>summary:focus-visible{outline:2px solid var(--ws-green);outline-offset:2px;border-radius:8px}
+@media(max-width:899px){.fw-pixel-fields{grid-template-columns:1fr}}
 @media(max-width:767px){.fw-details-header{align-items:flex-start;flex-wrap:wrap}.fw-details-header h1{font-size:20px}.fw-details .fw-form{padding-inline:16px}}

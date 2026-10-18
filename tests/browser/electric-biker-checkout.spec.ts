@@ -1,6 +1,50 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test } from 'playwright/test';
 
+for (const locale of ['en', 'ar'] as const) test(`Funnel advertising pins its path and order identity through recovery in ${locale}`, async ({ page, baseURL }) => {
+  const advertising: Array<Record<string, unknown>> = []; const orders: Array<{ body: Record<string, unknown>; key?: string }> = [];
+  const providers: string[] = [];
+  await page.addInitScript(() => { Object.defineProperty(navigator, 'doNotTrack', { value: null }); });
+  await page.route(/https:\/\/(connect\.facebook\.net|analytics\.tiktok\.com|sc-static\.net|www\.googletagmanager\.com)\//, async route => { providers.push(route.request().url()); await route.abort(); });
+  await page.route('**/api/v1/**', async route => {
+    const request = route.request(); const path = new URL(request.url()).pathname.replace(/\/$/, '');
+    const respond = (json: unknown, status = 200) => route.fulfill({ json, status });
+    if (path === '/api/v1/storefront') return respond({ store: { id: 7654321, name: 'Synthetic pixel store', slug: 'synthetic-pixels', currency: 'USD', default_locale: locale, supported_locales: ['en', 'ar'], tracking_enabled: true }, theme: { key: 'sahra', version: '1.0.0', settings: {} }, navigation: { header: [], footer: [] } });
+    if (path.endsWith('/funnels/isolated-pixels')) return respond({ data: { slug: 'isolated-pixels', template: 'page', locale, title: 'Synthetic pixel campaign', native_funnel_template: `electric-biker-${locale}`, funnel_product_slug: 'synthetic-bicycle', sections: [{ id: 'pixel-purchase', type: 'electric-purchase', settings: {} }] } });
+    if (path.endsWith('/products/synthetic-bicycle')) return respond({ data: { id: 700, name: 'Synthetic bicycle', slug: 'synthetic-bicycle', price: 100, stock: 10, is_active: true, variants: [] } });
+    if (path.endsWith('/payment-methods')) return respond({ data: [{ slug: 'cod', name: 'Cash on delivery', test_mode: true }] });
+    if (path.endsWith('/checkout/fields')) return respond({ data: [], requires_shipping: false, has_digital: false, shipping: { enabled: false, regions_enabled: false, currency: 'USD', flat_rate: '0', regions: [], options: [] } });
+    if (path.endsWith('/checkout/quote')) return respond({ data: { currency: 'USD', requires_shipping: false, totals: { subtotal: 100, discount_total: 0, shipping_total: 0, tax_total: 0, grand_total: 100 } } });
+    if (path.endsWith('/tracking/events')) { advertising.push(request.postDataJSON()); return respond({ data: null }, 202); }
+    if (path.endsWith('/checkout/recover')) return respond({ message: 'Synthetic missing claim' }, 404);
+    if (path.endsWith('/checkout')) {
+      orders.push({ body: request.postDataJSON(), key: request.headers()['idempotency-key'] });
+      return orders.length === 1 ? respond({ message: 'Synthetic connection loss' }, 503) : respond({ data: { number: 'SYNTHETIC-ONLY', tracking: null } }, 201);
+    }
+    if (request.method() !== 'GET') expect(path).toMatch(/\/(events|leads)$/);
+    return respond({ data: [] });
+  });
+  // Serve the local storefront shell at an ordinary funnel URL without preview=1,
+  // which intentionally suppresses advertising. Every commerce endpoint is intercepted.
+  await page.route('**/funnels/isolated-pixels*', async route => {
+    if (!route.request().isNavigationRequest()) return route.fallback();
+    await route.fulfill({ response: await route.fetch({ url: `${baseURL}/storefront.html` }) });
+  });
+  await page.setViewportSize({ width: 390, height: 900 });
+  await page.goto(`/funnels/isolated-pixels?lang=${locale}`);
+  const submit = page.locator('.sf-funnel-checkout form button[type=submit]');
+  await expect(submit).toBeEnabled();
+  await expect.poll(() => advertising.map(event => event.event)).toEqual(expect.arrayContaining(['page_view', 'view_item', 'begin_checkout']));
+  expect(advertising.every(event => event.page_path === '/funnels/isolated-pixels')).toBe(true);
+  await submit.click();
+  await expect(page.getByRole('button', { name: locale === 'ar' ? 'استعادة نتيجة الطلب' : 'Recover checkout result', exact: true })).toBeVisible();
+  expect(orders[0]?.body).toMatchObject({ cart_mode: 'direct', checkout_surface: 'funnel', funnel_path: '/funnels/isolated-pixels', advertising_allowed: true, items: [{ product_id: 700, quantity: 1, personalization: {} }] });
+  await page.getByRole('button', { name: locale === 'ar' ? 'استعادة نتيجة الطلب' : 'Recover checkout result', exact: true }).click();
+  await expect.poll(() => orders.length).toBe(2);
+  expect(orders[1]).toEqual(orders[0]);
+  expect(providers).toEqual([]);
+});
+
 for (const locale of ['en', 'ar'] as const) for (const width of [1440, 390, 320]) {
   test(`Electric Biker real checkout preserves variant, offer, gallery and payment readability in ${locale} at ${width}px`, async ({ page }, testInfo) => {
     const mutations: string[] = []; const quotes: Array<{ items: Array<{ product_id: number; variant_id?: number; quantity: number; quantity_offer_id?: string }> }> = [];
