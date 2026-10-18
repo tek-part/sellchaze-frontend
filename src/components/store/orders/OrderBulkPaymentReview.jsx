@@ -20,6 +20,7 @@ const localizedFailure = (error, ar) => !ar ? failureMessage(error) : ({
     422: 'راجع المبلغ الكامل والعملة ومرجع التحصيل وتأكيد الاستلام وسبب التحديث لكل طلب مؤهل.',
 }[error.response?.status] || 'لم نتمكن من تأكيد نتيجة الطلب. أعد المحاولة أو حمّل المراجعة للتحقق من حالته.');
 const manualMethodNames = { cod: ['الدفع عند الاستلام', 'Cash on delivery'], bank_transfer: ['تحويل بنكي', 'Bank transfer'], transfer_receipt: ['تحويل بنكي بإيصال', 'Transfer with receipt'] };
+const methodName = (method, ar) => manualMethodNames[method]?.[ar ? 0 : 1] || (typeof method === 'string' && method.trim() ? method.replaceAll('_', ' ') : ar ? 'طريقة غير محددة' : 'Unspecified method');
 
 export default function OrderBulkPaymentReview({ ids, target, apiBase, uiBase, ar, onCancel, onComplete, onBusy }) {
     const text = (a, e) => ar ? a : e; const idsKey = ids.join(',');
@@ -65,7 +66,7 @@ export default function OrderBulkPaymentReview({ ids, target, apiBase, uiBase, a
             <p className="ws-bulk-payment-counts">{text('مؤهل', 'Eligible')}: {eligible.length} · {text('دون تغيير', 'Unchanged')}: {rows.filter(row => row.state === 'unchanged').length} · {text('غير مؤهل', 'Ineligible')}: {rows.filter(row => row.state === 'skipped').length}</p>
             <div className="ws-bulk-payment-rows">{rows.map(row => <fieldset key={row.id} disabled={busy} className="ws-bulk-payment-row" data-state={row.state}>
                 <legend><a href={`${uiBase}/orders/${row.id}`} target="_blank" rel="noopener noreferrer">#{row.order_number || row.id}</a></legend>
-                <div className="ws-bulk-payment-summary"><PaymentMethodLogo slug={row.payment_method} /><div className="ws-bulk-payment-identity"><span>{row.customer_name || '—'}</span><small>{manualMethodNames[row.payment_method]?.[ar ? 0 : 1] || row.payment_method.replaceAll('_', ' ')}</small></div><bdi>{row.amount} {row.currency}</bdi></div>
+                <div className="ws-bulk-payment-summary"><PaymentMethodLogo slug={row.payment_method || ''} /><div className="ws-bulk-payment-identity"><span>{row.customer_name || '—'}</span><small>{methodName(row.payment_method, ar)}</small></div><bdi>{row.amount} {row.currency}</bdi></div>
                 {row.state === 'eligible' ? <>
                     {target === 'paid' ? <>
                         <div className="ws-bulk-payment-fields"><label>{text('مرجع التحصيل', 'Collection reference')}<input required maxLength={200} value={fields[row.id]?.reference || ''} onChange={e => setField(row.id, 'reference', e.target.value)} /></label>
@@ -75,7 +76,7 @@ export default function OrderBulkPaymentReview({ ids, target, apiBase, uiBase, a
                         <label className="ws-bulk-payment-check"><input type="checkbox" required checked={fields[row.id]?.acknowledged || false} onChange={e => setField(row.id, 'acknowledged', e.target.checked)} />{row.receipt ? text('راجعت هذا الإيصال وأؤكد وصول المبلغ الكامل.', 'I reviewed this receipt and confirm receipt of the full amount.') : text('أؤكد استلام المبلغ الكامل لهذا الطلب.', 'I confirm receipt of the full amount for this order.')}</label>
                     </> : null}
                     <label>{target === 'paid' ? text('ملاحظة داخلية — اختياري', 'Internal note — optional') : text('سبب التحديث', 'Reason for update')}<textarea required={target !== 'paid'} maxLength={2000} value={fields[row.id]?.note || ''} onChange={e => setField(row.id, 'note', e.target.value)} /></label>
-                </> : <p>{row.state === 'unchanged' ? text('الدفع مسجل بهذه الحالة بالفعل.', 'Payment is already recorded in this state.') : reasons[row.reason]?.[ar ? 0 : 1] || text('هذا الطلب غير مؤهل لهذا التحديث.', 'This order is ineligible for this update.')}</p>}
+                </> : <p>{row.state === 'unchanged' ? text('الدفع مسجل بهذه الحالة بالفعل.', 'Payment is already recorded in this state.') : !row.payment_method ? text('طريقة الدفع غير مسجلة لهذا الطلب؛ راجع تفاصيله.', 'The payment method is not recorded. Review the order details.') : reasons[row.reason]?.[ar ? 0 : 1] || text('هذا الطلب غير مؤهل لهذا التحديث.', 'This order is ineligible for this update.')}</p>}
             </fieldset>)}</div>
             <label className="ws-bulk-payment-check"><input type="checkbox" checked={confirmed} disabled={busy} onChange={e => setConfirmed(e.target.checked)} />{text('راجعت الطلبات ونتائج الأهلية وأؤكد تحديث الدفعات المؤهلة.', 'I reviewed these orders and eligibility results and confirm updating eligible payments.')}</label>
             <div className="ws-bulk-payment-footer"><button type="button" disabled={busy} onClick={onCancel}>{text('إلغاء', 'Cancel')}</button><button type="submit" disabled={busy || !confirmed}>{busy ? text('جارٍ التحديث…', 'Updating…') : text('تأكيد تحديث الدفع', 'Confirm payment update')}</button></div>

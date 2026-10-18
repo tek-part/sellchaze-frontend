@@ -28,6 +28,12 @@ beforeEach(() => {
 afterEach(async () => { await act(async () => root.unmount()); host.remove(); vi.restoreAllMocks(); vi.unstubAllGlobals(); });
 
 describe('bulk manual payment review', () => {
+    it('keeps an old order with no payment method reviewable as ineligible without inventing a provider', async () => {
+        api.post.mockResolvedValue({ data: { data: [{ ...rows[2], payment_method: null }] } });
+        await render(); expect(host.textContent).toContain('Unspecified method');
+        expect(host.textContent).toContain('The payment method is not recorded. Review the order details.');
+        expect(host.textContent).not.toContain('online payment provider'); expect(host.querySelector('fieldset input')).toBeNull();
+    });
     it('requires per-order full collection acknowledgements and preserves the same request after an ambiguous response', async () => {
         let attempts = 0;
         api.post.mockImplementation(path => path.endsWith('/bulk-payment-review') ? Promise.resolve({ data: { data: rows } }) : ++attempts === 1 ? Promise.reject(new Error('Simulated response loss')) : Promise.resolve({ data: { updated: 2, skipped: 1, unchanged: 0 } }));
