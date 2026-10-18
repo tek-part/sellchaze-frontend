@@ -1,5 +1,6 @@
 import { ProductHeaderChrome, ProductPresentationProvider } from './state/product-presentation';
 import { UiBlocksProvider } from './ui-blocks/UiBlocks';
+import './floating-tools.css';
 /**
  * StorefrontApp — resolves the active theme's `default` layout (global chrome) and renders the
  * router inside it, so the header/footer/cart persist across navigations while the page content
@@ -252,9 +253,9 @@ export function StorefrontApp(): ReactElement {
   return (
     <ProductPresentationProvider><UiBlocksProvider><div className="sf-root" data-theme-id={manifest.id}>
       <ProductHeaderChrome>{store.supportedCurrencies.length > 1 ? (
-        <label className="fixed bottom-4 end-4 z-[var(--z-toast,9999)] rounded-full border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 text-xs shadow-lg">
-          <span className="sr-only">Display currency</span>
-          <select aria-label="Display currency" value={store.currency} onChange={(event) => setCurrency(event.target.value)} className="bg-transparent font-semibold outline-none">
+        <label className="sf-currency-widget fixed bottom-4 end-4 z-[var(--z-toast,9999)] rounded-full border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 text-xs shadow-lg">
+          <span className="sr-only">{locale === 'ar' ? 'عملة العرض' : 'Display currency'}</span>
+          <select aria-label={locale === 'ar' ? 'عملة العرض' : 'Display currency'} value={store.currency} onChange={(event) => setCurrency(event.target.value)} className="bg-transparent font-semibold outline-none">
             {store.supportedCurrencies.map((currency) => <option key={currency} value={currency}>{currency}</option>)}
           </select>
         </label>
