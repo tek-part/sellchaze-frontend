@@ -2,6 +2,13 @@ import { useEffect, useRef, useState, type ReactElement, type ReactNode } from '
 import { useParams } from 'react-router-dom';
 import { HugeiconsIcon } from '@hugeicons/react';
 import ShoppingCart01Icon from '@hugeicons/core-free-icons/ShoppingCart01Icon';
+import Facebook01Icon from '@hugeicons/core-free-icons/Facebook01Icon';
+import InstagramIcon from '@hugeicons/core-free-icons/InstagramIcon';
+import NewTwitterIcon from '@hugeicons/core-free-icons/NewTwitterIcon';
+import Linkedin01Icon from '@hugeicons/core-free-icons/Linkedin01Icon';
+import TiktokIcon from '@hugeicons/core-free-icons/TiktokIcon';
+import YoutubeIcon from '@hugeicons/core-free-icons/YoutubeIcon';
+import SnapchatIcon from '@hugeicons/core-free-icons/SnapchatIcon';
 import type { SectionInstance } from '../theme-engine/rendering';
 import type { ApiReview } from '../api/types';
 import { getProduct, getProductReviews } from '../api/storefront';
@@ -25,6 +32,17 @@ interface Props { sections: ReadonlyArray<SectionInstance>; productSlug: string 
 type Values = Readonly<Record<string, unknown>>;
 const text = (value: unknown): string => typeof value === 'string' ? value : '';
 const rows = (value: unknown): Values[] => Array.isArray(value) ? value.filter((row): row is Values => !!row && typeof row === 'object' && !Array.isArray(row)).slice(0, 12) : [];
+
+function SocialMark({ url, label }: { url: string; label: string }): ReactElement {
+  let host = ''; try { host = new URL(url).hostname; } catch { /* Unrecognized links retain their merchant label. */ }
+  const networks: Record<string, { domains: string[]; icon: typeof Facebook01Icon }> = {
+    facebook: { domains: ['facebook.com', 'fb.com'], icon: Facebook01Icon }, instagram: { domains: ['instagram.com'], icon: InstagramIcon },
+    twitter: { domains: ['twitter.com', 'x.com'], icon: NewTwitterIcon }, linkedin: { domains: ['linkedin.com'], icon: Linkedin01Icon },
+    tiktok: { domains: ['tiktok.com'], icon: TiktokIcon }, youtube: { domains: ['youtube.com', 'youtu.be'], icon: YoutubeIcon }, snapchat: { domains: ['snapchat.com'], icon: SnapchatIcon },
+  };
+  const match = Object.values(networks).find(network => network.domains.some(domain => host === domain || host.endsWith(`.${domain}`)));
+  return match ? <HugeiconsIcon icon={match.icon} size={24} aria-hidden="true" /> : <span>{label}</span>;
+}
 
 function Announcement({ settings, ar }: { settings: Values; ar: boolean }): ReactElement | null {
   const [now, setNow] = useState(Date.now); const expiry = settings['expires_at']; const remaining = offerRemaining(expiry, now);
@@ -139,7 +157,7 @@ export function HairComposition({ sections, productSlug, locale: pageLocale, pre
   return <div ref={root} className="hr-root" id="hr-top" dir={ar ? 'rtl' : 'ltr'} lang={ar ? 'ar' : 'en'}>
     {sections.map((section, i) => <section id={`hr-section-${i}`} key={section.id ?? i} data-section-id={section.id} className={customizer.selectedId === section.id ? 'hr-section hr-section-selected' : 'hr-section'}>{render(section, i)}</section>)}
     {!purchase ? <div className="hr-wrap hr-purchase-panel">{checkout}</div> : null}
-    <footer className="hr-footer"><div className="hr-wrap"><strong className="hr-brand">{store.name}</strong><nav aria-label={ar ? 'روابط المتجر' : 'Store links'}>{navigation.footer.flatMap(group => group.children?.length ? group.children : [group]).filter(link => !!link.url).map(link => <a href={link.url ?? undefined} key={link.url}>{link.label}</a>)}</nav><StorePaymentMarks label={ar ? 'وسائل الدفع' : 'Payment methods'} /><p>© {new Date().getFullYear()} {store.name}</p></div></footer>
+    <footer className="hr-footer"><div className="hr-wrap"><a className="hr-brand" href="#hr-top">{store.logoUrl ? <img src={store.logoUrl} alt={store.name} /> : store.name}</a><nav aria-label={ar ? 'روابط المتجر' : 'Store links'}>{navigation.footer.flatMap(group => group.children?.length ? group.children : [group]).filter(link => !!link.url).map(link => <a href={link.url ?? undefined} key={link.url}>{link.label}</a>)}</nav>{store.merchantInformation?.address || store.email || store.phone ? <address className="hr-contact">{store.merchantInformation?.address ? <span>{store.merchantInformation.address}</span> : null}{store.email ? <a href={`mailto:${store.email}`}>{store.email}</a> : null}{store.phone ? <a href={`tel:${store.phone.replace(/[^+\d]/g, '')}`} dir="ltr">{store.phone}</a> : null}</address> : null}{store.identity?.social?.length ? <nav className="hr-social" aria-label={ar ? 'روابط التواصل الاجتماعي' : 'Social links'}>{store.identity.social.map(link => <a href={link.url} aria-label={link.label} key={link.url} target="_blank" rel="noopener noreferrer"><SocialMark url={link.url} label={link.label} /></a>)}</nav> : null}<StorePaymentMarks label={ar ? 'وسائل الدفع' : 'Payment methods'} /><p>© {new Date().getFullYear()} {store.name}</p></div></footer>
     <dialog ref={menuDialog} id="hr-menu" className="hr-menu-dialog" aria-label={ar ? 'أقسام الصفحة' : 'Page sections'} onClose={() => setMenu(false)} onClick={event => { if (event.target === event.currentTarget) closeMenu(); }}><div className="hr-menu-panel"><button type="button" className="hr-menu-close" aria-label={ar ? 'إغلاق القائمة' : 'Close page menu'} onClick={closeMenu}><IconClose /></button><nav>{navigationLinks(true)}</nav></div></dialog>
     {product ? <aside className="hr-dock" aria-label={ar ? 'طلب المنتج' : 'Order this product'}><div className="hr-dock-product">{campaignUrl(presentation.image) ? <img src={presentation.image!} alt="" /> : null}<div><strong>{product.name}</strong><span>{formatMoney(presentation.unitPrice, store.baseCurrency, locale)}{presentation.comparePrice && presentation.comparePrice > presentation.unitPrice ? <del>{formatMoney(presentation.comparePrice, store.baseCurrency, locale)}</del> : null}</span></div></div>{order(purchase?.settings?.['cta_label'], true)}</aside> : null}
   </div>;
