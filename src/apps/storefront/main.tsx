@@ -24,6 +24,7 @@ import type { ThemeSettingValue } from './theme-engine/types';
 import { applyLegacyThemeAlias, resolveStorefrontThemeId } from './theme-resolution';
 import { setActiveThemeMatch } from './active-theme-match';
 import { loadIdentityFonts } from './store-identity';
+import { warmNativeCatalogPreview } from './funnels/native-catalog';
 import './styles/index.css';
 // Editorial layout for the journal/brands pages. App-level, not theme-level: these render the
 // shared `.sf-*` library, so a theme stylesheet would leave three themes unstyled. Every value
@@ -188,6 +189,7 @@ async function bootstrap(): Promise<void> {
   );
 }
 
+warmNativeCatalogPreview(window.location);
 void bootstrap();
 
 const platformHosts = new Set(['sellchaze.com', 'www.sellchaze.com']);

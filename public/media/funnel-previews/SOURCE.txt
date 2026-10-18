@@ -5,3 +5,7 @@ Demo product names, prices and content belong only to the local layout fixture. 
 Hair Revive Arabic and English thumbnails are actual 1920 x 1031 screenshots of the independent native display-only previews, captured locally on 2026-10-18. The original photographs and exact image-generation prompts are documented in ../funnel-campaigns/hair-revive-SOURCE.txt. Sample reviews are explicitly labeled and checkout is disabled.
 
 Litter Robot Arabic and English thumbnails are actual 1440 x 900 screenshots of the native display-only previews, captured locally on 2026-10-18. The original photographs are documented in ../funnel-campaigns/litter-robot-SOURCE.txt. Sample reviews are labeled and checkout is disabled.
+
+Funnel workspace gallery: *-desktop.png and *-phone.png are actual independent native catalog captures made on 2026-10-18 with CSS viewports1440x1800 and390x1400. Browser JPEG exports were encoded losslessly as PNG, without resizing/cropping or changing decoded pixels. Actual export dimensions are recorded separately in the audit provenance. All photographs are original generated assets documented in ../funnel-campaigns/. No competitor screenshot is embedded.
+
+Matching *-desktop.jpg and *-phone.jpg files retain the original browser export bytes. The gallery selects these smaller captures through srcset, with the lossless PNG files as fallbacks. Both formats decode to the same captured pixels; no crop, resize or visual editing was applied.

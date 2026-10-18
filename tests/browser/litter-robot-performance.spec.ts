@@ -37,8 +37,9 @@ for (const locale of ['ar', 'en']) {
       await page.waitForTimeout(750);
       const metrics = await page.evaluate(() => {
         const navigation = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming;
-        return { ...window.__litterVitals!, ttfb: navigation.responseStart - navigation.startTime, domContentLoaded: navigation.domContentLoadedEventEnd };
+        return { ...window.__litterVitals!, ttfb: navigation.responseStart - navigation.startTime, domContentLoaded: navigation.domContentLoadedEventEnd, fonts: performance.getEntriesByType('resource').filter(item => /fonts\.(googleapis|gstatic)\.com|\/media\/fonts\//.test(item.name)).map(item => ({url:item.name,duration:item.duration})) };
       });
+      console.log('Litter Robot vitals', JSON.stringify({locale,width,...metrics}));
       expect(metrics.cls, `Unexpected shifts: ${JSON.stringify(metrics.shifts)}`).toBeLessThanOrEqual(0.1);
       expect(metrics.lcp).toBeGreaterThan(0);
       expect(metrics.lcp).toBeLessThanOrEqual(2500);
@@ -50,3 +51,24 @@ for (const locale of ['ar', 'en']) {
     });
   }
 }
+
+test('Catalog hero starts loading while the store bootstrap is still pending', async ({page}) => {
+  let release: () => void = () => {};
+  const gate = new Promise<void>(resolve => { release = resolve; });
+  await page.route('**/api/v1/storefront/**', async route => { await gate; await route.fulfill({status:503,json:{message:'Isolated unavailable store'}}); });
+  const hero = page.waitForRequest(request => new URL(request.url()).pathname === '/media/funnel-campaigns/litter-robot-hero-v1.webp');
+  const navigation = page.goto('/funnel-templates/litter-robot-en?preview=1&lang=en&theme=sahra');
+  try { await hero; } finally { release(); }
+  await navigation;
+  await expect(page.locator('.lr-hero h1')).toBeVisible();
+});
+
+test('Native catalog paints with external font services unavailable', async ({page}) => {
+  await page.route('https://fonts.googleapis.com/**', route => route.abort());
+  await page.route('https://fonts.gstatic.com/**', route => route.abort());
+  await page.route('**/api/v1/storefront/**', route => route.fulfill({status:503,json:{message:'Isolated unavailable store'}}));
+  await page.goto('/funnel-templates/litter-robot-ar?preview=1&lang=ar');
+  await expect(page.locator('.lr-hero h1')).toBeVisible();
+  expect(await page.evaluate(() => document.fonts.load('400 16px "IBM Plex Sans Arabic"', 'متجر').then(faces => faces.length))).toBeGreaterThan(0);
+  expect(await page.evaluate(() => performance.getEntriesByType('resource').some(item => /\/media\/fonts\/storefront\/fonts-[a-f0-9]+\.css/.test(item.name)))).toBe(true);
+});
