@@ -6,7 +6,17 @@ import { walletTheme } from './index';
 import { fashionTheme } from '../hype-fashion';
 import { walletCampaignSchema, walletLookSchema } from './sections';
 import { WALLET_CATALOG } from '../../content/demo/elite-wallets';
+import { sampleProductDetail, sampleNewest } from '../../dev/sampleData';
 describe('Native Elite Wallets package', () => {
+  it('preserves the sample catalog item when opening its product page in either language', () => {
+    for (const locale of ['en', 'ar']) for (const card of sampleNewest('elite-wallets', locale)) {
+      const detail = sampleProductDetail(card.handle!, 'elite-wallets', locale);
+      expect(detail.id).toBe(card.id); expect(detail.title).toBe(card.title);
+      expect(detail.price).toBe(card.price); expect(detail.currency).toBe(card.currency);
+      expect(detail.images).toEqual([card.image]); expect(detail.variants ?? []).toEqual([]);
+      expect(detail.descriptionHtml).not.toMatch(/cashmere|wardrobe|Small|Medium/);
+    }
+  });
   it('loads independent chrome and exports all ten editable home sections and real commerce pages', async () => {
     const entry = getCatalogEntry('elite-wallets')!; expect(await entry.load()).toBe(walletTheme);
     expect(walletTheme.layouts?.['default']).not.toBe(fashionTheme.layouts?.['default']);
