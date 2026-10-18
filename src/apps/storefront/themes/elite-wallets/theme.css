@@ -20,3 +20,4 @@ html:has(.ew-root) .hyp-cart{font-family:"Instrument Sans","IBM Plex Sans Arabic
 .ew-nav-overflow>button{border:0;background:none;color:inherit;font:inherit;text-align:start;letter-spacing:inherit;text-transform:inherit;cursor:pointer}
 .ew-nav summary{list-style:none;display:flex;align-items:center;gap:8px}.ew-nav summary::-webkit-details-marker{display:none}.ew-nav summary::after{content:'';width:6px;height:6px;border-inline-end:1px solid currentColor;border-bottom:1px solid currentColor;transform:rotate(45deg);margin-top:-4px}
 .ew-root .lib-cat-header__title{margin:0}@media(min-width:768px){.ew-root .lib-cat-header__title{padding-inline-end:200px}.ew-listing .ew-sort{position:absolute;top:-64px;inset-inline-end:32px;padding:0}.ew-root:has(.lib-cat-header__desc) .ew-listing .ew-sort{position:static;padding-bottom:24px}}
+.ew-sort select{height:40px;box-sizing:border-box;padding-block:8px}
