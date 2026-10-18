@@ -13,6 +13,7 @@ for (const locale of ['en', 'ar'] as const) {
       await page.goto(`/funnel-templates/litter-robot-${locale}?preview=1&lang=${locale}&theme=${locale === 'ar' ? 'sahra' : 'elite-wallets'}`, { waitUntil: 'networkidle' });
       await expect(page.locator('.lr-root')).toHaveAttribute('dir', locale === 'ar' ? 'rtl' : 'ltr');
       await expect(page.locator('.lr-hero h1')).toHaveCSS('font-family', /^Rubik/);
+      await expect(page.locator('.lr-purchase-panel label').first()).toHaveCSS('font-family', /^"DM Sans"/);
       await expect(page.locator('.lr-section')).toHaveCount(16);
       await expect(page.locator('.lr-editorial')).toHaveCount(4);
       await expect(page.locator('form')).toHaveCount(0);

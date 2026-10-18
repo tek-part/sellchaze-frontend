@@ -69,3 +69,5 @@
 @media(max-width:359px){.lr-offer h2{font-size:18px}.lr-offer>strong{font-size:28px}.lr-hero-copy :is(h1,h2){font-size:30px}.lr-wrap{padding-inline:16px}.lr-dock strong{font-size:12px}.lr-dock>.lr-button{min-width:100px;padding-inline:8px;font-size:12px}.lr-assurance-cards{gap:8px}.lr-assurance-cards img{width:56px;height:56px}}
 @media(prefers-reduced-motion:reduce){.lr-root{scroll-behavior:auto}.lr-motion [data-lr-reveal]{opacity:1;transform:none;transition:none}.lr-marquee>div{animation:none}.lr-marquee p[aria-hidden=true]{display:none}}
 .lr-purchase{padding-top:0}
+.lr-root .sf-funnel-checkout{font-family:'DM Sans',sans-serif}
+.lr-root .sf-funnel-checkout :is(label,input,select,textarea,button){font-family:inherit}
