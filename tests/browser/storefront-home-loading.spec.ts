@@ -35,7 +35,7 @@ for (const theme of themes) {
           }
         }).observe({ type: 'layout-shift', buffered: true });
       });
-      await page.route('**/api/v1/storefront**', async route => {
+      await page.route('**/api/v1/**', async route => {
         const path = new URL(route.request().url()).pathname.replace(/\/$/, '');
         if (path === '/api/v1/storefront') {
           await route.fulfill({ json: { store: { id: 7654321, name: 'Loading fixture', slug: 'loading-fixture', currency: 'USD', supported_currencies: ['USD'], default_locale: 'en', supported_locales: ['en', 'ar'], tracking_enabled: false }, theme: { key: theme, version: '1.0.0', settings: {} }, navigation: { header: [], footer: [] } } });
@@ -80,16 +80,21 @@ for (const theme of themes) {
 
   test(`${theme} isolated preview renders without merchant home or layout requests`, async ({ page }) => {
     const dataQueries: string[] = [];
-    await page.route('**/api/v1/storefront**', async route => {
+    let bootstrapReads = 0;
+    page.on('request', request => {
+      const path = new URL(request.url()).pathname.replace(/\/$/, '');
+      if (/\/storefront\/(home|layout)$/.test(path)) dataQueries.push(path);
+    });
+    await page.route('**/api/v1/**', async route => {
       const path = new URL(route.request().url()).pathname.replace(/\/$/, '');
-      if (path === '/api/v1/storefront') { await route.fulfill({ status: 404, json: { message: 'No merchant on this isolated preview host' } }); return; }
-      if (/\/(home|layout)$/.test(path)) dataQueries.push(path);
+      if (path === '/api/v1/storefront') { bootstrapReads++; await route.fulfill({ status: 404, json: { message: 'No merchant on this isolated preview host' } }); return; }
       await route.fulfill({ json: { data: [] } });
     });
     await page.goto(`/?preview=1&theme=${theme}&lang=en`, { waitUntil: 'networkidle' });
     await expect(page.locator('#sf-main .sf-section-frame').first()).toBeVisible();
     await expect(page.locator('#sf-main [aria-busy="true"]')).toHaveCount(0);
     await expect(page.locator('footer')).toHaveCSS('visibility', 'visible');
+    expect(bootstrapReads).toBeGreaterThan(0);
     expect(dataQueries).toEqual([]);
   });
 }
