@@ -41,6 +41,12 @@ async function click(el) { await act(async () => el.click()); }
 async function select(value) { const el = host.querySelector('select'); await act(async () => { el.value = value; el.dispatchEvent(new Event('change', { bubbles: true })); }); }
 
 describe('merchant theme gallery', () => {
+    it('classifies a registered perfume package and filters it without showing unregistered packages', async () => {
+        state.rows.push({ id: 7, key: 'hype-perfumes', name: 'Hype Perfumes', price: '0.00', currency: 'USD', licensed: true });
+        await mount(); await click(button('Perfumes'));
+        expect(card('hype-perfumes')).not.toBeNull(); expect(host.querySelectorAll('.ws-theme-modern article')).toHaveLength(1);
+        expect(card('nature-pets')).toBeNull(); expect(api.post).not.toHaveBeenCalled();
+    });
     it('shows all genuine available themes in modern/classic groups and the actual active banner', async () => {
         await mount(); expect(host.querySelectorAll('.ws-theme-modern article')).toHaveLength(4); expect(host.querySelectorAll('.ws-theme-classic article')).toHaveLength(2);
         expect(host.querySelector('.ws-theme-active-banner h2').textContent).toBe('Naseem');

@@ -30,7 +30,7 @@ export function CategoryPage(): ReactElement | null {
   // `/shop` has no :slug segment; it is the shop-all view, same as /collections/all.
   const { slug = 'all' } = useParams();
   const [searchParams, setSearchParams] = useSearchParams();
-  const kids = manifest.id === 'nature-kids' || manifest.id === 'blast-pets' || manifest.id === 'nature-pets';
+  const kids = ['nature-kids', 'blast-pets', 'nature-pets', 'hype-perfumes'].includes(manifest.id);
   const listing = kidsListingSearch(searchParams);
   const { store } = useStore();
   const currency = store.currency;

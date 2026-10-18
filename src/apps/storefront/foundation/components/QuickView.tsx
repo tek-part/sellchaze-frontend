@@ -7,6 +7,9 @@ import type { ReactElement, ReactNode } from 'react';
 import type { ProductImage } from '../../types/catalog';
 import { Modal } from './Modal';
 import { ProductGallery } from './ProductGallery';
+import { useTranslation } from 'react-i18next';
+import { IconButton } from './IconButton';
+import { IconClose } from './icons';
 
 export interface QuickViewProps {
   open: boolean;
@@ -19,8 +22,10 @@ export interface QuickViewProps {
 
 export function QuickView(props: QuickViewProps): ReactElement {
   const { open, onClose, title, images, children } = props;
+  const { t } = useTranslation();
   return (
     <Modal open={open} onClose={onClose} ariaLabel={title}>
+      <IconButton className="sf-quickview__close" label={t('common.close')} onClick={onClose}><IconClose /></IconButton>
       <div className="sf-quickview">
         <ProductGallery images={images} title={title} enableZoom={false} />
         <div className="sf-quickview__details">{children}</div>

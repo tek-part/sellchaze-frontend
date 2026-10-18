@@ -110,6 +110,9 @@ export const sampleAnnouncements = (themeId?: string, locale?: string): string[]
 
 export function sampleProductDetail(slug: string, themeId?: string, locale?: string): ProductDetailModel {
   const base = sampleNewest(themeId, locale).find((p) => p.handle === slug) ?? sampleNewest(themeId, locale)[0]!;
+  if (themeId === 'hype-perfumes') {
+    return { ...base, images: [base.image, base.hoverImage].filter((image): image is NonNullable<typeof image> => Boolean(image)), inStock: true, sku: `PREVIEW-${base.id}`, descriptionHtml: locale === 'ar' ? '<p>بيانات معاينة فقط. يضيف المتجر صور منتجاته ووصفها وخياراتها الفعلية.</p>' : '<p>Preview content only. Each store supplies its actual fragrance photographs, descriptions and options.</p>' };
+  }
   if (themeId === 'blast-pets' || themeId === 'nature-pets') {
     const ar = locale === 'ar'; const source = base.image?.src;
     return { ...base, images: source ? [{ src: source, alt: base.title }] : [], inStock: true, sku: `PETS-${base.id}`, descriptionHtml: ar ? '<p>بيانات معاينة فقط. يحدد كل متجر صور منتجاته ووصفها وخياراتها الفعلية.</p>' : '<p>Preview content only. Each store supplies its own product photographs, descriptions and options.</p>', variants: base.categorySlug === 'beds-accessories' ? [

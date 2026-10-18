@@ -1285,7 +1285,8 @@
 [dir='rtl'] .sf-countdown__label { letter-spacing: normal; text-transform: none; }
 
 /* ==================================================== QuickView · §32.3 ==== */
-.sf-quickview { display: grid; grid-template-columns: 1fr 1fr; gap: var(--sp-6); padding: var(--sp-6); }
+.sf-quickview { display: grid; grid-template-columns: 1fr 1fr; gap: var(--sp-6); padding: var(--sp-6); overflow-y: auto; min-height: 0; }
+.sf-quickview__close { position: absolute; inset-block-start: 8px; inset-inline-end: 8px; z-index: 3; background: var(--surface); }
 .sf-quickview__details { display: flex; flex-direction: column; gap: var(--sp-4); }
 @media (max-width: 768px) {
   .sf-quickview { grid-template-columns: 1fr; }
