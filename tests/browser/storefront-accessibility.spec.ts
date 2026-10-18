@@ -5,6 +5,52 @@ const themes = ['naseem', 'bazaar', 'sahra', 'fresh', 'techno', 'elite-furniture
 
 for (const locale of ['en', 'ar'] as const) {
   for (const width of [1440, 390, 320]) {
+    test(`Electric Biker preview navigation, gallery and checkout isolation in ${locale} at ${width}px`, async ({ page }) => {
+      const commerceRequests: string[] = [];
+      page.on('request', request => { if (/\/storefront\/(checkout|products\/|product-reviews)/.test(request.url())) commerceRequests.push(request.url()); });
+      await page.setViewportSize({ width, height: 900 });
+      await page.emulateMedia({ reducedMotion: 'reduce' });
+      await page.goto(`/funnel-templates/electric-biker-${locale}?preview=1&lang=${locale}&theme=${locale === 'ar' ? 'sahra' : 'elite-wallets'}`, { waitUntil: 'networkidle' });
+      await expect(page.locator('.eb-root')).toHaveAttribute('dir', locale === 'ar' ? 'rtl' : 'ltr');
+      await expect(page.locator('.eb-hero h1')).toHaveCSS('font-family', /^"Readex Pro"/);
+      await expect(page.locator('.eb-purchase-panel label').first()).toHaveCSS('font-family', locale === 'ar' ? /^"Readex Pro"/ : /^"DM Sans"/);
+      await expect(page.locator('.eb-section')).toHaveCount(11);
+      await expect(page.locator('.eb-editorial article')).toHaveCount(2);
+      await expect(page.locator('form')).toHaveCount(0);
+      await expect(page.locator('.eb-purchase-panel input').first()).toBeDisabled();
+      await expect(page.locator('meta[name="robots"]')).toHaveAttribute('content', 'noindex,nofollow');
+      expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)).toBe(true);
+      await page.locator('.eb-gallery-rail button').nth(1).click();
+      await expect(page.locator('.eb-gallery-main')).toHaveAttribute('src', /electric-biker-detail/);
+      if (width < 992) {
+        const toggle = page.getByRole('button', { name: locale === 'ar' ? 'قائمة الصفحة' : 'Page menu', exact: true });
+        await toggle.click();
+        await expect(page.getByRole('dialog')).toBeVisible();
+        const menu = await page.locator('.eb-menu-panel').boundingBox();
+        expect(menu?.width).toBe(250);
+        expect(menu?.x).toBeGreaterThan(0);
+        await expect(page.locator('.eb-menu-panel')).toHaveCSS('background-color', 'rgba(18, 18, 18, 0.97)');
+        await expect(page.locator('.eb-menu-dock')).toBeVisible();
+        await page.keyboard.press('Escape');
+        await expect(toggle).toBeFocused();
+        await toggle.click();
+      }
+      await page.getByRole('link', { name: locale === 'ar' ? 'أسئلة وأجوبة' : 'Questions & answers', exact: true }).filter({ visible: true }).click();
+      await expect(page).toHaveURL(/#eb-section-10$/);
+      await expect(page.getByRole('dialog')).not.toBeVisible();
+      const questions = page.locator('.eb-faq button');
+      await questions.nth(0).click(); await questions.nth(1).click();
+      await expect(page.locator('.eb-faq button[aria-expanded=true]')).toHaveCount(1);
+      const results = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']).analyze();
+      const blocking = results.violations.filter(violation => ['serious', 'critical'].includes(violation.impact ?? ''));
+      expect(blocking, blocking.map(item => `${item.id}: ${item.help}`).join('\n')).toEqual([]);
+      expect(commerceRequests).toEqual([]);
+    });
+  }
+}
+
+for (const locale of ['en', 'ar'] as const) {
+  for (const width of [1440, 390, 320]) {
     test(`Litter Robot preview navigation, gallery and checkout isolation in ${locale} at ${width}px`, async ({ page }) => {
       const commerceRequests: string[] = [];
       page.on('request', request => { if (/\/storefront\/(checkout|products\/|product-reviews)/.test(request.url())) commerceRequests.push(request.url()); });

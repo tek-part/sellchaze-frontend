@@ -1,0 +1,15 @@
+Electric Biker catalog preview assets — 2026-10-18
+Created with the built-in image_gen tool. Original fictional, unbranded sample photography.
+These files are used only in the explicitly marked, non-purchasable template catalog.
+Merchant pages start with the selected merchant product photographs.
+
+electric-biker-hero-v1.webp
+Prompt: Two adult cyclists in plain charcoal helmets and dark casual clothes riding unbranded black electric commuter bicycles on a quiet countryside road at dawn. Wide editorial photograph, muted teal shadows, open background for an HTML headline. No text, logos or watermarks.
+
+electric-biker-product-v1.webp
+Prompt: Original unbranded charcoal-black electric commuter bicycle in three-quarter side view on a seamless pale warm-gray studio floor. Realistic frame, integrated battery, spokes and disc brakes. Square product photograph, no text, logos or watermarks.
+
+electric-biker-detail-v1.webp
+Prompt: Close-up of an unbranded matte charcoal commuter electric bicycle front wheel, spokes, disc brake, headlamp and fork against a warm gray studio background. Square detailed photograph. No text, logos, badges or watermarks.
+
+Generated source PNGs remain in the local generated_images archive. WebP conversion changes encoding only.

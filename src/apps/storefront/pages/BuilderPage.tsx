@@ -27,6 +27,7 @@ import { sanitizeHtml } from '../../../shared/utils/sanitizeHtml';
 import './simple-page.css';
 const GlassesFunnel = lazy(() => import('../funnels/GlassesFunnel'));
 const HairReviveFunnel = lazy(() => import('../funnels/HairReviveFunnel'));
+const ElectricBikerFunnel = lazy(() => import('../funnels/ElectricBikerFunnel'));
 const LitterRobotFunnel = lazy(() => import('../funnels/LitterRobotFunnel'));
 
 export function BuilderPage({ funnel = false }: { funnel?: boolean }): ReactElement | null {
@@ -74,7 +75,7 @@ export function BuilderPage({ funnel = false }: { funnel?: boolean }): ReactElem
         {...(seo?.description ? { description: seo.description } : {})}
         {...(seo?.image ? { image: seo.image } : {})}
       />
-      {api?.native_funnel_template?.startsWith('litter-robot-') ? <Suspense fallback={<Spinner />}><LitterRobotFunnel key={api.slug} sections={page?.sections ?? []} productSlug={api.funnel_product_slug ?? null} locale={api.locale} /></Suspense> : api?.native_funnel_template?.startsWith('hair-revive-') ? <Suspense fallback={<Spinner />}><HairReviveFunnel key={api.slug} sections={page?.sections ?? []} productSlug={api.funnel_product_slug ?? null} locale={api.locale} /></Suspense> : api?.native_funnel_template?.startsWith('glasses-') ? <Suspense fallback={<Spinner />}><GlassesFunnel key={api.slug} sections={page?.sections ?? []} productSlug={api.funnel_product_slug ?? null} locale={api.locale} /></Suspense> : <>
+      {api?.native_funnel_template?.startsWith('electric-biker-') ? <Suspense fallback={<Spinner />}><ElectricBikerFunnel key={api.slug} sections={page?.sections ?? []} productSlug={api.funnel_product_slug ?? null} locale={api.locale} /></Suspense> : api?.native_funnel_template?.startsWith('litter-robot-') ? <Suspense fallback={<Spinner />}><LitterRobotFunnel key={api.slug} sections={page?.sections ?? []} productSlug={api.funnel_product_slug ?? null} locale={api.locale} /></Suspense> : api?.native_funnel_template?.startsWith('hair-revive-') ? <Suspense fallback={<Spinner />}><HairReviveFunnel key={api.slug} sections={page?.sections ?? []} productSlug={api.funnel_product_slug ?? null} locale={api.locale} /></Suspense> : api?.native_funnel_template?.startsWith('glasses-') ? <Suspense fallback={<Spinner />}><GlassesFunnel key={api.slug} sections={page?.sections ?? []} productSlug={api.funnel_product_slug ?? null} locale={api.locale} /></Suspense> : <>
         {page ? <ThemeRenderer page={page} context={context} selectedSectionId={customizer.active ? customizer.selectedId : null} /> : <Section><Container><h1>{title}</h1></Container></Section>}
         {!customizer.active && api?.funnel_product_slug !== undefined ? <FunnelCheckout key={api.funnel_product_slug} productSlug={api.funnel_product_slug} /> : null}
       </>}

@@ -40,7 +40,7 @@ async function fixture(page: Page, language = 'en', ai = false, permission = tru
     if (path === '/auth/me') return respond({ user: { id: 1, name: 'Funnel Fixture', email: 'funnel@example.test', roles: [permission ? 'Merchant' : 'StoreManager'], permissions: permission ? ['store.view', 'store.pages.manage', 'store.products.manage', 'store.settings.manage'] : ['store.view'], parent_user_id: permission ? null : 2, is_active: true, pending_approval: false } });
     if (path === '/my-store') return respond({ data: { id: 1, owner_user_id: 1, name: 'Fixture', slug: 'fixture', status: 'active', currency: 'USD', default_locale: 'en', supported_locales: ['en', 'ar'] } });
     if (path === '/my-store/funnels/templates') return respond({
-      data: ['glasses-en', 'glasses-ar', 'hair-revive-en', 'hair-revive-ar', 'litter-robot-en', 'litter-robot-ar', 'spotlight'].map(key => ({ key, native_layout: key !== 'spotlight', locale: key.endsWith('-ar') ? 'ar' : 'en', name: { en: key }, preview_desktop_image: `/media/funnel-previews/${key}-desktop.png`, preview_mobile_image: `/media/funnel-previews/${key}-phone.png`, preview_url: `/funnel-templates/${key}?preview=1` })),
+      data: ['glasses-en', 'glasses-ar', 'hair-revive-en', 'hair-revive-ar', 'litter-robot-en', 'litter-robot-ar', 'electric-biker-en', 'electric-biker-ar', 'spotlight'].map(key => ({ key, native_layout: key !== 'spotlight', locale: key.endsWith('-ar') ? 'ar' : 'en', name: { en: key }, preview_desktop_image: `/media/funnel-previews/${key}-desktop.png`, preview_mobile_image: `/media/funnel-previews/${key}-phone.png`, preview_url: `/funnel-templates/${key}?preview=1` })),
       ai: { available: ai }, funnel_base_url: 'https://a-very-long-merchant-domain.example/funnels/',
     });
     if (path === `/my-store/funnels/by-code/${code}`) return respond({data: original});
@@ -67,7 +67,7 @@ for (const language of ['ar', 'en']) for (const width of [1920, 390, 320]) {
     await expect(dialog.getByRole('button', { name: language === 'ar' ? /إنشاء مسار بالذكاء/ : /Create a funnel with AI/ })).toBeDisabled();
     await accessible(page, '.fw-method-panel');
     await dialog.getByRole('button', {name: language === 'ar' ? /إنشاء مسار يدويًا/ : /Create a funnel manually/}).click();
-    await expect(page.locator('.fw-template')).toHaveCount(6);
+    await expect(page.locator('.fw-template')).toHaveCount(8);
     await expect.poll(() => page.locator('.fw-template-desktop').first().evaluate((image: HTMLImageElement) => image.complete && image.naturalWidth > 0 && image.currentSrc.endsWith('/glasses-en-desktop.jpg'))).toBe(true);
     const cloneField = await page.getByLabel(language === 'ar' ? 'كود المسار' : 'Funnel code', {exact:true}).boundingBox();
     const cloneNext = await page.locator('.fw-clone-fields').getByRole('button', {name:language === 'ar' ? 'التالي' : 'Next',exact:true}).boundingBox();

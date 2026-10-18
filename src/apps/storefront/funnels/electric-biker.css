@@ -1,0 +1,172 @@
+@font-face{font-family:'DM Sans';src:url('/fonts/dmsans/dmsans-variable.woff2') format('woff2');font-weight:100 1000;font-display:swap}
+@font-face{font-family:'Readex Pro';src:url('/fonts/readexpro/readexpro-variable.woff2') format('woff2');font-weight:160 700;font-display:swap}
+html:has(.eb-root){scroll-behavior:smooth}
+html:has(.eb-root)::-webkit-scrollbar{width:5px}
+html:has(.eb-root)::-webkit-scrollbar-thumb{background:#555;border-radius:8px}
+.eb-root{--color-primary:#fff;--color-on-primary:#151515;--color-text:#f7f7f7;--color-surface:#202020;--color-border:#777;--bg:#121212;--text:#f7f7f7;--surface:#202020;--surface-2:#292929;--border:#777;background:#121212;color:#f7f7f7;font:16px/1.5 'DM Sans',system-ui,-apple-system,'Segoe UI',sans-serif;overflow:clip}
+.eb-root *{box-sizing:border-box;min-width:0}
+.eb-root[dir=rtl]{--font-arabic:'Readex Pro',sans-serif;font-family:'Readex Pro',sans-serif}
+.eb-root :is(h1,h2,h3,p,figure,dl,dd){margin:0}
+.eb-root :is(h1,h2,h3,.eb-button,.eb-header,.eb-announcement){font-family:'Readex Pro',sans-serif}
+.eb-root p{white-space:pre-line;overflow-wrap:anywhere}
+.eb-root a{color:inherit;text-decoration:none}
+.eb-root button,.eb-root input{font:inherit}
+.eb-root button{cursor:pointer}
+.eb-root :focus-visible{outline:3px solid #ffbda9;outline-offset:4px}
+.eb-root img{display:block;max-width:100%}
+.eb-wrap{width:100%;max-width:1280px;padding-inline:12px;margin-inline:auto}
+.eb-section{scroll-margin-top:24px;padding:48px 24px}
+.eb-section:empty{display:none}
+.eb-section-selected{outline:2px solid #ffbda9;outline-offset:-2px}
+.eb-section:first-child,.eb-section[data-electric-section='electric-closing'],.eb-section[data-electric-section='electric-marquee']{padding:0}
+.eb-button{display:inline-flex;justify-content:center;align-items:center;gap:8px;min-height:56px;min-width:185px;padding:16px 24px;border:0;border-radius:999px;background:#fff;color:#161616!important;font-size:20px;font-weight:500;line-height:24px;text-align:center;transition:background .2s,transform .2s}
+.eb-button:hover{background:#e8e8e8;transform:translateY(-2px)}
+.eb-announcement{display:flex;justify-content:center;align-items:center;gap:12px;min-height:54px;padding:12px 16px;text-align:center;font-size:16px;font-weight:600}
+.eb-campaign{min-height:765px;position:relative;isolation:isolate;display:flex;flex-direction:column;background:#18312e}
+.eb-cover{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:-2}
+.eb-campaign::after,.eb-closing::after{content:'';position:absolute;inset:0;background:#0005;z-index:-1;pointer-events:none}
+.eb-header{padding:20px 0}
+.eb-header>.eb-wrap{display:flex;align-items:center;justify-content:space-between;gap:24px;min-height:56px}
+.eb-brand{display:flex;align-items:center;font-size:28px;font-weight:800;line-height:1.25;overflow-wrap:anywhere}
+.eb-brand img{max-height:48px;max-width:180px;object-fit:contain;background:#fff;padding:6px 10px;border-radius:6px}
+.eb-header nav{display:flex;align-items:center;gap:32px;font-weight:500}
+.eb-menu-toggle{display:none;width:40px;height:40px;border:0;background:none;color:#fff;padding:8px}
+.eb-menu-toggle svg{width:24px;height:24px}
+.eb-hero{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:32px;text-align:center;padding-block:64px 100px}
+.eb-hero>p{font:500 24px/1.5 'Readex Pro',sans-serif}
+.eb-hero :is(h1,h2){font-size:80px;font-weight:700;line-height:1.16;white-space:pre-line;max-width:1100px;text-wrap:balance}
+.eb-purchase{display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:start}
+.eb-gallery-main,.eb-placeholder{width:100%;aspect-ratio:1;object-fit:contain;background:#d1d1cd}
+.eb-placeholder{display:grid;place-items:center;color:#222}
+.eb-gallery-rail{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-top:16px}
+.eb-gallery-rail button{width:100%;aspect-ratio:1;padding:0;border:2px solid transparent;background:#d1d1cd;overflow:hidden}
+.eb-gallery-rail button[aria-pressed=true]{border-color:#ffbda9}
+.eb-gallery-rail img{width:100%;height:100%;object-fit:cover}
+.eb-purchase-panel{display:flex;flex-direction:column;gap:24px}
+.eb-purchase-panel>h2{font-size:32px;line-height:1.2;font-weight:700}
+.eb-prices{display:flex;align-items:center;justify-content:space-between;gap:24px;flex-wrap:wrap}
+.eb-prices strong{font:700 32px/1.2 'Readex Pro',sans-serif}
+.eb-prices del{font-size:20px;color:#ddd}
+.eb-purchase-panel>p{line-height:1.65}
+.eb-root .sf-funnel-checkout{padding:0;margin:24px 0 0;background:transparent;border:0;scroll-margin-top:24px;color:inherit;--color-text:#f7f7f7;--text:#f7f7f7}
+.eb-root .sf-funnel-checkout :is(input,select,textarea){background:#fff;color:#161616;border:1px solid #aaa;border-radius:0;min-height:48px}
+.eb-root .sf-funnel-checkout fieldset{border:0;padding:0;min-width:0;display:grid;gap:24px}
+.eb-root .sf-funnel-checkout>fieldset>label{display:grid;gap:8px}
+.eb-root .sf-funnel-checkout fieldset>label input{padding:12px;border:1px solid #aaa}
+.eb-root .sf-funnel-checkout .sf-btn{border-radius:999px;text-transform:none;letter-spacing:normal;font-family:inherit}
+.eb-root .sf-funnel-checkout .sf-btn--primary{background:#fff;color:#161616;min-height:56px;height:auto;padding:16px 24px;font-size:20px;line-height:24px;font-weight:500}
+.eb-root .sf-funnel-checkout :is(button:disabled,input:disabled){cursor:not-allowed}
+.eb-root .sf-funnel-checkout :is(h2,h3){margin-bottom:16px}
+.eb-root .sf-funnel-checkout{--primary:#fff;--on-primary:#161616;--primary-soft:#333;--muted:#ccc;--danger:#ffb4b4}
+.eb-root .sf-funnel-checkout>.sf-container{width:100%;max-width:none;padding:0}
+.eb-root .sf-funnel-checkout form{padding:0;border:0;border-radius:0;background:transparent}
+.eb-root .sf-funnel-checkout__product{position:absolute;width:1px;height:1px;padding:0;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+.eb-root .sf-funnel-checkout input:is([type=radio],[type=checkbox]){min-height:0;accent-color:#fff}
+.eb-root .sf-funnel-checkout__payment label{display:flex;align-items:center;gap:10px;min-height:44px}
+.eb-root .sf-funnel-checkout__payment input[type=radio]{width:18px;height:18px;flex-shrink:0}
+.eb-root .sf-funnel-checkout__payment img,.eb-root .sf-payment-marks img{background:#fff;border-radius:6px;padding:4px}
+.eb-root .sf-funnel-checkout .sf-quantity-offer{display:flex}
+.eb-root .sf-funnel-checkout :is(label,input,select,textarea,button){font-family:inherit}
+.eb-root .sf-funnel-checkout .sf-field--float .sf-field__box{gap:8px}
+.eb-root .sf-funnel-checkout .sf-field--float .sf-field__label{position:static;order:-1;inset:auto;transform:none;background:transparent;color:#f7f7f7;font-size:16px;line-height:1.4;letter-spacing:normal;text-transform:none;padding:0;pointer-events:auto}
+.eb-section-heading{font-size:40px;font-weight:500;margin-bottom:32px!important}
+.eb-technical{padding-block:24px;text-align:center}
+.eb-technical>h2{font-size:24px;font-weight:500;margin-bottom:32px}
+.eb-technical-cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:48px 24px}
+.eb-technical-cards article{display:flex;flex-direction:column;align-items:center;gap:16px}
+.eb-technical-cards img{width:176px;height:176px;object-fit:cover;border-radius:50%}
+.eb-technical-cards h3{font-size:20px;font-weight:700;line-height:1.4}
+.eb-technical-cards p{font-size:14px;margin-top:8px}
+.eb-stories{display:flex;flex-direction:column;align-items:center;gap:48px}
+.eb-stories article{width:100%;display:flex;flex-direction:column;align-items:center;text-align:center;gap:16px}
+.eb-stories img{width:100%;max-width:488px;aspect-ratio:4/5;object-fit:cover}
+.eb-stories h3{font-size:40px;line-height:1.2;font-weight:500;max-width:720px}
+.eb-stories p{max-width:720px;margin-top:16px}
+.eb-section[data-electric-section='electric-benefits']{background:#202020}
+.eb-benefits{display:flex;flex-direction:column}
+.eb-benefits article{display:grid;grid-template-columns:1fr 1fr;align-items:stretch}
+.eb-benefits article:nth-child(even)>img{order:2}
+.eb-benefits img{width:100%;height:100%;aspect-ratio:640/500;object-fit:cover}
+.eb-benefits article>div{padding:48px;display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:24px}
+.eb-benefits h3,.eb-editorial h3{font-size:32px;line-height:1.25;font-weight:600}
+.eb-benefits p,.eb-editorial p{font-size:16px;line-height:1.62}
+.eb-editorial{display:flex;flex-direction:column;gap:0}
+.eb-editorial article{width:50%;border:1px solid #aaa}
+.eb-editorial article:nth-child(even){align-self:flex-end}
+.eb-editorial img{width:100%;aspect-ratio:1;object-fit:cover}
+.eb-editorial article>div{display:flex;flex-direction:column;align-items:flex-start;gap:24px;padding:24px}
+.eb-closing{position:relative;isolation:isolate;min-height:600px;display:flex;align-items:center;text-align:center;padding:48px 24px;background:#18312e}
+.eb-closing>.eb-wrap{display:flex;flex-direction:column;align-items:center;gap:24px}
+.eb-closing h2,.eb-mosaic h2{font-size:56px;line-height:1.21;font-weight:700;text-wrap:balance}
+.eb-closing p{font-size:24px;max-width:950px}
+.eb-marquee{padding-block:24px;overflow:hidden;background:#202020}
+.eb-marquee>div{display:flex;width:max-content;animation:eb-marquee 35s linear infinite}
+.eb-marquee p{display:flex;flex-shrink:0;gap:48px;padding-inline:24px;font:600 24px/1.5 'Readex Pro',sans-serif;white-space:nowrap}
+.eb-marquee span::after{content:'✦';margin-inline-start:48px}
+@keyframes eb-marquee{to{transform:translateX(-50%)}}
+.eb-mosaic h2{margin-bottom:32px}
+.eb-mosaic-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:24px}.eb-mosaic-start,.eb-mosaic-middle,.eb-mosaic-end{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px}.eb-mosaic-start>figure{width:60%;aspect-ratio:376/308}.eb-mosaic-start>div{display:grid;grid-template-columns:1fr 1fr;gap:16px;width:100%}.eb-mosaic-start>div figure{aspect-ratio:176/226}.eb-mosaic-middle>figure{width:60%;aspect-ratio:.68}.eb-mosaic-end>figure{width:100%;aspect-ratio:376/267}
+.eb-mosaic figure{position:relative;overflow:hidden}
+
+.eb-mosaic figure img{width:100%;height:100%;object-fit:cover}
+.eb-mosaic figcaption{position:absolute;bottom:0;inset-inline:0;background:#121212d9;padding:12px}
+.eb-reviews header{text-align:center;margin-bottom:48px}
+.eb-reviews header h2{font:500 72px/1.2 'Readex Pro',sans-serif;text-wrap:balance}
+.eb-reviews header p{margin-top:16px}
+.eb-review-list{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:24px}
+.eb-review-list article{border:1px solid #666;border-radius:16px;padding:24px;display:flex;flex-direction:column;align-items:flex-start;gap:12px;background:#202020}
+.eb-stars{color:#ffd16c;font-size:20px;letter-spacing:3px}
+.eb-review-list small{color:#c6e3c8;font-size:12px}
+.eb-review-list h3{font-size:18px;line-height:1.4}
+.eb-review-list p{font-size:16px}
+.eb-review-photos{display:flex;gap:8px}
+.eb-review-photos img{width:96px;height:96px;object-fit:cover;border-radius:8px}
+.eb-faq{display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:center}
+.eb-faq>img{width:100%;aspect-ratio:600/568;object-fit:cover}
+.eb-faq h2{font-size:40px;line-height:1.2;font-weight:600;margin-bottom:32px}
+.eb-questions article{border-bottom:1px solid #666}
+.eb-questions h3{font-size:16px;line-height:1.4}
+.eb-questions button{width:100%;display:flex;align-items:center;justify-content:space-between;gap:24px;text-align:start;padding:20px 0;background:none;border:0;color:inherit}
+.eb-questions button span{font:400 24px/1 sans-serif;flex-shrink:0}
+.eb-questions article>div p{padding:4px 0 24px;line-height:1.6;color:#e3e3e3}
+.eb-footer{background:#202020;padding:80px 24px 200px;text-align:center}
+.eb-footer .eb-wrap{display:flex;flex-direction:column;align-items:center;gap:32px}
+.eb-footer nav{display:flex;justify-content:center;flex-wrap:wrap;gap:24px}
+.eb-footer address{display:flex;flex-direction:column;gap:8px;font-style:normal}
+.eb-footer address:empty{display:none}
+.eb-footer a:hover{text-decoration:underline}
+.eb-footer p{font-size:14px}
+.eb-footer .sf-payment-marks{justify-content:center}
+.eb-dock{position:fixed;z-index:45;bottom:18px;inset-inline:12.5%;min-height:116px;background:#20202080;backdrop-filter:blur(12px);border:1px dashed #ffffff40;border-radius:999px;box-shadow:0 0 14px #ffffff20;display:flex;align-items:center;justify-content:space-between;gap:24px;padding:16px;color:#fff}
+.eb-dock>div{display:flex;align-items:center;gap:16px;flex:1}
+.eb-dock img{width:80px;height:80px;border:1px solid #ffffff70;border-radius:50%;object-fit:cover;padding:4px}
+.eb-dock strong{display:block;font-size:20px;line-height:1.2;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.eb-dock span{display:flex;align-items:center;gap:24px;font-size:24px;font-weight:700;flex-wrap:wrap}
+.eb-dock del{font-size:18px;font-weight:400}
+.eb-dock>.eb-button{min-width:28%;flex-shrink:0}
+.eb-menu-dialog{padding:0;border:0;background:transparent;color:#fff;max-height:100dvh;height:100dvh;width:auto;max-width:none;margin:0;position:fixed;inset:0;font:500 16px/24px 'Readex Pro',sans-serif;overflow:visible;transition:display .3s allow-discrete,overlay .3s allow-discrete}
+.eb-menu-panel{position:absolute;inset:0 0 0 auto;width:250px;max-width:calc(100vw - 32px);height:100%;background:#121212f7;padding:86px 0;overflow-y:auto;transform:translateX(100%);transition:transform .3s ease-in-out}
+.eb-menu-dialog[open] .eb-menu-panel{transform:none}
+@starting-style{.eb-menu-dialog[open] .eb-menu-panel{transform:translateX(100%)}}
+.eb-menu-dialog::backdrop{background:transparent}
+.eb-menu-dialog button{position:absolute;top:20px;left:20px;display:grid;place-items:center;width:40px;height:40px;padding:8px;border:0;border-radius:50%;background:#ed4949;color:white;cursor:pointer}
+.eb-menu-dialog button svg{width:24px;height:24px}
+.eb-menu-dialog nav{display:flex;flex-direction:column;align-items:center;gap:27px}
+.eb-menu-dialog nav>a{padding:10px 4px 8px;color:inherit;text-decoration:none}
+.eb-menu-dialog nav>span{display:block;text-align:center;width:100%;margin-top:-3px}
+.eb-menu-dialog nav .eb-button{min-width:176px;max-width:calc(100% - 32px);min-height:48px;width:max-content;padding:12px 10px}
+.eb-demo-note{position:relative;z-index:46;background:#18312e;color:#fff;padding:8px 16px;text-align:center;font:13px/1.5 system-ui,sans-serif}
+.eb-demo-note a{text-decoration:underline}
+.eb-motion [data-eb-reveal]{opacity:0;transform:translateY(28px);transition:opacity .7s ease,transform .7s ease}
+.eb-motion [data-eb-reveal].eb-visible{opacity:1;transform:none}
+@media(min-width:1600px){.eb-wrap{max-width:1536px}.eb-campaign{min-height:90svh}.eb-hero :is(h1,h2){font-size:96px}.eb-closing{min-height:85svh}}
+@media(max-width:991px){
+  .eb-wrap{padding-inline:12px}.eb-section{padding:24px 8px}.eb-header{padding:8px 0}.eb-header>.eb-wrap{min-height:37px}.eb-brand{font-size:20px}.eb-header nav{display:none}.eb-menu-toggle{display:block;width:35px;height:29px;padding:2px 5px}.eb-header .eb-brand img{max-height:29px}.eb-campaign{min-height:312px}.eb-hero{gap:16px;padding:20px 20px 32px}.eb-hero>p{font-size:20px;line-height:1.4}.eb-hero :is(h1,h2){font-size:40px;line-height:1.2}.eb-hero .eb-button{min-height:44px;padding:10px 24px}.eb-button{min-height:44px;min-width:176px;padding:10px 20px}.eb-announcement{font-size:13px}.eb-purchase{grid-template-columns:1fr;gap:32px;padding-block:16px}.eb-gallery-rail{gap:8px}.eb-purchase-panel>h2{font-size:24px}.eb-prices strong{font-size:24px}.eb-prices del{font-size:18px}.eb-section-heading{font-size:25px}.eb-technical{padding-block:16px}.eb-technical>h2{font-size:20px}.eb-technical-cards{grid-template-columns:repeat(3,minmax(0,1fr));gap:24px 12px}.eb-technical-cards img{width:86px;height:86px}.eb-technical-cards h3{font-size:13px}.eb-technical-cards p{font-size:12px}.eb-stories{gap:24px}.eb-stories img{max-width:none;aspect-ratio:4/5}.eb-stories h3{font-size:25px;line-height:1.2}.eb-benefits{gap:32px}.eb-benefits article{display:flex;flex-direction:column}.eb-benefits article:nth-child(even)>img{order:0}.eb-benefits article>div{padding:24px 8px 0;gap:16px}.eb-benefits h3,.eb-editorial h3{font-size:20px}.eb-benefits p,.eb-editorial p{font-size:14px}.eb-editorial{gap:24px}.eb-editorial article{width:100%}.eb-editorial article>div{padding:24px;gap:16px}.eb-closing{min-height:253px;padding:32px 20px}.eb-closing h2{font-size:28px}.eb-closing p{font-size:16px}.eb-mosaic h2{font-size:28px;margin-bottom:24px}.eb-mosaic-grid{grid-template-columns:1fr;gap:24px}.eb-mosaic-start>figure{width:100%}.eb-mosaic-middle>figure{width:80%}.eb-reviews header h2{font-size:32px}.eb-reviews header{margin-bottom:32px}.eb-review-list{grid-template-columns:1fr;gap:16px}.eb-faq{grid-template-columns:1fr;gap:32px}.eb-faq h2{font-size:28px}.eb-footer{padding:48px 24px 150px}.eb-footer nav{flex-direction:column;gap:16px}.eb-dock{inset-inline:2.5%;bottom:6px;min-height:80px;gap:8px;padding:12px}.eb-dock>div{gap:8px;flex:1}.eb-dock img{width:55px;height:55px;padding:4px;flex-shrink:0}.eb-dock strong{font-size:14px;line-height:1.3;white-space:normal;overflow-wrap:anywhere}.eb-dock span{font-size:14px;line-height:1.2;gap:8px}.eb-dock del{display:none}.eb-dock>.eb-button{flex:0 1 auto;min-width:0;max-width:47%;min-height:44px;font-size:16px;line-height:20px;padding:10px 15px}.eb-dock .eb-button svg{width:16px;height:16px}
+}
+@media(max-width:359px){.eb-hero :is(h1,h2){font-size:32px}.eb-hero>p{font-size:16px}.eb-dock{inset-inline:0;gap:6px;padding:10px}.eb-dock img{width:42px;height:42px}.eb-dock strong,.eb-dock span{font-size:12px}.eb-dock>.eb-button{font-size:14px;padding-inline:10px}.eb-technical-cards img{width:68px;height:68px}}
+@media(max-width:767px){.eb-root .sf-quantity-offer__body{flex:1 0 calc(100% - 44px)}.eb-root .sf-quantity-offer__prices{flex-basis:calc(100% - 44px);margin-inline-start:44px}}
+@media(prefers-reduced-motion:reduce){.eb-root{scroll-behavior:auto}.eb-motion [data-eb-reveal]{opacity:1;transform:none;transition:none}.eb-marquee>div{animation:none}.eb-marquee p[aria-hidden=true]{display:none}.eb-menu-dialog,.eb-menu-panel,.eb-button{transition:none}.eb-button:hover{transform:none}}
+@media(prefers-reduced-motion:reduce){html:has(.eb-root){scroll-behavior:auto}}
+
+.eb-discount{display:inline-block;font:700 12px/18px 'Readex Pro',sans-serif;padding:5px 10px;border-radius:4px;background:#fff;color:#161616;text-transform:uppercase;white-space:nowrap}
+@media(max-width:991px){.eb-dock .eb-discount{display:none}}
