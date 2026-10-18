@@ -1,13 +1,19 @@
 import { expect, test, type Page } from 'playwright/test';
 import AxeBuilder from '@axe-core/playwright';
+import { readFile } from 'node:fs/promises';
 
 // These browser contracts use an isolated, intercepted API. No real account is created.
-async function workspace(page: Page, locale: 'ar' | 'en', manager = false, appearance: 'light' | 'dark' = 'light') {
+async function workspace(page: Page, locale: 'ar' | 'en', manager = false, appearance: 'light' | 'dark' = 'light', sessionDetails = false) {
   const mutations: Array<{ method: string; path: string; data: Record<string, unknown> }> = [];
   const reads: string[] = [];
   const keys = ['view', 'orders.manage', 'products.manage', 'categories.manage', 'coupons.manage', 'reviews.manage', 'analytics.view', 'themes.manage', 'pages.manage', 'settings.manage'];
   const labels = [['عرض المتجر', 'View store'], ['إدارة الطلبات', 'Manage orders'], ['إدارة المنتجات', 'Manage products'], ['إدارة الأقسام', 'Manage categories'], ['إدارة الكوبونات', 'Manage coupons'], ['إدارة التقييمات', 'Manage reviews'], ['عرض الإحصائيات', 'View analytics'], ['إدارة الثيمات وقوائمها', 'Manage themes and navigation'], ['إدارة الصفحات ومسارات البيع', 'Manage pages and funnels'], ['إدارة إعدادات المتجر والشحن والدفع', 'Manage store, shipping and payment settings']];
   let row = { id: 5, name: 'Catalog Manager', email: 'manager@example.test', is_active: true, permissions: ['store.view', 'store.products.manage'], version: 'a'.repeat(64), deleted_at: null };
+  let sessions = sessionDetails ? [
+    { id: 1, current: true, device_name: 'Current protected synthetic device', email: 'current@example.test', ip_address: '192.0.2.1', created_at: '2026-10-01T12:00:00Z' },
+    { id: 2, current: false, device_name: 'Synthetic Windows device with a deliberately long browser description and a long operating system label', email: 'long.synthetic.account.for.layout.verification@example.test', ip_address: 'ffff:ffff:ffff:ffff:ffff:ffff:255.255.255.255', created_at: '2026-10-01T12:00:00Z' },
+    { id: 3, current: false, device_name: 'Synthetic phone', email: 'phone@example.test', ip_address: '198.51.100.2', created_at: '2026-10-01T12:00:00Z' },
+  ] : Array.from({ length: 24 }, (_, index) => ({ id: index + 1, current: index === 0, device_name: `Isolated device ${index + 1}`, email: 'fixture@example.test', ip_address: '192.0.2.1', created_at: '2026-10-01T12:00:00Z' }));
   await page.addInitScript(({language, mode}) => {
     localStorage.setItem('sellchase_access_token', 'isolated-browser-fixture');
     localStorage.setItem('sellchase_locale', language);
@@ -19,6 +25,13 @@ async function workspace(page: Page, locale: 'ar' | 'en', manager = false, appea
     const headers = { 'Access-Control-Allow-Origin': request.headers()['origin'] || 'http://127.0.0.1:4183', 'Access-Control-Allow-Credentials': 'true', 'Access-Control-Allow-Headers': 'authorization,content-type,x-requested-with', 'Access-Control-Allow-Methods': 'GET,POST,PUT,PATCH,DELETE,OPTIONS' };
     if (request.method() === 'OPTIONS') { await route.fulfill({ status: 204, headers }); return; }
     if (request.method() !== 'GET') {
+      if (sessionDetails && request.method() === 'DELETE' && path.startsWith('/auth/sessions/')) {
+        const id = Number(path.split('/').at(-1));
+        expect([2, 3]).toContain(id);
+        mutations.push({ method: 'DELETE', path, data: {} });
+        sessions = sessions.filter(session => session.id !== id);
+        await route.fulfill({ json: { message: 'Synthetic session revoked' }, headers }); return;
+      }
       expect(path.startsWith('/my-store/managers')).toBe(true);
       const data = request.postDataJSON() as Record<string, unknown>;
       mutations.push({ method: request.method(), path, data });
@@ -36,7 +49,7 @@ async function workspace(page: Page, locale: 'ar' | 'en', manager = false, appea
       await route.fulfill({ json: { data: [row], meta: { current_page: 1, last_page: 1, total: 1 }, permissions: keys.map((key, index) => ({ key: `store.${key}`, required: key === 'view', label: { ar: labels[index]![0], en: labels[index]![1] } })) }, headers }); return;
     }
     if (path === '/auth/sessions') {
-      await route.fulfill({ json: { data: Array.from({ length: 24 }, (_, index) => ({ id: index + 1, current: index === 0, device_name: `Isolated device ${index + 1}`, email: 'fixture@example.test', ip_address: '192.0.2.1', created_at: '2026-10-01T12:00:00Z' })) }, headers }); return;
+      await route.fulfill({ json: { data: sessions }, headers }); return;
     }
     await route.fulfill({ json: { data: [], unread: 0, count: 0 }, headers });
   });
@@ -207,5 +220,89 @@ for (const width of [1440, 320]) {
     await page.getByRole('button', { name: 'إضافة مدير', exact: true }).click();
     expect(await dialog.evaluate(element => element.scrollTop)).toBe(0);
     expect(api.mutations).toEqual([]);
+  });
+}
+
+for (const locale of ['ar', 'en'] as const) for (const width of [320, 390, 1440]) {
+  test(`Session fields remain readable and keyboard-scrollable in ${locale} at ${width}px`, async ({ page }) => {
+    const api = await workspace(page, locale, false, width === 320 ? 'dark' : 'light', true);
+    await page.setViewportSize({ width, height: 844 });
+    await page.goto('/store/settings/login-sessions');
+    const region = page.locator('.ws-login-table');
+    const table = region.getByRole('table');
+    await expect(table.locator('tbody tr')).toHaveCount(3);
+    const geometry = await region.evaluate(element => {
+      const table = element.querySelector('table')!;
+      const row = table.querySelectorAll('tbody tr')[1]!;
+      const ip = row.children[1] as HTMLElement;
+      const range = document.createRange(); range.selectNodeContents(ip);
+      return {
+        table: table.getBoundingClientRect().width, region: element.clientWidth, overflow: element.scrollWidth > element.clientWidth,
+        headings: [...table.querySelectorAll('thead th')].map(cell => cell.getBoundingClientRect().height),
+        ip: { content: range.getBoundingClientRect().width, available: ip.clientWidth - parseFloat(getComputedStyle(ip).paddingLeft) - parseFloat(getComputedStyle(ip).paddingRight), height: range.getBoundingClientRect().height },
+        email: row.children[3]!.getBoundingClientRect().width, row: row.getBoundingClientRect().height,
+      };
+    });
+    expect(geometry.table).toBeGreaterThanOrEqual(1000);
+    expect(geometry.overflow).toBe(true);
+    expect(geometry.headings.every(height => height < 60)).toBe(true);
+    expect(geometry.ip.content).toBeLessThanOrEqual(geometry.ip.available + 1);
+    expect(geometry.ip.height).toBeLessThan(30);
+    expect(geometry.email).toBeGreaterThanOrEqual(240);
+    expect(geometry.row).toBeLessThan(160);
+    await expect(page.getByRole('region', { name: locale === 'ar' ? 'جدول جلسات الدخول' : 'Login sessions table', exact: true })).toBeVisible();
+    await expect(table).toHaveAccessibleName(locale === 'ar' ? 'الأجهزة المسجّلة في حسابك' : 'Devices signed in to your account');
+    await region.focus(); await expect(region).toBeFocused();
+    await page.keyboard.press(locale === 'ar' ? 'ArrowLeft' : 'ArrowRight');
+    await expect.poll(() => region.evaluate(element => Math.abs(element.scrollLeft))).toBeGreaterThan(1);
+    const current = table.getByRole('checkbox', { name: locale === 'ar' ? 'الجلسة الحالية' : 'Current session', exact: true });
+    await expect(current).toBeDisabled();
+    const all = table.getByRole('checkbox', { name: locale === 'ar' ? 'تحديد الجلسات الأخرى' : 'Select other sessions', exact: true });
+    await all.check();
+    await expect(table.locator('tbody input:checked')).toHaveCount(2);
+    await expect(current).not.toBeChecked();
+    await page.setViewportSize({ width: width === 1440 ? 390 : 1440, height: 844 });
+    await expect(table.locator('tbody input:checked')).toHaveCount(2);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)).toBe(true);
+    const results = await new AxeBuilder({ page }).include('.ws-login-table').withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']).analyze();
+    expect(results.violations.filter(v => ['serious', 'critical'].includes(v.impact ?? ''))).toEqual([]);
+    expect(api.mutations).toEqual([]);
+  });
+}
+
+for (const locale of ['ar', 'en'] as const) {
+  test(`Session export and revocation keep the current device protected in ${locale}`, async ({ page }) => {
+    const api = await workspace(page, locale, false, 'light', true);
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto('/store/settings/login-sessions');
+    const table = page.locator('.ws-login-table table');
+    await expect(table.locator('tbody tr')).toHaveCount(3);
+    await table.getByRole('checkbox', { name: locale === 'ar' ? 'تحديد الجلسة Synthetic phone' : 'Select session Synthetic phone', exact: true }).check();
+    const downloaded = page.waitForEvent('download');
+    await page.getByRole('button', { name: locale === 'ar' ? 'تصدير' : 'Export', exact: true }).click();
+    const download = await downloaded;
+    expect(download.suggestedFilename()).toBe('login-sessions.csv');
+    const csv = await readFile((await download.path())!, 'utf8');
+    expect(csv).toContain('phone@example.test');
+    expect(csv).not.toContain('current@example.test');
+    expect(csv).not.toContain('long.synthetic.account');
+    const remove = page.locator('.ws-login-actions').getByRole('button', { name: locale === 'ar' ? 'حذف' : 'Delete', exact: true });
+    await remove.click();
+    const dialog = page.getByRole('dialog');
+    await expect(dialog).toBeVisible();
+    await dialog.getByRole('button', { name: locale === 'ar' ? 'إلغاء' : 'Cancel', exact: true }).click();
+    await expect(dialog).not.toBeVisible();
+    expect(api.mutations).toEqual([]);
+    await remove.click();
+    await dialog.getByRole('button', { name: locale === 'ar' ? 'حذف' : 'Delete', exact: true }).click();
+    await expect(dialog).not.toBeVisible();
+    await expect(table.locator('tbody tr')).toHaveCount(2);
+    expect(api.mutations).toEqual([{ method: 'DELETE', path: '/auth/sessions/3', data: {} }]);
+    const current = table.getByRole('checkbox', { name: locale === 'ar' ? 'الجلسة الحالية' : 'Current session', exact: true });
+    await expect(current).toBeDisabled();
+    await expect(current).not.toBeChecked();
+    await page.reload();
+    await expect(table.locator('tbody tr')).toHaveCount(2);
+    await expect(current).toBeDisabled();
   });
 }
