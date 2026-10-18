@@ -21,6 +21,7 @@
 .gf-brand{font-size:30px;font-weight:800;overflow-wrap:anywhere;max-width:35%;line-height:1.3}
 .gf-header .gf-brand{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .gf-brand img{max-width:180px;max-height:55px;object-fit:contain}
+.gf-header .gf-brand img[src='/brand-logo.svg']{filter:brightness(0) invert(1)}
 .gf-header nav{display:flex;align-items:center;gap:32px;font-weight:600}
 .gf-menu-toggle{display:none}
 .gf-root button:disabled{cursor:not-allowed;opacity:.6}
