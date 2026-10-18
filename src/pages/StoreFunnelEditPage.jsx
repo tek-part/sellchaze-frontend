@@ -12,6 +12,12 @@ const pixelProviders = ['facebook', 'tiktok', 'snapchat'];
 const pixelNames = { facebook: 'Facebook', tiktok: 'TikTok', snapchat: 'Snapchat' };
 const pixelValues = draft => Object.fromEntries(pixelProviders.map(provider => [provider, [...new Set((draft[provider] || '').split(/\r?\n/).map(id => id.trim()).filter(Boolean))]]));
 const pixelText = record => Object.fromEntries(pixelProviders.map(provider => [provider, (record.browser_pixels?.[provider] || []).join('\n')]));
+// Keep local copy as a key so a language switch also updates completed requests.
+// API validation details stay verbatim; changing language must never repeat a save.
+const requestError = error => ({
+    key: error.response?.status === 404 ? 'editMissing' : error.response?.status === 409 ? 'editConflict' : 'editRequestFailed',
+    detail: [404, 409].includes(error.response?.status) ? '' : funnelError(error),
+});
 
 export default function StoreFunnelEditPage() {
     const { funnelId } = useParams(); const scope = useStoreScope(); const { access } = useOutletContext();
@@ -25,7 +31,7 @@ function FunnelDetails({ apiBase, uiBase, funnelId }) {
     const [record, setRecord] = useState(null); const [version, setVersion] = useState(''); const [baseUrl, setBaseUrl] = useState('');
     const [form, setForm] = useState({ title: '', slug: '', product_id: '' }); const [selectedProduct, setSelectedProduct] = useState(null);
     const [loading, setLoading] = useState(true); const [saving, setSaving] = useState(false); const [saved, setSaved] = useState(false);
-    const [error, setError] = useState(''); const [conflict, setConflict] = useState(false); const [reload, setReload] = useState(0);
+    const [error, setError] = useState(null); const [conflict, setConflict] = useState(false); const [reload, setReload] = useState(0);
     const [query, setQuery] = useState(''); const [products, setProducts] = useState([]); const [productLoading, setProductLoading] = useState(false);
     const [pixels, setPixels] = useState({});
     const mounted = useRef(true); const saveRequest = useRef(null); const inFlight = useRef(false);
@@ -36,18 +42,18 @@ function FunnelDetails({ apiBase, uiBase, funnelId }) {
         setPixels(pixelText(item));
     }
     useEffect(() => {
-        let active = true; const controller = new AbortController(); setLoading(true); setError(''); setConflict(false); setSaved(false); setRecord(null);
+        let active = true; const controller = new AbortController(); setLoading(true); setError(null); setConflict(false); setSaved(false); setRecord(null);
         api.get(endpoint, { signal: controller.signal }).then(({ data }) => { if (active) hydrate(data); })
-            .catch(e => { if (active) setError(e.response?.status === 404 ? funnelCopy[i18n.language?.startsWith('ar') ? 'ar' : 'en'].editMissing : funnelError(e)); }).finally(() => { if (active) setLoading(false); });
+            .catch(e => { if (active) setError(requestError(e)); }).finally(() => { if (active) setLoading(false); });
         return () => { active = false; controller.abort(); };
-    }, [endpoint, reload, i18n]);
+    }, [endpoint, reload]);
     useEffect(() => {
         if (!record) return undefined;
         let active = true; const controller = new AbortController(); setProductLoading(true);
         const timer = setTimeout(() => {
             api.get(`${apiBase}/funnels/products`, { params: { search: query }, signal: controller.signal })
                 .then(({ data }) => { if (active) setProducts(data.data || []); })
-                .catch(e => { if (active) setError(funnelError(e)); }).finally(() => { if (active) setProductLoading(false); });
+                .catch(e => { if (active) setError(requestError(e)); }).finally(() => { if (active) setProductLoading(false); });
         }, 200);
         return () => { active = false; clearTimeout(timer); controller.abort(); };
     }, [apiBase, query, record]);
@@ -60,16 +66,16 @@ function FunnelDetails({ apiBase, uiBase, funnelId }) {
     function change(field, value) { setForm(current => ({ ...current, [field]: value })); setSaved(false); }
     async function submit(event) {
         event.preventDefault(); if (inFlight.current || !dirty || !form.product_id || conflict) return;
-        inFlight.current = true; setSaving(true); setSaved(false); setError(''); const controller = new AbortController(); saveRequest.current = controller;
+        inFlight.current = true; setSaving(true); setSaved(false); setError(null); const controller = new AbortController(); saveRequest.current = controller;
         try {
             const { data } = await api.put(endpoint, { ...form, product_id: Number(form.product_id), version, ...(pixelsDirty ? { browser_pixels: pixelValues(pixels) } : {}) }, { signal: controller.signal });
             if (mounted.current) { hydrate(data); setSaved(true); }
-        } catch (e) { if (mounted.current && !controller.signal.aborted) { setError(e.response?.status === 409 ? c.editConflict : e.response?.status === 404 ? c.editMissing : funnelError(e)); setConflict(e.response?.status === 409); } }
+        } catch (e) { if (mounted.current && !controller.signal.aborted) { setError(requestError(e)); setConflict(e.response?.status === 409); } }
         finally { inFlight.current = false; if (mounted.current) setSaving(false); }
     }
     return <div className="fw-workspace fw-details">
         <header className="fw-details-header"><h1>{c.editTitle}</h1><Link className="fw-button" to={`${uiBase}/funnels`}>{c.backToList}</Link></header>
-        {error ? <div className="fw-error" role="alert">{error}{!saving ? <button type="button" onClick={() => setReload(value => value + 1)}>{conflict ? c.reloadDetails : c.retry}</button> : null}</div> : null}
+        {error ? <div className="fw-error" role="alert">{c[error.key]}{error.detail ? <> {error.detail}</> : null}{!saving ? <button type="button" onClick={() => setReload(value => value + 1)}>{conflict ? c.reloadDetails : c.retry}</button> : null}</div> : null}
         {loading ? <p role="status">{c.loading}</p> : record ? <form className="fw-form" onSubmit={submit}>
             <label htmlFor="fw-edit-name">{c.name}<input id="fw-edit-name" required maxLength={255} disabled={saving} value={form.title} onChange={event => change('title', event.target.value)} /></label>
             <label htmlFor="fw-edit-slug">{c.slug}<span className="fw-url"><span id="fw-edit-prefix" title={baseUrl}>{baseUrl}</span><input id="fw-edit-slug" dir="ltr" aria-label={c.slug} aria-describedby="fw-edit-prefix" required maxLength={180} pattern="[a-z0-9]+(-[a-z0-9]+)*" disabled={saving} value={form.slug} onChange={event => change('slug', event.target.value)} /></span></label>
