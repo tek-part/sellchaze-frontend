@@ -1,5 +1,6 @@
 @font-face{font-family:'DM Sans';src:url('/fonts/dmsans/dmsans-variable.woff2') format('woff2');font-weight:100 1000;font-display:swap}
 @font-face{font-family:'Readex Pro';src:url('/fonts/readexpro/readexpro-variable.woff2') format('woff2');font-weight:160 700;font-display:swap}
+html:has(.eb-root){scroll-behavior:smooth}
 html:has(.eb-root)::-webkit-scrollbar{width:5px}
 html:has(.eb-root)::-webkit-scrollbar-thumb{background:#555;border-radius:8px}
 .eb-root{--color-primary:#fff;--color-on-primary:#151515;--color-text:#f7f7f7;--color-surface:#202020;--color-border:#777;--bg:#121212;--text:#f7f7f7;--surface:#202020;--surface-2:#292929;--border:#777;background:#121212;color:#f7f7f7;font:16px/1.5 'DM Sans',system-ui,-apple-system,'Segoe UI',sans-serif;overflow:clip}
@@ -152,3 +153,4 @@ html:has(.eb-root)::-webkit-scrollbar-thumb{background:#555;border-radius:8px}
 }
 @media(max-width:359px){.eb-hero :is(h1,h2){font-size:32px}.eb-hero>p{font-size:16px}.eb-dock{inset-inline:0;gap:6px;padding:10px}.eb-dock img{width:42px;height:42px}.eb-dock strong,.eb-dock span{font-size:12px}.eb-dock>.eb-button{font-size:14px;padding-inline:10px}.eb-technical-cards img{width:68px;height:68px}}
 @media(prefers-reduced-motion:reduce){.eb-root{scroll-behavior:auto}.eb-motion [data-eb-reveal]{opacity:1;transform:none;transition:none}.eb-marquee>div{animation:none}.eb-marquee p[aria-hidden=true]{display:none}.eb-menu-dialog,.eb-menu-panel,.eb-button{transition:none}.eb-button:hover{transform:none}}
+@media(prefers-reduced-motion:reduce){html:has(.eb-root){scroll-behavior:auto}}
