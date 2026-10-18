@@ -152,3 +152,15 @@ test('AI generation only submits after complete content and product selection', 
   expect(api.writes).toHaveLength(1);
   expect(api.writes[0]).toMatchObject({path:'/my-store/funnels/generate',data:{product_id:7,template_key:'glasses-en',locale:'en',generation:{language:'English',dialect:'Plain English',product_name:'Fixture glasses',description:'A synthetic description for isolated draft creation tests.'}}});
 });
+for (const ai of [false, true]) test(`Creation details start at the top on short screens (${ai ? 'AI' : 'manual'})`, async ({page}) => {
+  const api = await fixture(page, 'en', ai);
+  await page.setViewportSize({width:844,height:390});
+  await page.goto('/store/funnels/create');
+  await page.getByRole('dialog').getByRole('button', {name:ai ? /Create a funnel with AI/ : /Create a funnel manually/}).click();
+  await page.getByRole('button', {name:'Use template: litter-robot-ar',exact:true}).click();
+  expect(await page.evaluate(() => document.documentElement.scrollHeight <= innerHeight)).toBe(true);
+  await expect(page.locator('.fw-create-footer')).toBeInViewport();
+  await page.locator('.fw-create-footer').getByRole('button', {name:'Next',exact:true}).click();
+  await expect(page.getByLabel('Funnel name',{exact:true})).toBeInViewport();
+  expect(api.writes).toEqual([]);
+});

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Link, Navigate, useNavigate, useOutletContext, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Combobox, ComboboxButton, ComboboxInput, ComboboxOption, ComboboxOptions, Dialog, DialogBackdrop, DialogPanel, DialogTitle } from '@headlessui/react';
@@ -17,6 +17,8 @@ export default function StoreFunnelCreatePage() {
     const { apiBase, uiBase } = useStoreScope(); const { access, locales } = useOutletContext(); const navigate = useNavigate();
     const [params, setParams] = useSearchParams(); const cloneParam = params.get('clone'); const loadedClone = useRef(''); const cloneRequest = useRef(null); const mounted = useRef(true);
     const [mode, setMode] = useState(cloneParam ? 'manual' : null); const [step, setStep] = useState(1);
+    const scroller = useRef(null);
+    useLayoutEffect(() => { if (scroller.current) scroller.current.scrollTop = 0; }, [step]);
     const [templates, setTemplates] = useState([]); const [template, setTemplate] = useState('');
     const [aiAvailable, setAiAvailable] = useState(false); const [baseUrl, setBaseUrl] = useState('/funnels/');
     const [loading, setLoading] = useState(true); const [saving, setSaving] = useState(false); const [error, setError] = useState('');
@@ -88,7 +90,7 @@ export default function StoreFunnelCreatePage() {
     const localeAllowed = supported.includes(form.locale);
     return <div className="fw-workspace fw-create">
         <ol className="fw-steps" aria-label={c.create}><li className={`fw-step ${step === 2 ? 'fw-step-done' : ''}`} aria-current={step === 1 ? 'step' : undefined}><span>1</span>{c.templates}</li><li className="fw-step-line" aria-hidden="true" /><li className="fw-step" aria-current={step === 2 ? 'step' : undefined}><span>2</span>{c.details}</li></ol>
-        <div className="fw-create-scroll">
+        <div className="fw-create-scroll" ref={scroller}>
             {error ? <div className="fw-error" role="alert">{error}</div> : null}
             {codeBusy ? <p role="status">{c.loading}</p> : step === 1 ? <div className="fw-gallery">
                 <div className="fw-clone-box"><p>{c.clonePrompt}</p><div className="fw-clone-fields"><label>{c.cloneCode}<input value={code} dir="ltr" autoComplete="off" onChange={event => { setCode(event.target.value); if (source) { setSource(null); setTemplate(''); } }} onKeyDown={event => { if (event.key === 'Enter') { event.preventDefault(); void lookup(code); } }} /></label><button type="button" className="fw-button" disabled={!code.trim() || codeBusy} onClick={() => void lookup(code)}>{c.next}</button></div></div>
