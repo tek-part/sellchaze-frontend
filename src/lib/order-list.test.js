@@ -80,7 +80,7 @@ describe('merchant order list lifecycle and review actions', () => {
         expect([...select.options].some(e => e.value === 'returning_from_delivery')).toBe(true);
         await act(async () => { select.value = 'high_risk'; select.dispatchEvent(new Event('change', { bubbles: true })); });
         expect(document.querySelector('[role="dialog"]').textContent).toContain('manual review classification');
-        await click(button('Update'));
+        await click(button('Update orders'));
         expect(api.post).toHaveBeenCalledWith('/my-store/orders/bulk-status', { status: 'high_risk', eligible_only: true, orders: [{ id: 7, status: 'processing', review_version: 3 }] });
         expect(host.textContent).toContain('0 orders updated. Ineligible: 1, unchanged: 0.');
         expect(host.querySelector('.ws-orders-selection')).toBeNull();
@@ -91,7 +91,7 @@ describe('merchant order list lifecycle and review actions', () => {
         const select = document.querySelector('[role="dialog"] select');
         await act(async () => { select.value = 'refunded'; select.dispatchEvent(new Event('change', { bubbles: true })); });
         expect(document.querySelector('[role="dialog"]').textContent).toContain('does not issue a payment refund');
-        await click(button('Update'));
+        await click(button('Update orders'));
         expect(document.querySelector('[role="dialog"]')).not.toBeNull();
         expect(host.querySelector('tbody input').checked).toBe(true);
         expect(host.textContent).not.toContain('orders updated');
