@@ -1,5 +1,5 @@
 type CatalogLocation = Pick<Location, 'pathname' | 'search'>;
-const keys = new Set(['glasses-ar', 'glasses-en', 'hair-revive-ar', 'hair-revive-en', 'litter-robot-ar', 'litter-robot-en']);
+const keys = new Set(['glasses-ar', 'glasses-en', 'hair-revive-ar', 'hair-revive-en', 'litter-robot-ar', 'litter-robot-en', 'electric-biker-ar', 'electric-biker-en']);
 
 /** Only the explicitly marked public catalog can warm demo assets. Merchant pages stay authoritative. */
 export function nativeCatalogKey(location: CatalogLocation): string | null {
@@ -12,6 +12,7 @@ export function loadNativeCatalogPreview(key: string) {
   if (key === 'glasses-ar' || key === 'glasses-en') return import('./GlassesFunnel').then(m => ({ default: m.GlassesTemplatePreview }));
   if (key === 'hair-revive-ar' || key === 'hair-revive-en') return import('./HairReviveFunnel').then(m => ({ default: m.HairTemplatePreview }));
   if (key === 'litter-robot-ar' || key === 'litter-robot-en') return import('./LitterRobotFunnel').then(m => ({ default: m.LitterTemplatePreview }));
+  if (key === 'electric-biker-ar' || key === 'electric-biker-en') return import('./ElectricBikerFunnel').then(m => ({ default: m.ElectricTemplatePreview }));
   return Promise.reject(new Error('Unknown native catalog preview'));
 }
 
@@ -20,9 +21,9 @@ export function warmNativeCatalogPreview(location: CatalogLocation): void {
   if (!key) return;
   // Start the route module/CSS in parallel with store bootstrap instead of after React routing.
   void loadNativeCatalogPreview(key).catch(() => { /* The routed lazy boundary handles load failures. */ });
-  if (key.startsWith('litter-robot-')) {
+  if (key.startsWith('litter-robot-') || key.startsWith('electric-biker-')) {
     const image = document.createElement('link');
-    image.rel = 'preload'; image.as = 'image'; image.href = '/media/funnel-campaigns/litter-robot-hero-v1.webp';
+    image.rel = 'preload'; image.as = 'image'; image.href = key.startsWith('electric-biker-') ? '/media/funnel-campaigns/electric-biker-hero-v1.webp' : '/media/funnel-campaigns/litter-robot-hero-v1.webp';
     image.fetchPriority = 'high'; document.head.appendChild(image);
   }
 }
