@@ -23,6 +23,7 @@ import { abCheckoutToken } from './ab-assignment';
 import { recordPromotionPurchase } from '../state/product-promotion-purchases';
 
 export interface CheckoutContactPayload {
+  payment_adjustment_token?: string | null;
   customer_name?: string;
   customer_email?: string;
   customer_phone?: string;
@@ -39,6 +40,9 @@ export interface CheckoutContactPayload {
 interface RetryState {
   token: string;
   orderNumber?: string;
+  total?: string | number;
+  currency?: string;
+  adjustment?: string;
 }
 
 interface CheckoutResponse {
@@ -110,7 +114,7 @@ export function useCheckoutPaymentFlow(options?: { items: ReadonlyArray<Checkout
       window.scrollTo({ top: 0, behavior: 'auto' });
     } catch (requestError) {
       if (requestError instanceof ApiError) {
-        const body = requestError.payload as { checkout_rejected?: boolean; payment_retry?: { token?: string }; receipt?: { token?: string }; data?: { number?: string; tracking?: unknown }; message?: string } | undefined;
+        const body = requestError.payload as { checkout_rejected?: boolean; payment_retry?: { token?: string }; receipt?: { token?: string }; data?: { number?: string; tracking?: unknown; total?: string | number; currency?: string; payment_adjustment_total?: string }; message?: string } | undefined;
         if (body?.data?.number && body.receipt?.token) {
           recordPromotionPurchase(store.id, body.data.number, readCheckoutAttempt(scope)?.body.items ?? items ?? checkoutCartItems(cart.lines));
           sendAdvertisingEnvelope(store.id, body.data.tracking);
@@ -118,7 +122,7 @@ export function useCheckoutPaymentFlow(options?: { items: ReadonlyArray<Checkout
           try { retireLeadToken(window.sessionStorage, readCheckoutAttempt(scope)?.body.lead_token); } catch { /* server already converted the lead */ }
         }
         if (body?.payment_retry?.token) {
-          setPaymentRetry({ token: body.payment_retry.token, orderNumber: body.data?.number });
+          setPaymentRetry({ token: body.payment_retry.token, orderNumber: body.data?.number, total: body.data?.total, currency: body.data?.currency, adjustment: body.data?.payment_adjustment_total });
           setError(undefined);
           return;
         }

@@ -34,6 +34,28 @@ async function mount() { await act(async () => root.render(<MemoryRouter><StoreP
 async function click(el) { await act(async () => el.click()); }
 
 describe('payment methods', () => {
+    it('loads a saved percentage discount, preserves it on save, and can disable it explicitly', async () => {
+        const rows = fixture();
+        rows[1].price_adjustment = { enabled: true, type: 'percentage', direction: 'subtract', value: '12.50' };
+        api.get.mockResolvedValue({ data: { data: rows } });
+        api.put.mockResolvedValue({ data: { data: rows } });
+        await mount(); await click(button(card('Stripe'), 'Edit'));
+        const form = document.querySelector('[role="dialog"] form');
+        expect(form.querySelector('#payment-adjustment-type').value).toBe('percentage');
+        expect(form.querySelector('#payment-adjustment-direction').value).toBe('subtract');
+        expect(form.querySelector('#payment-adjustment-value').value).toBe('12.50');
+        expect(form.querySelector('#payment-adjustment-value').step).toBe('any');
+        await act(async () => form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true })));
+        expect(api.put.mock.calls[0][1].gateways[0].presentation.price_adjustment).toEqual(rows[1].price_adjustment);
+        api.get.mockResolvedValue({ data: { data: rows } });
+        api.put.mockResolvedValue({ data: { data: rows } });
+        await click(button(card('Stripe'), 'Edit'));
+        await click(document.querySelector('.ws-payment-price-adjustment [role="switch"]'));
+        const next = document.querySelector('[role="dialog"] form');
+        expect(next.querySelector('#payment-adjustment-value')).toBeNull();
+        await act(async () => next.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true })));
+        expect(api.put.mock.calls[1][1].gateways[0].presentation.price_adjustment.enabled).toBe(false);
+    });
     it('renders provider marks and distinct edit/activation controls without writing on load', async () => {
         await mount(); expect(host.querySelectorAll('.ws-payment-card')).toHaveLength(3);
         expect(card('Stripe').querySelector('img').getAttribute('src')).toBe('/payments/stripe.png');
