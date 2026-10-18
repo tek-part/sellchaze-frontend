@@ -1371,12 +1371,10 @@
 /* Arabic is not uppercase-able and must not be tracked. */
 .sf-lang__btn[lang='ar'] { font-family: var(--font-arabic); text-transform: none; letter-spacing: normal; }
 
-/* Home-page settle guard (see pages/HomePage.tsx): keep data-driven sections and the footer
-   invisible until the first data round-trip resolves, so their growth is not counted as CLS. */
-[data-sf-home-loading] #sf-main .sf-section-frame:not(:first-child),
-[data-sf-home-loading] footer {
-  visibility: hidden;
-}
+/* Code and content loading share one full-page placeholder; chrome stays visible. */
+.sf-page-loading.sf-section { padding-block:0; }
+.sf-page-loading__content { display:grid; justify-items:center; align-content:start; gap:var(--sp-3); min-block-size:100svh; padding-block-start:clamp(8rem,30svh,20rem); color:var(--muted); }
+.sf-page-loading__content p { margin:0; font-size:var(--fs-sm); }
 
 .sf-gallery__video { width:100%; max-height:75vh; aspect-ratio:1; object-fit:contain; background:#111; border-radius:inherit; }
 .sf-gallery__video-thumb { display:grid; place-items:center; width:100%; height:100%; min-height:3rem; color:var(--text); background:var(--surface); }
