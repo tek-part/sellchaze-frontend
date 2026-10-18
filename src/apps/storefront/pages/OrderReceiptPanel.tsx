@@ -40,6 +40,11 @@ export function OrderReceiptPanel({ number }: { number: string | null }): ReactE
   useEffect(() => { sendAdvertisingEnvelope(store.id, tracking); }, [store.id, tracking]);
   if (!token) return null;
   const order = query.data?.data;
+  const returnLabels: Record<string, string> = ar
+    ? { returning_from_delivery: 'مرتجع من الشحن', request_refund: 'العميل طلب الارجاع', refund_in_progress: 'جاري الارجاع', refunded: 'تم الارجاع' }
+    : { returning_from_delivery: 'Returning from delivery', request_refund: 'Return requested', refund_in_progress: 'Return in progress', refunded: 'Returned' };
+  const returnLabel = returnLabels[order?.status ?? ''];
+  const paymentClosed = Boolean(returnLabel) || order?.status === 'cancelled';
   const hasDigital = order?.items?.some((item) => Boolean(item.digital_delivery)) === true;
   const bank = query.data?.bank_transfer;
   const labels: Record<string, string> = ar ? { account_name: 'اسم المستفيد', bank_name: 'البنك', iban: 'رقم الحساب / IBAN', swift_code: 'رمز SWIFT' } : { account_name: 'Account holder', bank_name: 'Bank', iban: 'Account / IBAN', swift_code: 'SWIFT' };
@@ -48,12 +53,13 @@ export function OrderReceiptPanel({ number }: { number: string | null }): ReactE
     <h2>{ar ? 'إيصال طلبك الخاص' : 'Your private order receipt'}</h2>
     {query.loading ? <Spinner label={ar ? 'جارٍ تحميل الإيصال…' : 'Loading receipt…'} /> : query.error ? <p role="alert">{ar ? 'تعذر فتح الإيصال. قد يكون الرابط منتهيًا أو غير صالح.' : 'Unable to open this receipt. The link may be invalid or expired.'}</p> : order ? <>
       <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}><PaymentMethodLogo slug={order.payment_method} src={query.data?.payment_method?.logo_url} /><span>{query.data?.payment_method?.name}</span></div><p><bdi>{order.number}</bdi> · {formatMoney(Number(order.total), order.currency ?? 'USD', locale)}</p>
-      <p role="status">{order.status === 'cancelled' ? (ar ? 'الطلب ملغى' : 'Order cancelled') : order.payment_status === 'paid' ? (ar ? 'تم تأكيد الدفع' : 'Payment confirmed') : (ar ? 'بانتظار تأكيد الدفع' : 'Awaiting payment confirmation')}</p>
+      <p role="status">{returnLabel || (order.status === 'cancelled' ? (ar ? 'الطلب ملغى' : 'Order cancelled') : order.payment_status === 'paid' ? (ar ? 'تم تأكيد الدفع' : 'Payment confirmed') : (ar ? 'بانتظار تأكيد الدفع' : 'Awaiting payment confirmation'))}</p>
+      {returnLabel ? <p>{ar ? 'حالة الدفع المسجلة: ' : 'Recorded payment status: '}{order.payment_status === 'paid' ? (ar ? 'تم تأكيد الدفع' : 'Payment confirmed') : order.payment_status === 'failed' ? (ar ? 'فشل الدفع' : 'Payment failed') : (ar ? 'بانتظار التأكيد' : 'Awaiting confirmation')}</p> : null}
       <PaymentAdjustmentLine amount={order.payment_adjustment_total} currency={order.currency ?? 'USD'} />
-      {hasDigital && order.payment_method === 'cod' && order.payment_status !== 'paid' && order.status !== 'cancelled' ? <p>{ar ? 'الدفع عند الاستلام: تتاح المنتجات الرقمية بعد مراجعة المتجر لتحصيل كامل قيمة الطلب. تسليم الطرد وحده لا يؤكد الدفع.' : 'Cash on delivery: digital products become available after the store verifies collection of the full order amount. Parcel delivery alone does not confirm payment.'}</p> : null}
+      {hasDigital && order.payment_method === 'cod' && order.payment_status !== 'paid' && !paymentClosed ? <p>{ar ? 'الدفع عند الاستلام: تتاح المنتجات الرقمية بعد مراجعة المتجر لتحصيل كامل قيمة الطلب. تسليم الطرد وحده لا يؤكد الدفع.' : 'Cash on delivery: digital products become available after the store verifies collection of the full order amount. Parcel delivery alone does not confirm payment.'}</p> : null}
       {order.items?.map((item, index) => <div key={item.id ?? index}><h3>{item.name} × {item.quantity}</h3><DigitalDeliverySummary delivery={item.digital_delivery} /></div>)}
-      {order.payment_method === 'transfer_receipt' ? <TransferReceiptUpload token={token} proofs={query.data?.transfer_proofs || []} ar={ar} canUpload={order.payment_status !== 'paid' && order.status !== 'cancelled'} onUploaded={() => setRevision(value => value + 1)} /> : null}
-      {bank && order.status !== 'cancelled' ? <div className="sf-order-receipt__bank">
+      {order.payment_method === 'transfer_receipt' ? <TransferReceiptUpload token={token} proofs={query.data?.transfer_proofs || []} ar={ar} canUpload={order.payment_status !== 'paid' && !paymentClosed} onUploaded={() => setRevision(value => value + 1)} /> : null}
+      {bank && !paymentClosed ? <div className="sf-order-receipt__bank">
         <h3>{ar ? 'تعليمات التحويل البنكي' : 'Bank transfer instructions'}{bank.test_mode ? (ar ? ' (تجريبي)' : ' (Test)') : ''}</h3>
         {Object.entries(bank.fields).length ? <dl>{Object.entries(bank.fields).map(([key, value]) => <div key={key}><dt>{labels[key] ?? key}</dt><dd><bdi>{value}</bdi></dd></div>)}</dl> : <p>{ar ? 'تواصل مع المتجر للحصول على بيانات التحويل.' : 'Contact the store for transfer details.'}</p>}
         {bank.notes ? <p style={{ whiteSpace: 'pre-wrap' }}>{bank.notes}</p> : null}
