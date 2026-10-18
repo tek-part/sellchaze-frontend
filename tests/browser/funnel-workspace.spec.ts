@@ -203,6 +203,8 @@ for (const contentLocale of ['en','ar']) test(`AI ${contentLocale} generation on
   const product = page.getByRole('combobox', {name: 'Product', exact: true});
   await product.fill('Fixture');
   await page.getByRole('option', {name: 'Fixture glasses', exact: true}).click();
+  await expect(product).toHaveAttribute('aria-expanded', 'false');
+  await expect(product).toHaveValue('Fixture glasses');
   await page.getByLabel('Style or dialect', {exact: true}).fill('Plain English');
   await page.getByLabel('Product description and features', {exact: true}).fill('A synthetic description for isolated draft creation tests.');
   expect(api.writes).toEqual([]);
