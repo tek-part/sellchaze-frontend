@@ -1,3 +1,5 @@
 Actual screenshots of the independently implemented native Glasses Arabic and English funnels, captured at 1920 x 972 in an isolated local synthetic fixture on 2026-10-18.
 The campaign photographs are original generated assets documented in ../funnel-campaigns/glasses-SOURCE.txt. No competitor screenshot or photograph is embedded in these thumbnails.
 Demo product names, prices and content belong only to the local layout fixture. Merchant-created funnels use their own linked product and start as unpublished drafts.
+
+Hair Revive Arabic and English thumbnails are actual 1920 x 1031 screenshots of the independent native display-only previews, captured locally on 2026-10-18. The original photographs and exact image-generation prompts are documented in ../funnel-campaigns/hair-revive-SOURCE.txt. Sample reviews are explicitly labeled and checkout is disabled.
