@@ -40,6 +40,30 @@ async function workspace(page: Page, locale: 'ar' | 'en', manager = false, appea
   return { mutations, reads };
 }
 
+for (const width of [1440, 390]) {
+  test(`Reduced motion disables merchant navigation transitions at ${width}px`, async ({ page }) => {
+    const api = await workspace(page, 'en');
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    await page.setViewportSize({ width, height: 900 });
+    await page.goto('/store/settings/managers');
+    await expect(page.getByRole('button', { name: 'Add manager', exact: true })).toBeVisible();
+    if (width < 768) await page.getByRole('button', { name: 'Open navigation', exact: true }).click();
+    const navigation = page.locator(width < 768 ? '.ws-drawer' : '.ws-desktop-sidebar');
+    const products = navigation.getByRole('button', { name: 'Products', exact: true });
+    await products.click();
+    await expect(navigation.getByRole('link', { name: 'All products', exact: true })).toBeVisible();
+    await expect(products).toHaveCSS('transition-duration', '0s');
+    await expect(navigation.locator('.ws-nav-panel')).toHaveCSS('transition-duration', '0s');
+    if (width < 768) {
+      await expect(navigation).toHaveCSS('transition-duration', '0s');
+      await page.keyboard.press('Escape');
+      await expect(page.getByRole('dialog')).not.toBeVisible();
+      await expect(page.getByRole('button', { name: 'Open navigation', exact: true })).toBeFocused();
+    }
+    expect(api.mutations).toEqual([]);
+  });
+}
+
 for (const locale of ['ar', 'en'] as const) {
   for (const width of [1440, 390]) {
     test(`Manager form is accessible in ${locale} at ${width}px`, async ({ page }) => {
