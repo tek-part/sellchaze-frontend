@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
 import { Navigate, useNavigate, useParams, useOutletContext } from 'react-router-dom';
 import useStoreScope from '../hooks/useStoreScope';
 import { useTranslation } from 'react-i18next';
@@ -9,6 +9,7 @@ import StoreMediaPicker from '../components/store/StoreMediaPicker';
 import { commit, createHistory, isPreviewMessage, redo, reorder, undo, VIEWPORT_WIDTH } from '../apps/storefront/platform/studio/editor-domain';
 
 function SectionSettings({ schema, value, onChange, viewport, apiBase }) {
+    const fieldPrefix = useId();
     const fields = schema?.settings ?? [];
     if (!fields.length) return <p className="text-xs text-slate-400">No settings.</p>;
     const set = (field, nextValue) => {
@@ -25,25 +26,34 @@ function SectionSettings({ schema, value, onChange, viewport, apiBase }) {
                 const cls = 'w-full rounded-lg border border-slate-200 px-2 py-1.5 text-sm';
                 return (
                     <div key={f.id}>
-                        <label className="mb-0.5 flex items-center justify-between text-[11px] font-medium text-slate-500"><span>{f.label || f.id}</span>{f.responsive && <span className="rounded bg-slate-100 px-1.5 py-0.5 uppercase">{viewport}</span>}</label>
-                        {f.type === 'toggle' ? (
-                            <input type="checkbox" checked={!!v} onChange={(e) => set(f, e.target.checked)} />
+                        <label htmlFor={`${fieldPrefix}-${f.id}`} className="mb-0.5 flex items-center justify-between text-[11px] font-medium text-slate-500"><span>{f.label || f.id}</span>{f.responsive && <span className="rounded bg-slate-100 px-1.5 py-0.5 uppercase">{viewport}</span>}</label>
+                        {f.type === 'list' ? (
+                            <div className="space-y-3 rounded-lg border border-slate-200 p-2">
+                                {(Array.isArray(v) ? v : []).map((item, index) => <fieldset key={index} className="space-y-2 rounded border border-slate-100 p-2">
+                                    <legend className="text-xs">{index + 1}</legend>
+                                    <SectionSettings schema={{ settings: f.item || [] }} value={item} onChange={(next) => set(f, v.map((entry, i) => i === index ? next : entry))} viewport={viewport} apiBase={apiBase} />
+                                    <div className="flex gap-2 text-xs"><button type="button" aria-label={`${f.label || f.id} ${index + 1} ↑`} disabled={index === 0} onClick={() => set(f, reorder(v, index, index - 1))}>↑</button><button type="button" aria-label={`${f.label || f.id} ${index + 1} ↓`} disabled={index === v.length - 1} onClick={() => set(f, reorder(v, index, index + 1))}>↓</button><button type="button" onClick={() => set(f, v.filter((_, i) => i !== index))}>− {f.label || f.id} {index + 1}</button></div>
+                                </fieldset>)}
+                                <button type="button" className="rounded border px-3 py-1 text-xs" disabled={Array.isArray(v) && v.length >= (f.max ?? 20)} onClick={() => set(f, [...(Array.isArray(v) ? v : []), {}])}>+ {f.label || f.id}</button>
+                            </div>
+                        ) : f.type === 'toggle' ? (
+                            <input id={`${fieldPrefix}-${f.id}`} type="checkbox" checked={!!v} onChange={(e) => set(f, e.target.checked)} />
                         ) : f.type === 'textarea' || f.type === 'richtext' ? (
-                            <textarea rows={2} value={v ?? ''} onChange={(e) => set(f, e.target.value)} className={cls} />
+                            <textarea id={`${fieldPrefix}-${f.id}`} rows={2} value={v ?? ''} onChange={(e) => set(f, e.target.value)} className={cls} />
                         ) : f.type === 'select' ? (
-                            <SearchableSelect value={v ?? ''} onChange={(e) => set(f, e.target.value)} className="w-full">
+                            <SearchableSelect id={`${fieldPrefix}-${f.id}`} value={v ?? ''} onChange={(e) => set(f, e.target.value)} className="w-full">
                                 {(f.options || []).map((o) => (o && typeof o === 'object'
                                     ? <option key={String(o.value)} value={String(o.value ?? '')}>{String(o.label ?? o.value ?? '')}</option>
                                     : <option key={String(o)} value={String(o)}>{String(o)}</option>))}
                             </SearchableSelect>
                         ) : f.type === 'number' || f.type === 'range' ? (
-                            <input type="number" min={f.min} max={f.max} step={f.step} value={v ?? ''} onChange={(e) => set(f, e.target.value === '' ? '' : Number(e.target.value))} className={cls} />
+                            <input id={`${fieldPrefix}-${f.id}`} type="number" min={f.min} max={f.max} step={f.step} value={v ?? ''} onChange={(e) => set(f, e.target.value === '' ? '' : Number(e.target.value))} className={cls} />
                         ) : f.type === 'image' ? (
                             <StoreMediaPicker apiBase={apiBase} value={v ?? ''} onChange={(next) => set(f, next)} />
                         ) : f.type === 'color' ? (
-                            <input type="color" value={v || '#000000'} onChange={(e) => set(f, e.target.value)} />
+                            <input id={`${fieldPrefix}-${f.id}`} type="color" value={v || '#000000'} onChange={(e) => set(f, e.target.value)} />
                         ) : (
-                            <input type="text" value={v ?? ''} onChange={(e) => set(f, e.target.value)} className={cls} />
+                            <input id={`${fieldPrefix}-${f.id}`} type="text" value={v ?? ''} onChange={(e) => set(f, e.target.value)} className={cls} />
                         )}
                     </div>
                 );
@@ -74,14 +84,28 @@ export default function StorePageBuilderPage() {
     const [dragIndex, setDragIndex] = useState(null);
     const hydrated = useRef(false);
     const previewFrame = useRef(null);
+    const previewReady = useRef(false);
+    const [previewStatus, setPreviewStatus] = useState('loading');
     const [previewVersion, setPreviewVersion] = useState(0);
     const [dirty, setDirty] = useState(false);
     const [publishing, setPublishing] = useState(false);
+    const frameUrl = useMemo(() => {
+        if (!previewUrl) return '';
+        const target = new URL(previewUrl);
+        // Match the homepage customizer's same-origin Vite preview. The configured
+        // proxy still resolves the seeded tenant and verifies the signed page token.
+        const url = import.meta.env.DEV && import.meta.env.VITE_STOREFRONT_HOST
+            ? new URL(target.pathname + target.search, window.location.origin) : target;
+        if (import.meta.env.DEV && import.meta.env.VITE_STOREFRONT_HOST) url.searchParams.set('preview', '1');
+        url.searchParams.set('lang', locale);
+        url.searchParams.set('customize', '1');
+        return url.href;
+    }, [previewUrl, locale]);
 
     const load = useCallback(() => {
         Promise.all([
             api.get(`${apiBase}/pages/${pageId}`),
-            api.get(`${apiBase}/pages/schema`),
+            api.get(`${apiBase}/pages/schema`, { params: { page_id: pageId } }),
             api.get(`${apiBase}/pages/${pageId}/revisions`),
             api.post(`${apiBase}/pages/${pageId}/preview`),
         ]).then(([pg, sc, rv, pv]) => {
@@ -102,6 +126,7 @@ export default function StorePageBuilderPage() {
     useEffect(() => { load(); }, [load]);
 
     const types = useMemo(() => Object.keys(schema), [schema]);
+    const sectionLimitReached = (type) => schema[type]?.max_instances != null && sections.filter(section => section.type === type).length >= schema[type].max_instances;
     const changeSections = (recipe) => { setDirty(true); setHistory((current) => commit(current, recipe(current.present))); };
     const move = (i, dir) => changeSections((prev) => reorder(prev, i, i + dir));
     const duplicate = (i) => changeSections((prev) => { const n = [...prev]; n.splice(i + 1, 0, { ...structuredClone(prev[i]), id: crypto.randomUUID() }); return n; });
@@ -113,7 +138,6 @@ export default function StorePageBuilderPage() {
     const saveSections = () => run(async () => {
         await api.put(`${apiBase}/pages/${pageId}/sections`, { sections: sections.map(({ id: _id, ...section }) => section) });
         toast.success(t('page_sections_saved', 'Layout saved'));
-        setPreviewVersion((value) => value + 1);
     });
     const saveMetadata = async () => {
         const { data } = await api.put(`${apiBase}/pages/${pageId}`, { title: page.title, slug: page.slug, template: page.template, seo: page.seo || {} });
@@ -154,28 +178,43 @@ export default function StorePageBuilderPage() {
     useEffect(() => {
         if (!page || !hydrated.current) { hydrated.current = true; return undefined; }
         const timer = window.setTimeout(() => {
-            api.put(`${apiBase}/pages/${pageId}/sections`, { sections: sections.map(({ id: _id, ...section }) => section) })
-                .then(() => setPreviewVersion((value) => value + 1)).catch(() => undefined);
+            // Hydrate the existing child through the bridge. Reloading after each
+            // autosave interrupts editing and can abort an in-flight frame load.
+            api.put(`${apiBase}/pages/${pageId}/sections`, { sections: sections.map(({ id: _id, ...section }) => section) }).catch(() => undefined);
         }, 900);
         return () => window.clearTimeout(timer);
     }, [apiBase, pageId, sections, page]);
 
     const sendPreviewState = useCallback(() => {
-        if (!previewUrl) return;
-        previewFrame.current?.contentWindow?.postMessage({ channel: 'sellchaze-theme-studio', version: 1, type: 'hydrate', payload: { sections, locale, path: page?.preview_path || `/pages/${page?.slug || ''}` } }, new URL(previewUrl).origin);
-    }, [locale, page?.slug, page?.preview_path, previewUrl, sections]);
+        if (!frameUrl || !previewReady.current) return;
+        previewFrame.current?.contentWindow?.postMessage({ channel: 'sellchaze-theme-studio', version: 1, type: 'hydrate', payload: { sections: sections.filter(section => section.is_visible !== false), locale, path: page?.preview_path || `/pages/${page?.slug || ''}` } }, new URL(frameUrl).origin);
+    }, [locale, page?.slug, page?.preview_path, frameUrl, sections]);
+
+    useEffect(() => {
+        previewReady.current = false;
+        setPreviewStatus('loading');
+        const timer = window.setTimeout(() => { if (!previewReady.current) setPreviewStatus('unavailable'); }, 6000);
+        return () => window.clearTimeout(timer);
+    }, [frameUrl, previewVersion]);
 
     useEffect(() => {
         const receive = (event) => {
-            if (!previewUrl || event.origin !== new URL(previewUrl).origin || event.source !== previewFrame.current?.contentWindow || !isPreviewMessage(event.data)) return;
-            if (event.data.type === 'ready') sendPreviewState();
+            if (!isPreviewMessage(event.data) || !frameUrl || event.origin !== new URL(frameUrl).origin || event.source !== previewFrame.current?.contentWindow) return;
+            if (event.data.type === 'ready') { previewReady.current = true; setPreviewStatus('ready'); sendPreviewState(); }
             if (event.data.type === 'section-selected') setSelected(event.data.payload.id);
         };
         window.addEventListener('message', receive);
         return () => window.removeEventListener('message', receive);
-    }, [previewUrl, sendPreviewState]);
+    }, [frameUrl, sendPreviewState]);
 
     useEffect(() => { sendPreviewState(); }, [sendPreviewState]);
+
+    useEffect(() => {
+        // Start navigation after the sandboxed frame has been attached. This also
+        // gives a replacement frame its own navigation after a manual reload.
+        const frame = previewFrame.current;
+        if (frame && frameUrl && frame.getAttribute('src') !== frameUrl) frame.src = frameUrl;
+    }, [frameUrl, previewVersion]);
 
     if (id && !can('stores-edit')) return <Navigate to="/stores" replace />;
     if (!page) return <p className="p-6 text-sm text-slate-500">…</p>;
@@ -203,11 +242,11 @@ export default function StorePageBuilderPage() {
                     {sections.map((s, i) => (
                         <div key={s.id} draggable onDragStart={() => setDragIndex(i)} onDragOver={(event) => event.preventDefault()} onDrop={() => { if (dragIndex !== null) changeSections((prev) => reorder(prev, dragIndex, i)); setDragIndex(null); }} onClick={() => setSelected(s.id)} className={`rounded-2xl border bg-white p-4 shadow-card ${selected === s.id ? 'border-brand ring-2 ring-brand/20' : 'border-slate-200/80'} ${s.is_visible ? '' : 'opacity-50'}`}>
                             <div className="mb-2 flex items-center justify-between">
-                                <strong className="text-sm">{s.type}{s.reusable_section_id ? ' (reusable)' : ''}</strong>
+                                <strong className="text-sm">{schema[s.type]?.label || s.type}{s.reusable_section_id ? ' (reusable)' : ''}</strong>
                                 <div className="flex gap-1 text-xs">
                                     <button type="button" onClick={() => move(i, -1)} className="rounded-sm border px-2 py-1">↑</button>
                                     <button type="button" onClick={() => move(i, 1)} className="rounded-sm border px-2 py-1">↓</button>
-                                    <button type="button" onClick={() => duplicate(i)} className="rounded-sm border px-2 py-1">copy</button>
+                                    <button type="button" disabled={sectionLimitReached(s.type)} onClick={() => duplicate(i)} className="rounded-sm border px-2 py-1 disabled:opacity-40">copy</button>
                                     <button type="button" onClick={() => toggleVisibility(i)} className="rounded-sm border px-2 py-1">{s.is_visible ? 'hide' : 'show'}</button>
                                     <button type="button" onClick={() => remove(i)} className="rounded-sm border px-2 py-1 text-red-600">×</button>
                                 </div>
@@ -227,7 +266,7 @@ export default function StorePageBuilderPage() {
                         <h3 className="mb-2 text-sm font-semibold">{t('page_add_section', 'Add section')}</h3>
                         <div className="flex flex-wrap gap-1">
                             {types.map((tp) => (
-                                <button key={tp} type="button" onClick={() => add(tp)} className="rounded-lg border border-slate-200 px-2 py-1 text-xs hover:bg-slate-50">{tp}</button>
+                                <button key={tp} type="button" disabled={sectionLimitReached(tp)} onClick={() => add(tp)} className="rounded-lg border border-slate-200 px-2 py-1 text-xs hover:bg-slate-50 disabled:opacity-40">{schema[tp]?.label || tp}</button>
                             ))}
                         </div>
                     </div>
@@ -269,7 +308,8 @@ export default function StorePageBuilderPage() {
                 </div>
                 {previewUrl ? (
                     <div className="mx-auto overflow-hidden rounded-xl bg-white shadow-lg transition-[width]" style={{ width: `min(100%, ${VIEWPORT_WIDTH[viewport]}px)` }}>
-                        <iframe key={previewVersion} ref={previewFrame} onLoad={sendPreviewState} title="Live page preview" src={`${previewUrl}${previewUrl.includes('?') ? '&' : '?'}lang=${locale}`} className="h-[720px] w-full border-0" sandbox="allow-forms allow-same-origin allow-scripts" />
+                        {previewStatus === 'unavailable' ? <div role="status" className="flex flex-wrap items-center gap-3 border-b border-amber-200 bg-amber-50 p-3 text-sm"><span>{t('customizer_preview_timeout', 'The preview is taking longer than expected.')}</span><button type="button" className="rounded border bg-white px-3 py-1" onClick={() => setPreviewVersion(value => value + 1)}>{t('customizer_reload_preview', 'Reload preview')}</button><a href={previewUrl} target="_blank" rel="noreferrer" className="underline">{t('customizer_open_in_tab', 'Open in a new tab')}</a></div> : null}
+                        <iframe key={`${previewVersion}:${frameUrl}`} ref={previewFrame} title="Live page preview" loading="eager" sandbox="allow-forms allow-same-origin allow-scripts" className="h-[720px] w-full border-0" />
                     </div>
                 ) : <button type="button" onClick={preview} className="mx-auto block rounded-xl bg-white px-5 py-3 text-sm font-semibold">Load live canvas</button>}
             </section>

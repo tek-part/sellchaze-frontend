@@ -74,9 +74,10 @@ function CreateFunnel({ c, lang, apiBase, uiBase, locales, onClose }) {
             </fieldset>
             {loading ? <p role="status">{c.loading}</p> : <div className="grid gap-3 md:grid-cols-3" role="radiogroup" aria-label={c.templates}>
                 {templates.map((item) => <label key={item.key} className={`cursor-pointer rounded-xl border p-4 ${template === item.key ? 'border-brand bg-brand-light' : 'border-slate-200'}`}>
-                    <div className="mb-4 flex h-24 items-center justify-center rounded-lg" style={{ backgroundColor: item.color }}><HiOutlineSparkles className="h-9 w-9 text-white" aria-hidden /></div>
-                    <span className="flex items-center gap-2"><input type="radio" name="funnel-template" value={item.key} checked={template === item.key} onChange={() => setTemplate(item.key)} /><strong>{item.name?.[lang] || item.name?.en}</strong></span>
+                    {item.preview_image ? <img src={item.preview_image} alt="" className="mb-4 h-56 w-full rounded-lg object-cover object-top" loading="lazy" /> : <div className="mb-4 flex h-24 items-center justify-center rounded-lg" style={{ backgroundColor: item.color }}><HiOutlineSparkles className="h-9 w-9 text-white" aria-hidden /></div>}
+                    <span className="flex items-center gap-2"><input type="radio" name="funnel-template" value={item.key} checked={template === item.key} onChange={() => { setTemplate(item.key); if (item.locale && locales?.supported?.includes(item.locale)) setForm(current => ({ ...current, locale: item.locale })); }} /><strong>{item.name?.[lang] || item.name?.en}</strong></span>
                     <p className="mt-2 text-sm text-slate-500">{item.description?.[lang] || item.description?.en}</p>
+                    {item.preview_url ? <a href={item.preview_url} target="_blank" rel="noreferrer" className="mt-3 inline-flex rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-brand">{lang === 'ar' ? 'معاينة القالب' : 'Preview template'}</a> : null}
                 </label>)}
             </div>}
             <button type="button" disabled={!template} onClick={() => setStep(2)} className={`${button} bg-brand text-white hover:bg-brand-dark`}>{c.next}</button>

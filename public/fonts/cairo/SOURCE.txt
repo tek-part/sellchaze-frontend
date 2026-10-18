@@ -1,0 +1,7 @@
+Google Fonts official repository
+Commit: 47d54ca1ebb14fd864695f1d39dc734f39017c33
+Source: https://raw.githubusercontent.com/google/fonts/47d54ca1ebb14fd864695f1d39dc734f39017c33/ofl/cairo/Cairo%5Bslnt%2Cwght%5D.ttf
+License: https://raw.githubusercontent.com/google/fonts/47d54ca1ebb14fd864695f1d39dc734f39017c33/ofl/cairo/OFL.txt
+Source SHA256: 667c987182391c91f4e57a2f455b1794fb5e3ee6ca4ef3383e86bb690fa9c964
+Converted losslessly to WOFF2 with fontTools; glyphs and variable axes retained.
+Output SHA256: ed59860301782d16f5e6e0a5dc35ad57e331c44d8046d7acc4548a3395101bf5

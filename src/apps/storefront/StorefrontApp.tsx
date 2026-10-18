@@ -1,5 +1,8 @@
 import { ProductHeaderChrome, ProductPresentationProvider } from './state/product-presentation';
 import { UiBlocksProvider } from './ui-blocks/UiBlocks';
+import { useLocation } from 'react-router-dom';
+import { CartProvider } from './state/cart';
+import { ToastProvider } from './foundation/components/toast/ToastProvider';
 import './floating-tools.css';
 /**
  * StorefrontApp — resolves the active theme's `default` layout (global chrome) and renders the
@@ -158,6 +161,9 @@ function footerFromMenu(items: ReadonlyArray<ApiNavItem>, locale: string, fallba
 }
 
 export function StorefrontApp(): ReactElement {
+  const route = useLocation().pathname;
+  const standaloneFunnel = /^\/funnels\/[^/]+\/?$/.test(route);
+  const templatePreview = /^\/funnel-templates\/[^/]+\/?$/.test(route);
   const manifest = useThemeManifest();
   const { t } = useTranslation();
   // Applies direction + <html lang> from the active language. Called here so every theme gets it
@@ -253,7 +259,7 @@ export function StorefrontApp(): ReactElement {
 
   return (
     <ProductPresentationProvider><UiBlocksProvider><div className="sf-root" data-theme-id={manifest.id}>
-      <ProductHeaderChrome>{store.supportedCurrencies.length > 1 ? (
+      <ProductHeaderChrome>{!templatePreview && store.supportedCurrencies.length > 1 ? (
         <label className="sf-currency-widget fixed bottom-4 end-4 z-[var(--z-toast,9999)] rounded-full border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 text-xs shadow-lg">
           <span className="sr-only">{locale === 'ar' ? 'عملة العرض' : 'Display currency'}</span>
           <select aria-label={locale === 'ar' ? 'عملة العرض' : 'Display currency'} value={store.currency} onChange={(event) => setCurrency(event.target.value)} className="bg-transparent font-semibold outline-none">
@@ -282,7 +288,7 @@ export function StorefrontApp(): ReactElement {
       >
         Skip to content
       </a>
-      {Layout ? (
+      {templatePreview ? <main id="sf-main"><AppErrorBoundary><AppRoutes /></AppErrorBoundary></main> : standaloneFunnel ? <ToastProvider><CartProvider><main id="sf-main"><AppErrorBoundary><AppRoutes /></AppErrorBoundary></main></CartProvider></ToastProvider> : Layout ? (
         <Layout context={context}>
           <AppErrorBoundary>
             <AppRoutes />
