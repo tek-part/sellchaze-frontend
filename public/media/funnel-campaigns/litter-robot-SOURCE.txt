@@ -3,3 +3,5 @@ Generic unbranded pet appliance; no Source product imagery, trademark logos, end
 Hero: exec-08c0c8dc-fafc-4a4f-8dff-ca639b677e9d.png
 Detail: exec-da0ab9c8-c8e7-43c5-b652-b57f0cc9a508.png
 Display-only sample imagery; real funnels start with merchant product imagery and content.
+
+WebP display derivatives: same full dimensions, quality 88, original PNG sources retained; encoding only.

@@ -24,6 +24,8 @@ it('renders an independent complete composition without commerce hooks or fabric
   expect(doc.querySelectorAll('.lr-orbit-features article')).toHaveLength(4);
   expect(doc.querySelectorAll('.lr-technical-features article')).toHaveLength(6);
   expect(doc.querySelectorAll('.lr-specifications dl')).toHaveLength(2);
+  expect(doc.querySelectorAll('.lr-feature-rows-image')).toHaveLength(1);
+  expect(doc.querySelectorAll('.lr-feature-rows article')).toHaveLength(3);
   expect(doc.querySelector('form')).toBeNull();
   expect(doc.querySelector('fieldset')?.disabled).toBe(true);
   expect(doc.querySelectorAll('#funnel-checkout')).toHaveLength(1);

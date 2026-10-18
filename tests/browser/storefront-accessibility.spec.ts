@@ -26,6 +26,11 @@ for (const locale of ['en', 'ar'] as const) {
         const toggle = page.getByRole('button', { name: locale === 'ar' ? 'قائمة الصفحة' : 'Page menu', exact: true });
         await toggle.click();
         await expect(page.getByRole('dialog')).toBeVisible();
+        const menu = await page.locator('.lr-menu-panel').boundingBox();
+        expect(menu?.width).toBe(250);
+        expect(menu?.x).toBeGreaterThan(0);
+        await expect(page.locator('.lr-menu-panel')).toHaveCSS('background-color', 'rgba(255, 133, 91, 0.98)');
+        await expect(page.locator('.lr-menu-dock')).toBeVisible();
         await page.keyboard.press('Escape');
         await expect(toggle).toBeFocused();
         await toggle.click();
