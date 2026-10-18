@@ -125,6 +125,13 @@ for (const language of ['ar', 'en']) for (const width of [1920, 390, 320]) {
     await dialog.getByRole('button', {name: language === 'ar' ? /إنشاء مسار يدويًا/ : /Create a funnel manually/}).click();
     await expect(page.locator('.fw-template')).toHaveCount(10);
     await expect.poll(() => page.locator('.fw-template-desktop').first().evaluate((image: HTMLImageElement) => image.complete && image.naturalWidth > 0 && image.currentSrc.endsWith('/glasses-en-desktop.jpg'))).toBe(true);
+    for (const locale of ['en', 'ar']) {
+      for (const device of ['desktop', 'phone']) {
+        const poster = page.locator(`.fw-template-${device}[src$="hair-care-${locale}-${device}.png"]`);
+        await poster.scrollIntoViewIfNeeded();
+        await expect.poll(() => poster.evaluate((image: HTMLImageElement) => image.complete && image.naturalWidth > 0 && image.currentSrc.endsWith('.jpg') ? image.naturalHeight / image.naturalWidth : 0)).toBeGreaterThanOrEqual(device === 'desktop' ? 1.18 : 3.4);
+      }
+    }
     const cloneField = await page.getByLabel(language === 'ar' ? 'كود المسار' : 'Funnel code', {exact:true}).boundingBox();
     const cloneNext = await page.locator('.fw-clone-fields').getByRole('button', {name:language === 'ar' ? 'التالي' : 'Next',exact:true}).boundingBox();
     expect(cloneField && cloneNext).toBeTruthy();
