@@ -1,0 +1,23 @@
+[
+  {
+    "asset": "nature-pets-cat-mobile-v1.png",
+    "sourceAsset": "blast-pets-cat-v1.png",
+    "prompt": "Use case: ads-marketing. Input image is an existing original Sellchaze project asset, use as the edit target. Recompose this same orange tabby cat, cream bowl, warm peach interior, soft daylight and plant details into a vertical portrait photograph, 2:3 aspect ratio. Keep the entire seated cat and its tail visible in the lower two thirds, with ample clean softly lit peach negative space in the upper third for a website heading that will be added in HTML. Natural realistic fur, coherent anatomy, premium editorial pet campaign. No lettering, no logo, no watermark, no product packaging. Preserve the calm lighting and visual identity of the original image. This is a mobile website background, not a mockup.",
+    "tool": "built-in image_gen",
+    "usedIn": "Nature Pets mobile slideshow and portrait category photography"
+  },
+  {
+    "asset": "nature-pets-dog-mobile-v1.png",
+    "sourceAsset": "blast-pets-dog-v1.png",
+    "prompt": "Use case: ads-marketing. Input image is an existing original Sellchaze project asset, use as the edit target. Recompose this same friendly golden retriever, cream feeding bowl and warm beige sunlit room into a vertical portrait photograph, 2:3 aspect ratio. Keep the whole dog seated with paws fully visible in the lower two thirds. Leave the upper third as clean softly lit beige negative space, with subtle plant shadows, for a heading added separately in HTML. Photorealistic natural fur, correct anatomy, warm calm premium pet campaign. No lettering, no logo, no watermark, no packaging. Preserve the original visual identity and daylight. Mobile website background only, not a mockup.",
+    "tool": "built-in image_gen",
+    "usedIn": "Nature Pets mobile slideshow and portrait category photography"
+  },
+  {
+    "asset": "nature-pets-bed-mobile-v1.png",
+    "sourceAsset": "blast-pets-bed-v1.png",
+    "prompt": "Use case: ads-marketing. Input image is an existing original Sellchaze project asset, use as the edit target. Recompose the same sleeping gray tabby in its cream textured round bed, small rope toy and sage green room into a vertical portrait photograph, 2:3 aspect ratio. Keep the complete round bed and cat clearly visible in the lower two thirds, with clean softly lit sage wall and quiet plant shadows in the upper third for HTML heading overlay. Realistic fur and woven fabric, calm natural daylight, premium pet comfort campaign. No lettering, no logo, no watermark. Preserve the original atmosphere and materials. Mobile website background only, not a UI mockup.",
+    "tool": "built-in image_gen",
+    "usedIn": "Nature Pets mobile slideshow and portrait category photography"
+  }
+]

@@ -110,7 +110,7 @@ export const sampleAnnouncements = (themeId?: string, locale?: string): string[]
 
 export function sampleProductDetail(slug: string, themeId?: string, locale?: string): ProductDetailModel {
   const base = sampleNewest(themeId, locale).find((p) => p.handle === slug) ?? sampleNewest(themeId, locale)[0]!;
-  if (themeId === 'blast-pets') {
+  if (themeId === 'blast-pets' || themeId === 'nature-pets') {
     const ar = locale === 'ar'; const source = base.image?.src;
     return { ...base, images: source ? [{ src: source, alt: base.title }] : [], inStock: true, sku: `PETS-${base.id}`, descriptionHtml: ar ? '<p>بيانات معاينة فقط. يحدد كل متجر صور منتجاته ووصفها وخياراتها الفعلية.</p>' : '<p>Preview content only. Each store supplies its own product photographs, descriptions and options.</p>', variants: base.categorySlug === 'beds-accessories' ? [
       { id: 'pets-small', label: ar ? 'صغير' : 'Small', options: { [ar ? 'المقاس' : 'Size']: ar ? 'صغير' : 'Small' }, price: base.price, available: true, availableStock: 5 },

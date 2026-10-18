@@ -8,7 +8,9 @@ import { StorefrontVisit } from '../analytics/hooks';
 import { StorefrontAdvertising } from '../advertising/hooks';
 import { Route, Routes } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Container, Section, Spinner } from '../foundation/components';
+import { Container } from '../foundation/components/Container';
+import { Section } from '../foundation/components/Section';
+import { Spinner } from '../foundation/components/Spinner';
 
 const HomePage = lazy(() => import('./HomePage').then((m) => ({ default: m.HomePage })));
 const CategoryPage = lazy(() => import('./CategoryPage').then((m) => ({ default: m.CategoryPage })));
