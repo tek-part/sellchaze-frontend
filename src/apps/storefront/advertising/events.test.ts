@@ -34,3 +34,18 @@ it('posts only catalog selections and uses the server response rather than clien
   const init = vi.mocked(apiFetch).mock.calls[0]?.[1]; expect(JSON.parse(init?.body as string)).toEqual({ event_id: '12345678-1234-4234-8234-123456789abc', event: 'add_to_cart', page_path: '/products/bag', advertising_allowed: true, items: [{ product_id: 12, quantity: 2 }] });
   expect(vi.mocked(sendTrackingCommand).mock.calls[0]?.[0]).toMatchObject({ data: { value: 525 } });
 });
+
+it('does not suppress the same product checkout when the visitor enters a different funnel', async () => {
+  const { recordAdvertisingCheckout, flushAdvertising } = await import('./events');
+  vi.mocked(apiFetch).mockResolvedValue({ data: null });
+  const items = [{ product_id: 12, quantity: 1 }];
+  window.location.pathname = '/funnels/first';
+  recordAdvertisingCheckout('1', 'same-selection', items); await flushAdvertising('1');
+  await vi.waitFor(() => expect(apiFetch).toHaveBeenCalledTimes(1));
+  recordAdvertisingCheckout('1', 'same-selection', items); await flushAdvertising('1');
+  expect(apiFetch).toHaveBeenCalledTimes(1);
+  window.location.pathname = '/funnels/second';
+  recordAdvertisingCheckout('1', 'same-selection', items); await flushAdvertising('1');
+  await vi.waitFor(() => expect(apiFetch).toHaveBeenCalledTimes(2));
+  expect(JSON.parse(vi.mocked(apiFetch).mock.calls[1]?.[1]?.body as string)).toMatchObject({ page_path: '/funnels/second', event: 'begin_checkout' });
+});

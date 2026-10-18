@@ -9,7 +9,7 @@ async function fixture(page: Page, language = 'en', ai = false, permission = tru
   const reads: string[] = [];
   let deleted = false;
   const state = { deleteFails: false, editConflict: false };
-  let current = { ...original }; let version = 'a'.repeat(64);
+  let current = { ...original, browser_pixels: { facebook: [] as string[], tiktok: [] as string[], snapchat: [] as string[] } }; let version = 'a'.repeat(64);
   await page.addInitScript(({language, dark}) => {
     localStorage.setItem('sellchase_access_token', 'isolated-funnel-fixture');
     localStorage.setItem('sellchase_locale', language);
@@ -27,7 +27,7 @@ async function fixture(page: Page, language = 'en', ai = false, permission = tru
         expect(request.method()).toBe('PUT');
         if (state.editConflict) return respond({message: 'Changed in another session'}, 409);
         expect(data.version).toBe(version);
-        current = { ...current, title: String(data.title), slug: String(data.slug), product: { id: Number(data.product_id), name: 'Replacement product' } }; version = 'b'.repeat(64);
+        current = { ...current, title: String(data.title), slug: String(data.slug), product: { id: Number(data.product_id), name: 'Replacement product' }, ...(data.browser_pixels ? { browser_pixels: data.browser_pixels as typeof current.browser_pixels } : {}) }; version = 'b'.repeat(64);
         return respond({data: current, version, funnel_base_url: 'https://a-very-long-merchant-domain.example/funnels/'});
       }
       if (path.endsWith('/bulk-delete')) {
@@ -57,6 +57,62 @@ async function accessible(page: Page, selector: string) {
   const result = await new AxeBuilder({page}).include(selector).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']).analyze();
   expect(result.violations.filter(v => ['serious', 'critical'].includes(v.impact ?? '')), result.violations.map(v => `${v.id}: ${v.help}`).join('\n')).toEqual([]);
 }
+
+for (const language of ['ar', 'en']) for (const width of [1440, 390, 320]) {
+  test(`Funnel Custom Pixel saves, reopens and clears identifiers in ${language} at ${width}px`, async ({ page }, testInfo) => {
+    const api = await fixture(page, language, false, true, width === 320);
+    await page.setViewportSize({ width, height: 900 });
+    await page.goto('/store/funnels/31/edit');
+    const save = page.getByRole('button', { name: language === 'ar' ? 'حفظ البيانات' : 'Save details', exact: true });
+    await expect(save).toBeDisabled();
+    const advanced = page.locator('.fw-advanced summary');
+    await advanced.focus(); await page.keyboard.press('Enter');
+    const facebook = page.getByLabel('Facebook Pixel ID', { exact: true });
+    const tiktok = page.getByLabel('TikTok Pixel ID', { exact: true });
+    const snapchat = page.getByLabel('Snapchat Pixel ID', { exact: true });
+    await expect(facebook).toBeVisible();
+    await facebook.fill('1234567890\n 1234567890 \n2345678901');
+    await tiktok.fill('C7TEST0123456789ABCDE0');
+    await snapchat.fill('12345678-1234-4234-8234-123456789abc');
+    await expect(save).toBeEnabled();
+    expect(api.writes).toEqual([]);
+    await accessible(page, '.fw-details');
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)).toBe(true);
+    await page.locator('.fw-advanced').screenshot({ path: testInfo.outputPath('custom-pixels.png') });
+    await save.click();
+    await expect(page.getByRole('status')).toContainText(language === 'ar' ? 'تم حفظ بيانات المسار' : 'Funnel details saved');
+    expect(api.writes).toHaveLength(1);
+    expect(api.writes[0].data).toMatchObject({ version: 'a'.repeat(64), product_id: 7, browser_pixels: { facebook: ['1234567890', '2345678901'], tiktok: ['C7TEST0123456789ABCDE0'], snapchat: ['12345678-1234-4234-8234-123456789abc'] } });
+    await page.reload();
+    await expect(page.locator('.fw-advanced')).toBeVisible();
+    if (await page.locator('.fw-advanced').getAttribute('open') === null) await advanced.click();
+    await expect(facebook).toHaveValue('1234567890\n2345678901');
+    await expect(save).toBeDisabled();
+    await facebook.fill(''); await tiktok.fill(''); await snapchat.fill('');
+    await save.click();
+    await expect(save).toBeDisabled();
+    expect(api.writes).toHaveLength(2);
+    expect(api.writes[1].data).toMatchObject({ version: 'b'.repeat(64), browser_pixels: { facebook: [], tiktok: [], snapchat: [] } });
+  });
+}
+
+test('A pixel edit survives conflicts and explicit reload discards only the unsaved draft', async ({ page }) => {
+  const api = await fixture(page);
+  await page.goto('/store/funnels/31/edit');
+  await page.locator('.fw-advanced summary').click();
+  const input = page.getByLabel('Facebook Pixel ID', { exact: true });
+  await input.fill('1234567890'); api.state.editConflict = true;
+  await page.getByRole('button', { name: 'Save details', exact: true }).click();
+  await expect(page.getByRole('alert')).toContainText('changed in another session');
+  await expect(input).toHaveValue('1234567890');
+  await expect(page.getByRole('button', { name: 'Save details', exact: true })).toBeDisabled();
+  expect(api.writes).toHaveLength(1);
+  await page.getByRole('button', { name: 'Reload details and discard edits', exact: true }).click();
+  await expect(page.locator('.fw-advanced')).toBeVisible();
+  if (await page.locator('.fw-advanced').getAttribute('open') === null) await page.locator('.fw-advanced summary').click();
+  await expect(input).toHaveValue('');
+  expect(api.writes).toHaveLength(1);
+});
 for (const language of ['ar', 'en']) for (const width of [1920, 390, 320]) {
   test(`Manual creation in ${language} at ${width}px only saves the final product selection`, async ({page}) => {
     const api = await fixture(page, language, false, true, width === 320);

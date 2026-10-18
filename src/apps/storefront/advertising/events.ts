@@ -65,7 +65,7 @@ export function recordAdvertising(storeId: string, event: Exclude<AdvertisingEve
   void flushAdvertising(storeId);
 }
 export function recordAdvertisingCheckout(storeId: string, key: string, items: ReadonlyArray<CheckoutItem>, surface?: 'product'): void {
-  const id = `${storeId}:${surface ?? ''}:${key}`; const until = starts.get(id) ?? 0;
+  const id = `${storeId}:${window.location.pathname}:${surface ?? ''}:${key}`; const until = starts.get(id) ?? 0;
   if (until > Date.now() || !browserAdvertisingAllowed()) return;
   starts.set(id, Date.now() + 30 * 60 * 1000);
   if (starts.size > 100) starts.delete(starts.keys().next().value!);

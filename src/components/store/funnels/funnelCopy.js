@@ -9,12 +9,16 @@ export function funnelError(error) {
 }
 
 Object.assign(funnelCopy.ar, {
+    advanced: 'إعدادات متقدمة', funnelPixelsHelp: 'أضف معرّفات البيكسل فقط، كل معرّف في سطر مستقل، بحد أقصى 10 لكل منصة. تُضاف إلى بيكسلات المتجر لهذا المسار دون تكرار. اترك الحقول فارغة لاستخدام بيكسلات المتجر فقط.',
+    funnelPixelsLiveNote: 'تسري على المسار المنشور وطلباته الجديدة فور الحفظ. لا تعمل في المعاينة أو عند رفض التتبع. إعدادات Conversion API تُدار من إعدادات المتجر.',
     editTitle: 'تعديل الـ Funnel', backToList: 'العودة للمسارات', saveDetails: 'حفظ البيانات', openDesign: 'تعديل التصميم', detailsSaved: 'تم حفظ بيانات المسار.', editMissing: 'لم يتم العثور على المسار في متجرك.',
     editConflict: 'تغيّرت بيانات هذا المسار في جلسة أخرى. أعد تحميل البيانات قبل حفظ تعديل جديد.', reloadDetails: 'إعادة تحميل البيانات وتجاهل التعديلات', saveBeforeDesign: 'احفظ البيانات لفتح محرر التصميم.',
     editPublishedNote: 'تغيير المنتج يحدّث المنتج المرتبط بالمسار المنشور فور الحفظ. تعديل الاسم والرابط يبقى في المسودة حتى النشر من محرر التصميم.',
     editDraftNote: 'حفظ البيانات لا ينشر المسار. يمكنك تعديل الأقسام ومعاينتها ونشرها من محرر التصميم.',
 });
 Object.assign(funnelCopy.en, {
+    advanced: 'Advanced settings', funnelPixelsHelp: 'Enter Pixel IDs only, one per line, up to 10 per platform. They are added to store pixels for this funnel without duplicates. Leave blank to use store pixels only.',
+    funnelPixelsLiveNote: 'Applies to the published funnel and its new orders when saved. Preview and privacy opt-outs do not send events. Manage Conversion API in store settings.',
     editTitle: 'Edit funnel', backToList: 'Back to funnels', saveDetails: 'Save details', openDesign: 'Edit design', detailsSaved: 'Funnel details saved.', editMissing: 'This funnel was not found in your store.',
     editConflict: 'This funnel changed in another session. Reload its details before saving again.', reloadDetails: 'Reload details and discard edits', saveBeforeDesign: 'Save the details to open the design editor.',
     editPublishedNote: 'Changing the product updates the published funnel’s linked product when saved. Name and URL edits stay in the draft until you publish from the design editor.',

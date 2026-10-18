@@ -23,7 +23,8 @@ export function trackingConfiguration(value: unknown): TrackingConfiguration | u
   if (!Number.isSafeInteger(row.version) || row.version < 1) return undefined;
   const result = { version: row.version, enabled: row.enabled === true } as TrackingConfiguration;
   for (const provider of ['facebook', 'tiktok', 'snapchat', 'google'] as const) {
-    const ids = row[provider]; if (!Array.isArray(ids) || ids.length > 10 || !ids.every((id) => typeof id === 'string' && idPatterns[provider].test(id))) return undefined;
+    // A funnel may add ten browser IDs to the store's ten. Google remains store scoped.
+    const ids = row[provider]; if (!Array.isArray(ids) || ids.length > (provider === 'google' ? 10 : 20) || !ids.every((id) => typeof id === 'string' && idPatterns[provider].test(id))) return undefined;
     result[provider] = [...new Set(ids)];
   }
   return result;
