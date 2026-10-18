@@ -14,6 +14,16 @@ import { THEME_LOADERS } from './loaders';
 
 export const THEME_CATALOG: ThemeCatalog = [
   {
+    id: 'hype-perfumes', name: 'Hype Perfumes', version: '1.0.0', archetype: 'Perfumes',
+    description: 'Full-width fragrance campaigns, category tiles, product rails, image comparison, editorial stories and customer reviews.',
+    author: 'Sellchaze', tags: ['perfumes', 'beauty', 'modern', 'rtl'], accent: '#35161F',
+    previewImage: '/media/theme-previews/hype-perfumes.png',
+    minEngineVersion: '1.0.0', capabilities: ['rtl', 'cart-drawer', 'quick-add', 'newsletter'],
+    license: { type: 'free', sku: 'theme-hype-perfumes' }, featured: true,
+    changelog: [{ version: '1.0.0', date: '2026-10-18', notes: ['Independent fragrance storefront and editable sections.'] }],
+    load: THEME_LOADERS['hype-perfumes'],
+  },
+  {
     id: 'nature-pets', name: 'Nature Pets', version: '1.0.0', archetype: 'Pets',
     description: 'Pet collections with Nature-family navigation, peek campaigns, a split story and FAQ, compact product grids and photography.',
     author: 'Sellchaze', tags: ['pets', 'animals', 'modern', 'rtl'], accent: '#A67500',

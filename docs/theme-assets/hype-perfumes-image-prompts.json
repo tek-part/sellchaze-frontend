@@ -1,0 +1,20 @@
+[
+  {
+    "asset": "hype-perfumes-hero-v1.png",
+    "prompt": "Use case: ads-marketing. Create an original premium fragrance campaign photograph for the Sellchaze Hype Perfumes storefront. Wide landscape 3:2 composition suitable for a full-width website hero cropped to 2.47:1. One sculptural matte midnight-purple unbranded perfume bottle with a plain rectangular black cap, subtle lilac flowers and deep plum fabric. Balanced central composition with generous uncluttered dark violet negative space around the upper middle for text added separately in HTML. Rich real glass reflections, quiet studio daylight, sophisticated editorial photography, no people, no lettering, no logo, no watermark, no recognizable commercial packaging. The image itself must contain no text. Entire bottle visible, botanicals framing rather than obscuring it.",
+    "tool": "built-in image_gen",
+    "usedIn": "Hype Perfumes native campaign and isolated demo imagery"
+  },
+  {
+    "asset": "hype-perfumes-amber-v1.png",
+    "prompt": "Use case: product-mockup. Original premium fragrance photograph for a Sellchaze storefront. Portrait 2:3 composition. A clear square perfume bottle containing pale amber liquid, plain gold cap, no label or lettering, on warm ivory stone with a small piece of aromatic wood and soft fabric. Minimal premium editorial lighting, realistic refraction and tactile materials, warm neutral cream palette, bottle fully visible in the lower two thirds with ample clean upper space. No text, no logo, no watermark, no recognizable brand packaging. Suitable both as a collection tile and a product demo photo.",
+    "tool": "built-in image_gen",
+    "usedIn": "Hype Perfumes native campaign and isolated demo imagery"
+  },
+  {
+    "asset": "hype-perfumes-botanical-v1.png",
+    "prompt": "Use case: product-mockup. Original premium fragrance photograph for a Sellchaze storefront. Portrait 2:3 composition. An unbranded deep green translucent perfume bottle with a simple black cap, on charcoal stone with restrained green leaves and a small aromatic wood detail, gentle dramatic side light, premium editorial perfume photography, true glass refraction, coherent natural shadows. Keep the complete bottle visible, clean negative space above, deep forest and neutral black palette. No lettering, no logo, no watermark, no recognizable existing commercial bottle design. This is a campaign asset, not a website mockup.",
+    "tool": "built-in image_gen",
+    "usedIn": "Hype Perfumes native campaign and isolated demo imagery"
+  }
+]
