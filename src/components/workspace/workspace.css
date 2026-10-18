@@ -460,5 +460,5 @@ body[data-workspace-merchant='true'] .ws-sidebar-compact .ws-sidebar-scroll .ws-
 
 /* Respect reduced motion after the merchant-specific transition overrides. */
 @media(prefers-reduced-motion:reduce){
-  .ws-frame *,.ws-nav-panel,.ws-sidebar-rail::after{transition:none !important}
+  .ws-frame *,.ws-drawer *,.ws-nav-panel,.ws-sidebar-rail::after{transition:none !important}
 }
