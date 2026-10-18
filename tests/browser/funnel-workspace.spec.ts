@@ -58,6 +58,7 @@ for (const language of ['ar', 'en']) for (const width of [1920, 390, 320]) {
     await accessible(page, '.fw-method-panel');
     await dialog.getByRole('button', {name: language === 'ar' ? /إنشاء مسار يدويًا/ : /Create a funnel manually/}).click();
     await expect(page.locator('.fw-template')).toHaveCount(6);
+    await expect.poll(() => page.locator('.fw-template-desktop').first().evaluate((image: HTMLImageElement) => image.complete && image.naturalWidth > 0 && image.currentSrc.endsWith('/glasses-en-desktop.jpg'))).toBe(true);
     const cloneField = await page.getByLabel(language === 'ar' ? 'كود المسار' : 'Funnel code', {exact:true}).boundingBox();
     const cloneNext = await page.locator('.fw-clone-fields').getByRole('button', {name:language === 'ar' ? 'التالي' : 'Next',exact:true}).boundingBox();
     expect(cloneField && cloneNext).toBeTruthy();
@@ -133,14 +134,15 @@ test('A manager without pages permission never reads or writes funnels', async (
   expect(api.reads.some(read => read.includes('/funnels'))).toBe(false);
   expect(api.writes).toEqual([]);
 });
-test('AI generation only submits after complete content and product selection', async ({page}) => {
+for (const contentLocale of ['en','ar']) test(`AI ${contentLocale} generation only submits after complete content and product selection`, async ({page}) => {
   const api = await fixture(page, 'en', true);
   await page.goto('/store/funnels/create');
   await page.getByRole('button', {name: /Create a funnel with AI/}).click();
-  await page.getByRole('button', {name: 'Use template: glasses-en', exact: true}).click();
+  await page.getByRole('button', {name: `Use template: glasses-${contentLocale}`, exact: true}).click();
   await page.locator('.fw-create-footer').getByRole('button', {name: 'Next', exact: true}).click();
   await page.getByLabel('Funnel name', {exact: true}).fill('Generated fixture');
   await page.getByLabel('Funnel URL', {exact: true}).fill('generated-fixture');
+  await expect(page.getByLabel('Content language',{exact:true})).toHaveValue(contentLocale === 'ar' ? 'العربية' : 'English');
   const product = page.getByRole('combobox', {name: 'Product', exact: true});
   await product.fill('Fixture');
   await page.getByRole('option', {name: 'Fixture glasses', exact: true}).click();
@@ -150,7 +152,7 @@ test('AI generation only submits after complete content and product selection', 
   await page.getByRole('button', {name: 'Generate draft and open editor', exact: true}).click();
   await expect(page).toHaveURL(/\/pages\/99\/builder$/);
   expect(api.writes).toHaveLength(1);
-  expect(api.writes[0]).toMatchObject({path:'/my-store/funnels/generate',data:{product_id:7,template_key:'glasses-en',locale:'en',generation:{language:'English',dialect:'Plain English',product_name:'Fixture glasses',description:'A synthetic description for isolated draft creation tests.'}}});
+  expect(api.writes[0]).toMatchObject({path:'/my-store/funnels/generate',data:{product_id:7,template_key:`glasses-${contentLocale}`,locale:contentLocale,generation:{language:contentLocale === 'ar' ? 'العربية' : 'English',dialect:'Plain English',product_name:'Fixture glasses',description:'A synthetic description for isolated draft creation tests.'}}});
 });
 for (const ai of [false, true]) test(`Creation details start at the top on short screens (${ai ? 'AI' : 'manual'})`, async ({page}) => {
   const api = await fixture(page, 'en', ai);

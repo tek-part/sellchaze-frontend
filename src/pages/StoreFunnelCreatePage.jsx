@@ -11,6 +11,10 @@ import useStoreScope from '../hooks/useStoreScope';
 const uuid = /^[a-f\d]{8}(?:-[a-f\d]{4}){3}-[a-f\d]{12}$/i;
 const catalogOrder = ['glasses-en', 'glasses-ar', 'hair-revive-en', 'hair-revive-ar', 'litter-robot-en', 'litter-robot-ar'];
 function templateName(item) { return (item?.name?.en || item?.key || '').replace(' — English', ' EN').replace(' — Arabic', ' AR'); }
+function previewSourceSet(item, device) {
+    const path = `/media/funnel-previews/${item.key}-${device}`;
+    return catalogOrder.includes(item.key) && item[device === 'desktop' ? 'preview_desktop_image' : 'preview_mobile_image'] === `${path}.png` ? `${path}.jpg 1x` : undefined;
+}
 
 export default function StoreFunnelCreatePage() {
     const { i18n } = useTranslation(); const lang = i18n.language?.startsWith('ar') ? 'ar' : 'en'; const c = funnelCopy[lang];
@@ -72,6 +76,7 @@ export default function StoreFunnelCreatePage() {
     function selectTemplate(item) {
         setTemplate(item.key); setSource(null); setCode(''); setError('');
         setForm(value => ({ ...value, locale: item.locale || value.locale }));
+        if (item.locale) setGeneration(value => ({ ...value, language: item.locale === 'ar' ? 'العربية' : 'English' }));
         if (cloneParam) setParams({}, { replace: true });
     }
     async function submit(event) {
@@ -98,7 +103,7 @@ export default function StoreFunnelCreatePage() {
                 {loading ? <p role="status">{c.loading}</p> : <div className="fw-templates" aria-label={c.templates}>{gallery.map(item => {
                     const selectable = !item.locale || supported.includes(item.locale);
                     return <article className="fw-template" key={item.key} data-selected={template === item.key || undefined}>
-                        <div className="fw-template-image"><img className="fw-template-desktop" src={item.preview_desktop_image || item.preview_image} alt={templateName(item)} loading="lazy" />{item.preview_mobile_image ? <img className="fw-template-phone" src={item.preview_mobile_image} alt="" loading="lazy" /> : null}{item.preview_url ? <a href={item.preview_url} target="_blank" rel="noopener noreferrer">{c.preview}</a> : null}</div>
+                        <div className="fw-template-image"><img className="fw-template-desktop" src={item.preview_desktop_image || item.preview_image} srcSet={previewSourceSet(item, 'desktop')} alt={templateName(item)} loading="lazy" />{item.preview_mobile_image ? <img className="fw-template-phone" src={item.preview_mobile_image} srcSet={previewSourceSet(item, 'phone')} alt="" loading="lazy" /> : null}{item.preview_url ? <a href={item.preview_url} target="_blank" rel="noopener noreferrer">{c.preview}</a> : null}</div>
                         <div className="fw-template-name">{templateName(item)}</div><div className="fw-template-action"><button type="button" className="fw-button fw-button-primary" disabled={!selectable || template === item.key} onClick={() => selectTemplate(item)} aria-label={`${c.useTemplate}: ${templateName(item)}`}>{template === item.key ? c.selected : c.useTemplate}</button></div>
                         {!selectable ? <p className="fw-template-note">{c.enableLocale} {item.locale?.toUpperCase()} <Link to={`${uiBase}/settings/general`}>{c.manageLanguages}</Link></p> : null}
                     </article>;
