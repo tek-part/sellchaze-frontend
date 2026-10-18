@@ -45,7 +45,7 @@ export function useHomeContext(): HomeContextResult {
     let categories: CategoryCardModel[] = b?.categories ? b.categories.map(toCategoryCard) : [];
     if (dev && !b) newest = sampleNewest(manifest.id, locale);
     if (dev && !b) categories = sampleCategories(manifest.id, locale);
-    const featured = newest.length > 0 ? newest.slice(0, 4) : dev ? sampleFeatured(manifest.id, locale) : [];
+    const featured = newest.length > 0 ? newest.slice(0, 4) : dev && !b ? sampleFeatured(manifest.id, locale) : [];
 
     // Real merchandising rows from product flags; fall back to the base set so no rail is empty.
     const best = cards(b?.best_sellers);
