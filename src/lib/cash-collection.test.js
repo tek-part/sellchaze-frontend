@@ -13,7 +13,7 @@ describe('review of full cash collection', () => {
         expect(cashCollectionRequest(order, '   ', '385', true)).toBeNull();
     });
     it('does not treat delivery, cancellation or another payment method as cash settlement', () => {
-        for (const change of [{ payment_method: 'bank_transfer' }, { payment_status: 'paid' }, { status: 'cancelled' }, { currency: '' }]) {
+        for (const change of [{ payment_method: 'bank_transfer' }, { payment_status: 'paid' }, { status: 'cancelled' }, { status: 'refunded' }, { status: 'request_refund' }, { currency: '' }]) {
             expect(cashCollectionRequest({ ...order, ...change }, 'REF', '385', true)).toBeNull();
         }
     });

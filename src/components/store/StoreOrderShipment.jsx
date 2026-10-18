@@ -84,7 +84,7 @@ export default function StoreOrderShipment({ order, apiBase, uiBase, onOrderUpda
     const uncertain = shipment && ['unknown', 'submitting'].includes(shipment.status);
     const canCreate = loaded && (!shipment || shipment.status === 'rejected');
     const paymentReady = order.payment_status === 'paid' || (order.payment_method === 'cod' && ['pending', 'unpaid'].includes(order.payment_status));
-    const eligible = paymentReady && order.currency === 'EGP' && order.shipping_address?.country === 'EG' && ['confirmed', 'processing'].includes(order.status);
+    const eligible = paymentReady && order.currency === 'EGP' && order.shipping_address?.country === 'EG' && ['confirmed', 'processing', 'waiting_for_pickup'].includes(order.status);
     const field = (name, title, props = {}) => <FormField label={title} htmlFor={`shipment-${name}`}><input id={`shipment-${name}`} className={INPUT_CLASS} value={form[name]} onChange={(e) => setForm({ ...form, [name]: e.target.value })} {...props} /></FormField>;
     return <SettingsCard title={text('شحنة الطلب • Bosta', 'Order shipment • Bosta')} actions={<Link className="text-sm text-brand underline" to={`${uiBase}/settings/shipping`}>{text('إعدادات الربط', 'Connection settings')}</Link>}>
         <div className="space-y-4">

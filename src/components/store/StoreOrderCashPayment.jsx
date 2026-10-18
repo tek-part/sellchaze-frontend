@@ -42,17 +42,17 @@ export default function StoreOrderCashPayment({ order, apiBase, onOrderUpdated }
         try {
             const { data } = await api.get(`${apiBase}/orders/${order.id}`);
             onOrderUpdated(data.data);
-            if (data.data.payment_status === 'paid' || data.data.status === 'cancelled') { setReview(null); setUncertain(false); }
+            if (data.data.payment_status === 'paid' || ['cancelled', 'returning_from_delivery', 'request_refund', 'refund_in_progress', 'refunded'].includes(data.data.status)) { setReview(null); setUncertain(false); }
         } catch { setError(text('تعذر تحديث حالة الطلب. حاول مرة أخرى.', 'Order status could not be refreshed. Try again.')); }
         finally { working.current = false; setBusy(false); }
     }
     const request = cashCollectionRequest(order, reference, amount, collected, note);
     const paid = order.payment_status === 'paid';
-    const cancelled = order.status === 'cancelled';
+    const cancelled = ['cancelled', 'returning_from_delivery', 'request_refund', 'refund_in_progress', 'refunded'].includes(order.status);
     return <section aria-label={text('تحصيل الدفع عند الاستلام', 'Cash on delivery collection')} className="space-y-3 rounded-2xl border border-slate-200/80 bg-white p-5 shadow-card">
         <h2 className="font-semibold">{text('تحصيل الدفع عند الاستلام', 'Cash on delivery collection')}</h2>
         <p className="text-sm text-slate-600">{text('إجمالي طلب العميل', 'Complete customer order')}: <b dir="ltr">{order.currency} {order.grand_total}</b></p>
-        {paid ? <p role="status" className="break-words text-sm text-emerald-700">{text('تم تأكيد الدفع', 'Payment confirmed')}{order.payment_reference ? <> · <b>{order.payment_reference}</b></> : null}</p> : cancelled ? <p className="text-sm text-slate-600">{text('الطلب ملغى ولا يمكن تسجيل تحصيل له.', 'This order is cancelled and cannot collect payment.')}</p> : <>
+        {paid ? <p role="status" className="break-words text-sm text-emerald-700">{text('تم تأكيد الدفع', 'Payment confirmed')}{order.payment_reference ? <> · <b>{order.payment_reference}</b></> : null}</p> : cancelled ? <p className="text-sm text-slate-600">{text('الطلب ملغى أو ضمن دورة الإرجاع ولا يمكن تسجيل تحصيل له.', 'This order is cancelled or in a return workflow and cannot collect payment.')}</p> : <>
             <p className="text-sm text-slate-600">{text('حالة الشحن لا تؤكد التحصيل. سجّل وصول كامل المبلغ بعد مراجعة الإيصال أو كشف التحصيل؛ لا يدعم هذا الإجراء الدفعات الجزئية.', 'Shipping status does not confirm payment. Record the full amount received after checking the receipt or collection statement; partial payments are not supported here.')}</p>
             {order.fulfillment?.digital_quantity > 0 ? <p className="text-sm text-sky-800">{text('بعد التأكيد ستصبح المنتجات الرقمية متاحة للمشتري وسيُجدول بريد التسليم.', 'Confirmation releases digital products to the buyer and queues the delivery email.')}</p> : null}
             {!review ? <>

@@ -7,9 +7,13 @@ export const ORDER_FILTERS = [
 ];
 export const ORDER_STATUSES = [
     ['pending', 'تحت المراجعة', 'Under review'], ['confirmed', 'تم التأكيد', 'Confirmed'],
-    ['processing', 'قيد التجهيز للشحن', 'Preparing shipment'], ['shipped', 'قيد التوصيل', 'In transit'],
-    ['delivered', 'تم التوصيل', 'Delivered'], ['cancelled', 'تم إلغاء الطلب', 'Cancelled'],
+    ['processing', 'قيد التجهيز للشحن', 'Preparing shipment'], ['waiting_for_pickup', 'بانتظار الشحن', 'Waiting for pickup'],
+    ['shipped', 'قيد التوصيل', 'In transit'], ['delivered', 'تم التوصيل', 'Delivered'], ['cancelled', 'تم الغاء الطلب', 'Cancelled'],
+    ['returning_from_delivery', 'مرتجع من الشحن', 'Returning from delivery'], ['request_refund', 'العميل طلب الارجاع', 'Return requested'],
+    ['refund_in_progress', 'جاري الارجاع', 'Return in progress'], ['refunded', 'تم الارجاع', 'Returned'],
 ];
+export const ORDER_RISK_STATUSES = [['high_risk', 'High Risk', 'High Risk'], ['moderate_risk', 'Moderate Risk', 'Moderate Risk']];
+export const ORDER_RETURN_STATUSES = ['returning_from_delivery', 'request_refund', 'refund_in_progress', 'refunded'];
 export function orderStatusLabel(value, ar) { const row = ORDER_STATUSES.find(([key]) => key === value); return row ? row[ar ? 1 : 2] : value; }
 export function orderFilterParams(filters) { return Object.fromEntries(Object.entries(filters).filter(([, value]) => value !== '' && value != null)); }
 export function orderAddress(address) {
