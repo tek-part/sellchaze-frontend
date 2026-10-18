@@ -40,6 +40,7 @@ for (const locale of ['en', 'ar'] as const) for (const width of [1440, 390, 320]
     await page.locator('.sf-quantity-offer').filter({ hasText: 'Isolated pair' }).getByRole('radio').check();
     await expect(page.locator('input[type=number]')).toHaveValue('2');
     await expect(page.locator('.eb-page-dock')).toContainText('80');
+    await expect(page.locator('.eb-prices .eb-discount')).toContainText('47');
     await expect.poll(() => quotes.at(-1)?.items[0]).toEqual({ product_id: 700, variant_id: 702, quantity: 2, quantity_offer_id: offer, quantity_offer_version: 1, personalization: {} });
     await expect(page.locator('.sf-funnel-checkout__payment img')).toHaveAttribute('src', /\/payments\/cod\.png$/);
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)).toBe(true);
