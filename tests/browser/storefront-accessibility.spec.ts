@@ -4,6 +4,43 @@ import { expect, test } from 'playwright/test';
 const themes = ['naseem', 'bazaar', 'sahra', 'fresh', 'techno', 'elite-furniture', 'blast-pets', 'hype-perfumes', 'hype-fashion', 'elite-wallets'] as const;
 
 for (const locale of ['en', 'ar'] as const) {
+  for (const width of [1440, 390, 320]) {
+    test(`Hair Revive preview has working accessible navigation and inert checkout in ${locale} at ${width}px`, async ({ page }) => {
+      const commerceRequests: string[] = [];
+      await page.route('**/api/v1/storefront/checkout**', async route => { commerceRequests.push(route.request().url()); await route.abort(); });
+      await page.setViewportSize({ width, height: 900 });
+      await page.emulateMedia({ reducedMotion: 'reduce' });
+      await page.goto(`/funnel-templates/hair-revive-${locale}?preview=1&lang=${locale}&theme=${locale === 'ar' ? 'sahra' : 'elite-wallets'}`, { waitUntil: 'networkidle' });
+      await expect(page.locator('.hr-root')).toHaveAttribute('dir', locale === 'ar' ? 'rtl' : 'ltr');
+      await expect(page.locator('.hr-hero h1')).toHaveCSS('font-family', /^Alexandria/);
+      await expect(page.locator('.hr-reviews-heading h2')).toHaveCSS('font-family', /^"Readex Pro"/);
+      await expect(page.locator('.hr-section')).toHaveCount(15);
+      await expect(page.locator('form')).toHaveCount(0);
+      await expect(page.locator('.hr-purchase-panel input').first()).toBeDisabled();
+      expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)).toBe(true);
+      if (width < 768) {
+        const toggle = page.getByRole('button', { name: locale === 'ar' ? 'قائمة الصفحة' : 'Page menu', exact: true });
+        await toggle.click();
+        await expect(page.getByRole('dialog')).toBeVisible();
+        expect(await page.locator('.hr-menu-panel').evaluate(node => node.getBoundingClientRect().width)).toBe(250);
+        await page.keyboard.press('Escape');
+        await expect(toggle).toBeFocused();
+        await toggle.click();
+      }
+      await page.getByRole('link', { name: locale === 'ar' ? 'أسئلة وأجوبة' : 'Questions & answers', exact: true }).filter({ visible: true }).click();
+      const questions = page.locator('.hr-question button');
+      await questions.nth(0).click(); await questions.nth(1).click();
+      await expect(page.locator('.hr-question button[aria-expanded=true]')).toHaveCount(1);
+      await expect(questions.nth(0)).toHaveAttribute('aria-expanded', 'false');
+      const results = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']).analyze();
+      const blocking = results.violations.filter(violation => ['serious', 'critical'].includes(violation.impact ?? ''));
+      expect(blocking, blocking.map(item => `${item.id}: ${item.help}`).join('\n')).toEqual([]);
+      expect(commerceRequests).toEqual([]);
+    });
+  }
+}
+
+for (const locale of ['en', 'ar'] as const) {
   for (const theme of themes) {
     test(`${theme} storefront has no serious accessibility violations in ${locale}`, async ({ page }) => {
       await page.addInitScript((language) => localStorage.setItem('sf:locale', language), locale);

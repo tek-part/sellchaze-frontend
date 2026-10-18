@@ -116,7 +116,7 @@ export interface ApiBuilderPage {
   template: string;
   public_path?: string;
   funnel_product_slug?: string | null;
-  native_funnel_template?: 'glasses-ar' | 'glasses-en' | null;
+  native_funnel_template?: 'glasses-ar' | 'glasses-en' | 'hair-revive-ar' | 'hair-revive-en' | null;
   locale?: string;
   /** Sanitized published rich content; present only for simple pages. */
   content_html?: string;

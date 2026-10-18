@@ -40,7 +40,7 @@ const FaqPage = lazy(() => import('./StaticPages').then((m) => ({ default: m.Faq
 const BlogPage = lazy(() => import('./BlogPages').then((m) => ({ default: m.BlogPage })));
 const BlogDetailPage = lazy(() => import('./BlogPages').then((m) => ({ default: m.BlogDetailPage })));
 const BuilderPage = lazy(() => import('./BuilderPage').then((m) => ({ default: m.BuilderPage })));
-const GlassesTemplatePreview = lazy(() => import('../funnels/GlassesFunnel').then((m) => ({ default: m.GlassesTemplatePreview })));
+const NativeTemplatePreview = lazy(() => import('../funnels/NativeTemplatePreview'));
 const CategoriesPage = lazy(() => import('./BrowsePages').then((m) => ({ default: m.CategoriesPage })));
 const CollectionsPage = lazy(() => import('./BrowsePages').then((m) => ({ default: m.CollectionsPage })));
 const BrandsPage = lazy(() => import('./BrowsePages').then((m) => ({ default: m.BrandsPage })));
@@ -107,7 +107,7 @@ export function AppRoutes(): ReactElement {
         <Route path="/pages/:slug" element={<BuilderPage key="page" />} />
         <Route path="/policies/:kind" element={<MerchantPolicyPage />} />
         <Route path="/funnels/:slug" element={<BuilderPage key="funnel" funnel />} />
-        <Route path="/funnel-templates/:key" element={<GlassesTemplatePreview />} />
+        <Route path="/funnel-templates/:key" element={<NativeTemplatePreview />} />
 
         <Route path="*" element={<NotFoundPage />} />
       </Routes>

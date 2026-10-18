@@ -1,0 +1,7 @@
+Google Fonts official repository
+Commit: 47d54ca1ebb14fd864695f1d39dc734f39017c33
+Source: https://raw.githubusercontent.com/google/fonts/47d54ca1ebb14fd864695f1d39dc734f39017c33/ofl/readexpro/ReadexPro%5BHEXP%2Cwght%5D.ttf
+License: https://raw.githubusercontent.com/google/fonts/47d54ca1ebb14fd864695f1d39dc734f39017c33/ofl/readexpro/OFL.txt
+Source SHA256: 268bba7e1e8f3b14d798b3fb0e40ebaa3fc39308c9ac0020e2faf6df181cc30e
+Converted losslessly to WOFF2 with fontTools; glyphs and variable axes retained.
+Output SHA256: e75844ebb5a251b8c069758dbb16a74c62a555e1a7c1f68fa547b176f6d17adb
