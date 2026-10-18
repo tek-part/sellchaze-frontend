@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { HiOutlineArrowPath } from '../workspace/WorkspaceIcons';
 import api, { clearTokens } from '../../api/client';
 import useStoreScope from '../../hooks/useStoreScope';
-import { fullStoreAccess, storeAccess } from '../../lib/storeAccess';
+import { fullStoreAccess, storeAccess, storeUiPermissions } from '../../lib/storeAccess';
 
 const unwrapUser = (payload) => (payload ? payload.data ?? payload : null);
 
@@ -39,7 +39,7 @@ export default function EditorLayout({ product = false }) {
         return () => { cancelled = true; window.removeEventListener('sellchase:session-expired', onSessionExpired); };
     }, [navigate]);
 
-    const permissions = useMemo(() => (Array.isArray(me?.permissions) ? me.permissions : []), [me?.permissions]);
+    const permissions = useMemo(() => storeUiPermissions(Array.isArray(me?.permissions) ? me.permissions : []), [me?.permissions]);
     const roles = useMemo(() => (Array.isArray(me?.roles) ? me.roles : []), [me?.roles]);
     const canAdminEdit = permissions.includes('stores-edit');
     const access = useMemo(() => (isAdminScope && canAdminEdit ? fullStoreAccess() : storeAccess(roles, permissions)), [isAdminScope, canAdminEdit, roles, permissions]);

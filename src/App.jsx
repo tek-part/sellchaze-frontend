@@ -138,6 +138,7 @@ const StorePublicApiPage = lazy(() => import('./pages/store/settings/StorePublic
 const StorePublicApiEditorPage = lazy(() => import('./pages/store/settings/StorePublicApiPage').then(module => ({ default: module.StorePublicApiEditorPage })));
 const StorePublicApiDocsPage = lazy(() => import('./pages/store/settings/StorePublicApiPage').then(module => ({ default: module.StorePublicApiDocsPage })));
 const StoreWebhookEditorPage = lazy(() => import('./pages/store/settings/StoreWebhooksPage').then(module => ({ default: module.StoreWebhookEditorPage })));
+const StoreManagersPage = lazy(() => import('./pages/store/settings/StoreManagersPage'));
 const StoreLoginSessionsPage = lazy(() => import('./pages/store/settings/StoreLoginSessionsPage'));
 const StoreBotProtectionPage = lazy(() => import('./pages/store/settings/StoreBotProtectionPage'));
 const StoreTrackingPage = lazy(() => import('./pages/store/StoreTrackingPage'));
@@ -303,6 +304,7 @@ const STORE_ROUTES = [
     { path: 'settings/public-api/:keyId', element: <StorePublicApiEditorPage /> },
     { path: 'settings/webhooks/create', element: <StoreWebhookEditorPage /> },
     { path: 'settings/webhooks/:webhookId', element: <StoreWebhookEditorPage /> },
+    { path: 'settings/managers', element: <StoreManagersPage /> },
     { path: 'settings/login-sessions', element: <StoreLoginSessionsPage /> },
     { path: 'settings/bot-protection', element: <StoreBotProtectionPage /> },
     { path: 'settings/shopping-preferences', element: <StoreShoppingPreferencesPage /> },

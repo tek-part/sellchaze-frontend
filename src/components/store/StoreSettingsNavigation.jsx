@@ -33,7 +33,7 @@ export default function StoreSettingsNavigation({ items, uiBase, rel, label }) {
     const referenceLabels = { general: 'اعدادات المتجر', domains: 'اعدادات الدومين', 'store-info': 'سياسات المتجر',
         'head-code': 'اضافة كود للهيد', 'seo-settings': 'اعدادات ال SEO', payments: 'بوابات الدفع',
         'digital-delivery': 'إعدادات تسليم المنتجات الرقمية', 'order-push': 'اشعارات الطلبات', shipping: 'اعدادات الشحن',
-        'social-links': 'روابط التواصل الاجتماعي', 'login-sessions': 'جلسات الدخول', 'phone-verification': 'رقم الهاتف' };
+        'social-links': 'روابط التواصل الاجتماعي', managers: 'اعدادات المديرين', 'login-sessions': 'جلسات الدخول', 'phone-verification': 'رقم الهاتف' };
     const apiItems = items.filter(item => ['webhooks', 'public-api'].includes(item.key));
     return <nav className="ws-settings-navigation" aria-label={label}>{items.map(item => {
         if (apiItems.includes(item)) return item === apiItems[0] ? <ApiNavigation key="public-api-group" items={apiItems} uiBase={uiBase} rel={rel} /> : null;

@@ -19,7 +19,7 @@ export function storeAccess(roles = [], permissions = []) {
     const canStoreAnalytics = isStoreOwner || can('store.analytics.view');
     const canStoreThemes = isStoreOwner || can('store.themes.manage');
     const canStorePages = isStoreOwner || can('store.pages.manage');
-    const canStoreMenus = isStoreOwner || can('store.menus.manage');
+    const canStoreMenus = isStoreOwner || can('store.menus.manage') || can('store.themes.manage');
     const canStoreSettings = isStoreOwner || can('store.settings.manage');
     const canStorePayments = isStoreOwner || can('store.settings.manage');
     const storeMyGroup = canStoreSettings || canStorePayments || canStoreThemes || canStorePages || canStoreMenus;
@@ -30,9 +30,10 @@ export function storeAccess(roles = [], permissions = []) {
 
     return {
         isStoreOwner,
+        canStoreManagers: isStoreOwner,
         canStoreView,
         canStoreProducts,
-        canStoreInventory: can('products-list'),
+        canStoreInventory: can('products-list') || can('store.products.manage'),
         canStoreCategories,
         canStoreOrders,
         canStoreCoupons,
@@ -59,7 +60,21 @@ export function storeAccess(roles = [], permissions = []) {
  */
 export function fullStoreAccess() {
     const all = storeAccess(['Merchant'], []);
-    return { ...all, canStoreInventory: true, isStoreOwner: false };
+    return { ...all, canStoreInventory: true, canStoreManagers: false, isStoreOwner: false };
 }
 
 export default storeAccess;
+
+/** UI aliases stay inside store layouts; account/API permissions are never expanded. */
+export function storeUiPermissions(permissions = []) {
+    const result = new Set(permissions);
+    if (result.has('store.products.manage')) {
+        for (const action of ['list', 'create', 'edit', 'delete']) result.add(`products-${action}`);
+        result.add('categories-list');
+    }
+    if (result.has('store.categories.manage')) {
+        for (const action of ['list', 'create', 'edit', 'delete']) result.add(`categories-${action}`);
+    }
+    if (result.has('store.themes.manage')) result.add('store.menus.manage');
+    return [...result];
+}

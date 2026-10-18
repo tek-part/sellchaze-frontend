@@ -22,6 +22,7 @@ import {
     HiOutlineTicket,
     HiOutlineTruck,
     HiOutlineShieldCheck,
+    HiOutlineUserGroup,
 } from '../workspace/WorkspaceIcons';
 
 /**
@@ -118,6 +119,7 @@ export function buildStoreNav(t, access = {}) {
                 { key: 'seo-settings', to: 'settings/seo', label: t('store_nav_seo_settings', 'SEO settings'), Icon: HiOutlineGlobeAlt, show: access.canStoreSettings },
                 { key: 'social-links', to: 'settings/social-links', label: t('store_nav_social_links', 'Social links'), Icon: HiOutlineGlobeAlt, show: access.canStoreSettings },
                 { key: 'order-push', to: 'settings/order-push', label: t('store_nav_order_push', 'Order notifications'), Icon: HiOutlineBell, show: access.isStoreOwner },
+                { key: 'managers', to: 'settings/managers', label: t('store_nav_managers', 'Managers'), Icon: HiOutlineUserGroup, show: access.canStoreManagers },
                 { key: 'login-sessions', to: 'settings/login-sessions', label: t('store_nav_login_sessions', 'Login sessions'), Icon: HiOutlineComputerDesktop, show: access.isStoreOwner },
                 { key: 'webhooks', to: 'settings/webhooks', label: 'Webhooks', Icon: HiOutlineCommandLine, show: access.canStoreWebhooks },
                 { key: 'public-api', to: 'settings/public-api', label: 'Public API', Icon: HiOutlineCommandLine, show: access.canStorePublicApi },
