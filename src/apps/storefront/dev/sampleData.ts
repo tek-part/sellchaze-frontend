@@ -110,6 +110,9 @@ export const sampleAnnouncements = (themeId?: string, locale?: string): string[]
 
 export function sampleProductDetail(slug: string, themeId?: string, locale?: string): ProductDetailModel {
   const base = sampleNewest(themeId, locale).find((p) => p.handle === slug) ?? sampleNewest(themeId, locale)[0]!;
+  if (themeId === 'elite-wallets') {
+    return { ...base, images: base.image ? [base.image] : [], inStock: true, sku: `PREVIEW-${base.id}`, descriptionHtml: locale === 'ar' ? '<p>بيانات معاينة فقط. يضيف المتجر صور الإكسسوارات ووصفها وخياراتها الفعلية.</p>' : '<p>Preview content only. Each store supplies its actual accessory photographs, descriptions and options.</p>' };
+  }
   if (themeId === 'hype-perfumes') {
     return { ...base, images: [base.image, base.hoverImage].filter((image): image is NonNullable<typeof image> => Boolean(image)), inStock: true, sku: `PREVIEW-${base.id}`, descriptionHtml: locale === 'ar' ? '<p>بيانات معاينة فقط. يضيف المتجر صور منتجاته ووصفها وخياراتها الفعلية.</p>' : '<p>Preview content only. Each store supplies its actual fragrance photographs, descriptions and options.</p>' };
   }
