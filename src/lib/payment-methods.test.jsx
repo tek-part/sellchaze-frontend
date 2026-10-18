@@ -50,7 +50,7 @@ describe('payment methods', () => {
         api.get.mockResolvedValue({ data: { data: rows } });
         api.put.mockResolvedValue({ data: { data: rows } });
         await click(button(card('Stripe'), 'Edit'));
-        await click(document.querySelector('.ws-payment-price-adjustment [role="switch"]'));
+        await click(document.querySelector('.ws-payment-price-adjustment input[type="checkbox"]'));
         const next = document.querySelector('[role="dialog"] form');
         expect(next.querySelector('#payment-adjustment-value').value).toBe('12.50');
         expect(next.querySelector('#payment-adjustment-value').required).toBe(false);
