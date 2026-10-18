@@ -6,3 +6,5 @@
 .ws-orders-status.is-waiting_for_pickup{background:#e9f0fb;color:#275698}.ws-orders-status:is(.is-returning_from_delivery,.is-request_refund,.is-refund_in_progress,.is-refunded){background:#fff3dc;color:#a95b00}.ws-orders td .ws-orders-review{margin-top:6px;font-size:12px}.ws-orders-review.is-high_risk{color:#aa2020}.ws-orders-review.is-moderate_risk{color:#a95b00}
 .ws-orders-toolbar .ws-orders-create{display:inline-flex;align-items:center;gap:8px;padding:8px 12px;border-radius:8px;color:var(--ws-text);font-size:14px}.ws-orders-toolbar .ws-orders-create svg{width:20px;height:20px}
 .ws-orders-toolbar{flex-wrap:wrap}.ws-orders-toolbar :is(button,.ws-orders-create){white-space:nowrap}
+
+.ws-orders-empty{display:grid;place-items:center;min-height:120px;margin:0;padding:16px;border-bottom:1px solid var(--ws-border);font-size:14px;line-height:20px;text-align:center;color:var(--ws-muted)}.ws-orders-pagination-controls{display:inline-flex;align-items:center;gap:12px;white-space:nowrap;flex-shrink:0}
