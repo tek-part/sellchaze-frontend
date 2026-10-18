@@ -171,9 +171,15 @@ test('Opening a clone is read only; only final submission creates the independen
   await expect(page.getByLabel('Funnel name', {exact: true})).toHaveValue('Original campaign (Clone)');
   await expect(page.getByRole('combobox', {name: 'Product', exact: true})).toHaveValue('Fixture glasses');
   expect(api.writes).toEqual([]);
+  const product = page.getByRole('combobox', {name:'Product',exact:true});
+  await product.fill('Replacement'); await expect(product).toHaveValue('Replacement');
+  await expect(page.locator('.fw-form button[type=submit]')).toBeDisabled();
+  await page.getByRole('option',{name:'Replacement product',exact:true}).click();
+  await expect(product).toHaveAttribute('aria-expanded','false'); await expect(product).toHaveValue('Replacement product');
+  expect(api.writes).toEqual([]);
   await page.getByRole('button', {name: 'Create funnel and open builder', exact: true}).click();
   await expect(page).toHaveURL(/\/pages\/99\/builder$/);
-  expect(api.writes).toEqual([{path: '/my-store/funnels', data: {title: 'Original campaign (Clone)', slug: 'original-copy', locale: 'en', product_id: 7, template_key: 'glasses-en', clone_code: code}}]);
+  expect(api.writes).toEqual([{path: '/my-store/funnels', data: {title: 'Original campaign (Clone)', slug: 'original-copy', locale: 'en', product_id: 8, template_key: 'glasses-en', clone_code: code}}]);
 });
 test('A missing or malformed clone code never creates a draft', async ({page}) => {
   const api = await fixture(page);
