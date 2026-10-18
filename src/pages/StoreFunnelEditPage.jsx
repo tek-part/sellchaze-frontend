@@ -31,9 +31,9 @@ function FunnelDetails({ apiBase, uiBase, funnelId }) {
     useEffect(() => {
         let active = true; const controller = new AbortController(); setLoading(true); setError(''); setConflict(false); setSaved(false); setRecord(null);
         api.get(endpoint, { signal: controller.signal }).then(({ data }) => { if (active) hydrate(data); })
-            .catch(e => { if (active) setError(funnelError(e)); }).finally(() => { if (active) setLoading(false); });
+            .catch(e => { if (active) setError(e.response?.status === 404 ? funnelCopy[i18n.language?.startsWith('ar') ? 'ar' : 'en'].editMissing : funnelError(e)); }).finally(() => { if (active) setLoading(false); });
         return () => { active = false; controller.abort(); };
-    }, [endpoint, reload]);
+    }, [endpoint, reload, i18n]);
     useEffect(() => {
         if (!record) return undefined;
         let active = true; const controller = new AbortController(); setProductLoading(true);
@@ -56,7 +56,7 @@ function FunnelDetails({ apiBase, uiBase, funnelId }) {
         try {
             const { data } = await api.put(endpoint, { ...form, product_id: Number(form.product_id), version }, { signal: controller.signal });
             if (mounted.current) { hydrate(data); setSaved(true); }
-        } catch (e) { if (mounted.current && !controller.signal.aborted) { setError(e.response?.status === 409 ? c.editConflict : funnelError(e)); setConflict(e.response?.status === 409); } }
+        } catch (e) { if (mounted.current && !controller.signal.aborted) { setError(e.response?.status === 409 ? c.editConflict : e.response?.status === 404 ? c.editMissing : funnelError(e)); setConflict(e.response?.status === 409); } }
         finally { inFlight.current = false; if (mounted.current) setSaving(false); }
     }
     return <div className="fw-workspace fw-details">

@@ -46,6 +46,7 @@ async function fixture(page: Page, language = 'en', ai = false, permission = tru
     if (path === `/my-store/funnels/by-code/${code}`) return respond({data: original});
     if (path.startsWith('/my-store/funnels/by-code/')) return respond({ message: 'Not found' }, 404);
     if (path === '/my-store/funnels/31') return respond({data:current, version, funnel_base_url:'https://a-very-long-merchant-domain.example/funnels/'});
+    if (path === '/my-store/funnels/404') return respond({message:'Internal model details must not be shown'},404);
     if (path === '/my-store/funnels/products') return respond({ data: url.searchParams.get('search')?.includes('Replacement') ? [{id:8,name:'Replacement product'}] : [original.product] });
     if (path === '/my-store/funnels') return respond({ data: deleted ? [] : [original], meta: { current_page: 1, last_page: 1, per_page: 25, from: deleted ? 0 : 1, to: deleted ? 0 : 1, total: deleted ? 0 : 1 } });
     return respond({ data: [], unread: 0, count: 0 });
@@ -164,6 +165,13 @@ test('A manager without page permission cannot load funnel editing details', asy
   const api = await fixture(page,'en',false,false); await page.goto('/store/funnels/31/edit');
   await expect(page).not.toHaveURL(/\/funnels\/31\/edit$/);
   expect(api.reads.some(path=>path==='/my-store/funnels/31')).toBe(false); expect(api.writes).toEqual([]);
+});
+
+test('An unavailable funnel shows a clear error without an editable form or mutation', async ({page}) => {
+  const api = await fixture(page); await page.goto('/store/funnels/404/edit');
+  await expect(page.getByRole('alert')).toContainText('This funnel was not found in your store.');
+  await expect(page.locator('.fw-form')).toHaveCount(0);
+  expect(api.writes).toEqual([]);
 });
 test('Opening a clone is read only; only final submission creates the independent draft', async ({page}) => {
   const api = await fixture(page);
