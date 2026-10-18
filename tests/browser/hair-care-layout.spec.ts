@@ -34,7 +34,9 @@ for (const locale of ['ar', 'en'] as const) for (const width of [1440, 390, 320]
     expect(layout.heroRadius).toBe(width < 768 ? '30px' : '80px');
     expect(layout.motion).toBe('none'); expect(layout.overflow).toBe(false);
     await page.screenshot({ path: testInfo.outputPath('catalog-top.png') });
-    await page.screenshot({ path: testInfo.outputPath('catalog-preview.png'), clip: { x: 0, y: 0, width, height: width >= 768 ? 1800 : 1400 } });
+    const previewHeight = width >= 768 ? 1800 : 1400;
+    const preview = await page.screenshot({ path: testInfo.outputPath('catalog-preview.png'), fullPage: true, clip: { x: 0, y: 0, width, height: previewHeight } });
+    expect(preview.readUInt32BE(20), 'Catalog capture must extend beyond the first viewport').toBe(previewHeight);
     if (width < 992) {
       const menu = page.getByRole('button', { name: locale === 'ar' ? 'قائمة الصفحة' : 'Page menu', exact: true });
       await menu.click();
