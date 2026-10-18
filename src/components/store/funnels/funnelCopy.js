@@ -9,6 +9,7 @@ export function funnelError(error) {
 }
 
 Object.assign(funnelCopy.ar, {
+    editRequestFailed: 'تعذّر إكمال الطلب. راجع التفاصيل التالية ثم حاول مجددًا.',
     advanced: 'إعدادات متقدمة', funnelPixelsHelp: 'أضف معرّفات البيكسل فقط، كل معرّف في سطر مستقل، بحد أقصى 10 لكل منصة. تُضاف إلى بيكسلات المتجر لهذا المسار دون تكرار. اترك الحقول فارغة لاستخدام بيكسلات المتجر فقط.',
     funnelPixelsLiveNote: 'تسري على المسار المنشور وطلباته الجديدة فور الحفظ. لا تعمل في المعاينة أو عند رفض التتبع. إعدادات Conversion API تُدار من إعدادات المتجر.',
     editTitle: 'تعديل الـ Funnel', backToList: 'العودة للمسارات', saveDetails: 'حفظ البيانات', openDesign: 'تعديل التصميم', detailsSaved: 'تم حفظ بيانات المسار.', editMissing: 'لم يتم العثور على المسار في متجرك.',
@@ -17,6 +18,7 @@ Object.assign(funnelCopy.ar, {
     editDraftNote: 'حفظ البيانات لا ينشر المسار. يمكنك تعديل الأقسام ومعاينتها ونشرها من محرر التصميم.',
 });
 Object.assign(funnelCopy.en, {
+    editRequestFailed: 'The request could not be completed. Review the details below and try again.',
     advanced: 'Advanced settings', funnelPixelsHelp: 'Enter Pixel IDs only, one per line, up to 10 per platform. They are added to store pixels for this funnel without duplicates. Leave blank to use store pixels only.',
     funnelPixelsLiveNote: 'Applies to the published funnel and its new orders when saved. Preview and privacy opt-outs do not send events. Manage Conversion API in store settings.',
     editTitle: 'Edit funnel', backToList: 'Back to funnels', saveDetails: 'Save details', openDesign: 'Edit design', detailsSaved: 'Funnel details saved.', editMissing: 'This funnel was not found in your store.',

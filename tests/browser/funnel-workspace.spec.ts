@@ -8,7 +8,9 @@ async function fixture(page: Page, language = 'en', ai = false, permission = tru
   const writes: Array<{ path: string; data: Record<string, unknown> }> = [];
   const reads: string[] = [];
   let deleted = false;
-  const state = { deleteFails: false, editConflict: false };
+  const state = { deleteFails: false, editConflict: false, editValidation: false, holdSave: false };
+  let releaseSave!: () => void;
+  const saveGate = new Promise<void>(resolve => { releaseSave = resolve; });
   let current = { ...original, browser_pixels: { facebook: [] as string[], tiktok: [] as string[], snapchat: [] as string[] } }; let version = 'a'.repeat(64);
   await page.addInitScript(({language, dark}) => {
     localStorage.setItem('sellchase_access_token', 'isolated-funnel-fixture');
@@ -25,7 +27,9 @@ async function fixture(page: Page, language = 'en', ai = false, permission = tru
       const data = request.postDataJSON() as Record<string, unknown>; writes.push({path, data});
       if (path === '/my-store/funnels/31') {
         expect(request.method()).toBe('PUT');
+        if (state.holdSave) await saveGate;
         if (state.editConflict) return respond({message: 'Changed in another session'}, 409);
+        if (state.editValidation) return respond({errors: {slug: ['This URL is already used by another page.']}}, 422);
         expect(data.version).toBe(version);
         current = { ...current, title: String(data.title), slug: String(data.slug), product: { id: Number(data.product_id), name: 'Replacement product' }, ...(data.browser_pixels ? { browser_pixels: data.browser_pixels as typeof current.browser_pixels } : {}) }; version = 'b'.repeat(64);
         return respond({data: current, version, funnel_base_url: 'https://a-very-long-merchant-domain.example/funnels/'});
@@ -51,7 +55,7 @@ async function fixture(page: Page, language = 'en', ai = false, permission = tru
     if (path === '/my-store/funnels') return respond({ data: deleted ? [] : [original], meta: { current_page: 1, last_page: 1, per_page: 25, from: deleted ? 0 : 1, to: deleted ? 0 : 1, total: deleted ? 0 : 1 } });
     return respond({ data: [], unread: 0, count: 0 });
   });
-  return { writes, reads, state };
+  return { writes, reads, state, releaseSave };
 }
 async function accessible(page: Page, selector: string) {
   const result = await new AxeBuilder({page}).include(selector).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']).analyze();
@@ -236,6 +240,62 @@ test('An unavailable funnel shows a clear error without an editable form or muta
   await expect(page.locator('.fw-form')).toHaveCount(0);
   expect(api.writes).toEqual([]);
 });
+
+for (const language of ['ar', 'en']) {
+  const other = language === 'ar' ? 'en' : 'ar';
+  const changeLanguage = (page: Page, from: string) => page.getByRole('button', {name: from === 'ar' ? 'تغيير اللغة' : 'Change language', exact:true}).click();
+  test(`Unavailable funnel copy follows ${language} language switches without refetching`, async ({page}) => {
+    const api = await fixture(page, language); await page.goto('/store/funnels/404/edit');
+    await expect(page.getByRole('alert')).toContainText(language === 'ar' ? 'لم يتم العثور على المسار في متجرك.' : 'This funnel was not found in your store.');
+    await changeLanguage(page, language);
+    await expect(page.getByRole('alert')).toContainText(other === 'ar' ? 'لم يتم العثور على المسار في متجرك.' : 'This funnel was not found in your store.');
+    await changeLanguage(page, other);
+    await expect(page.getByRole('alert')).toContainText(language === 'ar' ? 'لم يتم العثور على المسار في متجرك.' : 'This funnel was not found in your store.');
+    expect(api.reads.filter(path => path === '/my-store/funnels/404')).toHaveLength(1);
+    await expect(page.getByRole('alert')).not.toContainText('Internal model details');
+    await expect(page.locator('.fw-form')).toHaveCount(0); expect(api.writes).toEqual([]);
+  });
+  for (const failure of ['conflict', 'validation']) test(`Funnel ${failure} preserves dirty fields across ${language} language switches`, async ({page}) => {
+    const api = await fixture(page, language); await page.goto('/store/funnels/31/edit');
+    const name = page.locator('#fw-edit-name'); await name.fill('Unsaved campaign');
+    await page.locator('.fw-advanced summary').click();
+    await page.getByLabel('Facebook Pixel ID', {exact:true}).fill('1234567890');
+    api.state.editConflict = failure === 'conflict'; api.state.editValidation = failure === 'validation';
+    await page.locator('.fw-details-actions button[type=submit]').click();
+    await expect(page.getByRole('alert')).toBeVisible();
+    await changeLanguage(page, language);
+    await expect(page.getByRole('alert')).toContainText(failure === 'conflict'
+      ? other === 'ar' ? 'تغيّرت بيانات هذا المسار' : 'This funnel changed in another session.'
+      : other === 'ar' ? 'تعذّر إكمال الطلب.' : 'The request could not be completed.');
+    if (failure === 'validation') await expect(page.getByRole('alert')).toContainText('This URL is already used by another page.');
+    await expect(name).toHaveValue('Unsaved campaign');
+    await expect(page.getByLabel('Facebook Pixel ID', {exact:true})).toHaveValue('1234567890');
+    expect(api.reads.filter(path => path === '/my-store/funnels/31')).toHaveLength(1); expect(api.writes).toHaveLength(1);
+    const save = page.locator('.fw-details-actions button[type=submit]');
+    if (failure === 'conflict') await expect(save).toBeDisabled(); else await expect(save).toBeEnabled();
+    await page.setViewportSize({width:320,height:900});
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)).toBe(true);
+    await accessible(page, '.fw-details');
+  });
+  for (const failure of [false, true]) test(`Pending funnel save uses current ${language} copy on ${failure ? 'failure' : 'success'}`, async ({page}) => {
+    const api = await fixture(page, language); await page.goto('/store/funnels/31/edit');
+    await page.locator('#fw-edit-name').fill('Pending campaign');
+    api.state.holdSave = true; api.state.editConflict = failure;
+    const save = page.locator('.fw-details-actions button[type=submit]'); await save.click();
+    await expect.poll(() => api.writes.length).toBe(1); await expect(save).toBeDisabled();
+    await changeLanguage(page, language); await expect(page.locator('#fw-edit-name')).toHaveValue('Pending campaign');
+    await expect(page.locator('#fw-edit-name')).toBeDisabled();
+    expect(api.reads.filter(path => path === '/my-store/funnels/31')).toHaveLength(1);
+    api.releaseSave();
+    if (failure) {
+      await expect(page.getByRole('alert')).toContainText(other === 'ar' ? 'تغيّرت بيانات هذا المسار' : 'This funnel changed in another session.');
+      await expect(page.locator('#fw-edit-name')).toHaveValue('Pending campaign');
+    } else await expect(page.locator('.fw-details-saved')).toHaveText(other === 'ar' ? 'تم حفظ بيانات المسار.' : 'Funnel details saved.');
+    expect(api.writes).toHaveLength(1); await expect(save).toBeDisabled();
+    await changeLanguage(page, other);
+    if (failure) await expect(page.getByRole('alert')).toContainText(language === 'ar' ? 'تغيّرت بيانات هذا المسار' : 'This funnel changed in another session.');
+  });
+}
 test('Opening a clone is read only; only final submission creates the independent draft', async ({page}) => {
   const api = await fixture(page);
   await page.goto(`/store/funnels/create?clone=${code}`);
