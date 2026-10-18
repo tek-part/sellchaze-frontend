@@ -39,6 +39,7 @@ for (const locale of ['ar', 'en']) {
         const navigation = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming;
         return { ...window.__litterVitals!, ttfb: navigation.responseStart - navigation.startTime, domContentLoaded: navigation.domContentLoadedEventEnd };
       });
+      console.log('Litter Robot vitals', JSON.stringify({locale,width,...metrics}));
       expect(metrics.cls, `Unexpected shifts: ${JSON.stringify(metrics.shifts)}`).toBeLessThanOrEqual(0.1);
       expect(metrics.lcp).toBeGreaterThan(0);
       expect(metrics.lcp).toBeLessThanOrEqual(2500);
@@ -50,3 +51,14 @@ for (const locale of ['ar', 'en']) {
     });
   }
 }
+
+test('Catalog hero starts loading while the store bootstrap is still pending', async ({page}) => {
+  let release: () => void = () => {};
+  const gate = new Promise<void>(resolve => { release = resolve; });
+  await page.route('**/api/v1/storefront/**', async route => { await gate; await route.fulfill({status:503,json:{message:'Isolated unavailable store'}}); });
+  const hero = page.waitForRequest(request => new URL(request.url()).pathname === '/media/funnel-campaigns/litter-robot-hero-v1.webp');
+  const navigation = page.goto('/funnel-templates/litter-robot-en?preview=1&lang=en&theme=sahra');
+  try { await hero; } finally { release(); }
+  await navigation;
+  await expect(page.locator('.lr-hero h1')).toBeVisible();
+});

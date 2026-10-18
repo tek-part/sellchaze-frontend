@@ -1,0 +1,28 @@
+type CatalogLocation = Pick<Location, 'pathname' | 'search'>;
+const keys = new Set(['glasses-ar', 'glasses-en', 'hair-revive-ar', 'hair-revive-en', 'litter-robot-ar', 'litter-robot-en']);
+
+/** Only the explicitly marked public catalog can warm demo assets. Merchant pages stay authoritative. */
+export function nativeCatalogKey(location: CatalogLocation): string | null {
+  const params = new URLSearchParams(location.search);
+  const match = /^\/funnel-templates\/([^/]+)\/?$/.exec(location.pathname);
+  return params.get('preview') === '1' && !params.has('__preview') && !params.has('customize') && match?.[1] && keys.has(match[1]) ? match[1] : null;
+}
+
+export function loadNativeCatalogPreview(key: string) {
+  if (key === 'glasses-ar' || key === 'glasses-en') return import('./GlassesFunnel').then(m => ({ default: m.GlassesTemplatePreview }));
+  if (key === 'hair-revive-ar' || key === 'hair-revive-en') return import('./HairReviveFunnel').then(m => ({ default: m.HairTemplatePreview }));
+  if (key === 'litter-robot-ar' || key === 'litter-robot-en') return import('./LitterRobotFunnel').then(m => ({ default: m.LitterTemplatePreview }));
+  return Promise.reject(new Error('Unknown native catalog preview'));
+}
+
+export function warmNativeCatalogPreview(location: CatalogLocation): void {
+  const key = nativeCatalogKey(location);
+  if (!key) return;
+  // Start the route module/CSS in parallel with store bootstrap instead of after React routing.
+  void loadNativeCatalogPreview(key).catch(() => { /* The routed lazy boundary handles load failures. */ });
+  if (key.startsWith('litter-robot-')) {
+    const image = document.createElement('link');
+    image.rel = 'preload'; image.as = 'image'; image.href = '/media/funnel-campaigns/litter-robot-hero-v1.webp';
+    image.fetchPriority = 'high'; document.head.appendChild(image);
+  }
+}
