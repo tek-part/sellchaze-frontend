@@ -58,6 +58,11 @@ for (const language of ['ar', 'en']) for (const width of [1920, 390, 320]) {
     await accessible(page, '.fw-method-panel');
     await dialog.getByRole('button', {name: language === 'ar' ? /إنشاء مسار يدويًا/ : /Create a funnel manually/}).click();
     await expect(page.locator('.fw-template')).toHaveCount(6);
+    const cloneField = await page.getByLabel(language === 'ar' ? 'كود المسار' : 'Funnel code', {exact:true}).boundingBox();
+    const cloneNext = await page.locator('.fw-clone-fields').getByRole('button', {name:language === 'ar' ? 'التالي' : 'Next',exact:true}).boundingBox();
+    expect(cloneField && cloneNext).toBeTruthy();
+    expect(cloneNext!.x >= cloneField!.x + cloneField!.width || cloneNext!.x + cloneNext!.width <= cloneField!.x).toBe(true);
+    expect(cloneNext!.y).toBeLessThan(cloneField!.y + cloneField!.height);
     expect(api.writes).toEqual([]);
     const geometry = await page.evaluate(() => ({ width: document.documentElement.scrollWidth, client: document.documentElement.clientWidth, height: document.documentElement.scrollHeight, viewport: innerHeight, scroller: document.querySelector('.fw-create-scroll')!.getBoundingClientRect().bottom, footer: document.querySelector('.fw-create-footer')!.getBoundingClientRect().bottom }));
     expect(geometry.width).toBeLessThanOrEqual(geometry.client);
