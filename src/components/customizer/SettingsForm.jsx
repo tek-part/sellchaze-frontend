@@ -151,19 +151,18 @@ function FieldControl({ field, value, onChange, locales, defaultLocale, editLoca
         case 'collection':
             return <EntityPicker kind={field.type} value={value} onChange={onChange} />;
         case 'list':
-            if (depth > 0) return <p className="text-xs text-slate-400">{t('customizer_nested_list_unsupported', 'Nested lists are not supported.')}</p>;
-            return <ListField field={field} value={value} onChange={onChange} locales={locales} defaultLocale={defaultLocale} editLocale={editLocale} apiBase={apiBase} />;
+            return <ListField field={field} value={value} onChange={onChange} locales={locales} defaultLocale={defaultLocale} editLocale={editLocale} apiBase={apiBase} depth={depth} />;
         default:
             return <input type="text" value={value ?? ''} onChange={(e) => onChange(e.target.value)} className={INPUT_CLASS} />;
     }
 }
 
 /** Repeater for `list` fields: collapsible item cards with add/remove/reorder and a `max` cap. */
-function ListField({ field, value, onChange, locales, defaultLocale, editLocale, apiBase }) {
+function ListField({ field, value, onChange, locales, defaultLocale, editLocale, apiBase, depth }) {
     const { t } = useTranslation();
     const rows = Array.isArray(value) ? value : [];
     const [openIndex, setOpenIndex] = useState(rows.length ? 0 : -1);
-    const itemFields = (field.item || []).filter((f) => f.type !== 'list');
+    const itemFields = field.item || [];
     const max = typeof field.max === 'number' ? field.max : Infinity;
 
     const titleOf = (row, i) => {
@@ -196,7 +195,7 @@ function ListField({ field, value, onChange, locales, defaultLocale, editLocale,
     };
 
     return (
-        <div className="space-y-2">
+        <div className="space-y-2" role="group" aria-label={field.label || field.id}>
             {rows.map((row, i) => {
                 const open = openIndex === i;
                 return (
@@ -224,7 +223,7 @@ function ListField({ field, value, onChange, locales, defaultLocale, editLocale,
                                     defaultLocale={defaultLocale}
                                     editLocale={editLocale}
                                     apiBase={apiBase}
-                                    depth={1}
+                                    depth={depth + 1}
                                 />
                             </div>
                         ) : null}

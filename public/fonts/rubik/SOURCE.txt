@@ -1,0 +1,3 @@
+Rubik-Variable.ttf: https://raw.githubusercontent.com/google/fonts/main/ofl/rubik/Rubik%5Bwght%5D.ttf
+OFL.txt: https://raw.githubusercontent.com/google/fonts/main/ofl/rubik/OFL.txt
+Rubik is used for Litter Robot Arabic and campaign labels; DM Sans remains the English body font.
