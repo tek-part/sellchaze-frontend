@@ -61,7 +61,7 @@ export default function StoreFunnelsPage() {
                 <td><button type="button" className="fw-code" onClick={() => void copyCode(funnel.code)} aria-label={`${c.copyCode}: ${funnel.title}`}><HiOutlineClipboardDocument aria-hidden /><span dir="ltr">{funnel.code}</span></button></td>
                 <td><span className={`fw-status fw-status-${funnel.status}`}>{c[funnel.status] || funnel.status}</span></td>
                 <td>{funnel.is_public && funnel.public_url ? <a className="fw-view" href={funnel.public_url} target="_blank" rel="noopener noreferrer" aria-label={`${c.view}: ${funnel.title}`}><HiOutlineEye aria-hidden /></a> : <button type="button" className="fw-view" disabled title={c.publishFirst} aria-label={`${c.view}: ${funnel.title} — ${c.publishFirst}`}><HiOutlineEye aria-hidden /></button>}</td>
-                <td><Link className="fw-edit" to={`${uiBase}/pages/${funnel.page_id}/builder`}><HiOutlinePencil aria-hidden />{c.edit}</Link></td>
+                <td><Link className="fw-edit" to={`${uiBase}/funnels/${funnel.id}/edit`}><HiOutlinePencil aria-hidden />{c.edit}</Link></td>
                 <td><Link className="fw-clone" to={`${uiBase}/funnels/create?clone=${encodeURIComponent(funnel.code)}`}>{c.duplicate}</Link></td>
             </tr>)}</tbody>
         </table></div>

@@ -8,7 +8,8 @@ async function fixture(page: Page, language = 'en', ai = false, permission = tru
   const writes: Array<{ path: string; data: Record<string, unknown> }> = [];
   const reads: string[] = [];
   let deleted = false;
-  const state = { deleteFails: false };
+  const state = { deleteFails: false, editConflict: false };
+  let current = { ...original }; let version = 'a'.repeat(64);
   await page.addInitScript(({language, dark}) => {
     localStorage.setItem('sellchase_access_token', 'isolated-funnel-fixture');
     localStorage.setItem('sellchase_locale', language);
@@ -20,8 +21,15 @@ async function fixture(page: Page, language = 'en', ai = false, permission = tru
     if (request.method() === 'OPTIONS') return route.fulfill({ status: 204, headers });
     const respond = (json: unknown, status = 200) => route.fulfill({ json, status, headers });
     if (request.method() !== 'GET') {
-      expect(['/my-store/funnels', '/my-store/funnels/generate', '/my-store/funnels/bulk-delete']).toContain(path);
+      expect(['/my-store/funnels', '/my-store/funnels/generate', '/my-store/funnels/bulk-delete', '/my-store/funnels/31']).toContain(path);
       const data = request.postDataJSON() as Record<string, unknown>; writes.push({path, data});
+      if (path === '/my-store/funnels/31') {
+        expect(request.method()).toBe('PUT');
+        if (state.editConflict) return respond({message: 'Changed in another session'}, 409);
+        expect(data.version).toBe(version);
+        current = { ...current, title: String(data.title), slug: String(data.slug), product: { id: Number(data.product_id), name: 'Replacement product' } }; version = 'b'.repeat(64);
+        return respond({data: current, version, funnel_base_url: 'https://a-very-long-merchant-domain.example/funnels/'});
+      }
       if (path.endsWith('/bulk-delete')) {
         if (state.deleteFails) return respond({ message: 'Deletion failed; no rows changed' }, 409);
         deleted = true; return respond({ message: 'Deleted' });
@@ -37,7 +45,9 @@ async function fixture(page: Page, language = 'en', ai = false, permission = tru
     });
     if (path === `/my-store/funnels/by-code/${code}`) return respond({data: original});
     if (path.startsWith('/my-store/funnels/by-code/')) return respond({ message: 'Not found' }, 404);
-    if (path === '/my-store/funnels/products') return respond({ data: [original.product] });
+    if (path === '/my-store/funnels/31') return respond({data:current, version, funnel_base_url:'https://a-very-long-merchant-domain.example/funnels/'});
+    if (path === '/my-store/funnels/404') return respond({message:'Internal model details must not be shown'},404);
+    if (path === '/my-store/funnels/products') return respond({ data: url.searchParams.get('search')?.includes('Replacement') ? [{id:8,name:'Replacement product'}] : [original.product] });
     if (path === '/my-store/funnels') return respond({ data: deleted ? [] : [original], meta: { current_page: 1, last_page: 1, per_page: 25, from: deleted ? 0 : 1, to: deleted ? 0 : 1, total: deleted ? 0 : 1 } });
     return respond({ data: [], unread: 0, count: 0 });
   });
@@ -108,15 +118,76 @@ test('Table sorting and all-or-nothing deletion preserve rows after cancel or se
   await expect(page.getByText('No matching funnels', {exact: true})).toBeVisible();
   expect(api.writes).toEqual([{path: '/my-store/funnels/bulk-delete', data: {ids: [31]}}, {path: '/my-store/funnels/bulk-delete', data: {ids: [31]}}]);
 });
+
+for (const language of ['ar', 'en']) for (const width of [1920, 320]) {
+  test(`Funnel details in ${language} at ${width}px save the chosen product and preserve the code`, async ({page}) => {
+    const api = await fixture(page, language, false, true, width === 320);
+    await page.emulateMedia({reducedMotion:'reduce'}); await page.setViewportSize({width,height:844});
+    await page.goto('/store/funnels');
+    await page.locator('.fw-edit').click(); await expect(page).toHaveURL(/\/funnels\/31\/edit$/);
+    const name = page.getByLabel(language === 'ar' ? 'اسم الـ Funnel' : 'Funnel name', {exact:true});
+    await expect(name).toHaveValue('Original campaign');
+    expect(api.writes).toEqual([]);
+    const save = page.getByRole('button', {name:language === 'ar'?'حفظ البيانات':'Save details',exact:true});
+    await expect(save).toBeDisabled();
+    await name.fill('Edited campaign');
+    await page.getByLabel(language === 'ar'?'رابط الـ Funnel':'Funnel URL',{exact:true}).fill('edited-campaign');
+    const design = page.getByRole('link',{name:language === 'ar'?'تعديل التصميم':'Edit design',exact:true});
+    await expect(design).toHaveAttribute('aria-disabled','true');
+    const product = page.getByRole('combobox', {name:language === 'ar'?'المنتج':'Product',exact:true});
+    await product.fill('Replacement'); await expect(product).toHaveValue('Replacement'); await expect(page.locator('.fw-details-actions button[type=submit]')).toBeDisabled();
+    await page.getByRole('option',{name:'Replacement product',exact:true}).click();
+    await accessible(page, '.fw-details');
+    expect(await page.evaluate(()=>document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+    await save.click();
+    await expect(page.getByRole('status')).toHaveText(language === 'ar'?'تم حفظ بيانات المسار.':'Funnel details saved.');
+    await expect(product).toHaveValue('Replacement product'); await expect(save).toBeDisabled();
+    expect(api.writes).toEqual([{path:'/my-store/funnels/31',data:{title:'Edited campaign',slug:'edited-campaign',product_id:8,version:'a'.repeat(64)}}]);
+    await expect(design).toHaveAttribute('href','/store/pages/41/builder');
+    await expect(design).not.toHaveAttribute('aria-disabled','true');
+  });
+}
+
+test('Conflicting funnel details retain local edits until an explicit reload', async ({page}) => {
+  const api = await fixture(page); await page.goto('/store/funnels/31/edit');
+  const name = page.getByLabel('Funnel name',{exact:true}); await expect(name).toHaveValue('Original campaign');
+  await name.fill('Local edit'); api.state.editConflict = true;
+  await page.getByRole('button',{name:'Save details',exact:true}).click();
+  await expect(page.getByRole('alert')).toContainText('changed in another session');
+  await expect(name).toHaveValue('Local edit'); await expect(page.getByRole('button',{name:'Save details',exact:true})).toBeDisabled();
+  expect(api.writes).toHaveLength(1);
+  await page.getByRole('button',{name:'Reload details and discard edits',exact:true}).click();
+  await expect(name).toHaveValue('Original campaign'); await expect(page.getByRole('alert')).toHaveCount(0);
+  expect(api.writes).toHaveLength(1);
+});
+
+test('A manager without page permission cannot load funnel editing details', async ({page}) => {
+  const api = await fixture(page,'en',false,false); await page.goto('/store/funnels/31/edit');
+  await expect(page).not.toHaveURL(/\/funnels\/31\/edit$/);
+  expect(api.reads.some(path=>path==='/my-store/funnels/31')).toBe(false); expect(api.writes).toEqual([]);
+});
+
+test('An unavailable funnel shows a clear error without an editable form or mutation', async ({page}) => {
+  const api = await fixture(page); await page.goto('/store/funnels/404/edit');
+  await expect(page.getByRole('alert')).toContainText('This funnel was not found in your store.');
+  await expect(page.locator('.fw-form')).toHaveCount(0);
+  expect(api.writes).toEqual([]);
+});
 test('Opening a clone is read only; only final submission creates the independent draft', async ({page}) => {
   const api = await fixture(page);
   await page.goto(`/store/funnels/create?clone=${code}`);
   await expect(page.getByLabel('Funnel name', {exact: true})).toHaveValue('Original campaign (Clone)');
   await expect(page.getByRole('combobox', {name: 'Product', exact: true})).toHaveValue('Fixture glasses');
   expect(api.writes).toEqual([]);
+  const product = page.getByRole('combobox', {name:'Product',exact:true});
+  await product.fill('Replacement'); await expect(product).toHaveValue('Replacement');
+  await expect(page.locator('.fw-form button[type=submit]')).toBeDisabled();
+  await page.getByRole('option',{name:'Replacement product',exact:true}).click();
+  await expect(product).toHaveAttribute('aria-expanded','false'); await expect(product).toHaveValue('Replacement product');
+  expect(api.writes).toEqual([]);
   await page.getByRole('button', {name: 'Create funnel and open builder', exact: true}).click();
   await expect(page).toHaveURL(/\/pages\/99\/builder$/);
-  expect(api.writes).toEqual([{path: '/my-store/funnels', data: {title: 'Original campaign (Clone)', slug: 'original-copy', locale: 'en', product_id: 7, template_key: 'glasses-en', clone_code: code}}]);
+  expect(api.writes).toEqual([{path: '/my-store/funnels', data: {title: 'Original campaign (Clone)', slug: 'original-copy', locale: 'en', product_id: 8, template_key: 'glasses-en', clone_code: code}}]);
 });
 test('A missing or malformed clone code never creates a draft', async ({page}) => {
   const api = await fixture(page);
@@ -146,6 +217,8 @@ for (const contentLocale of ['en','ar']) test(`AI ${contentLocale} generation on
   const product = page.getByRole('combobox', {name: 'Product', exact: true});
   await product.fill('Fixture');
   await page.getByRole('option', {name: 'Fixture glasses', exact: true}).click();
+  await expect(product).toHaveAttribute('aria-expanded', 'false');
+  await expect(product).toHaveValue('Fixture glasses');
   await page.getByLabel('Style or dialect', {exact: true}).fill('Plain English');
   await page.getByLabel('Product description and features', {exact: true}).fill('A synthetic description for isolated draft creation tests.');
   expect(api.writes).toEqual([]);
