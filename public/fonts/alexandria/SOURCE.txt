@@ -1,0 +1,7 @@
+Google Fonts official repository
+Commit: 47d54ca1ebb14fd864695f1d39dc734f39017c33
+Source: https://raw.githubusercontent.com/google/fonts/47d54ca1ebb14fd864695f1d39dc734f39017c33/ofl/alexandria/Alexandria%5Bwght%5D.ttf
+License: https://raw.githubusercontent.com/google/fonts/47d54ca1ebb14fd864695f1d39dc734f39017c33/ofl/alexandria/OFL.txt
+Source SHA256: db8ae03b62d55a65aa4e04307878df8c00d6e5388e4800635cbe0e22b6411b64
+Converted losslessly to WOFF2 with fontTools; glyphs and variable axes retained.
+Output SHA256: 10f1126f8c782754c0be641182ae12a71dcd4cc2b1aa7e0b644d80fce4f73cd3

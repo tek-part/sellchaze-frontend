@@ -24,9 +24,19 @@ import { CheckoutMinimum } from './CheckoutMinimum';
 import { minimumOrderAllows } from './minimum-order';
 import { useCheckoutLead } from './useCheckoutLead';
 import { useCheckoutMetrics } from '../analytics/checkout-hooks';
+import type { ApiProduct } from '../api/types';
+
+export interface FunnelPresentation {
+  product: ApiProduct | null;
+  unitPrice: number;
+  quantity: number;
+  ready: boolean;
+  image: string | null;
+  comparePrice?: number;
+}
 
 /** Product-specific checkout: leaves the visitor's ordinary shopping cart intact. */
-export function FunnelCheckout({ productSlug }: { productSlug: string | null }): ReactElement {
+export function FunnelCheckout({ productSlug, renderLayout, compactHeader = false }: { productSlug: string | null; renderLayout?: (presentation: FunnelPresentation, checkout: ReactElement) => ReactElement; compactHeader?: boolean }): ReactElement {
   const { locale } = useLocale();
   const { store } = useStore();
   const ar = locale === 'ar';
@@ -76,9 +86,9 @@ export function FunnelCheckout({ productSlug }: { productSlug: string | null }):
     await payment.submit({ ...contact.payload(), coupon_code: appliedCoupon, lead_token: lead.submitToken(), ...(quote?.payment_adjustment_token ? { payment_adjustment_token: quote.payment_adjustment_token } : {}) });
   };
 
-  return <Section id="funnel-checkout" className="sf-funnel-checkout"><Container narrow>
-    <h2>{label('أكمل طلبك', 'Complete your order')}</h2>
-    <p>{contact.requiresShipping === false ? label('اختر الكمية وأدخل بيانات التواصل لاستلام المنتج الرقمي بعد تأكيد الدفع.', 'Choose your quantity and enter your contact details to receive the digital product after payment confirmation.') : label('اختر الكمية وأدخل بيانات التوصيل.', 'Choose your quantity and enter your delivery details.')}</p>
+  const checkout = <Section id="funnel-checkout" className="sf-funnel-checkout"><Container narrow>
+    {!compactHeader ? <><h2>{label('أكمل طلبك', 'Complete your order')}</h2>
+      <p>{contact.requiresShipping === false ? label('اختر الكمية وأدخل بيانات التواصل لاستلام المنتج الرقمي بعد تأكيد الدفع.', 'Choose your quantity and enter your contact details to receive the digital product after payment confirmation.') : label('اختر الكمية وأدخل بيانات التوصيل.', 'Choose your quantity and enter your delivery details.')}</p></> : null}
     <CheckoutRecovery flow={payment} />
     {productQ.loading ? <Spinner label={label('جارٍ تحميل المنتج…', 'Loading product…')} /> : productQ.error ? <ErrorState
       title={label('تعذّر تحميل المنتج', 'Unable to load product')}
@@ -136,4 +146,5 @@ export function FunnelCheckout({ productSlug }: { productSlug: string | null }):
       </Button> : null}
     </form><UiBlock slot="after_checkout" /></>}
   </Container></Section>;
+  return renderLayout ? renderLayout({ product: product ?? null, unitPrice: activeOffer?.unitPrice ?? basePrice, comparePrice: selectedVariant?.compareAtPrice ?? Number(product?.compare_price ?? 0), quantity, ready: selectionReady, image: selectedVariant?.image?.src ?? product?.image_url ?? product?.image ?? null }, checkout) : checkout;
 }

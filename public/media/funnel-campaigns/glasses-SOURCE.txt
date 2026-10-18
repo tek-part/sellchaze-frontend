@@ -1,0 +1,9 @@
+Original campaign photographs generated on 2026-10-18 with the built-in image_gen tool.
+No competitor photographs, branding, reviews or certifications were copied.
+These images accompany template previews. Actual merchant funnels start with the linked product's own image and copy.
+
+glasses-hero-v1.png — exact prompt:
+Use case: product-mockup. Create one premium original editorial campaign photograph for a customizable glasses sales funnel. Wide landscape 1536x1024. A single pair of unbranded black acetate sunglasses with dark gray lenses, resting on warm beige sculptural stone plinths in a sand colored architectural interior, strong natural sun from upper left, beautiful long shadows, subtle fine grain and realistic material details, high end fashion still life. Sunglasses large and visible in lower third, upper half has generous dark warm shadowed negative space where a separate HTML white headline will be placed. No words, letters, logos, watermark, people, buttons, UI, promotional seals, fake certifications or product claims. Own original composition, not an imitation of any branded image.
+
+glasses-detail-v1.png — exact prompt:
+Use case: product-mockup. One square premium editorial still-life photograph 1024x1024 for an original sunglasses sales funnel. Unbranded black acetate sunglasses with dark gray lenses, clean straight temples, resting diagonally on a warm pale beige plaster cube with a single long warm afternoon sun shadow. Camera close to lens level, glasses fill 70% of frame, tactile matte stone, fine grain, realistic optics, restrained cream and black palette. No text, logos, branding, watermark, UI, packaging, certification or people. An original modern product campaign photograph, not reproducing any reference artwork.

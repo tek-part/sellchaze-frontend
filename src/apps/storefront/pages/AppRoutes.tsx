@@ -6,7 +6,7 @@
 import { lazy, Suspense, type ReactElement } from 'react';
 import { StorefrontVisit } from '../analytics/hooks';
 import { StorefrontAdvertising } from '../advertising/hooks';
-import { Route, Routes } from 'react-router-dom';
+import { Route, Routes, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Container } from '../foundation/components/Container';
 import { Section } from '../foundation/components/Section';
@@ -40,6 +40,7 @@ const FaqPage = lazy(() => import('./StaticPages').then((m) => ({ default: m.Faq
 const BlogPage = lazy(() => import('./BlogPages').then((m) => ({ default: m.BlogPage })));
 const BlogDetailPage = lazy(() => import('./BlogPages').then((m) => ({ default: m.BlogDetailPage })));
 const BuilderPage = lazy(() => import('./BuilderPage').then((m) => ({ default: m.BuilderPage })));
+const GlassesTemplatePreview = lazy(() => import('../funnels/GlassesFunnel').then((m) => ({ default: m.GlassesTemplatePreview })));
 const CategoriesPage = lazy(() => import('./BrowsePages').then((m) => ({ default: m.CategoriesPage })));
 const CollectionsPage = lazy(() => import('./BrowsePages').then((m) => ({ default: m.CollectionsPage })));
 const BrandsPage = lazy(() => import('./BrowsePages').then((m) => ({ default: m.BrandsPage })));
@@ -59,10 +60,10 @@ function PageFallback(): ReactElement {
 }
 
 export function AppRoutes(): ReactElement {
+  const templatePreview = /^\/funnel-templates\//.test(useLocation().pathname);
   return (
     <Suspense fallback={<PageFallback />}>
-      <StorefrontVisit />
-      <StorefrontAdvertising />
+      {!templatePreview ? <><StorefrontVisit /><StorefrontAdvertising /></> : null}
       <Routes>
         <Route path="/" element={<HomePage />} />
         {/*
@@ -106,6 +107,7 @@ export function AppRoutes(): ReactElement {
         <Route path="/pages/:slug" element={<BuilderPage key="page" />} />
         <Route path="/policies/:kind" element={<MerchantPolicyPage />} />
         <Route path="/funnels/:slug" element={<BuilderPage key="funnel" funnel />} />
+        <Route path="/funnel-templates/:key" element={<GlassesTemplatePreview />} />
 
         <Route path="*" element={<NotFoundPage />} />
       </Routes>

@@ -1,0 +1,3 @@
+Actual screenshots of the independently implemented native Glasses Arabic and English funnels, captured at 1920 x 972 in an isolated local synthetic fixture on 2026-10-18.
+The campaign photographs are original generated assets documented in ../funnel-campaigns/glasses-SOURCE.txt. No competitor screenshot or photograph is embedded in these thumbnails.
+Demo product names, prices and content belong only to the local layout fixture. Merchant-created funnels use their own linked product and start as unpublished drafts.

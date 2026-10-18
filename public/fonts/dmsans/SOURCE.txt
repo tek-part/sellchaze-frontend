@@ -1,0 +1,7 @@
+Google Fonts official repository
+Commit: 47d54ca1ebb14fd864695f1d39dc734f39017c33
+Source: https://raw.githubusercontent.com/google/fonts/47d54ca1ebb14fd864695f1d39dc734f39017c33/ofl/dmsans/DMSans%5Bopsz%2Cwght%5D.ttf
+License: https://raw.githubusercontent.com/google/fonts/47d54ca1ebb14fd864695f1d39dc734f39017c33/ofl/dmsans/OFL.txt
+Source SHA256: 8cd08d97e89c24d0aa92edd2f0f4c8ee6195eee9b7c9f154865a58b02f0c1c0d
+Converted losslessly to WOFF2 with fontTools; glyphs and variable axes retained.
+Output SHA256: 3f455d6e7e4a47f1ba45abbc9df11d7b5e945cab7b30cfc1dc57f61e88daa61c
