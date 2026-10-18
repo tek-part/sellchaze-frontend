@@ -6,7 +6,7 @@
  *   3. the active theme's own `home` template.
  * Page data (catalogue rows, merchandising, editable content) comes from `useHomeContext()`.
  */
-import { useEffect, useMemo, type ReactElement } from 'react';
+import { useMemo, type ReactElement } from 'react';
 import { ThemeRenderer, useTemplate, type PageDefinition, type SectionInstance } from '../theme-engine';
 import { useStore } from '../state/store-context';
 import { useAsync } from '../api/useAsync';
@@ -18,6 +18,7 @@ import { organizationSchema, websiteSchema } from '../seo/schema';
 import { previewOrDev } from '../preview';
 import { useCustomizerSections, useCustomizerState } from '../customize/customizer-state';
 import { useHomeContext } from './home-context';
+import { PageLoading } from '../foundation/components/PageLoading';
 
 /** API layout sections → engine section instances (settings stay raw; sections resolve them). */
 export function toSectionInstances(sections: ReadonlyArray<ApiLayoutSection>): SectionInstance[] {
@@ -26,7 +27,7 @@ export function toSectionInstances(sections: ReadonlyArray<ApiLayoutSection>): S
 
 export function HomePage(): ReactElement | null {
   const { locale } = useLocale();
-  const { store } = useStore();
+  const { store, apiOk } = useStore();
   const themeHome = useTemplate('home');
   const { context, loading: homeLoading } = useHomeContext();
   const customizer = useCustomizerState();
@@ -36,23 +37,12 @@ export function HomePage(): ReactElement | null {
   // paying a failed round-trip on every render of the demo.
   // Also skip when previewing a theme other than the active one: the stored composition belongs
   // to the active theme and would be rendered with the wrong section set/defaults.
-  const skipLayout = (previewOrDev() && !store.id) || !activeThemeMatches();
+  const isolatedPreview = previewOrDev() && !apiOk;
+  const skipLayout = isolatedPreview || !activeThemeMatches();
   const layout = useAsync(
     () => (skipLayout ? Promise.resolve(null) : getLayout('home').catch(() => null)),
     [locale, skipLayout],
   );
-
-  // Layout-stability guard: until the home data settles, everything below the hero (and the
-  // footer) stays `visibility: hidden` (foundation/base.css). Hidden elements are excluded from
-  // layout-shift scoring, so data-driven sections growing from empty/skeleton to full grids do not
-  // register as CLS, while the fixed-height hero still paints immediately for LCP.
-  const settling = homeLoading || (!skipLayout && layout.loading);
-  useEffect(() => {
-    const root = document.documentElement;
-    if (settling) root.setAttribute('data-sf-home-loading', '');
-    else root.removeAttribute('data-sf-home-loading');
-    return () => root.removeAttribute('data-sf-home-loading');
-  }, [settling]);
 
   const page = useMemo<PageDefinition | undefined>(() => {
     if (draft) return { template: 'home', sections: draft };
@@ -66,12 +56,16 @@ export function HomePage(): ReactElement | null {
     return themeHome;
   }, [draft, skipLayout, layout.loading, layout.data, themeHome]);
 
+  // A saved composition and its data can resolve in either order. Keep a real loading
+  // area until both are ready, rather than collapsing main or painting default content first.
+  const waiting = !isolatedPreview && (homeLoading || (!draft && !skipLayout && layout.loading));
+
   const site = typeof window !== 'undefined' ? window.location.origin : '';
 
   return (
     <>
       <Seo path="/" jsonLd={[organizationSchema(store.name, site), websiteSchema(store.name, site)]} />
-      {page ? <ThemeRenderer page={page} context={context} selectedSectionId={customizer.active ? customizer.selectedId : null} /> : null}
+      {waiting ? <PageLoading /> : page ? <ThemeRenderer page={page} context={context} selectedSectionId={customizer.active ? customizer.selectedId : null} /> : null}
     </>
   );
 }

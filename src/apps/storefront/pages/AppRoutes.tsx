@@ -7,10 +7,7 @@ import { lazy, Suspense, type ReactElement } from 'react';
 import { StorefrontVisit } from '../analytics/hooks';
 import { StorefrontAdvertising } from '../advertising/hooks';
 import { Route, Routes, useLocation } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
-import { Container } from '../foundation/components/Container';
-import { Section } from '../foundation/components/Section';
-import { Spinner } from '../foundation/components/Spinner';
+import { PageLoading } from '../foundation/components/PageLoading';
 
 const HomePage = lazy(() => import('./HomePage').then((m) => ({ default: m.HomePage })));
 const CategoryPage = lazy(() => import('./CategoryPage').then((m) => ({ default: m.CategoryPage })));
@@ -46,23 +43,10 @@ const CollectionsPage = lazy(() => import('./BrowsePages').then((m) => ({ defaul
 const BrandsPage = lazy(() => import('./BrowsePages').then((m) => ({ default: m.BrandsPage })));
 const MerchantPolicyPage = lazy(() => import('./MerchantPolicyPage').then((m) => ({ default: m.MerchantPolicyPage })));
 
-function PageFallback(): ReactElement {
-  const { t } = useTranslation();
-  return (
-    <Section>
-      <Container>
-        <div style={{ display: 'grid', placeItems: 'center', minHeight: '100vh' }}>
-          <Spinner label={t('common.loading')} />
-        </div>
-      </Container>
-    </Section>
-  );
-}
-
 export function AppRoutes(): ReactElement {
   const templatePreview = /^\/funnel-templates\//.test(useLocation().pathname);
   return (
-    <Suspense fallback={<PageFallback />}>
+    <Suspense fallback={<PageLoading />}>
       {!templatePreview ? <><StorefrontVisit /><StorefrontAdvertising /></> : null}
       <Routes>
         <Route path="/" element={<HomePage />} />

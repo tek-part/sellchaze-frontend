@@ -1,8 +1,9 @@
 /**
  * useHomeContext — the store-wide data bundle every section-driven page (home, custom builder
  * pages) renders from: catalogue rows + merchandising + editable content in ONE request
- * (GET /storefront/home), packed into `StorefrontContext.data`. DEV/preview falls back to demo data
- * when the API isn't reachable, so the store is always demoable. Shared by HomePage + BuilderPage.
+ * (GET /storefront/home), packed into `StorefrontContext.data`. An isolated preview without a
+ * resolved merchant uses demo data; a resolved merchant's data and errors stay authoritative.
+ * Shared by HomePage + BuilderPage.
  */
 import { useMemo } from 'react';
 import { previewOrDev } from '../preview';
@@ -26,16 +27,17 @@ export interface HomeContextResult {
 export function useHomeContext(): HomeContextResult {
   const manifest = useThemeManifest();
   const { locale } = useLocale();
-  const { store } = useStore();
+  const { store, apiOk } = useStore();
   const currency = store.currency;
+  const isolatedPreview = previewOrDev() && !apiOk;
 
   // One request for the entire home page (catalogue rows + merchandising + editable content).
   // Keyed on the locale: product/category names come back translated by the API (`?lang=`).
-  const bundle = useAsync(() => getHome(), [locale]);
+  const bundle = useAsync(() => isolatedPreview ? Promise.resolve(null) : getHome(), [locale, isolatedPreview]);
 
   const context = useMemo<StorefrontContext>(() => {
-    const dev = previewOrDev();
-    const b = bundle.data?.data;
+    const dev = isolatedPreview;
+    const b = isolatedPreview ? undefined : bundle.data?.data;
     const cards = (arr: ReadonlyArray<ApiProduct> | undefined): ProductCardModel[] =>
       arr ? arr.map((p) => toProductCard(p, currency, store.currencyMultipliers[currency] ?? 1)) : [];
     // Pick the active-locale slice of a { en, ar, … } content payload: locale → store default → any.
@@ -80,7 +82,7 @@ export function useHomeContext(): HomeContextResult {
       navigation: { header: [], footer: [] },
       data: {
         loading: dev ? false : bundle.loading,
-        ...(bundle.error ? { error: bundle.error } : {}),
+        ...(!isolatedPreview && bundle.error ? { error: bundle.error } : {}),
         categories,
         merchandisingCollections: b ? { bestsellers: best, sale, newest: fresh.length ? fresh : newest } : undefined,
         collections: {
@@ -99,7 +101,7 @@ export function useHomeContext(): HomeContextResult {
         ...extras,
       },
     };
-  }, [bundle.data, bundle.loading, bundle.error, currency, store.currencyMultipliers, store.name, store.defaultLocale, manifest.id, locale]);
+  }, [bundle.data, bundle.loading, bundle.error, currency, store.currencyMultipliers, store.name, store.defaultLocale, manifest.id, locale, isolatedPreview]);
 
-  return { context, loading: bundle.loading };
+  return { context, loading: isolatedPreview ? false : bundle.loading };
 }
