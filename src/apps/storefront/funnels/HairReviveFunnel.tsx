@@ -51,7 +51,7 @@ function NumberedDetails({ settings, ar }: { settings: Values; ar: boolean }): R
   const items = rows(settings['items']).slice(0, 8); const [selected, setSelected] = useState(0); const current = items[selected] ?? items[0];
   if (!current) return null;
   const image = campaignUrl(current['image']);
-  return <div className="hr-wrap hr-factors"><div className="hr-factor-list" role="group" aria-label={ar ? 'تفاصيل المنتج' : 'Product details'}>{items.map((item, index) => <button type="button" key={index} onClick={() => setSelected(index)} aria-pressed={item === current}><span>{String(index + 1).padStart(2, '0')}</span><strong>{text(item['heading'])}</strong></button>)}</div><div className="hr-factor-content" aria-live="polite">{image ? <img src={image} alt={text(current['image_alt'])} loading="lazy" /> : null}<p>{text(current['text'])}</p></div></div>;
+  return <div className="hr-wrap hr-factors"><div className="hr-factor-list" data-hr-reveal="right" role="group" aria-label={ar ? 'تفاصيل المنتج' : 'Product details'}>{items.map((item, index) => <button type="button" key={index} onClick={() => setSelected(index)} aria-pressed={item === current}><span>{String(index + 1).padStart(2, '0')}</span><strong>{text(item['heading'])}</strong></button>)}</div><div className="hr-factor-content" data-hr-reveal aria-live="polite">{image ? <img src={image} alt={text(current['image_alt'])} loading="lazy" /> : null}<p>{text(current['text'])}</p></div></div>;
 }
 
 function Video({ settings, ar }: { settings: Values; ar: boolean }): ReactElement {
