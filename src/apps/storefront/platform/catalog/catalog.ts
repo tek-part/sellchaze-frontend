@@ -17,7 +17,7 @@ export const THEME_CATALOG: ThemeCatalog = [
     id: 'hype-fashion', name: 'Hype Fashion', version: '1.0.0', archetype: 'Fashion',
     description: 'Black navigation, editorial campaigns, collection rails, linked looks, image comparison and merchant review photos.',
     author: 'Sellchaze', tags: ['fashion', 'clothing', 'modern', 'rtl'], accent: '#000000',
-    previewImage: '/media/theme-campaigns/hype-fashion-hero-v1.png',
+    previewImage: '/media/theme-previews/hype-fashion.png',
     minEngineVersion: '1.0.0', capabilities: ['rtl', 'cart-drawer', 'quick-add', 'newsletter'],
     license: { type: 'free', sku: 'theme-hype-fashion' }, featured: true,
     changelog: [{ version: '1.0.0', date: '2026-10-18', notes: ['Fashion storefront with thirteen editable home sections and original campaign photography.'] }],
