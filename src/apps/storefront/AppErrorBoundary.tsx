@@ -4,7 +4,10 @@
  * failures; this is the app-level safety net for pages/routes. Fail-closed, never a white screen.
  */
 import { Component, type ErrorInfo, type ReactNode } from 'react';
-import { Button, Container, ErrorState, Section } from './foundation/components';
+import { Button } from './foundation/components/Button';
+import { Container } from './foundation/components/Container';
+import { ErrorState } from './foundation/components/StateMessage';
+import { Section } from './foundation/components/Section';
 
 interface State {
   error: Error | null;

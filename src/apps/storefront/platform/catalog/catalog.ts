@@ -14,6 +14,16 @@ import { THEME_LOADERS } from './loaders';
 
 export const THEME_CATALOG: ThemeCatalog = [
   {
+    id: 'nature-pets', name: 'Nature Pets', version: '1.0.0', archetype: 'Pets',
+    description: 'Pet collections with Nature-family navigation, peek campaigns, a split story and FAQ, compact product grids and photography.',
+    author: 'Sellchaze', tags: ['pets', 'animals', 'modern', 'rtl'], accent: '#A67500',
+    previewImage: '/media/theme-previews/nature-pets.png',
+    minEngineVersion: '1.0.0', capabilities: ['rtl', 'cart-drawer', 'quick-add', 'newsletter'],
+    license: { type: 'free', sku: 'theme-nature-pets' }, featured: true,
+    changelog: [{ version: '1.0.0', date: '2026-10-18', notes: ['Independent Nature Pets composition and editable sections.'] }],
+    load: THEME_LOADERS['nature-pets'],
+  },
+  {
     id: 'blast-pets', name: 'Blast Pets', version: '1.0.0', archetype: 'Pets',
     description: 'Pet collections, warm orange navigation, full-image campaigns and photo stories.',
     author: 'Sellchaze', tags: ['pets', 'animals', 'modern', 'rtl'], accent: '#FDAE03',

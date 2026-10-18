@@ -15,6 +15,7 @@ export const THEME_CATEGORIES = [
 // Compatibility while a paired API release is rolling out. These are actual runtime
 // packages, never aliases or placeholders for the rest of the reference catalog.
 const modern = {
+    'nature-pets': { categories: ['pets'], rank: 0 },
     'blast-pets': { categories: ['pets'], rank: 3 },
     'pure-furniture': { categories: ['furniture'], rank: 21 },
     'nature-kids': { categories: ['hobbies', 'kids'], rank: 24 },
