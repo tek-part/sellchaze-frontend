@@ -8,3 +8,4 @@
 .ws-orders-toolbar{flex-wrap:wrap}.ws-orders-toolbar :is(button,.ws-orders-create){white-space:nowrap}
 
 .ws-orders-empty{display:grid;place-items:center;min-height:120px;margin:0;padding:16px;border-bottom:1px solid var(--ws-border);font-size:14px;line-height:20px;text-align:center;color:var(--ws-muted)}.ws-orders-pagination-controls{display:inline-flex;align-items:center;gap:12px;white-space:nowrap;flex-shrink:0}
+.ws-orders td .ws-order-bot-warning{display:flex;align-items:flex-start;gap:4px;max-width:160px;color:#a95b00;line-height:18px}.ws-order-bot-warning svg{width:14px;height:14px;flex-shrink:0;margin-top:2px}
