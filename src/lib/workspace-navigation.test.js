@@ -85,4 +85,10 @@ describe('Workspace search uses the authorized sidebar', () => {
         expect(rows[0].element.props.to).toBe('/dashboard');
         expect(rows[1].Icon).toBe(Icon);
     });
+    it('retains the current group in compact navigation without marking every group active', () => {
+        const html = renderToStaticMarkup(React.createElement(I18nextProvider, { i18n }, React.createElement(MemoryRouter, { initialEntries: ['/store/products/30/edit'] }, React.createElement(SidebarNav, { roles: ['Merchant'], permissions: [], compact: true }))));
+        expect(html).toMatch(/aria-label="Products" aria-current="location"/);
+        expect(html.match(/aria-current="location"/g)).toHaveLength(1);
+        expect(html).not.toMatch(/aria-label="Orders" aria-current=/);
+    });
 });

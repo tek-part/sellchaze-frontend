@@ -14,6 +14,16 @@ import { THEME_LOADERS } from './loaders';
 
 export const THEME_CATALOG: ThemeCatalog = [
   {
+    id: 'hype-fashion', name: 'Hype Fashion', version: '1.0.0', archetype: 'Fashion',
+    description: 'Black navigation, editorial campaigns, collection rails, linked looks, image comparison and merchant review photos.',
+    author: 'Sellchaze', tags: ['fashion', 'clothing', 'modern', 'rtl'], accent: '#000000',
+    previewImage: '/media/theme-previews/hype-fashion.png',
+    minEngineVersion: '1.0.0', capabilities: ['rtl', 'cart-drawer', 'quick-add', 'newsletter'],
+    license: { type: 'free', sku: 'theme-hype-fashion' }, featured: true,
+    changelog: [{ version: '1.0.0', date: '2026-10-18', notes: ['Fashion storefront with thirteen editable home sections and original campaign photography.'] }],
+    load: THEME_LOADERS['hype-fashion'],
+  },
+  {
     id: 'hype-perfumes', name: 'Hype Perfumes', version: '1.0.0', archetype: 'Perfumes',
     description: 'Full-width fragrance campaigns, category tiles, product rails, image comparison, editorial stories and customer reviews.',
     author: 'Sellchaze', tags: ['perfumes', 'beauty', 'modern', 'rtl'], accent: '#35161F',

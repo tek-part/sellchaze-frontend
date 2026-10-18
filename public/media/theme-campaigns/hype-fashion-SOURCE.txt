@@ -1,0 +1,11 @@
+Hype Fashion original campaign assets, created 2026-10-18 for Sellchaze.
+
+Generated using the built-in image_gen tool. No competitor photo, logo or image was used as an input. These campaign images are editable theme defaults, not photographs of a merchant's actual products or customer testimonials.
+
+hype-fashion-hero-v1.png prompt:
+Use case: ads-marketing. Asset type: original full-width apparel storefront campaign hero photograph. Create one cinematic landscape fashion editorial photograph, wide 2.5:1 composition. Two adult models in understated premium everyday cotton clothing: one woman in a dusty rose oversized sweatshirt on the far left, one man in a cream hoodie and charcoal trousers on the far right, standing naturally in a warm grey minimalist studio with soft directional light. Leave a broad quiet area in the center for live website headline text. Visible cotton texture, realistic skin, sophisticated natural photography and muted tones, suitable for a professional clothing ecommerce homepage. No text, no lettering, no logo, no brand, no collage, no frame, no watermark. This is an original campaign photo, not a recreation of another brand's photograph.
+
+hype-fashion-look-v1.png prompt:
+Use case: photorealistic-natural. Asset type: original fashion ecommerce editorial photo, portrait 4:5. An adult woman with dark hair in a relaxed dusty rose cotton sweatshirt and cream wide-leg trousers, natural standing pose in a warm grey studio. Full outfit visible, tactile premium cotton, soft daylight, understated contemporary fashion campaign, clean realistic photography. No text, logos, watermark, accessories, or brand. This is an original unbranded photo for a clothing store template.
+
+../theme-previews/hype-fashion.png is an actual viewport screenshot of the native Hype Fashion renderer, captured from the optimized local production build. Its demo catalog is preview content only.

@@ -30,6 +30,7 @@ export type { DemoCatalog, DemoBrand, DemoFaq, DemoTestimonial } from './types';
 const DEFAULT_THEME = 'naseem';
 
 const BY_THEME: Readonly<Record<string, DemoCatalog>> = {
+  'hype-fashion': LUXURY_CATALOG,
   'hype-perfumes': HYPE_CATALOG,
   'nature-pets': NATURE_PETS_CATALOG,
   'blast-pets': PETS_CATALOG,
@@ -49,6 +50,7 @@ const BY_THEME: Readonly<Record<string, DemoCatalog>> = {
  * images, ratings and ids stay canonical, so a fact corrected once is correct in both languages.
  */
 const AR_OVERLAY: Readonly<Record<string, CatalogOverlay>> = {
+  'hype-fashion': LUXURY_AR,
   'hype-perfumes': HYPE_AR,
   'nature-pets': NATURE_PETS_AR,
   'blast-pets': PETS_AR,

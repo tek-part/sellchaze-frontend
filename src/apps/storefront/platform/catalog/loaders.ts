@@ -2,6 +2,7 @@ import type { ThemeLoader } from '../../theme-engine/types';
 
 /** Shared runtime loaders. Storefront boot needs these, without marketplace listing metadata. */
 export const THEME_LOADERS = {
+  'hype-fashion': () => import('../../themes/hype-fashion').then(module => module.fashionTheme),
   'hype-perfumes': () => import('../../themes/hype-perfumes').then(module => module.hypeTheme),
   'nature-pets': () => import('../../themes/nature-pets').then(module => module.naturePetsTheme),
   'blast-pets': () => import('../../themes/blast-pets').then(module => module.petsTheme),
