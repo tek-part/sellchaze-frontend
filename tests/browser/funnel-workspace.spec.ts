@@ -68,12 +68,15 @@ for (const language of ['ar', 'en'] as const) for (const width of [320, 390]) {
     await page.setViewportSize({ width, height: 844 });
     await page.goto('/store/funnels');
     const region = page.getByRole('region', { name: 'Product Funnels', exact: true });
-    await expect(region).toContainText(language === 'ar' ? 'لا توجد مسارات مطابقة' : 'No matching funnels');
+    const empty = page.locator('.fw-empty');
+    await expect(empty).toHaveText(language === 'ar' ? 'لا توجد مسارات مطابقة' : 'No matching funnels');
+    await expect(empty).toBeInViewport({ ratio: 1 });
     const pageFits = () => page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth);
     expect(await pageFits()).toBe(true);
     expect(await region.evaluate(e => e.scrollWidth > e.clientWidth)).toBe(true);
     await region.focus(); await page.keyboard.press(language === 'ar' ? 'ArrowLeft' : 'ArrowRight');
     await expect.poll(() => region.evaluate(e => Math.abs(e.scrollLeft))).toBeGreaterThan(0);
+    await expect(empty).toBeInViewport({ ratio: 1 });
     expect(await page.evaluate(() => window.scrollX)).toBe(0);
     api.state.emptyList = false; await page.reload();
     await expect(region).toContainText(original.title);

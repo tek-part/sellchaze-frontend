@@ -36,7 +36,9 @@
 .fw-clone:hover{text-decoration:underline}
 .fw-status{font-size:12px;white-space:nowrap}
 .fw-status-published{color:var(--ws-green-ink)}
-.fw-empty{padding:32px 16px;text-align:center;color:var(--ws-muted);margin:0}
+.fw-list-table{position:relative}
+.sc-workspace .ws-page .fw-table td.fw-empty-cell{height:100px;padding:0}
+.fw-empty{position:absolute;inset-inline:1px;top:35px;min-height:100px;padding:32px 16px;display:grid;place-items:center;pointer-events:none;text-align:center;color:var(--ws-muted);margin:0}
 .fw-pagination{display:flex;justify-content:flex-end;align-items:center;flex-wrap:wrap;gap:12px;min-height:68px;padding-inline:16px;color:var(--ws-muted);font-size:12px}
 .fw-pagination label{display:inline-flex;align-items:center;gap:8px}
 .sc-workspace .fw-pagination select{border:0;background:transparent;padding:4px 8px;min-height:28px;font-size:12px;box-shadow:none}
