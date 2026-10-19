@@ -42,6 +42,8 @@ for (const locale of ['ar', 'en'] as const) for (const width of [1920, 390, 320]
       const row = card.locator('.pe-pixel-row').nth(i);
       if (i === 0) {
         await expect(card.getByRole('status')).toHaveCount(0);
+        await expect(row.getByRole('combobox').locator('option:checked')).toHaveText('');
+        await expect(row.locator('.pe-pixel-caret')).toHaveAttribute('aria-hidden', 'true');
         const geometry = await row.evaluate(el => {
           const card = el.closest('section')!, input = el.querySelector('input')!, select = el.querySelector('select')!, button = el.querySelector('button')!;
           const rect = (e: Element) => { const r = e.getBoundingClientRect(); return { x: r.x, y: r.y, width: r.width, height: r.height, right: r.right, bottom: r.bottom }; };
