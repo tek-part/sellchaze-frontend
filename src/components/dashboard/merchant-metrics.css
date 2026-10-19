@@ -108,3 +108,6 @@ body[data-workspace-theme='dark'] .ws-metric { border-color:var(--ws-border); }
 
 .ws-metrics-heading p{margin-top:8px}.ws-metric-range{width:300px}.ws-metric-range-button{width:100%;justify-content:space-between}
 @media(max-width:767px){.ws-metrics-heading p{margin-top:4px}.ws-metric-range{width:100%}}
+
+/* Current saved dashboard reference uses neutral labels and value ink. */
+body[data-workspace-merchant='true'][data-workspace-theme='light'] :is(.ws-metrics-summary,.ws-metrics-charts){--ws-muted:#616161;--ws-text:#303030}
