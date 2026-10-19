@@ -1,0 +1,183 @@
+@font-face{font-family:Changa;src:url('/fonts/changa/changa-variable.ttf') format('truetype');font-weight:200 800;font-display:swap}
+@font-face{font-family:'DM Sans';src:url('/fonts/dmsans/dmsans-variable.woff2') format('woff2');font-weight:100 1000;font-display:swap}
+@font-face{font-family:Alexandria;src:url('/fonts/alexandria/alexandria-variable.woff2') format('woff2');font-weight:100 900;font-display:swap}
+@font-face{font-family:Cairo;src:url('/fonts/cairo/cairo-variable.woff2') format('woff2');font-weight:200 1000;font-display:swap}
+html:has(.skc-root){scroll-behavior:smooth}
+html:has(.skc-root)::-webkit-scrollbar{width:5px}
+html:has(.skc-root)::-webkit-scrollbar-thumb{background:#777;border-radius:8px}
+html:has(.skc-menu-dialog[open]){overflow:hidden}
+.skc-root{--color-primary:#bc4e2f;--color-on-primary:#fff;--color-text:#101010;--color-surface:#e3dfd6;--color-border:#aaa;--primary:#bc4e2f;--on-primary:#fff;--text:#101010;--bg:#fff;--surface:#e3dfd6;--surface-2:#fff;--border:#aaa;--muted:#555;background:#fff;color:#101010;font:16px/1.5 'DM Sans',system-ui,-apple-system,'Segoe UI',sans-serif;overflow:clip;color-scheme:light}
+.skc-root *{box-sizing:border-box;min-width:0}
+.skc-root[dir=rtl]{--font-arabic:Changa,sans-serif}
+.skc-root :is(h1,h2,h3,h4,p,figure,blockquote,dl,dd){margin:0}
+.skc-root p{white-space:pre-line;overflow-wrap:anywhere}
+.skc-root :is(h1,h2,h3,.skc-button,.skc-header,.skc-announcement){font-family:Changa,sans-serif}
+.skc-root :is(button,input,textarea,select){font:inherit}
+.skc-root a{color:inherit;text-decoration:none}
+.skc-root button{cursor:pointer}
+.skc-root img{display:block;max-width:100%}
+.skc-root :focus-visible{outline:3px solid #008aaf;outline-offset:4px}
+.skc-wrap{width:100%;max-width:1280px;margin-inline:auto;padding-inline:12px}
+.skc-section{scroll-margin-top:16px}
+.skc-section:empty{display:none}
+.skc-section-selected{outline:2px solid #bc4e2f;outline-offset:-2px}
+.skc-sr-only{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;overflow:hidden!important;clip-path:inset(50%)!important;white-space:nowrap!important}
+.skc-button{display:inline-flex;align-items:center;justify-content:center;gap:5px;min-height:58px;min-width:185px;padding:16px 22px;border:1px solid #e3dfd6;border-radius:2px;background:#bc4e2f;color:#fff!important;font:500 20px/24px Changa,sans-serif;text-align:center;transition:background .2s,transform .2s}
+.skc-button:hover{background:#a84025;transform:translateY(-1px)}
+.skc-button svg{flex-shrink:0}
+.skc-announcement{min-height:54px;padding:15px 10px;display:flex;justify-content:center;align-items:center;gap:8px;background:#000;color:#fff;font-size:16px;font-weight:700;line-height:24px;text-align:center;flex-wrap:wrap}
+.skc-countdown{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+.skc-countdown>span+span::before{content:':';margin-inline-end:8px}
+.skc-campaign{position:relative;isolation:isolate;min-height:100svh;background:#bdcfe0;color:#000}
+.skc-cover{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:-1}
+.skc-header{position:absolute;z-index:3;inset-block-start:20px;left:50%;transform:translateX(-50%);width:80%;max-width:1536px;display:flex;align-items:center;justify-content:space-between;gap:24px}
+.skc-brand{display:inline-flex;align-items:center;font:700 32px/1.5 Changa,sans-serif;overflow-wrap:anywhere}
+.skc-brand img{max-width:150px;height:48px;object-fit:contain}
+.skc-header nav{display:flex;align-items:center;gap:32px;font-weight:500}
+.skc-header nav>a:not(.skc-button):hover{text-decoration:underline;text-underline-offset:5px}
+.skc-menu-toggle{display:none;width:44px;height:44px;padding:10px;border:0;background:transparent;color:#000}
+.skc-hero{min-height:100svh;display:flex;align-items:center;justify-content:center;padding:190px 24px 100px;text-align:center}
+.skc-hero>div{max-width:1000px}
+.skc-hero :is(h1,h2){font-size:40px;font-weight:300;line-height:60px;overflow-wrap:anywhere;text-shadow:0 1px 3px #fffc,0 0 6px #ffffff80}
+.skc-hero p{font:300 24px/1.5 Changa,sans-serif;margin-top:16px}
+.skc-hero .skc-button{margin-top:32px}
+.skc-section[data-skincare-section=skincare-intro]{padding:48px 24px;background:#060201;color:#e3dfd6}
+.skc-intro p{font:400 64px/1.5 Changa,sans-serif;text-align:center}
+.skc-section[data-skincare-section=skincare-purchase]{padding:48px 24px;background:#c55635;color:#000}
+.skc-purchase{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:30px;align-items:start}
+.skc-gallery-main,.skc-placeholder{width:100%;aspect-ratio:1;object-fit:contain;background:#e3dfd6}
+.skc-placeholder{display:grid;place-items:center}
+.skc-gallery-rail{display:flex;gap:12px;margin-top:16px;overflow-x:auto;padding:4px 2px 12px;scrollbar-width:thin}
+.skc-gallery-rail button{border:1px solid #a0452e;background:#e3dfd6;padding:4px;flex:0 0 calc(25% - 9px);max-width:120px;min-width:64px;aspect-ratio:1}
+.skc-gallery-rail button[aria-pressed=true]{outline:2px solid #060201;outline-offset:1px}
+.skc-gallery-rail img{width:100%;height:100%;object-fit:cover}
+.skc-purchase-panel{padding:28px;background:#e3dfd6;border:1px dashed #b5a99a;color:#000}
+.skc-purchase-panel>h2{font:700 32px/1.2 Changa,sans-serif;margin-bottom:24px;overflow-wrap:anywhere}
+.skc-purchase-panel>p{font-size:16px;line-height:1.7;margin-top:24px}
+.skc-purchase-panel>p.skc-product-rating{margin:0 0 16px;font-size:14px}
+.skc-stars{font-family:Arial,sans-serif;letter-spacing:1px;white-space:nowrap}
+.skc-prices{display:flex;align-items:center;flex-wrap:wrap;gap:16px;font:700 32px/1.3 Changa,sans-serif}
+.skc-prices del{font:400 18px/1.5 Cairo,sans-serif;color:#4b4945;margin-inline-start:auto}
+.skc-discount{display:inline-block;white-space:nowrap;padding:4px 7px;border-radius:5px;background:#151515;color:#fff;font:700 14px/21px Cairo,sans-serif;animation:skc-flash 1.5s ease-in-out infinite}
+.skc-root .sf-funnel-checkout{padding:0;margin:48px 0 0;background:transparent;border:0;scroll-margin-top:24px;color:#101010;--color-text:#101010;--text:#101010;--primary:#bc4e2f;--on-primary:#fff;--primary-soft:#fae9e1;--muted:#555;--danger:#9b1628}
+.skc-root .sf-funnel-checkout>.sf-container{width:100%;max-width:none;padding:0}
+.skc-root .sf-funnel-checkout form{padding:0;border:0;border-radius:0;background:transparent}
+.skc-root .sf-funnel-checkout :is(input,select,textarea){background:#fff;color:#101010;border:1px solid #aaa;border-radius:4px;min-height:48px}
+.skc-root .sf-funnel-checkout fieldset{border:0;padding:0;display:grid;gap:24px;min-width:0}
+.skc-root .sf-funnel-checkout>fieldset>label{display:grid;gap:8px}
+.skc-root .sf-funnel-checkout fieldset>label :is(input,textarea){padding:12px}
+.skc-root .sf-funnel-checkout .sf-btn{border-radius:2px;text-transform:none;letter-spacing:normal;font-family:Changa,sans-serif}
+.skc-root .sf-funnel-checkout .sf-btn--primary{background:#bc4e2f;color:#fff;min-height:58px;height:auto;padding:16px 22px;font-size:20px;line-height:24px;font-weight:500}
+.skc-root .sf-funnel-checkout :is(button:disabled,input:disabled){cursor:not-allowed}
+.skc-root .sf-funnel-checkout :is(h2,h3){margin-bottom:16px}
+.skc-root .sf-funnel-checkout__product{position:absolute;width:1px;height:1px;padding:0;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+.skc-root .sf-funnel-checkout input:is([type=radio],[type=checkbox]){min-height:0;accent-color:#bc4e2f}
+.skc-root .sf-funnel-checkout__payment label{display:flex;align-items:center;gap:10px;min-height:44px}
+.skc-root .sf-funnel-checkout__payment input[type=radio]{width:18px;height:18px;flex-shrink:0}
+.skc-root .sf-funnel-checkout__payment img,.skc-root .sf-payment-marks img{background:#fff;border-radius:4px;padding:4px}
+.skc-root .sf-funnel-checkout .sf-quantity-offer{display:flex}
+.skc-root .sf-funnel-checkout :is(label,input,select,textarea,button){font-family:inherit}
+.skc-root .sf-funnel-checkout .sf-field--float .sf-field__box{gap:8px}
+.skc-root .sf-funnel-checkout .sf-field--float .sf-field__label{position:static;order:-1;inset:auto;transform:none;background:transparent;color:#101010;font-size:16px;line-height:1.4;letter-spacing:normal;text-transform:none;padding:0;pointer-events:auto}
+.skc-specs,.skc-story{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));min-height:648px;background:#060201;color:#fff}
+.skc-photo-frame{position:relative;isolation:isolate;display:flex;align-items:center;justify-content:center;padding:24px;overflow:hidden;min-height:648px;background:#060201}
+.skc-backdrop{position:absolute;inset:0;z-index:-1;width:100%;height:100%;object-fit:cover}
+.skc-portrait{position:relative;width:400px;height:600px;max-width:100%;object-fit:cover}
+.skc-specs-panel{margin:24px;padding:24px;border:1px dotted #8e8980;align-self:center}
+.skc-specs-panel>h2{font:500 18px/1.2 Changa,sans-serif;text-align:center}
+.skc-specs-panel>ul{padding:0;margin:16px 0 24px;display:grid;gap:16px;list-style:none}
+.skc-specs-panel li{overflow-wrap:anywhere;font-size:16px;line-height:24px}
+.skc-questions{width:100%;font-family:Cairo,sans-serif}
+.skc-questions>h2:not(.skc-sr-only){font:500 32px/1.3 Changa,sans-serif;margin-bottom:24px}
+.skc-questions article{border:1px dotted #e3dfd6}
+.skc-questions article+article{margin-top:20px}
+.skc-questions h3 button{display:flex;width:100%;align-items:center;justify-content:space-between;gap:20px;min-height:58px;padding:16px;background:transparent;border:0;border-radius:0;color:inherit;font:400 16px/24px Cairo,sans-serif;text-align:start;overflow-wrap:anywhere}
+.skc-questions button>span{font:300 28px/24px Arial,sans-serif;flex-shrink:0}
+.skc-questions article>div{padding:0 16px 16px;font:400 16px/1.5 Cairo,sans-serif}
+.skc-questions article>div[hidden]{display:none}
+.skc-policies{margin-top:24px;font-family:'DM Sans',system-ui,sans-serif}
+.skc-policies article+article{margin-top:0;border-top:0}
+.skc-policies h3 button,.skc-policies article>div{font-family:'DM Sans',system-ui,sans-serif}
+.skc-story-copy{background:#e3dfd6;color:#000;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:16px;padding:24px}
+.skc-story-copy h2{font:300 20px/1.2 Changa,sans-serif}
+.skc-story-copy p{font:400 28px/1.2 Changa,sans-serif}
+.skc-story-copy .skc-button{min-width:230px}
+.skc-marquee{padding:24px 0;background:#c55635;color:#fff;overflow:hidden}
+.skc-marquee>div{display:flex;width:max-content;animation:skc-strip 15s linear infinite}
+.skc-marquee p{display:flex;flex-shrink:0;gap:48px;padding-inline-end:48px;font:700 24px/36px Changa,sans-serif;white-space:nowrap}
+.skc-feature-cover{position:relative;isolation:isolate;min-height:50svh;display:flex;align-items:center;background:#060201;color:#fff;padding:48px}
+.skc-feature-background{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:brightness(.5);z-index:-1}
+.skc-feature-lines{width:100%;display:grid;gap:48px}
+.skc-feature-lines h2{font:600 28px/1.2 Changa,sans-serif;text-align:right;overflow-wrap:anywhere}
+.skc-feature-lines h2:nth-child(2),.skc-feature-lines h2:nth-child(4){text-align:center}
+.skc-feature-lines h2:nth-child(3){text-align:left}
+.skc-section[data-skincare-section=skincare-quote]{padding:48px 24px;background:#060201;color:#fff}
+.skc-quote-logos{display:flex;justify-content:center;align-items:center;gap:24px;max-width:720px;min-height:70px;margin:0 auto 24px}
+.skc-quote-logos:empty{display:none}
+.skc-quote-logos figure{flex:1;max-width:160px}
+.skc-quote-logo{width:100%;height:70px;object-fit:contain}
+.skc-quote-logos>span{font:700 30px/1.2 Georgia,serif}
+.skc-quote-logos>span:nth-child(2){font-size:44px;font-weight:400}
+.skc-quote-logos>span:nth-child(3){font-family:Changa,sans-serif;font-size:24px}
+.skc-quote blockquote{font:400 56px/1.5 Changa,sans-serif;text-align:start;overflow-wrap:anywhere}
+.skc-quote cite{display:block;margin-top:24px;font:400 20px/1.5 'DM Sans',system-ui,sans-serif}
+.skc-experiences{padding-top:48px;background:#fff;color:#101010}
+.skc-experiences h2{padding:0 24px 24px;text-align:center;font:500 40px/1.5 Changa,sans-serif}
+.skc-mosaic{width:100%;height:100svh;object-fit:cover}
+.skc-section[data-skincare-section=skincare-reviews]{padding:48px 24px;background:#e3dfd6;color:#000}
+.skc-reviews header{display:flex;align-items:center;justify-content:space-between;gap:32px;margin-bottom:64px}
+.skc-reviews header h2{font:400 32px/1.2 Alexandria,sans-serif;color:#3a3a3a}
+.skc-reviews header>div>p{font:500 48px/1.2 Alexandria,sans-serif;margin-top:8px}
+.skc-review-summary{display:flex;align-items:center;justify-content:end;gap:8px;flex-wrap:wrap;font:300 16px/1.2 Alexandria,sans-serif}
+.skc-review-summary>strong{font-weight:400;font-size:28px}
+.skc-review-summary>small{width:100%;font:400 14px/1.5 'DM Sans',system-ui,sans-serif;text-align:end}
+.skc-review-list article{display:grid;grid-template-columns:1fr 2fr;gap:24px;padding:24px;border-bottom:1px solid #5f5a52}
+.skc-review-author>strong{display:block;font:700 32px/1.3 'DM Sans',system-ui,sans-serif}
+.skc-review-author>small{display:block;margin-top:8px}
+.skc-review-list h3{font:700 24px/1.5 'DM Sans',system-ui,sans-serif;margin:12px 0 16px}
+.skc-review-list p{font-size:20px;line-height:1.5}
+.skc-review-photos{display:flex;gap:12px;margin-top:16px;flex-wrap:wrap}
+.skc-review-photos img{width:88px;height:88px;object-fit:cover}
+.skc-section[data-skincare-section=skincare-faq]{background:#060201;color:#fff;background-image:repeating-radial-gradient(ellipse at 0 50%,transparent 0 16px,#c556350d 17px 18px,transparent 19px 28px);padding-inline:24px}
+.skc-faq{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));min-height:648px}
+.skc-faq-copy{display:flex;align-items:center;padding:24px}
+.skc-footer{padding:48px 24px 170px;background:#060201;color:#fff}
+.skc-footer>.skc-wrap{display:grid;gap:32px;justify-items:center;text-align:center}
+.skc-footer .skc-brand{font-size:48px}
+.skc-footer nav,.skc-footer address{display:flex;justify-content:center;align-items:center;gap:32px;flex-wrap:wrap;font-style:normal}
+.skc-footer a:hover{text-decoration:underline;text-underline-offset:5px}
+.skc-footer .sf-payment-marks{justify-content:center}
+.skc-dock{position:fixed;z-index:40;inset-inline:0;bottom:20px;pointer-events:none}
+.skc-dock-content{width:75%;max-width:1600px;margin-inline:auto;min-height:117px;background:#fafafa;color:#000;border:1px dashed #be8c78;box-shadow:0 2px 6px #0003;padding:18px;display:flex;align-items:center;justify-content:space-between;gap:24px;pointer-events:auto}
+.skc-dock-product{display:flex;align-items:center;gap:16px;flex:1}
+.skc-dock-product>img{width:80px;height:80px;object-fit:cover;border:1px solid #aaa;flex-shrink:0}
+.skc-dock-product>div>strong{display:block;max-width:520px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font:500 20px/24px Changa,sans-serif}
+.skc-dock .skc-prices{margin-top:4px;font-size:24px;gap:16px}
+.skc-dock .skc-prices del{margin-inline-start:0;font-size:16px}
+.skc-dock .skc-button{width:28%;min-width:185px;flex-shrink:0;animation:skc-pulse 1.6s ease-in-out infinite}
+.skc-menu-dialog{position:fixed;inset:0;width:100%;height:100dvh;max-width:none;max-height:none;margin:0;padding:0;border:0;background:transparent;overflow:hidden;color:#fff}
+.skc-menu-dialog::backdrop{background:#0006}
+.skc-menu-panel{position:absolute;inset-block:0;inset-inline-start:0;width:250px;background:#060201fa;padding:86px 24px 24px;overflow:auto;animation:skc-menu-in .3s ease-in-out both}
+.skc-root[dir=rtl] .skc-menu-panel{--skc-slide:100%}
+.skc-menu-panel>button{position:absolute;left:20px;top:20px;width:36px;height:36px;padding:8px;border:0;background:transparent;color:#fff}
+.skc-menu-panel nav{display:grid;gap:24px;font:500 18px/1.5 Changa,sans-serif}
+.skc-menu-panel .skc-button{min-width:0;width:100%}
+.skc-demo-note{position:fixed;z-index:41;inset-inline-start:12px;bottom:150px;max-width:calc(100% - 24px);padding:8px 12px;border:1px solid #aaa;background:#fff;color:#000;font:400 12px/1.5 'DM Sans',system-ui,sans-serif}
+.skc-demo-note a{text-decoration:underline}
+.skc-motion [data-skc-reveal]{opacity:0;transform:translateY(30px);transition:opacity .8s ease,transform .8s ease}
+.skc-motion [data-skc-reveal=zoom]{transform:scale(.6);transition-duration:.9s}
+.skc-motion [data-skc-reveal=panel]{transform:translateX(60px);transition-duration:.9s}
+.skc-motion [data-skc-reveal=portrait]{transition-duration:.9s}
+.skc-motion [data-skc-reveal=down]{transform:translateY(-30px);transition-duration:.7s}
+.skc-motion [data-skc-reveal=up]{transition-duration:.7s}
+.skc-motion [data-skc-reveal=faq]{transition-duration:.5s}
+.skc-motion [data-skc-reveal].skc-visible{opacity:1;transform:none}
+@keyframes skc-strip{to{transform:translateX(-50%)}}
+@keyframes skc-pulse{50%{transform:scale(.98)}}
+@keyframes skc-flash{50%{transform:scale(.96)}}
+@keyframes skc-menu-in{from{transform:translateX(var(--skc-slide,-100%))}to{transform:translateX(0)}}
+@media(min-width:1600px){.skc-wrap{max-width:1536px}}
+@media(max-width:991px){.skc-header{width:calc(100% - 40px)}.skc-header nav{display:none}.skc-menu-toggle{display:block}.skc-specs,.skc-story,.skc-faq{grid-template-columns:1fr}.skc-photo-frame{min-height:0;padding:24px}.skc-portrait{height:600px;max-height:70svh}.skc-specs-panel{margin:24px}.skc-story-copy{min-height:400px;padding:48px 24px}.skc-faq-copy{padding:32px 16px}.skc-dock-content{width:calc(100% - 32px)}.skc-quote blockquote{font-size:40px}.skc-intro p{font-size:48px}}
+@media(max-width:767px){.skc-announcement{font-size:12px;line-height:20px;padding:12px 8px;min-height:44px}.skc-header{top:16px}.skc-brand{font-size:28px}.skc-brand img{height:40px;max-width:128px}.skc-hero{padding:110px 20px}.skc-hero :is(h1,h2){font-size:28px;line-height:1.5}.skc-hero p{font-size:18px}.skc-hero .skc-button{margin-top:24px}.skc-section[data-skincare-section=skincare-intro],.skc-section[data-skincare-section=skincare-purchase],.skc-section[data-skincare-section=skincare-quote],.skc-section[data-skincare-section=skincare-reviews]{padding:24px 8px}.skc-intro p{font-size:32px;line-height:1.5}.skc-purchase{grid-template-columns:1fr;gap:24px}.skc-gallery-rail{gap:10px}.skc-purchase-panel{padding:24px 16px}.skc-purchase-panel>h2{font-size:26px}.skc-prices{font-size:26px;gap:12px}.skc-prices del{font-size:16px}.skc-specs-panel{margin:16px;padding:20px 16px}.skc-photo-frame{padding:24px 16px}.skc-portrait{width:100%;max-width:400px;height:500px;max-height:65svh}.skc-story-copy{min-height:340px;padding:40px 20px}.skc-story-copy p{font-size:24px;line-height:1.4}.skc-feature-cover{min-height:50svh;padding:32px 20px}.skc-feature-lines{gap:28px}.skc-feature-lines h2{font-size:24px}.skc-marquee{padding:16px 0}.skc-marquee p{font-size:20px;line-height:30px;gap:32px;padding-inline-end:32px}.skc-quote blockquote{font-size:30px;line-height:1.5}.skc-quote-logos{gap:16px;flex-wrap:wrap;margin-bottom:20px}.skc-quote-logos>span,.skc-quote-logos>span:nth-child(2),.skc-quote-logos>span:nth-child(3){font-size:24px}.skc-experiences{padding-top:24px}.skc-experiences h2{font-size:28px;line-height:1.4;padding-bottom:20px}.skc-mosaic{height:75svh}.skc-reviews header{display:block;margin-bottom:24px}.skc-reviews header h2{font-size:24px}.skc-reviews header>div>p{font-size:32px}.skc-review-summary{justify-content:start;margin-top:24px}.skc-review-summary>small{text-align:start}.skc-review-list article{grid-template-columns:1fr;padding:24px 0;gap:16px}.skc-review-author>strong{font-size:24px}.skc-review-list h3{font-size:20px;line-height:1.5}.skc-review-list p{font-size:16px;line-height:1.5}.skc-section[data-skincare-section=skincare-faq]{padding-inline:8px}.skc-faq-copy{padding:24px 0}.skc-faq .skc-photo-frame{margin-inline:-20px}.skc-questions h3 button{padding:16px 12px;gap:12px}.skc-questions article>div{padding:0 12px 16px}.skc-footer{padding:32px 20px 140px}.skc-footer nav,.skc-footer address{flex-direction:column;gap:16px}.skc-footer .skc-brand{font-size:32px}.skc-dock{bottom:8px}.skc-dock-content{width:calc(100% - 16px);padding:10px;gap:12px;min-height:86px}.skc-dock-product{gap:8px}.skc-dock-product>img{width:50px;height:60px}.skc-dock-product>div>strong{max-width:160px;font-size:14px;line-height:20px}.skc-dock .skc-prices{font-size:16px;gap:4px 8px}.skc-dock .skc-prices del{font-size:12px}.skc-dock .skc-discount{font-size:9px;line-height:16px;padding:2px 4px}.skc-dock .skc-button{width:auto;min-width:100px;font-size:14px;line-height:20px;padding:12px 10px;min-height:48px}.skc-dock .skc-button svg{display:none}.skc-demo-note{bottom:112px;font-size:11px}}
+@media(max-width:359px){.skc-dock-product>img{display:none}.skc-dock-product>div>strong{max-width:145px}.skc-dock .skc-button{min-width:92px}.skc-hero :is(h1,h2){font-size:26px}.skc-quote blockquote{font-size:28px}}
+@media(prefers-reduced-motion:reduce){html:has(.skc-root){scroll-behavior:auto}.skc-root *,.skc-root *::before,.skc-root *::after{animation:none!important;transition:none!important}.skc-motion [data-skc-reveal]{opacity:1;transform:none}}
