@@ -15,6 +15,8 @@ import ProductCategoryPicker from '../components/store/ProductCategoryPicker';
 import { fetchAllPages } from '../utils/fetchAllPages';
 import ProductCreationOptions from '../components/store/ProductCreationOptions';
 import ProductPreferencesDialog, { newProductPreferences } from '../components/store/ProductPreferencesDialog';
+import ProductPixelsCard from '../components/store/ProductPixelsCard';
+import { compileProductPixels, productPixelRows } from '../lib/product-pixels';
 import { compileProductProperties, creationPayload, regularPrice, setRegularPrice, setDiscountPrice } from '../lib/product-creation-draft';
 import { HiOutlineArrowRight, HiOutlineArrowLeft, HiOutlineEye } from '../components/workspace/WorkspaceIcons';
 import './store/product-editor.css';
@@ -34,6 +36,7 @@ export default function StoreProductEditorPage() {
     const [cover, setCover] = useState(null); const [gallery, setGallery] = useState([]); const [removedMedia, setRemovedMedia] = useState([]); const [removeCover, setRemoveCover] = useState(false);
     const [mediaOrder, setMediaOrder] = useState([]);
     const [preferencesOpen, setPreferencesOpen] = useState(false);
+    const [pixelRows, setPixelRows] = useState([]);
     const [creation, setCreation] = useState({ axes: [], rows: [], signature: '[]' });
     const [initialStock, setInitialStock] = useState({ track_inventory: false, stock_quantity: '0' });
     const creationKey = useRef(null); const generation = useRef(0);
@@ -46,10 +49,12 @@ export default function StoreProductEditorPage() {
         let active = true; generation.current += 1; inFlight.current = false; setBusy(false); setLoading(!isNew); setLoadError(false); setError(''); setSaved(false);
         setCover(null); setGallery([]); setRemovedMedia([]); setRemoveCover(false); setConfirmDelete(false); setMediaOrder([]);
         setPreferencesOpen(false);
+        setPixelRows([]);
         if (isNew) { setDraft({ ...blank, product_preferences: newProductPreferences() }); setProduct(null); setVariantCount(0); creationKey.current = crypto.randomUUID(); setCreation({ axes: [], rows: [], signature: '[]' }); setInitialStock({ track_inventory: false, stock_quantity: '0' }); }
         if (isNew) setDigital({ type: 'physical', url: '', codes: '' });
         else api.get(`${path}/${productId}`).then(({ data }) => {
             if (!active) return; const value = data.data; setProduct(value); setMediaOrder((value.media || []).map((item) => item.id)); setDraft({ ...blank, ...Object.fromEntries(Object.keys(blank).map((key) => [key, value[key] ?? blank[key]])) }); setVariantCount(value.variants?.length || 0);
+            setPixelRows(productPixelRows(value.product_preferences?.browser_pixels));
         }).catch((e) => { if (active) { setError(errorText(e)); setLoadError(true); } }).finally(() => { if (active) setLoading(false); });
         return () => { active = false; generation.current += 1; };
     }, [path, productId, isNew, nonce]);
@@ -67,6 +72,8 @@ export default function StoreProductEditorPage() {
     async function save(event) {
         event.preventDefault(); if (!canEdit || inFlight.current) return;
         if (!draft.name.trim()) { setLocale(defaultLocale); setError(text('أدخل اسم المنتج باللغة الأساسية.', 'Enter the product name in the default language.')); return; }
+        const pixels = compileProductPixels(pixelRows);
+        if (!pixels.valid) { setError(text('أكمل أنواع ومعرّفات البيكسلات قبل الحفظ.', 'Complete the pixel types and IDs before saving.')); return; }
         const properties = compileProductProperties(creation.axes, gallery);
         if (isNew && (!properties.valid || properties.signature !== creation.signature)) { setError(text('أكمل الخواص وحدّث الأصناف قبل الحفظ.', 'Complete properties and update combinations before saving.')); return; }
         const attemptGeneration = generation.current;
@@ -80,6 +87,7 @@ export default function StoreProductEditorPage() {
         }
         if (isNew) Object.entries(digitalPayload(digital)).forEach(([key, value]) => { if (Array.isArray(value)) value.forEach((code) => payload.append(`${key}[]`, code)); else payload.append(key, value); });
         Object.entries(draft).forEach(([key, value]) => { if (key !== 'translations' && (key !== 'preferences_version' || !isNew && value)) payload.append(key, key === 'product_preferences' || Array.isArray(value) ? JSON.stringify(value) : typeof value === 'boolean' ? (value ? '1' : '0') : String(value ?? '')); });
+        payload.set('product_preferences', JSON.stringify({ ...draft.product_preferences, browser_pixels: pixels.value }));
         payload.set('translations', JSON.stringify({ ...draft.translations, ...Object.fromEntries(['name', 'description', 'short_description'].map((key) => [key, { ...draft.translations?.[key], [defaultLocale]: draft[key] }])) }));
         if (cover) payload.append('image', cover);
         payload.append('remove_image', removeCover ? '1' : '0');
@@ -91,8 +99,9 @@ export default function StoreProductEditorPage() {
             if (generation.current !== attemptGeneration) return;
             setCover(null); setGallery([]); setRemovedMedia([]); setRemoveCover(false); fileVersion.current += 1;
             setProduct(data.data); setMediaOrder((data.data.media || []).map((item) => item.id)); setDraft({ ...blank, ...Object.fromEntries(Object.keys(blank).map((key) => [key, data.data[key] ?? blank[key]])) }); setSaved(true);
+            setPixelRows(productPixelRows(data.data.product_preferences?.browser_pixels));
             if (isNew) navigate(`${uiBase}/products/${data.data.id}/edit`, { replace: true });
-        } catch (e) { if (generation.current === attemptGeneration) { setError(errorText(e)); if (Object.keys(e.response?.data?.errors || {}).some((key) => key.startsWith('product_preferences'))) setPreferencesOpen(true); } } finally { if (generation.current === attemptGeneration) { inFlight.current = false; setBusy(false); } }
+        } catch (e) { if (generation.current === attemptGeneration) { setError(errorText(e)); if (Object.keys(e.response?.data?.errors || {}).some((key) => key.startsWith('product_preferences') && !key.startsWith('product_preferences.browser_pixels'))) setPreferencesOpen(true); } } finally { if (generation.current === attemptGeneration) { inFlight.current = false; setBusy(false); } }
     }
     async function destroy() {
         if (inFlight.current) return; inFlight.current = true; setBusy(true); setError('');
@@ -102,7 +111,8 @@ export default function StoreProductEditorPage() {
     const storefrontUrl = store?.storefront_url || store?.public_url;
     const properties = compileProductProperties(creation.axes, gallery);
     const propertiesPending = !properties.valid || properties.signature !== creation.signature;
-    const saveDisabled = busy || loading || loadError || (isNew && (propertiesPending || !draft.name.trim() || draft.price === ''));
+    const pixels = compileProductPixels(pixelRows);
+    const saveDisabled = busy || loading || loadError || !pixels.valid || (isNew && (propertiesPending || !draft.name.trim() || draft.price === ''));
     return <div className="ws-product-editor">
         <header className="pe-page-heading"><div><Link className="pe-back" to={`${uiBase}/products`} aria-label={text('العودة للمنتجات', 'Back to products')}>{ar ? <HiOutlineArrowRight aria-hidden /> : <HiOutlineArrowLeft aria-hidden />}</Link><h1>{isNew ? text('إضافة منتج', 'Add product') : text('تعديل المنتج', 'Edit product')}</h1></div><div className="pe-heading-actions">{locales.length > 1 ? <label className="pe-locale">{text('لغة المحتوى', 'Content language')}<select value={locale} onChange={(e) => setLocale(e.target.value)}>{locales.map((value) => <option key={value} value={value}>{value.toUpperCase()}{value === defaultLocale ? ` · ${text('الأساسية', 'Default')}` : ''}</option>)}</select></label> : null}{product?.is_active && storefrontUrl ? <a className="pe-soft-button" href={`${storefrontUrl.replace(/\/$/, '')}/products/${product.slug}`} target="_blank" rel="noreferrer"><HiOutlineEye aria-hidden />{text('عرض المنتج', 'View product')}</a> : null}</div></header>
         {error ? <div role="alert" className="pe-error">{error}{loadError ? <button className="ms-3 underline" onClick={() => setNonce(nonce + 1)}>{text('إعادة التحميل', 'Reload')}</button> : null}</div> : null}
@@ -127,6 +137,7 @@ export default function StoreProductEditorPage() {
                     <details className="pe-card pe-fold pe-inventory-card"><summary><span>{text('إعدادات المخزون', 'Inventory settings')}</span><SidebarChevronIcon aria-hidden /></summary>{isNew ? <div className="pe-inventory-draft">{creation.rows.length ? <p className="pe-hint">{text('اضبط كمية كل صنف في جدول الأصناف.', 'Set quantities for each combination in the combinations table.')}</p> : <><label>{text('كمية المخزون', 'Stock quantity')}<input form="store-product-editor" type="number" required min="0" max="100000000" step="1" value={initialStock.stock_quantity} onChange={(e) => setInitialStock((current) => ({ ...current, stock_quantity: e.target.value }))} /></label><label className="pe-check"><input type="checkbox" checked={initialStock.track_inventory} onChange={(e) => setInitialStock((current) => ({ ...current, track_inventory: e.target.checked }))} />{text('تتبع المخزون ومنع البيع عند نفاده', 'Track stock and prevent overselling')}</label></>}</div> : product && !variantCount ? <ProductStockControl key={`${product.id}-${product.stock_quantity}-${product.reserved_quantity}-${product.track_inventory}`} productId={product.id} stock={product} onSaved={refreshStock} /> : <p className="pe-hint">{text('يُدار المخزون لكل صنف من جدول الخيارات.', 'Inventory is managed for each individual combination.')}</p>}</details>
                     <section className="pe-card pe-side-settings"><header><h2>{text('إعدادات متقدمة', 'Advanced settings')}</h2><button type="button" className="pe-soft-button" onClick={() => setPreferencesOpen(true)}>{text('إدارة الإعدادات', 'Manage settings')}</button></header><p className="pe-hint">{text('خصّص خيارات الشراء والشحن والمراجعات وعناصر صفحة المنتج. العدادات الترويجية لا تغيّر السعر أو المخزون الفعلي.', 'Customize purchasing, shipping, reviews and product page elements. Promotional counters do not change prices or actual inventory.')}</p></section>
                     {isNew ? <details className="pe-card pe-fold"><summary><span>{text('المنتجات الرقمية', 'Digital products')}</span><SidebarChevronIcon aria-hidden /></summary><DigitalProductFields value={digital} onChange={setDigital} ar={ar} formId="store-product-editor" /></details> : product ? <StoreProductDigital key={product.id} product={product} path={`${path}/${product.id}`} ar={ar} canEdit={canEdit} onSaved={(value) => setProduct((current) => ({ ...current, digital_url: value.digital_url, digital_codes_available: value.digital_codes_available, digital_sales: value.digital_sales }))} /> : null}
+                    <ProductPixelsCard rows={pixelRows} valid={pixels.valid} onChange={rows => { setSaved(false); setPixelRows(rows); }} ar={ar} disabled={!canEdit || busy} />
                     {product && permissions.includes('products-delete') ? <section className="pe-card pe-danger">{confirmDelete ? <><p>{text('حذف المنتج نهائيًا؟ الطلبات المحجوزة تمنع الحذف.', 'Permanently delete this product? Reserved orders prevent deletion.')}</p><div className="pe-actions"><button type="button" disabled={busy} onClick={destroy}>{text('تأكيد الحذف', 'Confirm deletion')}</button><button type="button" disabled={busy} onClick={() => setConfirmDelete(false)}>{text('إلغاء', 'Cancel')}</button></div></> : <button type="button" disabled={busy} onClick={() => setConfirmDelete(true)}>{text('حذف المنتج', 'Delete product')}</button>}</section> : null}
                 </fieldset>
             </div>

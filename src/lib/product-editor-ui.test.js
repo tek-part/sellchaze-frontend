@@ -52,6 +52,30 @@ describe('initial editor save workflow', () => {
         await submit(); expect(api.post).not.toHaveBeenCalled();
         expect(host.querySelector('[role=alert]').textContent).toContain('Complete properties');
     });
+    it('blocks incomplete pixel rows and submits canonical selected networks with the initial product', async () => {
+        await mount(); await fill(host.querySelector('.pe-name input'), 'Review product'); await fill(host.querySelector('.pe-fields-three input'), '40');
+        await act(async () => findButton('Add Pixel').click());
+        expect(findButton('Save').disabled).toBe(true);
+        await submit(); expect(api.post).not.toHaveBeenCalled();
+        await fill(host.querySelector('.pe-pixel-row input'), ' 2345678901 ');
+        await act(async () => { const select = host.querySelector('.pe-pixel-row select'); select.value = 'facebook'; select.dispatchEvent(new Event('change', { bubbles: true })); });
+        expect(findButton('Save').disabled).toBe(false);
+        api.post.mockResolvedValueOnce(response); await submit();
+        const preferences = JSON.parse(api.post.mock.calls[0][1].get('product_preferences'));
+        expect(preferences.browser_pixels).toEqual([{ provider: 'facebook', id: '2345678901' }]);
+        expect(preferences.is_skip_cart).toBe(false);
+    });
+    it('retains existing product pixel rows and preference version when editing other fields', async () => {
+        params.productId = '99';
+        const preferences = { is_skip_cart: true, browser_pixels: [{ provider: 'tiktok', id: 'C7TEST0123456789ABCDE0' }, { provider: 'facebook', id: '2345678901' }] };
+        const fixture = { ...response.data.data, product_preferences: preferences, preferences_version: 'a'.repeat(64) };
+        api.get.mockResolvedValue({ data: { data: fixture } }); api.post.mockResolvedValue({ data: { data: fixture } });
+        await mount(); expect(host.querySelectorAll('.pe-pixel-row')).toHaveLength(2);
+        await fill(host.querySelector('.pe-name input'), 'Retained product'); await submit();
+        const payload = api.post.mock.calls[0][1];
+        expect(JSON.parse(payload.get('product_preferences'))).toEqual(preferences);
+        expect(payload.get('preferences_version')).toBe('a'.repeat(64));
+    });
     it('preserves legacy fields and both short-description locales when visible product fields change', async () => {
         params.productId = '99';
         const legacy = { ...response.data.data, description: '<p>Old description</p>', short_description: 'Existing summary', barcode: 'KEEP-123', weight: '2.450', position: 7, is_featured: true,

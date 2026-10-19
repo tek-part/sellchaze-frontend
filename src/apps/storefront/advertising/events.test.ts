@@ -16,6 +16,22 @@ it('suppresses duplicate purchase envelopes across completion and receipt refres
   sendAdvertisingEnvelope('1', envelope); sendAdvertisingEnvelope('1', envelope); await vi.waitFor(() => expect(sendTrackingCommand).toHaveBeenCalledTimes(2));
   sendAdvertisingEnvelope('2', envelope); await vi.waitFor(() => expect(sendTrackingCommand).toHaveBeenCalledTimes(4));
 });
+it('retains a full browser destination set across receipt replay and document reload', async () => {
+  let stored = '';
+  vi.stubGlobal('sessionStorage', { getItem: () => stored || null, setItem: (_key: string, value: string) => { stored = value; } });
+  const large = { ...envelope, configuration: { ...envelope.configuration,
+    facebook: Array.from({ length: 1020 }, (_, i) => String(1234567890 + i)),
+    tiktok: Array.from({ length: 1020 }, (_, i) => `C7TEST${String(i).padStart(14, '0')}`),
+    snapchat: Array.from({ length: 1020 }, (_, i) => `12345678-1234-4234-8234-${123456789000 + i}`),
+    google: Array.from({ length: 10 }, (_, i) => `G-ABCDE${i}`) } };
+  const { sendAdvertisingEnvelope } = await import('./events');
+  sendAdvertisingEnvelope('1', large); await vi.waitFor(() => expect(sendTrackingCommand).toHaveBeenCalledTimes(3070));
+  sendAdvertisingEnvelope('1', large); await vi.dynamicImportSettled(); expect(sendTrackingCommand).toHaveBeenCalledTimes(3070);
+  expect(JSON.parse(stored)).toHaveLength(3070);
+  vi.resetModules(); const reloaded = await import('./events'); const freshSdk = await import('./sdk');
+  vi.mocked(freshSdk.sendTrackingCommand).mockClear();
+  reloaded.sendAdvertisingEnvelope('1', large); await vi.dynamicImportSettled(); expect(freshSdk.sendTrackingCommand).not.toHaveBeenCalled();
+});
 it('does not initialize or call providers while a private receipt token remains in the URL', async () => {
   const { sendAdvertisingEnvelope, browserAdvertisingAllowed } = await import('./events');
   window.location.hash = '#receipt=PRIVATE'; expect(browserAdvertisingAllowed()).toBe(false); sendAdvertisingEnvelope('1', envelope);

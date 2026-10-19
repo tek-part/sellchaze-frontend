@@ -1,6 +1,9 @@
 import type { CheckoutItem } from '../api/storefront';
 
 export type AdvertisingEvent = 'page_view' | 'view_item' | 'add_to_cart' | 'begin_checkout' | 'purchase';
+// Ten store + ten funnel IDs + ten per product for the maximum100 checkout lines.
+export const MAX_BROWSER_PIXEL_IDS = 1020;
+export const MAX_TRACKING_SENT_IDS = 10240;
 export interface TrackingConfiguration { version: number; enabled?: boolean; facebook: string[]; tiktok: string[]; snapchat: string[]; google: string[] }
 export interface TrackingItem { item_id: string; item_name: string; price: string; quantity: number }
 export interface TrackingEnvelope { configuration: TrackingConfiguration; event: { event: AdvertisingEvent; event_id: string; currency: string; value: string; content_type?: 'product_group'; gross_value?: string; shipping?: string; tax?: string; transaction_id?: string; items: TrackingItem[]; page_location: string } }
@@ -23,8 +26,8 @@ export function trackingConfiguration(value: unknown): TrackingConfiguration | u
   if (!Number.isSafeInteger(row.version) || row.version < 1) return undefined;
   const result = { version: row.version, enabled: row.enabled === true } as TrackingConfiguration;
   for (const provider of ['facebook', 'tiktok', 'snapchat', 'google'] as const) {
-    // A funnel may add ten browser IDs to the store's ten. Google remains store scoped.
-    const ids = row[provider]; if (!Array.isArray(ids) || ids.length > (provider === 'google' ? 10 : 20) || !ids.every((id) => typeof id === 'string' && idPatterns[provider].test(id))) return undefined;
+    // Product and funnel browser destinations extend store IDs; Google stays store scoped.
+    const ids = row[provider]; if (!Array.isArray(ids) || ids.length > (provider === 'google' ? 10 : MAX_BROWSER_PIXEL_IDS) || !ids.every((id) => typeof id === 'string' && idPatterns[provider].test(id))) return undefined;
     result[provider] = [...new Set(ids)];
   }
   return result;

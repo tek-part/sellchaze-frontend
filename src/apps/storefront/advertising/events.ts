@@ -1,6 +1,6 @@
 import { ApiError, apiFetch } from '../api/client';
 import type { CheckoutItem } from '../api/storefront';
-import { advertisingAllowed, advertisingItems, trackingCommands, trackingEnvelope, type AdvertisingEvent } from './protocol';
+import { advertisingAllowed, advertisingItems, trackingCommands, trackingEnvelope, MAX_TRACKING_SENT_IDS, type AdvertisingEvent } from './protocol';
 
 interface Pending { event_id: string; event: Exclude<AdvertisingEvent, 'purchase'>; page_path: string; items?: CheckoutItem[]; surface?: 'product' }
 const queue = new Map<string, Pending[]>(); const busy = new Set<string>(); const sent = new Map<string, Set<string>>(); const starts = new Map<string, number>();
@@ -16,7 +16,7 @@ function sentIds(storeId: string): Set<string> {
   if (!result) {
     result = new Set();
     try { const data: unknown = JSON.parse(sessionStorage.getItem(`sf:ad-sent:v1:${storeId}`) || 'null');
-      if (Array.isArray(data) && data.length <= 200 && data.every((id) => typeof id === 'string' && /^(facebook|tiktok|snapchat|google):[A-Za-z0-9-]{1,64}:[a-f0-9]{64}$/.test(id))) result = new Set(data);
+      if (Array.isArray(data) && data.length <= MAX_TRACKING_SENT_IDS && data.every((id) => typeof id === 'string' && /^(facebook|tiktok|snapchat|google):[A-Za-z0-9-]{1,64}:[a-f0-9]{64}$/.test(id))) result = new Set(data);
     } catch { /* A bounded in-memory set still suppresses duplicates in this document. */ }
     sent.set(storeId, result);
   }
@@ -34,7 +34,7 @@ export function sendAdvertisingEnvelope(storeId: string, value: unknown): void {
       if (ids.has(id)) continue;
       try { sendTrackingCommand(command); ids.add(id); } catch { /* Optional SDK errors never affect the cart or receipt. */ }
     }
-    while (ids.size > 200) ids.delete(ids.values().next().value!);
+    while (ids.size > MAX_TRACKING_SENT_IDS) ids.delete(ids.values().next().value!);
     try { sessionStorage.setItem(`sf:ad-sent:v1:${storeId}`, JSON.stringify([...ids])); } catch { /* Memory fallback. */ }
   }).catch(() => { /* Optional advertising must not block checkout when its adapter cannot load. */ });
 }
