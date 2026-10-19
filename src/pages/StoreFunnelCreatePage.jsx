@@ -9,7 +9,7 @@ import api from '../api/client';
 import useStoreScope from '../hooks/useStoreScope';
 
 const uuid = /^[a-f\d]{8}(?:-[a-f\d]{4}){3}-[a-f\d]{12}$/i;
-const catalogOrder = ['glasses-en', 'glasses-ar', 'hair-revive-en', 'hair-revive-ar', 'litter-robot-en', 'litter-robot-ar', 'electric-biker-en', 'electric-biker-ar', 'hair-care-en', 'hair-care-ar', 'skin-care-en', 'skin-care-ar', 'writing-board-en', 'writing-board-ar'];
+const catalogOrder = ['glasses-en', 'glasses-ar', 'hair-revive-en', 'hair-revive-ar', 'litter-robot-en', 'litter-robot-ar', 'electric-biker-en', 'electric-biker-ar', 'hair-care-en', 'hair-care-ar', 'skin-care-en', 'skin-care-ar', 'writing-board-en', 'writing-board-ar', 'habit-en', 'habit-ar'];
 function templateName(item) { return (item?.name?.en || item?.key || '').replace(' — English', ' EN').replace(' — Arabic', ' AR'); }
 function previewSourceSet(item, device) {
     const path = `/media/funnel-previews/${item.key}-${device}`;

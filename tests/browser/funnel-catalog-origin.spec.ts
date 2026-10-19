@@ -1,6 +1,6 @@
 import { expect, test } from 'playwright/test';
 
-for (const family of ['glasses','hair-revive','litter-robot','electric-biker','hair-care','skin-care','writing-board']) for (const locale of ['ar','en']) {
+for (const family of ['glasses','hair-revive','litter-robot','electric-biker','hair-care','skin-care','writing-board','habit']) for (const locale of ['ar','en']) {
   test(`Packaged ${family} ${locale} preview media follows its shared bundle across tenant hosts`, async ({ page, request }) => {
     const origin = 'http://127.0.0.1:4183'; const tenant = 'http://merchant.example.test'; const incorrect: string[] = []; const writes: string[] = [];
     const response = await request.get(`${origin}/storefront.html`);

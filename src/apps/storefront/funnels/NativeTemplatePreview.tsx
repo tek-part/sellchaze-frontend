@@ -4,6 +4,7 @@ import { Spinner } from '../foundation/components/Spinner';
 import { NotFoundPage } from '../pages/NotFoundPage';
 import { loadNativeCatalogPreview } from './native-catalog';
 
+const Habit = lazy(() => loadNativeCatalogPreview('habit-en'));
 const Glasses = lazy(() => loadNativeCatalogPreview('glasses-en'));
 const Hair = lazy(() => loadNativeCatalogPreview('hair-revive-en'));
 const Electric = lazy(() => loadNativeCatalogPreview('electric-biker-en'));
@@ -14,5 +15,5 @@ const SkinCare = lazy(() => loadNativeCatalogPreview('skin-care-en'));
 
 export default function NativeTemplatePreview(): ReactElement {
   const { key } = useParams();
-  return <Suspense fallback={<Spinner />}>{key === 'writing-board-ar' || key === 'writing-board-en' ? <WritingBoard /> : key === 'skin-care-ar' || key === 'skin-care-en' ? <SkinCare /> : key === 'hair-care-ar' || key === 'hair-care-en' ? <HairCare /> : key === 'electric-biker-ar' || key === 'electric-biker-en' ? <Electric /> : key === 'litter-robot-ar' || key === 'litter-robot-en' ? <Litter /> : key === 'hair-revive-ar' || key === 'hair-revive-en' ? <Hair /> : key === 'glasses-ar' || key === 'glasses-en' ? <Glasses /> : <NotFoundPage />}</Suspense>;
+  return <Suspense fallback={<Spinner />}>{key === 'habit-ar' || key === 'habit-en' ? <Habit /> : key === 'writing-board-ar' || key === 'writing-board-en' ? <WritingBoard /> : key === 'skin-care-ar' || key === 'skin-care-en' ? <SkinCare /> : key === 'hair-care-ar' || key === 'hair-care-en' ? <HairCare /> : key === 'electric-biker-ar' || key === 'electric-biker-en' ? <Electric /> : key === 'litter-robot-ar' || key === 'litter-robot-en' ? <Litter /> : key === 'hair-revive-ar' || key === 'hair-revive-en' ? <Hair /> : key === 'glasses-ar' || key === 'glasses-en' ? <Glasses /> : <NotFoundPage />}</Suspense>;
 }
