@@ -1,10 +1,11 @@
+import { funnelCatalogAsset } from './catalog-asset';
 import type { ApiProduct } from '../api/types';
 import type { SectionInstance } from '../theme-engine/rendering';
 
 /** Explicit inert catalog content, never used to initialize a merchant's funnel. */
 export function writingBoardPreview(locale: 'ar' | 'en'): { product: ApiProduct; sections: SectionInstance[] } {
   const ar = locale === 'ar'; const tr = (a: string, e: string): string => ar ? a : e;
-  const asset = (name: string): string => `/media/funnel-campaigns/writing-board-${name}-v1.webp`;
+  const asset = (name: string): string => funnelCatalogAsset(`/media/funnel-campaigns/writing-board-${name}-v1.webp`);
   const image = asset('hero'); const detail = asset('detail'); const exploded = asset('exploded'); const rear = asset('rear');
   const product: ApiProduct = { id: -7, name: tr('جهاز كتابة — نموذج', 'Writing device — demo'), slug: 'display-only-writing-board', price: 250, compare_price: 500, image_url: image, images: [image, detail, exploded, rear], short_description: tr('صور وبيانات توضيحية لمعاينة التصميم فقط. ليست مواصفات منتج معروض للبيع.', 'Sample photographs and content for previewing the design only, rather than specifications for a product offered for sale.') };
   let id = 0;

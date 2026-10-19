@@ -1,10 +1,11 @@
+import { funnelCatalogAsset } from './catalog-asset';
 import type { ApiProduct } from '../api/types';
 import type { SectionInstance } from '../theme-engine/rendering';
 
 /** Display-only composition; none of these synthetic values can reach checkout. */
 export function hairPreview(locale: 'ar' | 'en'): { product: ApiProduct; sections: SectionInstance[] } {
   const ar = locale === 'ar'; const tr = (a: string, e: string): string => ar ? a : e;
-  const hero = '/media/funnel-campaigns/hair-revive-hero-v1.png'; const image = '/media/funnel-campaigns/hair-revive-detail-v1.png';
+  const hero = funnelCatalogAsset('/media/funnel-campaigns/hair-revive-hero-v1.png'); const image = funnelCatalogAsset('/media/funnel-campaigns/hair-revive-detail-v1.png');
   const product: ApiProduct = { id: -2, name: tr('مجموعة العناية اليومية — نموذج', 'Everyday care collection — demo'), slug: 'display-only-hair-care', price: 150, image_url: image, images: [image, hero], short_description: tr('صورة منتج ومحتوى توضيحيان لمعاينة القالب.', 'Sample product imagery and content for previewing the composition.') };
   let id = 0;
   const row = (type: string, settings: Record<string, unknown>): SectionInstance => ({ id: `hair-demo-${id++}`, type: `hair-${type}`, settings });
