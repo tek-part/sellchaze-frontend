@@ -34,6 +34,10 @@ for (const locale of ['ar', 'en'] as const) for (const width of [1920, 390, 320]
     const root = page.locator('.pe-basic .product-rich-text'), editor = root.locator('.tiptap'), toolbar = root.locator('.product-rich-text__toolbar');
     await expect(editor).toBeVisible();
     expect(await toolbar.evaluate(element => getComputedStyle(element).direction)).toBe('ltr');
+    const groupTops = await toolbar.locator('[data-tool-group]').evaluateAll(elements => elements.map(element => element.getBoundingClientRect().top));
+    expect(groupTops).toHaveLength(3);
+    if (width < 768) { expect(groupTops[1]).toBeGreaterThan(groupTops[0]); expect(groupTops[2]).toBeGreaterThan(groupTops[1]); }
+    else { expect(groupTops[1]).toBe(groupTops[0]); expect(groupTops[2]).toBe(groupTops[0]); }
     await expect(editor).toHaveAttribute('dir', locale === 'ar' ? 'rtl' : 'ltr');
     const bold = toolbar.getByRole('button', { name: locale === 'ar' ? 'عريض' : 'Bold', exact: true });
     await bold.click(); await expect(bold).toHaveAttribute('aria-pressed', 'true');
