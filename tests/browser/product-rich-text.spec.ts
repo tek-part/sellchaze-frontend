@@ -33,6 +33,12 @@ for (const locale of ['ar', 'en'] as const) for (const width of [1920, 390, 320]
     await page.goto('/store/products/30/edit');
     const root = page.locator('.pe-basic .product-rich-text'), editor = root.locator('.tiptap'), toolbar = root.locator('.product-rich-text__toolbar');
     await expect(editor).toBeVisible();
+    await expect(page.locator('.pe-basic .pe-extra-copy')).toHaveCount(0);
+    await expect(page.locator('.pe-side summary').filter({ hasText: locale === 'ar' ? 'بيانات إضافية' : 'Additional details' })).toHaveCount(0);
+    expect(await editor.evaluate(element => element.getBoundingClientRect().height)).toBe(360);
+    const expandControl = root.getByRole('button', { name: locale === 'ar' ? 'تكبير محرر الوصف' : 'Expand editor', exact: true });
+    const expandBox = await expandControl.boundingBox(), headerBox = await page.locator('.pe-basic>header').boundingBox();
+    expect(expandBox && headerBox && expandBox.y >= headerBox.y - 1 && expandBox.y + expandBox.height <= headerBox.y + headerBox.height + 1).toBe(true);
     expect(await toolbar.evaluate(element => getComputedStyle(element).direction)).toBe('ltr');
     const groupTops = await toolbar.locator('[data-tool-group]').evaluateAll(elements => elements.map(element => element.getBoundingClientRect().top));
     expect(groupTops).toHaveLength(3);
@@ -61,17 +67,17 @@ for (const locale of ['ar', 'en'] as const) for (const width of [1920, 390, 320]
     await expect.poll(() => writes.length).toBe(1);
     await page.reload(); await expect(editor.locator('strong')).toHaveText('Own formatted description');
     await expect(editor.locator('span')).toHaveCSS('background-color', 'rgb(171, 205, 239)');
-    await root.getByRole('button', { name: locale === 'ar' ? 'توسيع المحرر' : 'Expand editor', exact: true }).click();
+    await expandControl.click();
     const expanded = page.locator('.product-rich-text--expanded'); await expect(expanded).toBeVisible();
     await expect(expanded.getByRole('button', { name: locale === 'ar' ? 'تصغير المحرر' : 'Collapse editor', exact: true })).toBeFocused();
     await page.keyboard.press('Shift+Tab');
     expect(await page.evaluate(() => document.activeElement?.closest('.product-rich-text--expanded') !== null)).toBe(true);
     await expanded.locator('.tiptap').press('Escape'); await expect(expanded).toHaveCount(0);
     await expect(root).toBeVisible();
-    await expect(root.getByRole('button', { name: locale === 'ar' ? 'توسيع المحرر' : 'Expand editor', exact: true })).toBeFocused();
+    await expect(expandControl).toBeFocused();
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)).toBe(true);
     const axe = await new AxeBuilder({ page }).include('.pe-basic .product-rich-text').withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa']).analyze();
     expect(axe.violations.filter(violation => ['serious', 'critical'].includes(violation.impact || '')).map(violation => ({ id: violation.id, nodes: violation.nodes.map(node => node.target) }))).toEqual([]);
-    if (process.env.PRODUCT_RICHTEXT_AUDIT_DIR) await root.screenshot({ path: `${process.env.PRODUCT_RICHTEXT_AUDIT_DIR}/merchant-product-richtext-${locale}-${width}-${appearance}.png` });
+    if (process.env.PRODUCT_RICHTEXT_AUDIT_DIR) await page.locator('.pe-basic').screenshot({ path: `${process.env.PRODUCT_RICHTEXT_AUDIT_DIR}/${process.env.PRODUCT_RICHTEXT_AUDIT_PREFIX || 'merchant-product-richtext'}-${locale}-${width}-${appearance}.png` });
   });
 }

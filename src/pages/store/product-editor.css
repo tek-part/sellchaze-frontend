@@ -43,4 +43,6 @@
 .ws-product-editor .pe-soft-button{color:color-mix(in srgb,var(--ws-green-ink) 85%,var(--ws-text))}
 
 .pe-side>details>summary{list-style:none;display:flex;align-items:center;justify-content:space-between;gap:12px;cursor:pointer}.pe-side>details>summary::-webkit-details-marker{display:none}.pe-side>details.pe-fold>summary::after{content:none}.pe-side>details>summary>svg{width:16px;height:16px;flex-shrink:0;color:var(--ws-muted)}.pe-side>details[open]>summary>svg{transform:rotate(180deg)}
+/* Keep the product expansion action in the card heading, above the description. */
+.ws-product-editor .pe-basic{position:relative}.ws-product-editor .pe-name{margin-bottom:32px}.ws-product-editor .pe-basic .tiptap{min-height:360px}.ws-product-editor .pe-basic .product-rich-text__heading>button{position:absolute;inset-block-start:16px;inset-inline-end:16px;display:inline-flex;align-items:center;gap:5px;padding:0 8px;min-height:28px;border:0;background:transparent;color:var(--ws-muted)}.product-rich-text--product .product-rich-text__heading>button svg{width:12px;height:12px;flex-shrink:0}
 @media(prefers-reduced-motion:no-preference){.pe-side>details>summary>svg{transition:transform .2s cubic-bezier(.4,0,.2,1)}}

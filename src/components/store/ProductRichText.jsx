@@ -7,6 +7,7 @@ import StarterKit from '@tiptap/starter-kit';
 import { sanitizeHtml } from '../../shared/utils/sanitizeHtml';
 import { richTextColor } from '../../shared/utils/richTextFormatting';
 import ProductDescriptionToolbar from './ProductDescriptionToolbar';
+import { FaCompressArrowsAlt, FaExpandArrowsAlt } from 'react-icons/fa';
 import './product-rich-text.css';
 import { HiOutlineArrowUturnLeft, HiOutlineArrowUturnRight, HiOutlineLink, HiOutlineListBullet, HiOutlinePhoto, HiOutlineVideoCamera, HiOutlineXMark } from '../workspace/WorkspaceIcons';
 
@@ -64,7 +65,7 @@ export default function ProductRichText({ value, onChange, label, locale, disabl
     const toolSymbols = { bold: <b>B</b>, italic: <i>I</i>, underline: <u>U</u>, strike: <s>S</s>, bulletList: <HiOutlineListBullet aria-hidden />, orderedList: <span aria-hidden>1.</span>, blockquote: <span aria-hidden>❞</span> };
     const toggleSource = () => { if (source) { const clean = sanitizeHtml(value, { formatting }); editor.commands.setContent(clean, { emitUpdate: false }); onChange(clean); } setSource(!source); };
     const content = <div className={`product-rich-text ${productContent ? 'product-rich-text--product' : ''} ${expanded ? 'product-rich-text--expanded' : ''}`} onKeyDown={(event) => { if (event.key === 'Escape') setExpanded(false); }}>
-        <div className="product-rich-text__heading"><span>{label}</span><button ref={expandButton} autoFocus={productContent && expanded} type="button" onClick={() => setExpanded(!expanded)}>{expanded ? text('تصغير المحرر', 'Collapse editor') : text('توسيع المحرر', 'Expand editor')}</button></div>
+        <div className="product-rich-text__heading"><span>{label}</span><button ref={expandButton} autoFocus={productContent && expanded} type="button" aria-label={productContent ? expanded ? text('تصغير المحرر', 'Collapse editor') : text('تكبير محرر الوصف', 'Expand editor') : undefined} onClick={() => setExpanded(!expanded)}>{productContent ? <>{expanded ? <FaCompressArrowsAlt aria-hidden /> : <FaExpandArrowsAlt aria-hidden />}{expanded ? text('تصغير', 'Collapse') : text('تكبير', 'Expand')}</> : expanded ? text('تصغير المحرر', 'Collapse editor') : text('توسيع المحرر', 'Expand editor')}</button></div>
         <div className="product-rich-text__toolbar" dir={productContent ? 'ltr' : undefined} role="group" aria-label={categoryContent ? text('تنسيق محتوى القسم', 'Category content formatting') : pageContent ? text('تنسيق محتوى الصفحة', 'Page content formatting') : text('تنسيق وصف المنتج', 'Product description formatting')}>
             {productContent ? <ProductDescriptionToolbar editor={editor} ar={ar} disabled={disabled} source={source} onSource={toggleSource} onLink={() => { setLink(editor.getAttributes('link').href || ''); setShowLink(!showLink); }} onMedia={(kind) => { setMediaKind(mediaKind === kind ? '' : kind); setMediaUrl(''); setMediaAlt(''); }} /> : landingContent ? <>
             <button type="button" aria-label={text('تراجع','Undo')} disabled={disabled||source||!editor.can().undo()} onClick={()=>editor.chain().focus().undo().run()}><HiOutlineArrowUturnLeft/></button>
