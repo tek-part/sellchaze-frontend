@@ -12,7 +12,7 @@ export default function NotificationsPage() {
     const navigate = useNavigate(); const { isSupplier, me } = useOutletContext() ?? {};
     const admin = me?.roles?.includes('Admin') && !me.roles.some((role) => ['Merchant', 'Supplier'].includes(role));
     const [page, setPage] = useState(1); const [status, setStatus] = useState('all');
-    const feed = useNotificationFeed({ page, status });
+    const feed = useNotificationFeed({ page, status, onPageChange: setPage });
     const items = feed.items.map((row) => ({ ...mapServerNotification(row, t, { isSupplier }), row }));
     const date = (at) => Number.isFinite(at) ? new Intl.DateTimeFormat(ar ? 'ar-EG' : 'en', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(at)) : '';
     async function open(item) {
@@ -29,7 +29,7 @@ export default function NotificationsPage() {
             <div className="ws-notifications-tabs" role="group" aria-label={text('حالة الإشعارات', 'Notification status')}>{[['all', text('الكل', 'All')], ['unread', text('غير مقروءة', 'Unread')], ['read', text('مقروءة', 'Read')]].map(([value, label]) => <button key={value} aria-pressed={status === value} onClick={() => { setStatus(value); setPage(1); }}>{label}{value === 'unread' && feed.unreadCount ? <span>{feed.unreadCount}</span> : null}</button>)}</div>
             {items.length ? <ul className="ws-notifications-list">{items.map((item) => {
                 const link = notificationDestination(item.link, window.location.origin, !admin);
-                return <li key={item.id} data-read={item.read}><span className="ws-notifications-indicator" aria-label={item.read ? text('مقروء', 'Read') : text('غير مقروء', 'Unread')} /><div><h2>{item.title}</h2><p>{item.body}</p><time dateTime={item.row.created_at}>{date(item.at)}</time></div><div className="ws-notifications-row-actions">{link ? <button disabled={feed.busy} onClick={() => void open(item)}>{text('مشاهدة', 'View')}</button> : null}{!item.read ? <button disabled={feed.busy} onClick={() => void feed.markRead(item.row)} aria-label={`${text('تحديد كمقروء', 'Mark as read')}: ${item.title}`}><HiOutlineCheck aria-hidden /></button> : null}</div></li>;
+                return <li key={item.id} data-read={item.read}><span className="ws-notifications-indicator" role="img" aria-label={item.read ? text('مقروء', 'Read') : text('غير مقروء', 'Unread')} /><div><h2>{item.title}</h2><p>{item.body}</p><time dateTime={item.row.created_at}>{date(item.at)}</time></div><div className="ws-notifications-row-actions">{link ? <button disabled={feed.busy} onClick={() => void open(item)}>{text('مشاهدة', 'View')}</button> : null}{!item.read ? <button disabled={feed.busy} onClick={() => void feed.markRead(item.row)} aria-label={`${text('تحديد كمقروء', 'Mark as read')}: ${item.title}`}><HiOutlineCheck aria-hidden /></button> : null}</div></li>;
             })}</ul> : !feed.error ? <p className="ws-notifications-no-results">{text('لا توجد إشعارات بهذه الحالة.', 'No notifications with this status.')}</p> : null}
             <PaginationBar meta={feed.meta} onPageChange={setPage} loading={feed.loading || feed.busy} />
         </>}
