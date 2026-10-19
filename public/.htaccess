@@ -40,7 +40,7 @@
 
 # Long cache for hashed assets (Vite emits filenames with content hash)
 <IfModule mod_headers.c>
-    <FilesMatch "\.(js|css|woff2?|png|jpg|jpeg|gif|svg|ico|webp)$">
+    <FilesMatch "\.(js|css|woff2?|ttf|png|jpg|jpeg|gif|svg|ico|webp)$">
         Header set Cache-Control "public, max-age=31536000, immutable"
         # Tenant storefronts (*.sellchaze.com) load these bundles cross-origin as ES modules.
         Header set Access-Control-Allow-Origin "*"

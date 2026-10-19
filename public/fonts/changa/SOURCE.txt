@@ -1,0 +1,4 @@
+Changa variable200-800, Arabic/Latin/LatinExt.
+Official Google Fonts source: https://github.com/google/fonts/tree/main/ofl/changa
+Pinned commit: 3dd78844021e948ceb633d1dcee3f7885561b5d9
+Original font bytes retained; SIL Open Font License in OFL.txt.

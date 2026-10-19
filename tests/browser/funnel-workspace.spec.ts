@@ -44,7 +44,7 @@ async function fixture(page: Page, language = 'en', ai = false, permission = tru
     if (path === '/auth/me') return respond({ user: { id: 1, name: 'Funnel Fixture', email: 'funnel@example.test', roles: [permission ? 'Merchant' : 'StoreManager'], permissions: permission ? ['store.view', 'store.pages.manage', 'store.products.manage', 'store.settings.manage'] : ['store.view'], parent_user_id: permission ? null : 2, is_active: true, pending_approval: false } });
     if (path === '/my-store') return respond({ data: { id: 1, owner_user_id: 1, name: 'Fixture', slug: 'fixture', status: 'active', currency: 'USD', default_locale: 'en', supported_locales: ['en', 'ar'] } });
     if (path === '/my-store/funnels/templates') return respond({
-      data: ['glasses-en', 'glasses-ar', 'hair-revive-en', 'hair-revive-ar', 'litter-robot-en', 'litter-robot-ar', 'electric-biker-en', 'electric-biker-ar', 'hair-care-en', 'hair-care-ar', 'spotlight'].map(key => ({ key, native_layout: key !== 'spotlight', locale: key.endsWith('-ar') ? 'ar' : 'en', name: { en: key }, preview_desktop_image: `/media/funnel-previews/${key}-desktop.png`, preview_mobile_image: `/media/funnel-previews/${key}-phone.png`, preview_url: `/funnel-templates/${key}?preview=1` })),
+      data: ['glasses-en', 'glasses-ar', 'hair-revive-en', 'hair-revive-ar', 'litter-robot-en', 'litter-robot-ar', 'electric-biker-en', 'electric-biker-ar', 'hair-care-en', 'hair-care-ar', 'skin-care-en', 'skin-care-ar', 'spotlight'].map(key => ({ key, native_layout: key !== 'spotlight', locale: key.endsWith('-ar') ? 'ar' : 'en', name: { en: key }, preview_desktop_image: `/media/funnel-previews/${key}-desktop.png`, preview_mobile_image: `/media/funnel-previews/${key}-phone.png`, preview_url: `/funnel-templates/${key}?preview=1` })),
       ai: { available: ai }, funnel_base_url: 'https://a-very-long-merchant-domain.example/funnels/',
     });
     if (path === `/my-store/funnels/by-code/${code}`) return respond({data: original});
@@ -127,11 +127,11 @@ for (const language of ['ar', 'en']) for (const width of [1920, 390, 320]) {
     await expect(dialog.getByRole('button', { name: language === 'ar' ? /إنشاء مسار بالذكاء/ : /Create a funnel with AI/ })).toBeDisabled();
     await accessible(page, '.fw-method-panel');
     await dialog.getByRole('button', {name: language === 'ar' ? /إنشاء مسار يدويًا/ : /Create a funnel manually/}).click();
-    await expect(page.locator('.fw-template')).toHaveCount(10);
+    await expect(page.locator('.fw-template')).toHaveCount(12);
     await expect.poll(() => page.locator('.fw-template-desktop').first().evaluate((image: HTMLImageElement) => image.complete && image.naturalWidth > 0 && image.currentSrc.endsWith('/glasses-en-desktop.jpg'))).toBe(true);
-    for (const locale of ['en', 'ar']) {
+    for (const family of ['hair-care', 'skin-care']) for (const locale of ['en', 'ar']) {
       for (const device of ['desktop', 'phone']) {
-        const poster = page.locator(`.fw-template-${device}[src$="hair-care-${locale}-${device}.png"]`);
+        const poster = page.locator(`.fw-template-${device}[src$="${family}-${locale}-${device}.png"]`);
         await poster.scrollIntoViewIfNeeded();
         await expect.poll(() => poster.evaluate((image: HTMLImageElement) => image.complete && image.naturalWidth > 0 && image.currentSrc.endsWith('.jpg') ? image.naturalHeight / image.naturalWidth : 0)).toBeGreaterThanOrEqual(device === 'desktop' ? 1.18 : 3.4);
       }
@@ -164,6 +164,23 @@ for (const language of ['ar', 'en']) for (const width of [1920, 390, 320]) {
     expect(api.writes).toEqual([{path: '/my-store/funnels', data: {title: 'Fixture campaign', slug: 'fixture-campaign', product_id: 7, locale: language, template_key: key}}]);
   });
 }
+for (const language of ['ar', 'en']) test(`Skin Care ${language} selection creates the requested independent template`, async ({page}) => {
+  const api = await fixture(page, language); await page.setViewportSize({width:390,height:900});
+  await page.goto('/store/funnels/create');
+  await page.getByRole('button', {name:language === 'ar' ? /إنشاء مسار يدويًا/ : /Create a funnel manually/}).click();
+  const key = `skin-care-${language}`;
+  await page.getByRole('button', {name:`${language === 'ar' ? 'استخدام القالب' : 'Use template'}: ${key}`,exact:true}).click();
+  await page.locator('.fw-create-footer').getByRole('button', {name:language === 'ar' ? 'التالي' : 'Next',exact:true}).click();
+  await page.getByLabel(language === 'ar' ? 'اسم الـ Funnel' : 'Funnel name',{exact:true}).fill('Synthetic skin campaign');
+  await page.getByLabel(language === 'ar' ? 'رابط الـ Funnel' : 'Funnel URL',{exact:true}).fill('synthetic-skin');
+  const product = page.getByRole('combobox',{name:language === 'ar' ? 'المنتج' : 'Product',exact:true});
+  await product.fill('Fixture'); await page.getByRole('option',{name:'Fixture glasses',exact:true}).click();
+  expect(api.writes).toEqual([]);
+  await page.getByRole('button',{name:language === 'ar' ? 'إنشاء المسار وفتح المحرر' : 'Create funnel and open builder',exact:true}).click();
+  await expect(page).toHaveURL(/\/store\/pages\/99\/builder$/);
+  expect(api.writes).toEqual([{path:'/my-store/funnels',data:{title:'Synthetic skin campaign',slug:'synthetic-skin',product_id:7,locale:language,template_key:key}}]);
+});
+
 test('Table sorting and all-or-nothing deletion preserve rows after cancel or server failure', async ({page}) => {
   const api = await fixture(page);
   await page.goto('/store/funnels');
