@@ -4,7 +4,7 @@ import api from '../api/client';
 const changed = 'sellchaze:notifications-changed';
 const errorMessage = (e) => e.response?.data?.message || e.message;
 
-export default function useNotificationFeed({ page = 1, perPage = 25, status = 'all' } = {}) {
+export default function useNotificationFeed({ page = 1, perPage = 25, status = 'all', onPageChange } = {}) {
     const [feed, setFeed] = useState({ items: [], meta: null, unreadCount: 0 });
     const [loading, setLoading] = useState(true); const [error, setError] = useState(''); const [busy, setBusy] = useState(false);
     const sequence = useRef(0); const mutation = useRef(false); const mounted = useRef(false);
@@ -12,10 +12,19 @@ export default function useNotificationFeed({ page = 1, perPage = 25, status = '
         const revision = ++sequence.current; if (!background) setLoading(true); setError('');
         try {
             const { data } = await api.get('/notifications', { params: { page, per_page: perPage, status } });
-            if (mounted.current && revision === sequence.current) setFeed({ items: Array.isArray(data.data) ? data.data : [], meta: data.meta ?? null, unreadCount: Number(data.unread_count) || 0 });
+            if (mounted.current && revision === sequence.current) {
+                // Reading the final item can shrink an unread result set by a page.
+                // Recover from the server's current pagination, including external changes.
+                const lastPage = Number(data.meta?.last_page);
+                if (onPageChange && Number.isSafeInteger(lastPage) && lastPage >= 1 && page > lastPage) {
+                    onPageChange(lastPage);
+                    return;
+                }
+                setFeed({ items: Array.isArray(data.data) ? data.data : [], meta: data.meta ?? null, unreadCount: Number(data.unread_count) || 0 });
+            }
         } catch (e) { if (mounted.current && revision === sequence.current) setError(errorMessage(e)); }
         finally { if (mounted.current && revision === sequence.current) setLoading(false); }
-    }, [page, perPage, status]);
+    }, [page, perPage, status, onPageChange]);
     useEffect(() => {
         const requests = sequence;
         mounted.current = true; setFeed((current) => ({ ...current, items: [], meta: null })); void load();
