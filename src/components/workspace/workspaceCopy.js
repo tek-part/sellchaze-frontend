@@ -2,6 +2,7 @@ import { useTranslation } from 'react-i18next';
 
 const copy = {
     other: ['أخرى', 'Other'],
+    communityServices: ['خدمات مجتمع سيلشيز', 'Sellchaze community services'],
     statisticsDashboard: ['لوحة الإحصائيات', 'Statistics dashboard'],
     quickAccess: ['الوصول السريع', 'Quick access'], storeDesign: ['تصميم المتجر', 'Store design'], company: ['مساحة الشركة', 'Company'], procurement: ['شبكة المشتريات', 'Procurement'], hello: ['مرحبًا', 'Hello'], language: ['تغيير اللغة', 'Change language'],
     search: ['ابحث في الأقسام…', 'Search sections…'], searchTitle: ['بحث في لوحة التحكم', 'Search your workspace'],

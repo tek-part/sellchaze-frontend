@@ -55,9 +55,9 @@ export function buildWorkspaceStoreNav(t, access, permissions = []) {
         { ...route('apps', '/store/apps', t('workspace_apps', 'Apps'), AppsReferenceIcon, access.canStoreSettings), single: true,
             isActive: (rel) => rel === '/apps' || (rel.startsWith('/apps/') && !SIDEBAR_APP_KEYS.has(rel.split('/')[2])) },
         { key: 'community', label: t('feed_title', 'Community'), to: '/community', Icon: HiOutlineUserGroup, single: true },
-        { ...route('service-marketplace', '/services', t('service_marketplace_nav', 'Service marketplace'), ServiceMarketplaceIcon, access.isStoreOwner), badge: t('workspace_new', 'New'), single: true, section: 'other' },
-        { ...route('platform-referral', '/referral', t('platform_referral_nav', 'Affiliate program'), AffiliateReferenceIcon, access.isStoreOwner), single: true, section: 'other' },
+        { ...route('service-marketplace', '/services', t('service_marketplace_nav', 'Service marketplace'), ServiceMarketplaceIcon, access.isStoreOwner), single: true, section: 'other' },
         { ...absolute(item('marketing-services')), Icon: MarketingServicesIcon, single: true, section: 'other' },
+        { ...route('platform-referral', '/referral', t('platform_referral_nav', 'Affiliate program'), AffiliateReferenceIcon, access.isStoreOwner), single: true, section: 'other' },
         { ...group('settings', t('workspace_menu_settings', 'Settings'), HiOutlineCog6Tooth, settingsItems), single: true, section: 'other', to: settingsItems[0]?.to },
     ].filter((row) => row.single ? Boolean(row.to) : row.items.length > 0);
 }
