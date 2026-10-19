@@ -52,7 +52,7 @@ export default function StoreFunnelsPage() {
             <Link to={`${uiBase}/funnels/create`} className="fw-new"><HiOutlinePlus aria-hidden />{c.create}</Link>
         </div>
         {error ? <div className="fw-error" role="alert">{error}<button type="button" onClick={() => setReload(value => value + 1)}>{c.retry}</button></div> : null}
-        <div className="fw-table-wrap"><table className="fw-table" aria-label={c.title} aria-busy={loading}>
+        <div className="fw-table-wrap" role="region" aria-label={c.title} tabIndex={0}><table className="fw-table" aria-label={c.title} aria-busy={loading}>
             <colgroup>{[3.4, 14, 8, 29, 11, 9, 15, 10.6].map((width, i) => <col key={i} style={{ width: `${width}%` }} />)}</colgroup>
             <thead><tr><th scope="col"><input type="checkbox" aria-label={c.selectAll} checked={allSelected} disabled={loading || busy || rows.length === 0} ref={node => { if (node) node.indeterminate = selected.length > 0 && !allSelected; }} onChange={() => setSelected(allSelected ? [] : rows.map(row => row.id))} /></th>{heading('title', c.name)}{heading('slug', c.slug)}{heading('public_id', c.code)}{heading('status', c.status)}<th scope="col">{c.view}</th><th scope="col"><span className="sr-only">{c.edit}</span></th><th scope="col"><span className="sr-only">{c.duplicate}</span></th></tr></thead>
             <tbody>{loading ? <tr><td colSpan={8}><p className="fw-empty" role="status">{c.loading}</p></td></tr> : rows.length === 0 ? <tr><td colSpan={8}><p className="fw-empty">{c.empty}</p></td></tr> : rows.map(funnel => <tr key={funnel.id} data-selected={selected.includes(funnel.id) || undefined}>

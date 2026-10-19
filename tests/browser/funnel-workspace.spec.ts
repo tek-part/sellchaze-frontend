@@ -8,7 +8,7 @@ async function fixture(page: Page, language = 'en', ai = false, permission = tru
   const writes: Array<{ path: string; data: Record<string, unknown> }> = [];
   const reads: string[] = [];
   let deleted = false;
-  const state = { deleteFails: false, editConflict: false, editValidation: false, holdSave: false };
+  const state = { deleteFails: false, editConflict: false, editValidation: false, holdSave: false, emptyList: false };
   let releaseSave!: () => void;
   const saveGate = new Promise<void>(resolve => { releaseSave = resolve; });
   let current = { ...original, browser_pixels: { facebook: [] as string[], tiktok: [] as string[], snapchat: [] as string[] } }; let version = 'a'.repeat(64);
@@ -52,7 +52,7 @@ async function fixture(page: Page, language = 'en', ai = false, permission = tru
     if (path === '/my-store/funnels/31') return respond({data:current, version, funnel_base_url:'https://a-very-long-merchant-domain.example/funnels/'});
     if (path === '/my-store/funnels/404') return respond({message:'Internal model details must not be shown'},404);
     if (path === '/my-store/funnels/products') return respond({ data: url.searchParams.get('search')?.includes('Replacement') ? [{id:8,name:'Replacement product'}] : [original.product] });
-    if (path === '/my-store/funnels') return respond({ data: deleted ? [] : [original], meta: { current_page: 1, last_page: 1, per_page: 25, from: deleted ? 0 : 1, to: deleted ? 0 : 1, total: deleted ? 0 : 1 } });
+    if (path === '/my-store/funnels') return respond({ data: deleted || state.emptyList ? [] : [original], meta: { current_page: 1, last_page: 1, per_page: 25, from: deleted || state.emptyList ? 0 : 1, to: deleted || state.emptyList ? 0 : 1, total: deleted || state.emptyList ? 0 : 1 } });
     return respond({ data: [], unread: 0, count: 0 });
   });
   return { writes, reads, state, releaseSave };
@@ -60,6 +60,27 @@ async function fixture(page: Page, language = 'en', ai = false, permission = tru
 async function accessible(page: Page, selector: string) {
   const result = await new AxeBuilder({page}).include(selector).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']).analyze();
   expect(result.violations.filter(v => ['serious', 'critical'].includes(v.impact ?? '')), result.violations.map(v => `${v.id}: ${v.help}`).join('\n')).toEqual([]);
+}
+
+for (const language of ['ar', 'en'] as const) for (const width of [320, 390]) {
+  test(`Funnel list keeps empty and populated tables inside the phone viewport in ${language} at ${width}px`, async ({ page }) => {
+    const api = await fixture(page, language); api.state.emptyList = true;
+    await page.setViewportSize({ width, height: 844 });
+    await page.goto('/store/funnels');
+    const region = page.getByRole('region', { name: 'Product Funnels', exact: true });
+    await expect(region).toContainText(language === 'ar' ? 'لا توجد مسارات مطابقة' : 'No matching funnels');
+    const pageFits = () => page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth);
+    expect(await pageFits()).toBe(true);
+    expect(await region.evaluate(e => e.scrollWidth > e.clientWidth)).toBe(true);
+    await region.focus(); await page.keyboard.press(language === 'ar' ? 'ArrowLeft' : 'ArrowRight');
+    await expect.poll(() => region.evaluate(e => Math.abs(e.scrollLeft))).toBeGreaterThan(0);
+    expect(await page.evaluate(() => window.scrollX)).toBe(0);
+    api.state.emptyList = false; await page.reload();
+    await expect(region).toContainText(original.title);
+    expect(await pageFits()).toBe(true);
+    await accessible(page, '.fw-workspace');
+    expect(api.writes).toEqual([]);
+  });
 }
 
 for (const language of ['ar', 'en']) for (const width of [1440, 390, 320]) {
