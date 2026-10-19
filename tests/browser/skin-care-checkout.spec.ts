@@ -46,7 +46,7 @@ for (const locale of ['en', 'ar'] as const) for (const width of [1440, 390, 320]
         { id: 'private-hero', type: 'skincare-hero', settings: { heading: 'Isolated campaign', image } },
         { id: 'private-purchase', type: 'skincare-purchase', settings: {} },
       ] } } });
-      if (path.endsWith('/products/isolated-cream')) return route.fulfill({ json: { data: { id: 700, name: 'Isolated cream', slug: 'isolated-cream', price: 100, stock: 10, is_active: true, image_url: image, auto_select_variant: true, variants: [
+      if (path.endsWith('/products/isolated-cream')) return route.fulfill({ json: { data: { id: 700, name: 'Isolated cream', slug: 'isolated-cream', price: 100, stock: 10, is_active: true, image_url: image, rating: 3.2, reviews_count: 7, auto_select_variant: true, variants: [
         { id: 701, name: 'Base', price: 100, compare_price: 150, stock: 10, is_active: true, image_url: image },
         { id: 702, name: 'Plus', price: 120, compare_price: 150, stock: 10, is_active: true, image_url: detail },
       ], quantity_offers: [{ id: offer, quantity: 2, unit_price: 80, version: 1, free_shipping: false, title: 'Isolated pair', subtitle: 'Two fixture items' }] } } });
@@ -66,6 +66,8 @@ for (const locale of ['en', 'ar'] as const) for (const width of [1440, 390, 320]
     await expect(page.locator('.skc-root')).toHaveAttribute('dir', locale === 'ar' ? 'rtl' : 'ltr');
     await expect(page.locator('.skc-purchase-panel form')).toHaveCount(1);
     await expect(page.locator('.skc-demo-note')).toHaveCount(0);
+    await expect(page.locator('.skc-product-rating .skc-stars')).toHaveText('★★★');
+    await expect(page.locator('.skc-product-rating')).toContainText('3.2');
     const options = page.locator('.sf-funnel-checkout__option select');
     await options.selectOption('702');
     await expect(page.locator('.skc-gallery-main')).toHaveAttribute('src', detail);
