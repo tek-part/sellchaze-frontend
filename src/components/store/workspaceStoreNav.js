@@ -18,7 +18,8 @@ export function buildWorkspaceStoreNav(t, access, permissions = []) {
         'ui-blocks': 'UI Blocks',
         'upload-assets': t('workspace_menu_upload_designs', 'Upload design files'),
     };
-    const absolute = (row) => row ? { ...row, to: `/store/${row.to}`, label: menuLabels[row.key] ?? row.label } : null;
+    const absolute = (row) => row ? { ...row, to: `/store/${row.to}`, label: menuLabels[row.key] ?? row.label,
+        ...(['newsletter', 'ab-tests'].includes(row.key) ? { badge: t('workspace_new', 'New') } : {}) } : null;
     const route = (key, to, label, Icon, show) => show ? { key, to, label, Icon } : null;
     const app = (key, label) => route(key, `/store/apps/${key}`, label, HiOutlineCog6Tooth, access.canStoreSettings);
     const can = (permission) => permissions.includes(permission);
@@ -55,8 +56,8 @@ export function buildWorkspaceStoreNav(t, access, permissions = []) {
             isActive: (rel) => rel === '/apps' || (rel.startsWith('/apps/') && !SIDEBAR_APP_KEYS.has(rel.split('/')[2])) },
         { key: 'community', label: t('feed_title', 'Community'), to: '/community', Icon: HiOutlineUserGroup, single: true },
         { ...route('service-marketplace', '/services', t('service_marketplace_nav', 'Service marketplace'), ServiceMarketplaceIcon, access.isStoreOwner), badge: t('workspace_new', 'New'), single: true, section: 'other' },
-        { ...absolute(item('marketing-services')), Icon: MarketingServicesIcon, badge: t('workspace_new', 'New'), single: true, section: 'other' },
         { ...route('platform-referral', '/referral', t('platform_referral_nav', 'Affiliate program'), AffiliateReferenceIcon, access.isStoreOwner), single: true, section: 'other' },
+        { ...absolute(item('marketing-services')), Icon: MarketingServicesIcon, single: true, section: 'other' },
         { ...group('settings', t('workspace_menu_settings', 'Settings'), HiOutlineCog6Tooth, settingsItems), single: true, section: 'other', to: settingsItems[0]?.to },
     ].filter((row) => row.single ? Boolean(row.to) : row.items.length > 0);
 }

@@ -192,7 +192,7 @@ export default function SidebarNav({ variant = 'list', expandedGroup = '', exclu
 }
 
 function SidebarNavInner({ isAdmin = false, isSupplier = false, roles = [], permissions = [], onNavigate, onExpand, compact = false, variant = 'list', query = '', search = false }) {
-    const { t, i18n } = useTranslation();
+    const { t } = useTranslation();
     const ws = useWorkspaceCopy();
     const mega = variant === 'mega';
     // Link styles follow the variant; the JSX below references these local names.
@@ -471,10 +471,10 @@ function SidebarNavInner({ isAdmin = false, isSupplier = false, roles = [], perm
             </div>
 
             {workspaceStoreGroups.some((group) => group.section === 'other') ? <div className={sec('mt-5 flex flex-col gap-1.5')}>
-                <SectionLabel>{i18n.language.startsWith('ar') ? 'خدمات مجتمع سيلشيز' : 'Sellchaze community services'}</SectionLabel>
+                <SectionLabel>{ws('other')}</SectionLabel>
                 {workspaceStoreGroups.filter((group) => group.section === 'other').map((group) => {
                     const active = group.items ? group.items.some((item) => workspaceStoreItemActive(item, location.pathname)) : workspaceStoreItemActive(group, location.pathname);
-                    return <Link key={group.key} to={group.to} aria-current={active ? 'page' : undefined} className={navLinkClass({ isActive: active })}><group.Icon className="h-5 w-5" aria-hidden /><span className="ws-nav-label">{group.label}</span></Link>;
+                    return <Link key={group.key} to={group.to} aria-current={active ? 'page' : undefined} className={navLinkClass({ isActive: active })}><group.Icon className="h-5 w-5" aria-hidden /><span className="ws-nav-label">{group.label}</span>{group.badge ? <span className="ws-nav-badge">{group.badge}</span> : null}</Link>;
                 })}
             </div> : null}
         </nav>
