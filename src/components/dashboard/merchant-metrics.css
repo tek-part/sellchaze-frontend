@@ -111,3 +111,6 @@ body[data-workspace-theme='dark'] .ws-metric { border-color:var(--ws-border); }
 
 /* Current saved dashboard reference uses neutral labels and value ink. */
 body[data-workspace-merchant='true'][data-workspace-theme='light'] :is(.ws-metrics-summary,.ws-metrics-charts){--ws-muted:#616161;--ws-text:#303030}
+
+/* The measured Orders badge uses a separate violet tint from its glyph. */
+body[data-workspace-merchant='true'][data-workspace-theme='light'] .ws-metric[data-metric='orders'] .ws-metric-icon{background:rgb(124 58 237/.12)}
