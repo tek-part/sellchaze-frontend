@@ -18,7 +18,8 @@ describe('Store workspace navigation', () => {
         expect(groups[4].items.map((item) => item.to)).toEqual(['/store/pixels-settings', '/store/pixel-conversion', '/store/ga']);
         expect(groups[5].items.map((item) => item.to)).toEqual(['/store/apps/cross-selling', '/store/coupons', '/store/retargeting', '/store/apps/whatsapp-unofficial', '/store/apps/top-media-buyer', '/store/utm-builder', '/store/google-merchant', '/store/apps/social-proof', '/store/create-referral-link', '/store/settings/order-limits', '/store/downsell']);
         expect(groups.find((group) => group.key === 'wallet').items.map((row) => row.to)).toEqual(['/top-up', '/transactions']);
-        expect(groups.filter((group) => group.section === 'other').map((group) => group.to)).toEqual(['/services', '/store/marketing-services', '/referral', '/store/settings/general']);
+        expect(groups.filter((group) => group.section === 'other').map((group) => group.to)).toEqual(['/services', '/referral', '/store/marketing-services', '/store/settings/general']);
+        expect(groups.flatMap(group => group.items ?? [group]).filter(item => item.badge).map(item => item.key)).toEqual(['newsletter', 'ab-tests', 'service-marketplace']);
         for (const row of groups.flatMap((group) => group.single ? [group] : group.items)) expect(merchantWorkspaceRouteAllowed(row.to)).toBe(true);
         expect(merchantWorkspaceRouteAllowed('/store/inventory')).toBe(true);
         expect(merchantWorkspaceRouteAllowed('/admin/settings')).toBe(false);
