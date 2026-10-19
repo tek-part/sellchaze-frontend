@@ -162,7 +162,7 @@ export function toProductDetail(product: ApiProduct, currency: string, multiplie
   // Security: product descriptions are merchant-authored HTML rendered into shoppers' browsers via
   // `dangerouslySetInnerHTML` by the themes. Sanitise centrally here (defence-in-depth) so every
   // theme receives already-safe markup — no theme change required. See docs/security.
-  const descriptionHtml = sanitizeHtml(product.long_description ?? product.description);
+  const descriptionHtml = sanitizeHtml(product.long_description ?? product.description, { formatting: true });
   const highlights = product.highlights?.filter((h): h is string => typeof h === 'string' && h.trim().length > 0);
   const specs = toSpecs(product);
   return {
