@@ -19,7 +19,7 @@ export function buildWorkspaceStoreNav(t, access, permissions = []) {
         'upload-assets': t('workspace_menu_upload_designs', 'Upload design files'),
     };
     const absolute = (row) => row ? { ...row, to: `/store/${row.to}`, label: menuLabels[row.key] ?? row.label,
-        ...(['newsletter', 'ab-tests'].includes(row.key) ? { badge: t('workspace_new', 'New') } : {}) } : null;
+        ...(row.key === 'newsletter' ? { badge: t('workspace_new', 'New') } : {}) } : null;
     const route = (key, to, label, Icon, show) => show ? { key, to, label, Icon } : null;
     const app = (key, label) => route(key, `/store/apps/${key}`, label, HiOutlineCog6Tooth, access.canStoreSettings);
     const can = (permission) => permissions.includes(permission);

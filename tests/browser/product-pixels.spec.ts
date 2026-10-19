@@ -1,5 +1,6 @@
 import { expect, test } from 'playwright/test';
 import AxeBuilder from '@axe-core/playwright';
+import { writeFile } from 'node:fs/promises';
 
 test.describe.configure({ retries: 0 });
 for (const locale of ['ar', 'en'] as const) for (const width of [1920, 390, 320]) for (const appearance of ['light', 'dark']) {
@@ -30,10 +31,43 @@ for (const locale of ['ar', 'en'] as const) for (const width of [1920, 390, 320]
     await page.goto('/store/products/30/edit');
     const card = page.locator('.pe-product-pixels'), add = card.getByRole('button', { name: locale === 'ar' ? 'إضافة Pixel' : 'Add Pixel', exact: true }), save = page.getByRole('button', { name: locale === 'ar' ? 'حفظ' : 'Save', exact: true });
     await expect(add).toBeVisible(); await expect(card.locator('.pe-pixel-row')).toHaveCount(0);
+    if (width === 1920) await expect(page.getByRole('link', { name: 'A/B Tests', exact: true })).toBeVisible();
+    const header = card.locator('header');
+    await expect(header.getByRole('button', { name: locale === 'ar' ? 'إضافة Pixel' : 'Add Pixel', exact: true })).toBeVisible();
+    const headerGeometry = await header.evaluate(el => { const h = el.querySelector('h2')!.getBoundingClientRect(), b = el.querySelector('button')!.getBoundingClientRect(); return { height: el.getBoundingClientRect().height, centerGap: Math.abs(h.y + h.height / 2 - b.y - b.height / 2) }; });
+    expect(headerGeometry.height).toBeCloseTo(28, 0); expect(headerGeometry.centerGap).toBeLessThan(1);
     const rows = [{ provider: 'facebook', id: '2345678901' }, { provider: 'tiktok', id: 'C7TEST0123456789ABCDE0' }, { provider: 'snapchat', id: '12345678-1234-4234-8234-123456789abc' }];
     for (let i = 0; i < rows.length; i++) {
       await add.click(); await expect(save).toBeDisabled();
       const row = card.locator('.pe-pixel-row').nth(i);
+      if (i === 0) {
+        await expect(card.getByRole('status')).toHaveCount(0);
+        const geometry = await row.evaluate(el => {
+          const card = el.closest('section')!, input = el.querySelector('input')!, select = el.querySelector('select')!, button = el.querySelector('button')!;
+          const rect = (e: Element) => { const r = e.getBoundingClientRect(); return { x: r.x, y: r.y, width: r.width, height: r.height, right: r.right, bottom: r.bottom }; };
+          return { card: rect(card), row: rect(el), input: rect(input), select: rect(select), remove: rect(button), rowBorder: getComputedStyle(el).borderTopWidth, rowPadding: getComputedStyle(el).paddingInlineStart, headingLine: getComputedStyle(card.querySelector('h2')!).lineHeight, font: getComputedStyle(input).fontFamily };
+        });
+        expect(geometry.rowBorder).toBe('0px'); expect(geometry.rowPadding).toBe('0px');
+        expect(geometry.input.y).toBeCloseTo(geometry.select.y, 0);
+        expect(Math.min(geometry.input.right, geometry.select.right)).toBeLessThanOrEqual(Math.max(geometry.input.x, geometry.select.x));
+        expect(geometry.remove.y).toBeGreaterThanOrEqual(Math.max(geometry.input.bottom, geometry.select.bottom));
+        expect(geometry.remove.height).toBeCloseTo(28, 0); expect(geometry.headingLine).toBe('21.6px');
+        expect(geometry.font).toContain('IBM Plex Sans Arabic');
+        if (width === 1920) { expect(Math.abs(geometry.card.height - 206.09375)).toBeLessThan(1); expect(Math.abs(geometry.select.width - 160)).toBeLessThan(1); }
+        await expect(row.getByRole('button').locator('svg')).toHaveCount(1);
+        expect(await row.getByRole('button').locator('svg').evaluate(el => el.getBoundingClientRect().width)).toBe(20);
+        expect(await add.locator('svg').evaluate(el => el.getBoundingClientRect().width)).toBe(20);
+        await page.emulateMedia({ reducedMotion: 'no-preference' });
+        expect(await row.getByRole('button').evaluate(el => getComputedStyle(el).transitionDuration)).toBe('0.15s');
+        await page.emulateMedia({ reducedMotion: 'reduce' });
+        expect(await row.getByRole('button').evaluate(el => getComputedStyle(el).transitionDuration)).toBe('0s');
+        if (process.env.PRODUCT_PIXELS_AUDIT_DIR) {
+          const prefix = process.env.PRODUCT_PIXELS_AUDIT_PREFIX || 'merchant-product-pixels';
+          await card.evaluate(el => el.scrollIntoView({ block: 'center', behavior: 'instant' }));
+          await card.screenshot({ path: `${process.env.PRODUCT_PIXELS_AUDIT_DIR}/${prefix}-blank-${locale}-${width}-${appearance}.png` });
+          await writeFile(`${process.env.PRODUCT_PIXELS_AUDIT_DIR}/${prefix}-${locale}-${width}-${appearance}.json`, JSON.stringify({ locale, width, appearance, geometry, headerGeometry }, null, 2));
+        }
+      }
       await row.getByRole('textbox').fill(rows[i]!.id);
       await row.getByRole('combobox').selectOption(rows[i]!.provider);
     }
@@ -52,7 +86,10 @@ for (const locale of ['ar', 'en'] as const) for (const width of [1920, 390, 320]
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)).toBe(true);
     const axe = await new AxeBuilder({ page }).include('.pe-product-pixels').withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa']).analyze();
     expect(axe.violations.filter(v => ['serious', 'critical'].includes(v.impact || '')).map(v => ({ id: v.id, nodes: v.nodes.map(n => n.target) }))).toEqual([]);
-    if (process.env.PRODUCT_PIXELS_AUDIT_DIR) await card.screenshot({ path: `${process.env.PRODUCT_PIXELS_AUDIT_DIR}/merchant-product-pixels-${locale}-${width}-${appearance}.png` });
+    if (process.env.PRODUCT_PIXELS_AUDIT_DIR) {
+      await card.evaluate(el => el.scrollIntoView({ block: 'center', behavior: 'instant' }));
+      await card.screenshot({ path: `${process.env.PRODUCT_PIXELS_AUDIT_DIR}/${process.env.PRODUCT_PIXELS_AUDIT_PREFIX || 'merchant-product-pixels'}-${locale}-${width}-${appearance}.png` });
+    }
     await card.getByRole('button', { name: locale === 'ar' ? 'إزالة البيكسل 2' : 'Remove pixel 2', exact: true }).click();
     await save.click(); await expect.poll(() => writes.length).toBe(2); expect(writes[1]).toEqual([rows[0], rows[2]]);
     while (await card.locator('.pe-pixel-row').count()) await card.getByRole('button', { name: locale === 'ar' ? 'إزالة البيكسل 1' : 'Remove pixel 1', exact: true }).click();
