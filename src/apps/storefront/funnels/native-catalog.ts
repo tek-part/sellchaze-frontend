@@ -1,3 +1,4 @@
+import { funnelCatalogAsset } from './catalog-asset';
 type CatalogLocation = Pick<Location, 'pathname' | 'search'>;
 const keys = new Set(['glasses-ar', 'glasses-en', 'hair-revive-ar', 'hair-revive-en', 'litter-robot-ar', 'litter-robot-en', 'electric-biker-ar', 'electric-biker-en', 'hair-care-ar', 'hair-care-en', 'skin-care-ar', 'skin-care-en', 'writing-board-ar', 'writing-board-en']);
 
@@ -27,6 +28,7 @@ export function warmNativeCatalogPreview(location: CatalogLocation): void {
   if (key.startsWith('litter-robot-') || key.startsWith('electric-biker-') || key.startsWith('hair-care-') || key.startsWith('skin-care-') || key.startsWith('writing-board-')) {
     const image = document.createElement('link');
     image.rel = 'preload'; image.as = 'image'; image.href = key.startsWith('writing-board-') ? '/media/funnel-campaigns/writing-board-hero-v1.webp' : key.startsWith('skin-care-') ? '/media/funnel-campaigns/skin-care-hero-v1.webp' : key.startsWith('hair-care-') ? '/media/funnel-campaigns/hair-care-hero-v1.webp' : key.startsWith('electric-biker-') ? '/media/funnel-campaigns/electric-biker-hero-v1.webp' : '/media/funnel-campaigns/litter-robot-hero-v1.webp';
+    image.href = funnelCatalogAsset(image.getAttribute('href')!);
     image.fetchPriority = 'high'; document.head.appendChild(image);
   }
 }

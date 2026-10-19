@@ -1,12 +1,13 @@
+import { funnelCatalogAsset } from './catalog-asset';
 import type { ApiProduct } from '../api/types';
 import type { SectionInstance } from '../theme-engine/rendering';
 
 /** Inert catalog content: never used to initialize a merchant's page. */
 export function hairCarePreview(locale: 'ar' | 'en'): { product: ApiProduct; sections: SectionInstance[] } {
   const ar = locale === 'ar'; const tr = (a: string, e: string): string => ar ? a : e;
-  const hero = '/media/funnel-campaigns/hair-care-hero-v1.webp';
-  const image = '/media/funnel-campaigns/hair-care-product-v1.webp';
-  const portrait = '/media/funnel-campaigns/hair-care-portrait-v1.webp';
+  const hero = funnelCatalogAsset('/media/funnel-campaigns/hair-care-hero-v1.webp');
+  const image = funnelCatalogAsset('/media/funnel-campaigns/hair-care-product-v1.webp');
+  const portrait = funnelCatalogAsset('/media/funnel-campaigns/hair-care-portrait-v1.webp');
   const product: ApiProduct = { id: -5, name: tr('شامبو العناية بالشعر — نموذج', 'Hair care shampoo — demo'), slug: 'display-only-hair-care', price: 250, image_url: image, images: [image, portrait, hero], short_description: tr('صور وبيانات توضيحية لعرض القالب فقط؛ ليست مواصفات منتج معروض للبيع.', 'Sample images and content for the template preview, rather than specifications for a product offered for sale.') };
   let id = 0;
   const row = (type: string, settings: Record<string, unknown>): SectionInstance => ({ id: `haircare-demo-${id++}`, type: `haircare-${type}`, settings });

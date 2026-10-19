@@ -1,10 +1,11 @@
+import { funnelCatalogAsset } from './catalog-asset';
 import type { ApiProduct } from '../api/types';
 import type { SectionInstance } from '../theme-engine/rendering';
 
 /** Sample catalog content cannot initialize checkout or reach a merchant product. */
 export function litterPreview(locale: 'ar' | 'en'): { product: ApiProduct; sections: SectionInstance[] } {
   const ar = locale === 'ar'; const tr = (a: string, e: string): string => ar ? a : e;
-  const hero = '/media/funnel-campaigns/litter-robot-hero-v1.webp'; const image = '/media/funnel-campaigns/litter-robot-detail-v1.webp';
+  const hero = funnelCatalogAsset('/media/funnel-campaigns/litter-robot-hero-v1.webp'); const image = funnelCatalogAsset('/media/funnel-campaigns/litter-robot-detail-v1.webp');
   const product: ApiProduct = { id: -3, name: tr('صندوق القطط — نموذج', 'Cat care — demo'), slug: 'display-only-litter-robot', price: 2500, image_url: image, images: [image, hero], short_description: tr('صورة ومحتوى توضيحيان لمعاينة قالب الأجهزة الأليفة.', 'Sample imagery and content for previewing the pet-appliance campaign.') };
   let id = 0;
   const row = (type: string, settings: Record<string, unknown>): SectionInstance => ({ id: `litter-demo-${id++}`, type: `litter-${type}`, settings });

@@ -1,10 +1,11 @@
+import { funnelCatalogAsset } from './catalog-asset';
 import type { ApiProduct } from '../api/types';
 import type { SectionInstance } from '../theme-engine/rendering';
 
 /** Display-only catalog example. These IDs and values are never sent to checkout. */
 export function glassesPreview(locale: 'ar' | 'en'): { product: ApiProduct; sections: SectionInstance[] } {
   const ar = locale === 'ar'; const label = (a: string, e: string): string => ar ? a : e;
-  const hero = '/media/funnel-campaigns/glasses-hero-v1.png'; const image = '/media/funnel-campaigns/glasses-detail-v1.png';
+  const hero = funnelCatalogAsset('/media/funnel-campaigns/glasses-hero-v1.png'); const image = funnelCatalogAsset('/media/funnel-campaigns/glasses-detail-v1.png');
   const product: ApiProduct = { id: -1, name: label('نظارات — نموذج توضيحي', 'Glasses — demo product'), slug: 'display-only-glasses', price: 170, image_url: image, images: [image, hero], short_description: label('بيانات توضيحية لمعاينة التصميم. ستستخدم صفحة متجرك بيانات منتجك الفعلية.', 'Sample content for previewing the design. Your store page uses your actual product details.'), specifications: { [label('القالب', 'Template')]: 'Glasses', [label('المحتوى', 'Content')]: label('قابل للتخصيص', 'Editable'), [label('العرض', 'Preview')]: label('بيانات توضيحية فقط', 'Sample data only') } };
   const row = (type: string, settings: Record<string, unknown>): SectionInstance => ({ id: `demo-${type}`, type: `glasses-${type}`, settings });
   const cta = label('اطلب الآن', 'Shop now');

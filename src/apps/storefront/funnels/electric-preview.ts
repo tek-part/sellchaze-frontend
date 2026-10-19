@@ -1,12 +1,13 @@
+import { funnelCatalogAsset } from './catalog-asset';
 import type { ApiProduct } from '../api/types';
 import type { SectionInstance } from '../theme-engine/rendering';
 
 /** Isolated catalog content. These images and claims never seed merchant funnels. */
 export function electricPreview(locale: 'ar' | 'en'): { product: ApiProduct; sections: SectionInstance[] } {
   const ar = locale === 'ar'; const tr = (a: string, e: string): string => ar ? a : e;
-  const hero = '/media/funnel-campaigns/electric-biker-hero-v1.webp';
-  const image = '/media/funnel-campaigns/electric-biker-product-v1.webp';
-  const detail = '/media/funnel-campaigns/electric-biker-detail-v1.webp';
+  const hero = funnelCatalogAsset('/media/funnel-campaigns/electric-biker-hero-v1.webp');
+  const image = funnelCatalogAsset('/media/funnel-campaigns/electric-biker-product-v1.webp');
+  const detail = funnelCatalogAsset('/media/funnel-campaigns/electric-biker-detail-v1.webp');
   const product: ApiProduct = { id: -4, name: tr('الدراجة الكهربائية — نموذج', 'Electric bike — demo'), slug: 'display-only-electric-biker', price: 2500, image_url: image, images: [image, detail, hero], short_description: tr('صور ومحتوى توضيحيان لمعاينة تصميم القالب، وليست مواصفات منتج معروض للبيع.', 'Sample imagery and content to preview the template design, rather than specifications for a product offered for sale.') };
   let id = 0;
   const row = (type: string, settings: Record<string, unknown>): SectionInstance => ({ id: `electric-demo-${id++}`, type: `electric-${type}`, settings });

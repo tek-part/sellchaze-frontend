@@ -1,14 +1,15 @@
+import { funnelCatalogAsset } from './catalog-asset';
 import type { ApiProduct } from '../api/types';
 import type { SectionInstance } from '../theme-engine/rendering';
 
 /** Explicit inert catalog content, never used to initialize a merchant's funnel. */
 export function skinCarePreview(locale: 'ar' | 'en'): { product: ApiProduct; sections: SectionInstance[] } {
   const ar = locale === 'ar'; const tr = (a: string, e: string): string => ar ? a : e;
-  const hero = '/media/funnel-campaigns/skin-care-hero-v1.webp';
-  const image = '/media/funnel-campaigns/skin-care-product-v1.webp';
-  const portrait = '/media/funnel-campaigns/skin-care-portrait-v1.webp';
-  const backdrop = '/media/funnel-campaigns/skin-care-forest-v1.webp';
-  const mosaic = '/media/funnel-campaigns/skin-care-mosaic-v1.webp';
+  const hero = funnelCatalogAsset('/media/funnel-campaigns/skin-care-hero-v1.webp');
+  const image = funnelCatalogAsset('/media/funnel-campaigns/skin-care-product-v1.webp');
+  const portrait = funnelCatalogAsset('/media/funnel-campaigns/skin-care-portrait-v1.webp');
+  const backdrop = funnelCatalogAsset('/media/funnel-campaigns/skin-care-forest-v1.webp');
+  const mosaic = funnelCatalogAsset('/media/funnel-campaigns/skin-care-mosaic-v1.webp');
   const product: ApiProduct = { id: -6, name: tr('عبوة عناية بالبشرة — نموذج', 'Skin care jar — demo'), slug: 'display-only-skin-care', price: 250, compare_price: 500, image_url: image, images: [image, portrait, hero], short_description: tr('صور وبيانات توضيحية لمعاينة التصميم فقط. ليست مواصفات منتج معروض للبيع.', 'Sample photographs and content for previewing the design only, rather than specifications for a product offered for sale.') };
   let id = 0;
   const row = (type: string, settings: Record<string, unknown>): SectionInstance => ({ id: `skincare-demo-${id++}`, type: `skincare-${type}`, settings });
