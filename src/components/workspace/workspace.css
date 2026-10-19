@@ -44,7 +44,7 @@ body[data-workspace-merchant='true'] .ws-sidebar-scroll nav [id*='disclosure-pan
 body[data-workspace-merchant='true'] .ws-sidebar-scroll nav [id*='disclosure-panel'][data-closed] { padding-block:0; }
 body[data-workspace-merchant='true'] .ws-sidebar-scroll .ws-nav-panel-inner > a { margin-block:0; }
 .ws-nav-label { flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap; }
-.ws-nav-badge { flex-shrink:0;padding:2px 8px;border-radius:6px;background:rgb(10 187 69 / .2);font-size:10px;line-height:14.28px; }
+.ws-nav-badge { flex-shrink:0;padding:2px 8px;border-radius:6px;background:rgb(10 187 69 / .2);color:var(--ws-text);font-size:10px;line-height:14.28px; }
 .ws-sidebar-container { display:flex; flex-shrink:0; height:100dvh; min-height:0; overflow:hidden; position:sticky; top:0; align-self:flex-start; transition:margin-inline-end .15s cubic-bezier(.4,0,.2,1); }
 .ws-sidebar-container[data-collapsed] { margin-inline-end:16px; }
 @media (max-width:767px) { .ws-sidebar-container { display:none; } }
@@ -412,7 +412,9 @@ body[data-workspace-merchant='true'][data-workspace-theme='light'],body[data-wor
 body[data-workspace-merchant='true'] .ws-header-container{padding-top:8px;padding-inline-end:8px}body[data-workspace-merchant='true'] .ws-header{height:56px;padding-inline:24px;background:var(--ws-panel-soft);border-start-start-radius:12px}
 body[data-workspace-merchant='true'] .ws-main-scroll{margin-inline-end:8px;background:var(--ws-panel-soft)}body[data-workspace-merchant='true'] .ws-sidebar-brand,body[data-workspace-merchant='true'] .ws-drawer .ws-sidebar-brand{height:65px}
 body[data-workspace-merchant='true'] .ws-sidebar:not(.ws-sidebar-compact) .ws-sidebar-scroll{padding-inline:12px;padding-block-start:8px}body[data-workspace-merchant='true'] .ws-sidebar-scroll nav>div{gap:0;padding-bottom:0}body[data-workspace-merchant='true'] .ws-sidebar-scroll nav>div+div{margin-top:16px}
-body[data-workspace-merchant='true'] .ws-sidebar-scroll nav>div>p{height:28px;min-height:28px;padding-inline:8px;font-size:11px;font-weight:600;line-height:16.5px}
+body[data-workspace-merchant='true'] .ws-sidebar-scroll nav>div>p{height:28px;min-height:28px;padding-inline:8px;font-size:11px;font-weight:600;line-height:16.5px;color:color-mix(in srgb,var(--ws-muted) 85%,var(--ws-text))}
+/* Saved reference: 40px before the first menu, with its label inset from the top. */
+body[data-workspace-merchant='true'] .ws-sidebar:not(.ws-sidebar-compact) .ws-sidebar-scroll nav>div:first-child>p{height:40px;min-height:40px;padding-block-start:8px}
 body[data-workspace-merchant='true'] .ws-sidebar-scroll nav:not(.ws-compact-nav) :is(a,button){height:32px;min-height:32px;padding:6px 8px;border-radius:6.4px;font-size:13px;line-height:18.57px;gap:8px}
 body[data-workspace-merchant='true'] .ws-sidebar-scroll nav svg{width:16px;height:16px}body[data-workspace-merchant='true'] .ws-sidebar-scroll nav a[aria-current='page']{background:var(--ws-panel);font-weight:500;box-shadow:0 1px 2px #1018280f,0 1px 3px #1018280d}
 body[data-workspace-merchant='true'] .ws-sidebar-scroll nav [id*='disclosure-panel']{margin-inline-start:16px;padding-inline-start:8px}body[data-workspace-merchant='true'] .ws-sidebar-scroll nav [id*='disclosure-panel'] a{font-size:13px}
