@@ -144,6 +144,7 @@ html:has(.skc-menu-dialog[open]){overflow:hidden}
 .skc-footer{padding:48px 24px 170px;background:#060201;color:#fff}
 .skc-footer>.skc-wrap{display:grid;gap:32px;justify-items:center;text-align:center}
 .skc-footer .skc-brand{font-size:48px}
+.skc-footer .skc-brand img{background:#e3dfd6;padding:8px 12px;border-radius:4px;box-sizing:content-box}
 .skc-footer nav,.skc-footer address{display:flex;justify-content:center;align-items:center;gap:32px;flex-wrap:wrap;font-style:normal}
 .skc-footer a:hover{text-decoration:underline;text-underline-offset:5px}
 .skc-footer .sf-payment-marks{justify-content:center}
