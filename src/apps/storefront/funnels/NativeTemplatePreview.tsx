@@ -9,9 +9,10 @@ const Hair = lazy(() => loadNativeCatalogPreview('hair-revive-en'));
 const Electric = lazy(() => loadNativeCatalogPreview('electric-biker-en'));
 const Litter = lazy(() => loadNativeCatalogPreview('litter-robot-en'));
 const HairCare = lazy(() => loadNativeCatalogPreview('hair-care-en'));
+const WritingBoard = lazy(() => loadNativeCatalogPreview('writing-board-en'));
 const SkinCare = lazy(() => loadNativeCatalogPreview('skin-care-en'));
 
 export default function NativeTemplatePreview(): ReactElement {
   const { key } = useParams();
-  return <Suspense fallback={<Spinner />}>{key === 'skin-care-ar' || key === 'skin-care-en' ? <SkinCare /> : key === 'hair-care-ar' || key === 'hair-care-en' ? <HairCare /> : key === 'electric-biker-ar' || key === 'electric-biker-en' ? <Electric /> : key === 'litter-robot-ar' || key === 'litter-robot-en' ? <Litter /> : key === 'hair-revive-ar' || key === 'hair-revive-en' ? <Hair /> : key === 'glasses-ar' || key === 'glasses-en' ? <Glasses /> : <NotFoundPage />}</Suspense>;
+  return <Suspense fallback={<Spinner />}>{key === 'writing-board-ar' || key === 'writing-board-en' ? <WritingBoard /> : key === 'skin-care-ar' || key === 'skin-care-en' ? <SkinCare /> : key === 'hair-care-ar' || key === 'hair-care-en' ? <HairCare /> : key === 'electric-biker-ar' || key === 'electric-biker-en' ? <Electric /> : key === 'litter-robot-ar' || key === 'litter-robot-en' ? <Litter /> : key === 'hair-revive-ar' || key === 'hair-revive-en' ? <Hair /> : key === 'glasses-ar' || key === 'glasses-en' ? <Glasses /> : <NotFoundPage />}</Suspense>;
 }
