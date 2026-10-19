@@ -59,8 +59,12 @@ for (const locale of ['ar', 'en'] as const) for (const width of [1920, 390, 320]
     await expect(editor.locator('span')).toHaveCSS('background-color', 'rgb(171, 205, 239)');
     await root.getByRole('button', { name: locale === 'ar' ? 'توسيع المحرر' : 'Expand editor', exact: true }).click();
     const expanded = page.locator('.product-rich-text--expanded'); await expect(expanded).toBeVisible();
+    await expect(expanded.getByRole('button', { name: locale === 'ar' ? 'تصغير المحرر' : 'Collapse editor', exact: true })).toBeFocused();
+    await page.keyboard.press('Shift+Tab');
+    expect(await page.evaluate(() => document.activeElement?.closest('.product-rich-text--expanded') !== null)).toBe(true);
     await expanded.locator('.tiptap').press('Escape'); await expect(expanded).toHaveCount(0);
     await expect(root).toBeVisible();
+    await expect(root.getByRole('button', { name: locale === 'ar' ? 'توسيع المحرر' : 'Expand editor', exact: true })).toBeFocused();
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)).toBe(true);
     const axe = await new AxeBuilder({ page }).include('.pe-basic .product-rich-text').withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa']).analyze();
     expect(axe.violations.filter(violation => ['serious', 'critical'].includes(violation.impact || '')).map(violation => ({ id: violation.id, nodes: violation.nodes.map(node => node.target) }))).toEqual([]);

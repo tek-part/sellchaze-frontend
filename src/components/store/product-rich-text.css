@@ -38,3 +38,4 @@ body[data-workspace-theme] .product-rich-text--product .product-rich-text__swatc
 body[data-workspace-theme] .product-rich-text--product .product-rich-text__icon-select select{position:absolute;inset:0;width:100%;height:100%;margin:0;padding:0;opacity:0}
 .product-rich-text--product .product-rich-text__icon-select:has(select:focus-visible){outline:2px solid var(--ws-green,#059669);outline-offset:1px}
 .product-rich-text--product .product-rich-text__icon-select:has(select:disabled){opacity:.4;cursor:default}
+.product-rich-text__dialog{position:fixed;inset:0;z-index:90}.product-rich-text__backdrop{position:fixed;inset:0;background:#0009}.product-rich-text__dialog .product-rich-text--expanded{box-shadow:none}

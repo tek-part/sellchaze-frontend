@@ -1,5 +1,6 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
+import { Dialog, DialogBackdrop, DialogPanel } from '@headlessui/react';
 import { EditorContent, useEditor, useEditorState } from '@tiptap/react';
 import { Extension, Mark, Node } from '@tiptap/core';
 import StarterKit from '@tiptap/starter-kit';
@@ -37,6 +38,14 @@ export default function ProductRichText({ value, onChange, label, locale, disabl
     const formatting = pageContent || productContent;
     const activeExtensions = useMemo(() => formatting ? [...extensions, pageTextStyle, pageAlignment] : extensions, [formatting]);
     const [source, setSource] = useState(false); const [expanded, setExpanded] = useState(false);
+    const expandButton = useRef(null); const previouslyExpanded = useRef(false);
+    useEffect(() => {
+        const restore = previouslyExpanded.current && !expanded && productContent;
+        previouslyExpanded.current = expanded;
+        if (!restore) return undefined;
+        const frame = window.requestAnimationFrame(() => expandButton.current?.focus());
+        return () => window.cancelAnimationFrame(frame);
+    }, [expanded, productContent]);
     const [link, setLink] = useState(''); const [showLink, setShowLink] = useState(false);
     const [mediaKind, setMediaKind] = useState(''); const [mediaUrl, setMediaUrl] = useState(''); const [mediaAlt, setMediaAlt] = useState('');
     const editor = useEditor({ extensions: activeExtensions, content: sanitizeHtml(value, { formatting }), editable: !disabled,
@@ -55,7 +64,7 @@ export default function ProductRichText({ value, onChange, label, locale, disabl
     const toolSymbols = { bold: <b>B</b>, italic: <i>I</i>, underline: <u>U</u>, strike: <s>S</s>, bulletList: <HiOutlineListBullet aria-hidden />, orderedList: <span aria-hidden>1.</span>, blockquote: <span aria-hidden>❞</span> };
     const toggleSource = () => { if (source) { const clean = sanitizeHtml(value, { formatting }); editor.commands.setContent(clean, { emitUpdate: false }); onChange(clean); } setSource(!source); };
     const content = <div className={`product-rich-text ${productContent ? 'product-rich-text--product' : ''} ${expanded ? 'product-rich-text--expanded' : ''}`} onKeyDown={(event) => { if (event.key === 'Escape') setExpanded(false); }}>
-        <div className="product-rich-text__heading"><span>{label}</span><button type="button" onClick={() => setExpanded(!expanded)}>{expanded ? text('تصغير المحرر', 'Collapse editor') : text('توسيع المحرر', 'Expand editor')}</button></div>
+        <div className="product-rich-text__heading"><span>{label}</span><button ref={expandButton} autoFocus={productContent && expanded} type="button" onClick={() => setExpanded(!expanded)}>{expanded ? text('تصغير المحرر', 'Collapse editor') : text('توسيع المحرر', 'Expand editor')}</button></div>
         <div className="product-rich-text__toolbar" dir={productContent ? 'ltr' : undefined} role="group" aria-label={categoryContent ? text('تنسيق محتوى القسم', 'Category content formatting') : pageContent ? text('تنسيق محتوى الصفحة', 'Page content formatting') : text('تنسيق وصف المنتج', 'Product description formatting')}>
             {productContent ? <ProductDescriptionToolbar editor={editor} ar={ar} disabled={disabled} source={source} onSource={toggleSource} onLink={() => { setLink(editor.getAttributes('link').href || ''); setShowLink(!showLink); }} onMedia={(kind) => { setMediaKind(mediaKind === kind ? '' : kind); setMediaUrl(''); setMediaAlt(''); }} /> : landingContent ? <>
             <button type="button" aria-label={text('تراجع','Undo')} disabled={disabled||source||!editor.can().undo()} onClick={()=>editor.chain().focus().undo().run()}><HiOutlineArrowUturnLeft/></button>
@@ -94,5 +103,6 @@ export default function ProductRichText({ value, onChange, label, locale, disabl
         {media.length ? <label className="product-rich-text__insert">{text('إدراج وسائط محفوظة داخل الوصف', 'Insert saved media into description')}<select value="" disabled={disabled || source} onChange={(e) => { const item = media.find((row) => String(row.id) === e.target.value); if (item) editor.chain().focus().insertContent({ type: item.type === 'video' ? 'video' : 'img', attrs: { src: item.url, alt: item.alt || label } }).run(); }}><option value="">{text('اختر صورة أو فيديو', 'Choose an image or video')}</option>{media.map((item, index) => <option key={item.id} value={item.id}>{item.type === 'video' ? '▶' : '▧'} {index + 1} · {item.alt}</option>)}</select></label> : null}
         {!productContent ? <p className="product-rich-text__hint">{categoryContent ? text('يظهر هذا المحتوى أعلى منتجات القسم.', 'This content appears above the category products.') : pageContent ? text('أضف صورًا أو فيديوهات مباشرة بروابطها، أو استخدم مكتبة وسائط المتجر. تُزال الأكواد والتنسيقات غير المدعومة عند الحفظ.', 'Insert direct image/video URLs or use your store media library. Unsupported code and formatting are removed on save.') : text('ارفع الصور والفيديوهات واحفظ المنتج لإدراجها في الوصف. تُزال الأكواد والتنسيقات غير المدعومة عند الحفظ.', 'Upload media and save the product to insert it here. Unsupported code and formatting are removed on save.')} {value.length}/20000</p> : value.length > 20000 ? <p role="alert" className="product-rich-text__hint">{text('وصف المنتج يتجاوز الحد الأقصى: 20000 حرف.', 'Product description exceeds the 20,000 character limit.')}</p> : null}
     </div>;
+    if (productContent && expanded) return <Dialog open onClose={() => setExpanded(false)} aria-label={label} className="product-rich-text__dialog"><DialogBackdrop className="product-rich-text__backdrop" /><DialogPanel>{content}</DialogPanel></Dialog>;
     return expanded ? createPortal(content, document.body) : content;
 }
