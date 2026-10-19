@@ -1,0 +1,1 @@
+Original unbranded demo photographs generated with the built-in image_gen tool on 2026-10-19. Used only in inert catalog previews; not actual product specifications or customer reviews. Prompt set and provenance are saved in audit/writing-board-image-prompts-20261019.json and audit/writing-board-image-provenance-20261019.json.

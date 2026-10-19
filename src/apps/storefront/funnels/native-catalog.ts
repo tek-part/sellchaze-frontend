@@ -1,5 +1,5 @@
 type CatalogLocation = Pick<Location, 'pathname' | 'search'>;
-const keys = new Set(['glasses-ar', 'glasses-en', 'hair-revive-ar', 'hair-revive-en', 'litter-robot-ar', 'litter-robot-en', 'electric-biker-ar', 'electric-biker-en', 'hair-care-ar', 'hair-care-en', 'skin-care-ar', 'skin-care-en']);
+const keys = new Set(['glasses-ar', 'glasses-en', 'hair-revive-ar', 'hair-revive-en', 'litter-robot-ar', 'litter-robot-en', 'electric-biker-ar', 'electric-biker-en', 'hair-care-ar', 'hair-care-en', 'skin-care-ar', 'skin-care-en', 'writing-board-ar', 'writing-board-en']);
 
 /** Only the explicitly marked public catalog can warm demo assets. Merchant pages stay authoritative. */
 export function nativeCatalogKey(location: CatalogLocation): string | null {
@@ -15,6 +15,7 @@ export function loadNativeCatalogPreview(key: string) {
   if (key === 'electric-biker-ar' || key === 'electric-biker-en') return import('./ElectricBikerFunnel').then(m => ({ default: m.ElectricTemplatePreview }));
   if (key === 'hair-care-ar' || key === 'hair-care-en') return import('./HairCareFunnel').then(m => ({ default: m.HairCareTemplatePreview }));
   if (key === 'skin-care-ar' || key === 'skin-care-en') return import('./SkinCareFunnel').then(m => ({ default: m.SkinCareTemplatePreview }));
+  if (key === 'writing-board-ar' || key === 'writing-board-en') return import('./WritingBoardFunnel').then(m => ({ default: m.WritingBoardTemplatePreview }));
   return Promise.reject(new Error('Unknown native catalog preview'));
 }
 
@@ -23,9 +24,9 @@ export function warmNativeCatalogPreview(location: CatalogLocation): void {
   if (!key) return;
   // Start the route module/CSS in parallel with store bootstrap instead of after React routing.
   void loadNativeCatalogPreview(key).catch(() => { /* The routed lazy boundary handles load failures. */ });
-  if (key.startsWith('litter-robot-') || key.startsWith('electric-biker-') || key.startsWith('hair-care-') || key.startsWith('skin-care-')) {
+  if (key.startsWith('litter-robot-') || key.startsWith('electric-biker-') || key.startsWith('hair-care-') || key.startsWith('skin-care-') || key.startsWith('writing-board-')) {
     const image = document.createElement('link');
-    image.rel = 'preload'; image.as = 'image'; image.href = key.startsWith('skin-care-') ? '/media/funnel-campaigns/skin-care-hero-v1.webp' : key.startsWith('hair-care-') ? '/media/funnel-campaigns/hair-care-hero-v1.webp' : key.startsWith('electric-biker-') ? '/media/funnel-campaigns/electric-biker-hero-v1.webp' : '/media/funnel-campaigns/litter-robot-hero-v1.webp';
+    image.rel = 'preload'; image.as = 'image'; image.href = key.startsWith('writing-board-') ? '/media/funnel-campaigns/writing-board-hero-v1.webp' : key.startsWith('skin-care-') ? '/media/funnel-campaigns/skin-care-hero-v1.webp' : key.startsWith('hair-care-') ? '/media/funnel-campaigns/hair-care-hero-v1.webp' : key.startsWith('electric-biker-') ? '/media/funnel-campaigns/electric-biker-hero-v1.webp' : '/media/funnel-campaigns/litter-robot-hero-v1.webp';
     image.fetchPriority = 'high'; document.head.appendChild(image);
   }
 }
