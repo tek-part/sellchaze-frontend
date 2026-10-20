@@ -16,9 +16,11 @@ import { fetchAllPages } from '../utils/fetchAllPages';
 import ProductCreationOptions from '../components/store/ProductCreationOptions';
 import ProductPreferencesDialog, { newProductPreferences } from '../components/store/ProductPreferencesDialog';
 import ProductPixelsCard from '../components/store/ProductPixelsCard';
+import ProductAiDialog from '../components/store/ProductAiDialog';
+import { applyProductAiDraft } from '../lib/product-ai-draft';
 import { compileProductPixels, productPixelRows } from '../lib/product-pixels';
 import { compileProductProperties, creationPayload, regularPrice, setRegularPrice, setDiscountPrice } from '../lib/product-creation-draft';
-import { HiOutlineArrowRight, HiOutlineArrowLeft, HiOutlineEye } from '../components/workspace/WorkspaceIcons';
+import { HiOutlineArrowRight, HiOutlineArrowLeft, HiOutlineEye, HiOutlineSparkles } from '../components/workspace/WorkspaceIcons';
 import './store/product-editor.css';
 
 const blank = { name: '', description: '', short_description: '', slug: '', sku: '', barcode: '', price: '', compare_price: '', cost: '', weight: '', seo_title: '', seo_description: '', category_id: '', category_ids: [], position: 0, display_priority: 0, catalog_hidden: false, product_preferences: null, preferences_version: '', is_active: false, is_featured: false, translations: {} };
@@ -36,6 +38,7 @@ export default function StoreProductEditorPage() {
     const [cover, setCover] = useState(null); const [gallery, setGallery] = useState([]); const [removedMedia, setRemovedMedia] = useState([]); const [removeCover, setRemoveCover] = useState(false);
     const [mediaOrder, setMediaOrder] = useState([]);
     const [preferencesOpen, setPreferencesOpen] = useState(false);
+    const [aiOpen, setAiOpen] = useState(false);
     const [pixelRows, setPixelRows] = useState([]);
     const [creation, setCreation] = useState({ axes: [], rows: [], signature: '[]' });
     const [initialStock, setInitialStock] = useState({ track_inventory: false, stock_quantity: '0' });
@@ -49,6 +52,7 @@ export default function StoreProductEditorPage() {
         let active = true; generation.current += 1; inFlight.current = false; setBusy(false); setLoading(!isNew); setLoadError(false); setError(''); setSaved(false);
         setCover(null); setGallery([]); setRemovedMedia([]); setRemoveCover(false); setConfirmDelete(false); setMediaOrder([]);
         setPreferencesOpen(false);
+        setAiOpen(false);
         setPixelRows([]);
         if (isNew) { setDraft({ ...blank, product_preferences: newProductPreferences() }); setProduct(null); setVariantCount(0); creationKey.current = crypto.randomUUID(); setCreation({ axes: [], rows: [], signature: '[]' }); setInitialStock({ track_inventory: false, stock_quantity: '0' }); }
         if (isNew) setDigital({ type: 'physical', url: '', codes: '' });
@@ -114,7 +118,7 @@ export default function StoreProductEditorPage() {
     const pixels = compileProductPixels(pixelRows);
     const saveDisabled = busy || loading || loadError || !pixels.valid || (isNew && (propertiesPending || !draft.name.trim() || draft.price === ''));
     return <div className="ws-product-editor">
-        <header className="pe-page-heading"><div><Link className="pe-back" to={`${uiBase}/products`} aria-label={text('العودة للمنتجات', 'Back to products')}>{ar ? <HiOutlineArrowRight aria-hidden /> : <HiOutlineArrowLeft aria-hidden />}</Link><h1>{isNew ? text('إضافة منتج', 'Add product') : text('تعديل المنتج', 'Edit product')}</h1></div><div className="pe-heading-actions">{locales.length > 1 ? <label className="pe-locale">{text('لغة المحتوى', 'Content language')}<select value={locale} onChange={(e) => setLocale(e.target.value)}>{locales.map((value) => <option key={value} value={value}>{value.toUpperCase()}{value === defaultLocale ? ` · ${text('الأساسية', 'Default')}` : ''}</option>)}</select></label> : null}{product?.is_active && storefrontUrl ? <a className="pe-soft-button" href={`${storefrontUrl.replace(/\/$/, '')}/products/${product.slug}`} target="_blank" rel="noreferrer"><HiOutlineEye aria-hidden />{text('عرض المنتج', 'View product')}</a> : null}</div></header>
+        <header className="pe-page-heading"><div><Link className="pe-back" to={`${uiBase}/products`} aria-label={text('العودة للمنتجات', 'Back to products')}>{ar ? <HiOutlineArrowRight aria-hidden /> : <HiOutlineArrowLeft aria-hidden />}</Link><h1>{isNew ? text('إضافة منتج', 'Add product') : text('تعديل المنتج', 'Edit product')}</h1></div><div className="pe-heading-actions">{canEdit ? <button type="button" className="pe-ai-trigger" disabled={busy || loading || loadError} onClick={() => setAiOpen(true)}><HiOutlineSparkles aria-hidden />{text('إنشاء بمساعدة الـ AI', 'Create with AI')}</button> : null}{locales.length > 1 ? <label className="pe-locale">{text('لغة المحتوى', 'Content language')}<select value={locale} onChange={(e) => setLocale(e.target.value)}>{locales.map((value) => <option key={value} value={value}>{value.toUpperCase()}{value === defaultLocale ? ` · ${text('الأساسية', 'Default')}` : ''}</option>)}</select></label> : null}{product?.is_active && storefrontUrl ? <a className="pe-soft-button" href={`${storefrontUrl.replace(/\/$/, '')}/products/${product.slug}`} target="_blank" rel="noreferrer"><HiOutlineEye aria-hidden />{text('عرض المنتج', 'View product')}</a> : null}</div></header>
         {error ? <div role="alert" className="pe-error">{error}{loadError ? <button className="ms-3 underline" onClick={() => setNonce(nonce + 1)}>{text('إعادة التحميل', 'Reload')}</button> : null}</div> : null}
         {saved ? <p role="status" className="pe-success">{text('تم حفظ المنتج.', 'Product saved.')}</p> : null}
         {loading ? <p role="status">{text('جارٍ التحميل…', 'Loading…')}</p> : !loadError ? <>
@@ -143,6 +147,7 @@ export default function StoreProductEditorPage() {
             </div>
             <footer className="pe-savebar"><div>{canEdit ? <button className="pe-save-button" form="store-product-editor" type="submit" disabled={saveDisabled}>{busy ? text('جارٍ الحفظ…', 'Saving…') : text('حفظ', 'Save')}</button> : null}<label className="pe-check"><input type="checkbox" disabled={!canEdit || busy} checked={draft.is_active} onChange={(e) => change('is_active', e.target.checked)} />{text('نشر المنتج في المتجر', 'Publish in store')}</label></div>{isNew && propertiesPending ? <p role="status">{text('أكمل الخواص وحدّث الأصناف قبل الحفظ.', 'Complete properties and update combinations before saving.')}</p> : null}</footer>
         </> : null}
+        {aiOpen ? <ProductAiDialog path={`${path}${productId ? `/${productId}` : ''}/ai-draft`} ar={ar} locale={locale} locales={locales} initialDescription={localizedValue('description')} onClose={() => setAiOpen(false)} onApply={result => { const next = applyProductAiDraft(draft, result, defaultLocale); setDraft(next); setLocale(result.locale); setSaved(false); }} /> : null}
         {preferencesOpen ? <ProductPreferencesDialog value={draft.product_preferences} hidden={draft.catalog_hidden} onChange={(value) => change('product_preferences', value)} onHiddenChange={(value) => change('catalog_hidden', value)} onClose={() => setPreferencesOpen(false)} ar={ar} disabled={!canEdit || busy} isNew={isNew} error={error} /> : null}
     </div>;
 }
