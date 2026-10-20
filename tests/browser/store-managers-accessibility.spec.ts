@@ -129,6 +129,81 @@ for (const locale of ['ar', 'en'] as const) {
   });
 }
 
+// Fresh Source desktop DOM (2026-10-20): 28px labels with a 12px top margin,
+// 4px group end padding, and no NewsLetter badge. Community adds one 32px row.
+for (const locale of ['ar', 'en'] as const) for (const width of [1920, 390, 320]) for (const appearance of ['light', 'dark'] as const) {
+  test(`Merchant sidebar groups match the reference and stay keyboard reachable in ${locale} at ${width}px ${appearance}`, async ({ page }, testInfo) => {
+    test.setTimeout(60_000);
+    const api = await workspace(page, locale, false, appearance);
+    await page.emulateMedia({ reducedMotion: appearance === 'dark' ? 'reduce' : 'no-preference' });
+    await page.setViewportSize({ width, height: width === 1920 ? 1031 : 568 });
+    await page.goto('/store/settings/login-sessions');
+    const opener = page.getByRole('button', { name: locale === 'ar' ? 'افتح القائمة' : 'Open navigation', exact: true });
+    if (width < 768) await opener.click();
+    const sidebar = page.locator(width < 768 ? '.ws-drawer' : '.ws-desktop-sidebar');
+    const dashboard = sidebar.locator('nav a[href="/dashboard"]');
+    await expect(dashboard).toBeVisible();
+    await page.evaluate(() => document.fonts.ready);
+    const orders = sidebar.getByRole('button', { name: locale === 'ar' ? 'الطلبات' : 'Orders', exact: true });
+    const products = sidebar.getByRole('button', { name: locale === 'ar' ? 'المنتجات' : 'Products', exact: true });
+    await orders.focus(); await page.keyboard.press('Enter');
+    await products.focus(); await page.keyboard.press('Enter');
+    await expect(orders).toHaveAttribute('aria-expanded', 'true');
+    await expect(products).toHaveAttribute('aria-expanded', 'true');
+    await expect(sidebar.locator('nav>div').first()).toHaveCSS('height', '711px');
+    const geometry = await sidebar.evaluate(element => {
+      const scroll = element.querySelector('.ws-sidebar-scroll')!;
+      const groups = Array.from(element.querySelectorAll('nav>div'));
+      return {
+        firstMenuInset: element.querySelector('nav a')!.getBoundingClientRect().top - scroll.getBoundingClientRect().top + scroll.scrollTop,
+        community: Boolean(element.querySelector('a[href="/community"]')),
+        groups: groups.map(group => {
+          const label = group.querySelector('p')!; const style = getComputedStyle(label);
+          return { height: group.getBoundingClientRect().height, paddingBottom: getComputedStyle(group).paddingBottom,
+            labelHeight: label.getBoundingClientRect().height, labelInset: label.getBoundingClientRect().top - group.getBoundingClientRect().top,
+            labelPadding: style.padding, letterSpacing: style.letterSpacing, textTransform: style.textTransform };
+        }),
+      };
+    });
+    expect(geometry.firstMenuInset).toBe(48);
+    expect(geometry.community).toBe(true);
+    expect(geometry.groups.map(group => group.height)).toEqual([711, 172]);
+    for (const group of geometry.groups) expect(group).toMatchObject({ paddingBottom: '4px', labelHeight: 28, labelInset: 12, labelPadding: '0px 8px', letterSpacing: '0.66px', textTransform: 'uppercase' });
+    const newsletter = sidebar.locator('a[href="/store/newsletter"]');
+    await expect(newsletter.locator('.ws-nav-badge')).toHaveCount(0);
+    await expect(newsletter).toHaveCSS('transition-duration', '0s');
+    await expect(sidebar.locator('nav>div').last().locator('a')).toHaveCount(4);
+    const settings = sidebar.locator('nav a[href="/store/settings/general"]');
+    await dashboard.focus();
+    for (let index = 0; index < 70 && !await settings.evaluate(element => element === document.activeElement); index++) await page.keyboard.press('Tab');
+    await expect(settings).toBeFocused();
+    expect(await settings.evaluate(element => {
+      const r = element.getBoundingClientRect(); const s = element.closest('.ws-sidebar-scroll')!.getBoundingClientRect();
+      return r.top >= s.top && r.bottom <= Math.min(s.bottom, innerHeight);
+    })).toBe(true);
+    const results = await new AxeBuilder({ page }).include(width < 768 ? '.ws-drawer' : '.ws-desktop-sidebar').withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa']).analyze();
+    expect(results.violations.filter(violation => ['serious', 'critical'].includes(violation.impact ?? ''))).toEqual([]);
+    await dashboard.focus();
+    await sidebar.locator('.ws-sidebar-scroll').evaluate(element => { element.scrollTop = 0; });
+    await page.screenshot({ path: testInfo.outputPath('merchant-sidebar-groups.png') });
+    await testInfo.attach('sidebar-geometry', { body: JSON.stringify(geometry), contentType: 'application/json' });
+    if (width === 1920) {
+      await sidebar.getByRole('button', { name: locale === 'ar' ? 'إخفاء القائمة الجانبية' : 'Hide sidebar', exact: true }).click();
+      await expect(sidebar).toHaveCSS('width', '64px');
+      await expect(sidebar.locator('nav p')).toHaveCount(0);
+      await sidebar.getByRole('button', { name: locale === 'ar' ? 'إظهار القائمة الجانبية' : 'Show sidebar', exact: true }).click();
+      await expect(sidebar).toHaveCSS('width', '272px');
+      await expect(sidebar.locator('nav>div>p').first()).toHaveCSS('height', '28px');
+    } else {
+      await page.keyboard.press('Escape');
+      await expect(sidebar).not.toBeVisible();
+      await expect(opener).toBeFocused();
+    }
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)).toBe(true);
+    expect(api.mutations).toEqual([]);
+  });
+}
+
 for (const width of [1440, 390]) {
   test(`Reduced motion disables merchant navigation transitions at ${width}px`, async ({ page }) => {
     const api = await workspace(page, 'en');

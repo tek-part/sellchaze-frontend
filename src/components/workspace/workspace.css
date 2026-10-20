@@ -411,10 +411,9 @@ body[data-workspace-merchant='true'] .ws-sidebar-brand-actions button.ws-icon-bu
 body[data-workspace-merchant='true'][data-workspace-theme='light'],body[data-workspace-merchant='true'][data-workspace-theme='light'] [data-workspace-theme='light']{--ws-canvas:#f4f6f9;--ws-panel-soft:#fafbfc;--ws-border:#e3e8ef;--ws-green:#0ea44f;--ws-green-ink:#0b8440;--ws-green-soft:rgb(14 164 79/.1)}
 body[data-workspace-merchant='true'] .ws-header-container{padding-top:8px;padding-inline-end:8px}body[data-workspace-merchant='true'] .ws-header{height:56px;padding-inline:24px;background:var(--ws-panel-soft);border-start-start-radius:12px}
 body[data-workspace-merchant='true'] .ws-main-scroll{margin-inline-end:8px;background:var(--ws-panel-soft)}body[data-workspace-merchant='true'] .ws-sidebar-brand,body[data-workspace-merchant='true'] .ws-drawer .ws-sidebar-brand{height:65px}
-body[data-workspace-merchant='true'] .ws-sidebar:not(.ws-sidebar-compact) .ws-sidebar-scroll{padding-inline:12px;padding-block-start:8px}body[data-workspace-merchant='true'] .ws-sidebar-scroll nav>div{gap:0;padding-bottom:0}body[data-workspace-merchant='true'] .ws-sidebar-scroll nav>div+div{margin-top:16px}
-body[data-workspace-merchant='true'] .ws-sidebar-scroll nav>div>p{height:28px;min-height:28px;padding-inline:8px;font-size:11px;font-weight:600;line-height:16.5px;color:color-mix(in srgb,var(--ws-muted) 85%,var(--ws-text))}
-/* Saved reference: 40px before the first menu, with its label inset from the top. */
-body[data-workspace-merchant='true'] .ws-sidebar:not(.ws-sidebar-compact) .ws-sidebar-scroll nav>div:first-child>p{height:40px;min-height:40px;padding-block-start:8px}
+body[data-workspace-merchant='true'] .ws-sidebar:not(.ws-sidebar-compact) .ws-sidebar-scroll{padding-inline:12px;padding-block-start:8px}body[data-workspace-merchant='true'] .ws-sidebar-scroll nav>div{gap:0;padding-bottom:4px}body[data-workspace-merchant='true'] .ws-sidebar-scroll nav>div+div{margin-top:0}
+/* Current reference: a 28px label after 12px, then 4px below each group. Keep readable label contrast. */
+body[data-workspace-merchant='true'] .ws-sidebar-scroll nav>div>p{height:28px;min-height:28px;margin-block:12px 0;padding:0 8px;font-size:11px;font-weight:600;line-height:16.5px;letter-spacing:.66px;text-transform:uppercase;color:color-mix(in srgb,var(--ws-muted) 85%,var(--ws-text))}
 body[data-workspace-merchant='true'] .ws-sidebar-scroll nav:not(.ws-compact-nav) :is(a,button){height:32px;min-height:32px;padding:6px 8px;border-radius:6.4px;font-size:13px;line-height:18.57px;gap:8px}
 body[data-workspace-merchant='true'] .ws-sidebar-scroll nav svg{width:16px;height:16px}body[data-workspace-merchant='true'] .ws-sidebar-scroll nav a[aria-current='page']{background:var(--ws-panel);font-weight:500;box-shadow:0 1px 2px #1018280f,0 1px 3px #1018280d}
 body[data-workspace-merchant='true'] .ws-sidebar-scroll nav [id*='disclosure-panel']{margin-inline-start:16px;padding-inline-start:8px}body[data-workspace-merchant='true'] .ws-sidebar-scroll nav [id*='disclosure-panel'] a{font-size:13px}
@@ -432,6 +431,7 @@ body[data-workspace-merchant='true'][data-workspace-theme='light'] .ws-sidebar-s
 body[data-workspace-merchant='true'] .ws-sidebar-scroll nav:not(.ws-compact-nav) [id*='disclosure-panel'] a{gap:8px}
 body[data-workspace-merchant='true'][data-workspace-theme='light'] .ws-sidebar-scroll nav [id*='disclosure-panel'] a:not([aria-current='page']){color:rgb(48 48 48/.7)}
 body[data-workspace-merchant='true'] .ws-sidebar-scroll nav:not(.ws-compact-nav) :is(a,button){transition:width .15s cubic-bezier(.4,0,.2,1),height .15s cubic-bezier(.4,0,.2,1),padding .15s cubic-bezier(.4,0,.2,1)}
+body[data-workspace-merchant='true'] .ws-sidebar-scroll nav:not(.ws-compact-nav) [id*='disclosure-panel'] a{transition:none}
 body[data-workspace-merchant='true'][data-workspace-theme='light'] .ws-sidebar-scroll nav a[aria-current='page']{color:#1a1a1a}
 body[data-workspace-merchant='true'][data-workspace-theme='light'] .ws-sidebar-scroll nav a[aria-current='page']>svg{color:var(--ws-green)}
 body[data-workspace-merchant='true'][data-workspace-theme='light'] .ws-sidebar-scroll nav :is(a,button):hover{background:#e9eef4;color:#1a1a1a}
