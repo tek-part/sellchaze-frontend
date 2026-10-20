@@ -45,6 +45,12 @@ async function workspace(page: Page, locale: 'ar' | 'en', manager = false, appea
     if (path === '/my-store') {
       await route.fulfill({ json: { data: { id: 1, owner_user_id: 1, name: 'Local store fixture', slug: 'fixture', status: 'active', currency: 'USD', default_locale: 'en', supported_locales: ['en', 'ar'] } }, headers }); return;
     }
+    if (path === '/my-store/general-settings') {
+      await route.fulfill({ headers, json: { data: { revision: 'a'.repeat(64), site_title: 'Synthetic store', header_text: '', primary_color: '#198754', default_locale: 'en', currency: 'USD', phone_country: 'EG', timezone: 'Africa/Cairo', shipping_flat_rate: 0, max_product_quantity: 0, max_orders_per_phone_24h: 0, disable_auto_select_shipping: false, disable_auto_select_variants: false, disable_bot_protection: true }, choices: { currencies: ['USD', 'EGP'], countries: ['EG'], timezones: ['Africa/Cairo'] } } }); return;
+    }
+    if (path === '/my-store/seo-settings') {
+      await route.fulfill({ headers, json: { data: { revision: 'a'.repeat(64), site_title: 'Synthetic store', description: '', logo_url: null, favicon_url: null } } }); return;
+    }
     if (path === '/my-store/managers') {
       await route.fulfill({ json: { data: [row], meta: { current_page: 1, last_page: 1, total: 1 }, permissions: keys.map((key, index) => ({ key: `store.${key}`, required: key === 'view', label: { ar: labels[index]![0], en: labels[index]![1] } })) }, headers }); return;
     }
@@ -116,6 +122,9 @@ for (const locale of ['ar', 'en'] as const) {
     await navigation.getByRole('link', { name: 'Webhooks', exact: true }).click();
     await expect(page).toHaveURL(/\/settings\/webhooks$/);
     await expect(navigation.getByRole('button', { name: 'Public API', exact: true })).toHaveAttribute('aria-expanded', 'true');
+    await expect(navigation.getByRole('link', { name: 'Webhooks', exact: true })).toHaveCSS('height', '30px');
+    await expect(navigation.locator('.ws-settings-api-panel')).toHaveCSS('padding-top', '2px');
+    await expect(navigation.locator('.ws-settings-api-panel>div')).toHaveCSS('row-gap', '1px');
     await page.setViewportSize({ width: 320, height: 844 });
     await selectedSettingsVisible(page);
     await page.setViewportSize({ width: 1440, height: 900 });
@@ -125,6 +134,54 @@ for (const locale of ['ar', 'en'] as const) {
     await selectedSettingsVisible(page);
     const results = await new AxeBuilder({ page }).include('.ws-settings-navigation').withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']).analyze();
     expect(results.violations.filter(v => ['serious', 'critical'].includes(v.impact ?? ''))).toEqual([]);
+    expect(api.mutations).toEqual([]);
+  });
+}
+
+for (const locale of ['ar', 'en'] as const) for (const width of [1920, 320]) for (const section of ['general', 'seo']) {
+  test(`Measured settings frame fits ${section} in ${locale} at ${width}px`, async ({ page }, testInfo) => {
+    const api = await workspace(page, locale, false, width === 320 ? 'dark' : 'light');
+    await page.setViewportSize({ width, height: width === 1920 ? 1031 : 844 });
+    await page.goto(`/store/settings/${section}`);
+    const card = page.locator(section === 'general' ? '.ws-general-settings form' : '.ws-seo-settings');
+    await expect(card.locator('input').first()).toBeVisible();
+    await page.evaluate(() => document.fonts.ready);
+    const heading = page.locator('.ws-settings-page-heading h1');
+    await expect(heading).toHaveCSS('font-size', '22px');
+    await expect(heading).toHaveCSS('font-weight', '700');
+    await expect(heading).toHaveCSS('margin-bottom', '4px');
+    await expect(page.locator('.ws-settings-page-heading p')).toHaveCSS('font-size', '13px');
+    await expect(card.locator('.ws-settings-card-heading>div>h2')).toHaveCSS('font-size', '18px');
+    await expect(card.locator('.ws-settings-card-heading>div>h2')).toHaveCSS('font-weight', '600');
+    await expect(card.locator('.ws-settings-card-heading>div>p')).toHaveCSS('font-size', '13px');
+    if (section === 'general') {
+      await expect(card).toHaveCSS('border-radius', '12px');
+      await expect(card.locator('h3').first()).toHaveCSS('font-size', '15px');
+      await expect(card.locator('h3').first()).toHaveCSS('margin-bottom', '5.25px');
+    }
+    const nav = page.locator('.ws-settings-navigation');
+    if (width === 1920) {
+      await expect(nav.locator('a').first()).toHaveCSS('height', '32px');
+      await expect(nav.locator('a').first()).toHaveCSS('font-size', '13px');
+      await expect(nav.locator('a').first()).toHaveCSS('gap', '10px');
+      await expect(nav.locator('svg').first()).toHaveCSS('width', '16px');
+      await expect(nav).toHaveCSS('padding', '16px 12px 20px');
+      const selected = nav.locator('a[aria-current="page"]');
+      await selected.hover();
+      expect(await selected.evaluate(element => getComputedStyle(element).backgroundColor === getComputedStyle(element.closest('.ws-settings-navigation')!).backgroundColor)).toBe(true);
+      expect(await selected.evaluate(element => getComputedStyle(element).boxShadow)).not.toBe('none');
+      const geometry = await nav.evaluate(element => ({ width: element.getBoundingClientRect().width, height: element.getBoundingClientRect().height, top: element.getBoundingClientRect().top }));
+      expect(geometry.height).toBe(486);
+      expect(geometry.top).toBeCloseTo(160.734375, 1);
+      if (locale === 'ar') expect(Math.abs(geometry.width - 269.890625)).toBeLessThan(3);
+      await testInfo.attach('settings-frame-geometry', { body: JSON.stringify(geometry), contentType: 'application/json' });
+    } else {
+      await selectedSettingsVisible(page);
+    }
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)).toBe(true);
+    const results = await new AxeBuilder({ page }).include('.ws-settings-layout').include('.ws-settings-page-heading').withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa']).analyze();
+    expect(results.violations.filter(violation => ['serious', 'critical'].includes(violation.impact ?? ''))).toEqual([]);
+    await page.screenshot({ path: testInfo.outputPath('merchant-settings-frame.png') });
     expect(api.mutations).toEqual([]);
   });
 }
