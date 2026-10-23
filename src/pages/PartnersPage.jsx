@@ -21,6 +21,7 @@ import {
 } from '../components/workspace/WorkspaceIcons';
 import api from '../api/client';
 import SearchableSelect from '../components/ui/SearchableSelect';
+import { publicProfileUrl } from '../config/marketing';
 
 export default function PartnersPage() {
     const { t } = useTranslation();
@@ -405,7 +406,7 @@ function PartnerCard({ u, role, t }) {
             <div className="mt-3 flex items-center justify-end border-t border-slate-100 pt-3">
                 {u.username ? (
                     <a
-                        href={`/u/${encodeURIComponent(u.username)}`}
+                        href={publicProfileUrl(u.username)}
                         target="_blank"
                         rel="noopener noreferrer"
                         title={t('view_public_profile')}

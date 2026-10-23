@@ -8,14 +8,8 @@
   }
 }
 
-/* Merchant workspace: logical borders preserve the same layout in Arabic and English. */
+/* Merchant workspace: white surfaces; brand colours come from the @theme tokens below. */
 .merchant-workspace {
-  --color-brand: #168849;
-  --color-brand-dark: #106b39;
-  --color-brand-light: #e3f4e9;
-  --color-accent: #22b35e;
-  --color-accent-dark: #168849;
-  --color-accent-light: #f0faf3;
   --color-surface: #ffffff;
   --color-surface-muted: #f6f7f9;
   --shadow-card: 0 1px 3px rgb(15 23 42 / 0.04);
@@ -23,10 +17,10 @@
 }
 
 .merchant-sidebar nav a[aria-current='page'] {
-  background: #e0f2e7;
-  color: #116c3b;
+  background: var(--color-brand-light);
+  color: var(--color-brand-dark);
   box-shadow: none;
-  border-inline-start: 3px solid #22b35e;
+  border-inline-start: 3px solid var(--color-accent);
   --tw-ring-shadow: 0 0 #0000;
 }
 
@@ -43,23 +37,25 @@
   --font-sans: Plus Jakarta Sans, system-ui, sans-serif;
   --font-arabic: IBM Plex Sans Arabic, Plus Jakarta Sans, system-ui, sans-serif;
 
-  --color-brand: #0b63ce;
-  --color-brand-dark: #0a3d7c;
-  --color-brand-light: #eaf3ff;
+  /* Sellchaze identity (sellchaze-website/brand/tokens). Brand is green-700, not the logo's
+     green-600: it carries white text on buttons and must meet WCAG AA (5.4:1). */
+  --color-brand: #027a48;
+  --color-brand-dark: #05603a;
+  --color-brand-light: #ecfdf3;
 
-  --color-accent: #4aa3ff;
-  --color-accent-dark: #176ed1;
-  --color-accent-light: #eff7ff;
+  --color-accent: #12b76a;
+  --color-accent-dark: #039855;
+  --color-accent-light: #f6fef9;
 
-  --color-surface: #f5f8fc;
+  --color-surface: #f6f9f7;
   --color-surface-card: #ffffff;
-  --color-surface-muted: #f0f4fa;
+  --color-surface-muted: #eef3f0;
 
   --shadow-soft:
-    0 4px 24px -4px rgba(11, 99, 206, 0.1),
-    0 2px 8px -2px rgba(15, 23, 42, 0.06);
+    0 4px 24px -4px rgba(3, 152, 85, 0.1),
+    0 2px 8px -2px rgba(11, 31, 23, 0.06);
   --shadow-card:
-    0 1px 3px rgba(11, 99, 206, 0.06), 0 4px 16px -4px rgba(15, 23, 42, 0.04);
+    0 1px 3px rgba(3, 152, 85, 0.06), 0 4px 16px -4px rgba(11, 31, 23, 0.04);
 }
 
 /* The administration shell uses the same navigation component with a dark,
@@ -70,12 +66,12 @@
 }
 
 .admin-sidebar-nav nav p {
-    color: rgb(147 197 253 / 0.72);
+    color: rgb(108 233 166 / 0.72);
 }
 
 .admin-sidebar-nav nav a,
 .admin-sidebar-nav nav button {
-    color: rgb(219 234 254 / 0.86);
+    color: rgb(209 250 223 / 0.86);
 }
 
 .admin-sidebar-nav nav a:hover,
@@ -85,9 +81,9 @@
 }
 
 .admin-sidebar-nav nav a[aria-current='page'] {
-    background: linear-gradient(135deg, #1677e8, #0b63ce);
+    background: linear-gradient(135deg, #039855, #027a48);
     color: white;
-    box-shadow: 0 10px 24px rgb(2 89 190 / 0.28);
+    box-shadow: 0 10px 24px rgb(3 152 85 / 0.28);
 }
 
 /*

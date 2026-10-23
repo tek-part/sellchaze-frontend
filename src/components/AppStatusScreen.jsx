@@ -92,7 +92,7 @@ export default function AppStatusScreen({
                 className="pointer-events-none absolute inset-0 opacity-50"
                 style={{
                     backgroundImage:
-                        'radial-gradient(ellipse 100% 70% at 10% 0%, rgba(0,75,180,0.12), transparent 50%), radial-gradient(at 90% 20%, rgba(0,192,169,0.1), transparent 45%)',
+                        'radial-gradient(ellipse 100% 70% at 10% 0%, rgba(3,152,85,0.12), transparent 50%), radial-gradient(at 90% 20%, rgba(50,213,131,0.1), transparent 45%)',
                 }}
             />
             <motion.div

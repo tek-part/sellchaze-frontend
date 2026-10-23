@@ -3,6 +3,7 @@ import { Link, useOutletContext, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { HiOutlineCalendarDays, HiOutlineEnvelope, HiOutlinePhone, HiOutlineShieldCheck, HiOutlineUser } from '../components/workspace/WorkspaceIcons';
 import api from '../api/client';
+import { publicProfileUrl } from '../config/marketing';
 
 export default function MerchantDetailPage() {
     const { id } = useParams();
@@ -99,7 +100,7 @@ export default function MerchantDetailPage() {
                         <h2 className="mb-4 text-base font-semibold text-slate-900">{t('col_actions')}</h2>
                         {row.username ? (
                             <a
-                                href={`/u/${encodeURIComponent(row.username)}`}
+                                href={publicProfileUrl(row.username)}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="inline-flex w-full items-center justify-center rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-700 hover:border-brand hover:text-brand"

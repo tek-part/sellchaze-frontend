@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { resolveApiBase } from '../api/base-url';
 describe('merchant API origin', () => {
-    it('targets the live API on both published merchant hosts without a build-time override', () => {
-        for (const hostname of ['sellchaze.com', 'www.sellchaze.com', 'SELLCHAZE.COM']) {
+    it('targets the live API on the published merchant hosts without a build-time override', () => {
+        for (const hostname of ['app.sellchaze.com', 'sellchaze.com', 'www.sellchaze.com', 'SELLCHAZE.COM']) {
             expect(resolveApiBase({ hostname, protocol: 'https:', development: false })).toBe('https://api.sellchaze.com/api/v1');
         }
     });

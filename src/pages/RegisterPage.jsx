@@ -6,6 +6,8 @@ import api, { setTokens } from '../api/client';
 import LanguageSwitcher from '../components/LanguageSwitcher';
 import { loginErrorMessage } from '../utils/apiError';
 import { savedPlatformReferral, clearPlatformReferral } from '../shared/marketing/platform-referral';
+import { safeRedirect } from '../lib/safeRedirect';
+import { marketingUrl } from '../config/marketing';
 
 function BackgroundDecor() {
     return (
@@ -25,7 +27,7 @@ function BackgroundDecor() {
                 aria-hidden
                 className="pointer-events-none absolute -left-32 -top-32 h-[420px] w-[420px] rounded-full blur-3xl sc-float"
                 style={{
-                    background: 'radial-gradient(closest-side, rgba(0,75,180,0.25), transparent 70%)',
+                    background: 'radial-gradient(closest-side, rgba(3,152,85,0.25), transparent 70%)',
                     animationDuration: '7s',
                 }}
             />
@@ -33,7 +35,7 @@ function BackgroundDecor() {
                 aria-hidden
                 className="pointer-events-none absolute -right-32 bottom-0 h-[380px] w-[380px] rounded-full blur-3xl sc-float"
                 style={{
-                    background: 'radial-gradient(closest-side, rgba(0,192,169,0.2), transparent 70%)',
+                    background: 'radial-gradient(closest-side, rgba(50,213,131,0.2), transparent 70%)',
                     animationDuration: '9s',
                     animationDelay: '1s',
                 }}
@@ -45,7 +47,7 @@ function BackgroundDecor() {
                 viewBox="0 0 1200 900"
                 preserveAspectRatio="none"
             >
-                <g stroke="rgba(0,75,180,0.18)" strokeDasharray="4 6" fill="none">
+                <g stroke="rgba(3,152,85,0.18)" strokeDasharray="4 6" fill="none">
                     <path d="M80,0 L80,360 Q80,400 120,400 L560,400" />
                     <path d="M1120,0 L1120,360 Q1120,400 1080,400 L640,400" />
                 </g>
@@ -119,7 +121,7 @@ export default function RegisterPage() {
     const { t } = useTranslation();
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
-    const redirectTo = searchParams.get('redirect') || '/dashboard';
+    const redirectTo = safeRedirect(searchParams.get('redirect'));
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -168,13 +170,13 @@ export default function RegisterPage() {
     }
 
     return (
-        <div className="relative flex min-h-screen flex-col overflow-hidden bg-[#F5F7FC] text-slate-900">
+        <div className="relative flex min-h-screen flex-col overflow-hidden bg-[#F6F9F7] text-slate-900">
             <BackgroundDecor />
 
             <header className="relative flex items-center justify-between px-4 py-4 md:px-8">
-                <Link to="/" className="flex items-center" aria-label="Sellchaze">
+                <a href={marketingUrl()} className="flex items-center" aria-label="Sellchaze">
                     <img src="/logo.png" alt="Sellchaze" className="h-12 w-auto object-contain md:h-14" />
-                </Link>
+                </a>
                 <LanguageSwitcher />
             </header>
 

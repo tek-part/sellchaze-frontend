@@ -5,7 +5,7 @@ export function resolveApiBase({ configured, protocol, hostname, development }) 
         if (protocol === 'https:' && /^http:\/\//i.test(url)) url = url.replace(/^http:\/\//i, 'https://');
         return url;
     }
-    if (!development && ['sellchaze.com', 'www.sellchaze.com'].includes(hostname?.toLowerCase())) {
+    if (!development && ['app.sellchaze.com', 'sellchaze.com', 'www.sellchaze.com'].includes(hostname?.toLowerCase())) {
         return 'https://api.sellchaze.com/api/v1';
     }
     return '/api/v1';

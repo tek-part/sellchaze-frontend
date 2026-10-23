@@ -15,6 +15,7 @@ import UserAvatar from '../components/UserAvatar';
 import ConfirmDialog from '../components/ConfirmDialog';
 import PaginationBar from '../components/table/PaginationBar';
 import { useGoogleOAuthClientId } from '../hooks/useGoogleOAuthClientId';
+import { publicProfileUrl } from '../config/marketing';
 
 function unwrapUser(payload) {
     if (!payload) return null;
@@ -465,13 +466,13 @@ export default function ProfilePage() {
                             <span className="text-xs text-slate-400">{t('or', 'or')}</span>
                             <input
                                 type="color"
-                                value={profile.cover_color || '#004BB4'}
+                                value={profile.cover_color || '#039855'}
                                 onChange={(e) => applyCoverColor(e.target.value)}
                                 className="h-9 w-12 cursor-pointer rounded-sm border border-slate-200 bg-white p-0.5"
                                 title={t('profile_cover_color', 'Cover color')}
                                 disabled={uploadingCover}
                             />
-                            {['#004BB4', '#0a4ea8', '#00C0A9', '#0f172a', '#7c3aed', '#dc2626', '#ea580c', '#16a34a'].map((c) => (
+                            {['#039855', '#05603a', '#00C0A9', '#0f172a', '#7c3aed', '#dc2626', '#ea580c', '#1570ef'].map((c) => (
                                 <button key={c} type="button" onClick={() => applyCoverColor(c)} disabled={uploadingCover}
                                     className="h-7 w-7 rounded-full ring-1 ring-slate-300 transition hover:scale-110" style={{ background: c }} aria-label={c} />
                             ))}
@@ -557,14 +558,14 @@ export default function ProfilePage() {
                                 <button
                                     type="button"
                                     onClick={() => {
-                                        const url = `${window.location.origin}/u/${profile.username}`;
+                                        const url = publicProfileUrl(profile.username);
                                         navigator.clipboard?.writeText(url);
                                     }}
                                     className="ms-auto rounded-lg border border-slate-200 px-2 py-1 text-xs hover:bg-white"
                                 >
                                     {t('profile_copy_link')}
                                 </button>
-                                <a href={`/u/${profile.username}`} target="_blank" rel="noreferrer" className="rounded-lg border border-slate-200 px-2 py-1 text-xs hover:bg-white">
+                                <a href={publicProfileUrl(profile.username)} target="_blank" rel="noreferrer" className="rounded-lg border border-slate-200 px-2 py-1 text-xs hover:bg-white">
                                     {t('profile_open_public')}
                                 </a>
                             </div>

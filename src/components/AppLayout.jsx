@@ -20,6 +20,7 @@ import './workspace/workspace.css';
 import { storeAccess } from '../lib/storeAccess';
 import { merchantWorkspaceRouteAllowed } from '../lib/merchantWorkspaceRoutes';
 import { WorkspaceIconProvider } from './workspace/WorkspaceIcons';
+import { marketingUrl } from '../config/marketing';
 
 function unwrapUser(payload) {
     if (!payload) {
@@ -175,7 +176,7 @@ export default function AppLayout() {
         clearTokens();
         setLogoutOpen(false);
         toast.success(t('toast_signed_out'));
-        navigate('/', { replace: true });
+        navigate('/login', { replace: true });
     }
 
     if (!me) {
@@ -268,7 +269,7 @@ export default function AppLayout() {
                             {merchantWorkspace ? <div className="ws-mobile-sidebar-preferences"><WorkspaceAppearanceControl appearance={appearance} inDrawer /><button type="button" className="ws-icon-button" onClick={toggleLanguage} aria-label={ws('language')}><HiOutlineLanguage aria-hidden /></button></div> : null}
                             {merchantWorkspace && me.roles?.some(role => ['Merchant', 'Supplier'].includes(role)) && !me.parent_user_id ? <MerchantSidebarFooter onNavigate={() => setMobileNavOpen(false)} /> : null}
                         </div>
-                        {!merchantWorkspace ? <div className="ws-sidebar-footer"><div className="ws-drawer-preferences"><WorkspaceAppearanceControl appearance={appearance} inDrawer /><button type="button" className="ws-icon-button" onClick={toggleLanguage} aria-label={ws('language')}><HiOutlineLanguage aria-hidden /></button></div><Link to="/contact" onClick={() => setMobileNavOpen(false)}>{ws('help')}</Link></div> : null}
+                        {!merchantWorkspace ? <div className="ws-sidebar-footer"><div className="ws-drawer-preferences"><WorkspaceAppearanceControl appearance={appearance} inDrawer /><button type="button" className="ws-icon-button" onClick={toggleLanguage} aria-label={ws('language')}><HiOutlineLanguage aria-hidden /></button></div><a href={marketingUrl('/contact')} target="_blank" rel="noopener noreferrer" onClick={() => setMobileNavOpen(false)}>{ws('help')}</a></div> : null}
                     </DialogPanel>
                 </div>
             </Dialog>
