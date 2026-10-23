@@ -12,7 +12,7 @@ export const READINESS_CHECKS = [
     { key: 'profile', fix: 'settings/general' },
     { key: 'verified_primary_domain', fix: 'settings/domains' },
     { key: 'active_theme', fix: 'themes' },
-    { key: 'active_product', fix: '/products' },
+    { key: 'active_product', fix: 'products' },
 ];
 
 export function readinessLabels(t) {
