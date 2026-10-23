@@ -6,6 +6,7 @@
  * Sticky by default; a hairline + soft shadow appear once scrolled. Nav items with children open a
  * hover/focus dropdown; everything collapses to the MobileNav drawer below 1024px.
  */
+import { densityImage } from '../../../foundation/media/responsive';
 import { useEffect, useState, type FormEvent, type ReactElement } from 'react';
 import { useTranslation } from 'react-i18next';
 import { cn } from '../../../../../shared/utils/cn';
@@ -108,7 +109,7 @@ export function Header(props: HeaderProps): ReactElement {
 
   const brand = (
     <a href="/" className="nsm-brand" aria-label={storeName}>
-      {logoUrl ? <img src={logoUrl} alt="" className="nsm-brand__logo" /> : <span className="nsm-brand__name">{storeName}</span>}
+      {logoUrl ? <img {...densityImage(logoUrl, 240)} decoding="async" alt="" className="nsm-brand__logo" /> : <span className="nsm-brand__name">{storeName}</span>}
     </a>
   );
 

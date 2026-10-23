@@ -1,3 +1,4 @@
+import { densityImage } from '../../../foundation/media/responsive';
 import { PaymentMark } from '../../../shared-ui/PaymentMarks';
 import { MerchantContact } from '../../../shared-ui/MerchantContact';
 /**
@@ -59,7 +60,7 @@ export function Footer(props: FooterProps): ReactElement {
         <div className="sh-footer__statement">
           <div className="sh-footer__brand">
             <a href="/" className="sh-brand sh-brand--footer" aria-label={storeName}>
-              {logoUrl ? <img src={logoUrl} alt="" className="sh-brand__logo" /> : <span className="sh-brand__name">{storeName}</span>}
+              {logoUrl ? <img {...densityImage(logoUrl, 240)} decoding="async" alt="" className="sh-brand__logo" /> : <span className="sh-brand__name">{storeName}</span>}
             </a>
             <p className="sh-footer__tagline">{STATEMENT[locale] ?? STATEMENT['en']}</p>
             {blurb ? <p className="sh-footer__blurb">{blurb}</p> : null}

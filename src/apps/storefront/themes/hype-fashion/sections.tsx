@@ -1,3 +1,4 @@
+import { mobileSrcSet } from '../../foundation/media/responsive';
 import type { CSSProperties, ReactElement } from 'react';
 import type { SectionRenderProps } from '../../theme-engine/rendering';
 import { defineSection, fields, tr } from '../../sections-lib/schema';
@@ -12,7 +13,7 @@ export const FASHION_LOOK = '/media/theme-campaigns/hype-fashion-look-v1.png';
 export const fashionHeroSchema = defineSection({ type: 'fashion-hero', label: 'Fashion full-width campaign', category: 'hero', settings: [fields.image('image', 'Desktop photo', FASHION_HERO), fields.image('mobile_image', 'Mobile photo', FASHION_LOOK), fields.text('eyebrow', 'Eyebrow', tr('مجموعة الموسم', 'New season')), fields.text('title', 'Heading', tr('إطلالة الموسم', 'The season edit')), fields.text('text', 'Description', tr('قصات وخامات وتفاصيل لإطلالتك اليومية.', 'Silhouettes, textures and details for every day.')), fields.text('button', 'Button', tr('تسوق المجموعة', 'Shop collection')), fields.url('url', 'Link', '/shop'), fields.range('overlay', 'Overlay', 28, 0, 80)] });
 export function FashionHero(props: SectionRenderProps): ReactElement {
   const s = useSectionSettings(fashionHeroSchema, props.settings);
-  return <section className="hpf-hero"><picture>{str(s, 'mobile_image') ? <source media="(max-width:767px)" srcSet={themeCampaignAsset(str(s, 'mobile_image'))} /> : null}<LibImage src={str(s, 'image')} alt="" eager /></picture><div className="hpf-hero-shade" style={{ opacity: Number(s['overlay'] ?? 28) / 100 } as CSSProperties} /><div className="hpf-hero-copy">{str(s, 'eyebrow') ? <p className="hpf-eyebrow">{str(s, 'eyebrow')}</p> : null}<h1>{str(s, 'title')}</h1>{str(s, 'text') ? <p>{str(s, 'text')}</p> : null}{str(s, 'button') ? <a href={str(s, 'url', '/shop')}>{str(s, 'button')}</a> : null}</div></section>;
+  return <section className="hpf-hero"><picture>{str(s, 'mobile_image') ? <source media="(max-width:767px)" srcSet={mobileSrcSet(themeCampaignAsset(str(s, 'mobile_image')))} sizes="100vw" /> : null}<LibImage src={str(s, 'image')} alt="" eager /></picture><div className="hpf-hero-shade" style={{ opacity: Number(s['overlay'] ?? 28) / 100 } as CSSProperties} /><div className="hpf-hero-copy">{str(s, 'eyebrow') ? <p className="hpf-eyebrow">{str(s, 'eyebrow')}</p> : null}<h1>{str(s, 'title')}</h1>{str(s, 'text') ? <p>{str(s, 'text')}</p> : null}{str(s, 'button') ? <a href={str(s, 'url', '/shop')}>{str(s, 'button')}</a> : null}</div></section>;
 }
 export const fashionMarqueeSchema = defineSection({ type: 'fashion-marquee', label: 'Fashion scrolling message', category: 'content', settings: [fields.text('text', 'Message', tr('اكتشف المجموعة الجديدة', 'Explore the new collection'))] });
 export function FashionMarquee(props: SectionRenderProps): ReactElement {

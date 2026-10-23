@@ -7,6 +7,7 @@
  *                  MobileNav drawer carries the same content on phones).
  * A hairline + soft shadow appear once scrolled.
  */
+import { densityImage } from '../../../foundation/media/responsive';
 import { useEffect, useId, useRef, useState, type FormEvent, type ReactElement } from 'react';
 import { useTranslation } from 'react-i18next';
 import { cn } from '../../../../../shared/utils/cn';
@@ -213,7 +214,7 @@ export function Header(props: HeaderProps): ReactElement {
           </button>
 
           <a href="/" className="bz-brand" aria-label={storeName}>
-            {logoUrl ? <img src={logoUrl} alt="" className="bz-brand__logo" /> : (
+            {logoUrl ? <img {...densityImage(logoUrl, 240)} decoding="async" alt="" className="bz-brand__logo" /> : (
               <span className="bz-brand__name"><span className="bz-brand__mark" aria-hidden>{storeName.charAt(0)}</span>{storeName}</span>
             )}
           </a>

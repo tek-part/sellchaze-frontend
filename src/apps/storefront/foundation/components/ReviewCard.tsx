@@ -43,7 +43,7 @@ export function ReviewCard(props: ReviewCardProps): ReactElement {
       {review.photos && review.photos.length > 0 ? (
         <div className="sf-review-card__photos">
           {review.photos.map((photo, i) => (
-            <StoreImage key={i} className="sf-review-card__photo" src={photo.src} alt={photo.alt ?? ''} />
+            <StoreImage key={i} className="sf-review-card__photo" sizes="160px" src={photo.src} alt={photo.alt ?? ''} />
           ))}
         </div>
       ) : null}

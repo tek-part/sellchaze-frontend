@@ -1,6 +1,7 @@
 /**
  * hero-banner — a single static hero: image (+ mobile crop), eyebrow, heading, text, up to two CTAs.
  */
+import { responsiveImage } from '../../foundation/media/responsive';
 import type { CSSProperties, ReactElement } from 'react';
 import type { SectionRenderProps } from '../../theme-engine/rendering';
 import { cn } from '../../../../shared/utils/cn';
@@ -43,7 +44,7 @@ export function HeroBanner(props: SectionRenderProps): ReactElement {
       <div className={cn('lib-hero', `lib-hero--${str(s, 'align', 'start')}`, !image && 'lib-hero--plain', str(s, 'text_color') === 'dark' && 'lib-hero--dark-text')} style={style}>
         {image ? (
           <picture className="lib-hero__media">
-            {mobile ? <source media="(max-width: 767px)" srcSet={mobile} /> : null}
+            {mobile ? <source media="(max-width: 767px)" srcSet={responsiveImage(mobile, [480, 800, 1280]).srcSet ?? mobile} sizes="100vw" /> : null}
             <LibImage src={image} alt="" className="lib-hero__img" eager />
           </picture>
         ) : null}

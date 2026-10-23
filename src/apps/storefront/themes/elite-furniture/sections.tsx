@@ -1,3 +1,4 @@
+import { mobileSrcSet, responsiveImage } from '../../foundation/media/responsive';
 import { useId, useState, type CSSProperties, type ReactElement } from 'react';
 import type { SectionRenderProps } from '../../theme-engine/rendering';
 import type { ProductCardModel } from '../../types/catalog';
@@ -15,7 +16,7 @@ import { relatedProductsSchema } from '../../sections-lib/components/RelatedProd
 export const eliteHeroSchema = defineSection({ type: 'elite-hero', label: 'Cinematic hero', category: 'hero', settings: [fields.image('image', 'Desktop image', ''), fields.image('mobile_image', 'Mobile image', ''), fields.text('eyebrow', 'Eyebrow', tr('مساحات ملهمة', 'Inspired spaces')), fields.text('title', 'Heading', tr('أناقة تدوم', 'Made for everyday living')), fields.text('text', 'Description', tr('قطع مختارة لتجعل كل مساحة أقرب إليك', 'Thoughtful furniture for a home that feels like you.')), fields.text('button', 'Button', tr('تسوق المجموعة', 'Shop collection')), fields.url('url', 'Link', '/shop'), fields.range('overlay', 'Image overlay', 30, 0, 80)] });
 export function EliteHero(props: SectionRenderProps): ReactElement {
   const s = useSectionSettings(eliteHeroSchema, props.settings);
-  return <section className="elt-hero"><picture>{str(s, 'mobile_image') ? <source media="(max-width:767px)" srcSet={str(s, 'mobile_image')} /> : null}<img src={str(s, 'image') || undefined} alt="" fetchPriority="high" /></picture><div className="elt-hero__shade" style={{ opacity: num(s, 'overlay', 30) / 100 }} /><div className="elt-hero__copy"><p className="elt-eyebrow">{str(s, 'eyebrow')}</p><h1>{str(s, 'title')}</h1><p>{str(s, 'text')}</p>{str(s, 'button') ? <a className="elt-pill" href={str(s, 'url', '/shop')}>{str(s, 'button')}</a> : null}</div></section>;
+  return <section className="elt-hero"><picture>{str(s, 'mobile_image') ? <source media="(max-width:767px)" srcSet={mobileSrcSet(str(s, 'mobile_image'))} sizes="100vw" /> : null}<img {...responsiveImage(str(s, 'image') || undefined)} sizes="100vw" alt="" fetchPriority="high" /></picture><div className="elt-hero__shade" style={{ opacity: num(s, 'overlay', 30) / 100 }} /><div className="elt-hero__copy"><p className="elt-eyebrow">{str(s, 'eyebrow')}</p><h1>{str(s, 'title')}</h1><p>{str(s, 'text')}</p>{str(s, 'button') ? <a className="elt-pill" href={str(s, 'url', '/shop')}>{str(s, 'button')}</a> : null}</div></section>;
 }
 
 export const eliteCategoriesSchema = defineSection({ type: 'elite-categories', label: 'Category photo tiles', category: 'categories', settings: [fields.text('eyebrow', 'Eyebrow', tr('مجموعات مختارة', 'Featured collections')), fields.text('title', 'Heading', tr('تسوق حسب القسم', 'Shop by category')), fields.range('limit', 'Categories', 5, 1, 12)] });

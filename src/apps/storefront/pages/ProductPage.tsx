@@ -3,7 +3,7 @@
  * `product` template (product-details + related-products). DEV falls back to a preview product.
  */
 import { previewOrDev } from '../preview';
-import { useEffect, useMemo, type ReactElement } from 'react';
+import { lazy, Suspense, useEffect, useMemo, type ReactElement } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
 import { ThemeRenderer, useTemplate, type StorefrontContext, useThemeManifest } from '../theme-engine';
 import { Button, Container, ErrorState, Section, Spinner } from '../foundation/components';
@@ -26,8 +26,8 @@ import { referralFromSearch } from '../../../shared/marketing/referral';
 import { useProductPresentation } from '../state/product-presentation';
 import { ProductPurchaseProvider } from '../state/product-purchase';
 import { parseLanding } from '../landing/document';
-import { LandingSections,ProductPresetSurface } from '../landing/LandingSections';
-import { ProductDetailsSection } from '../foundation/sections/ProductDetailsSection';
+
+const LandingProductLayout = lazy(() => import('../landing/LandingProductLayout'));
 
 export function ProductPage(): ReactElement | null {
   const manifest = useThemeManifest();
@@ -125,6 +125,8 @@ export function ProductPage(): ReactElement | null {
     );
   }
 
+  const templateBody = template ? <div data-landing-fallback><ThemeRenderer page={detail?.productPreferences?.hide_related_products ? { ...template, sections: template.sections.filter((section) => section.type !== 'related-products') } : template} context={context} /></div> : null;
+
   return (
     <>
       {detail ? (
@@ -147,11 +149,9 @@ export function ProductPage(): ReactElement | null {
         />
       ) : null}
       <ProductPurchaseProvider key={detail?.id ?? slug}>
-        <ProductPresetSurface document={landing}>
-        {landing && landing.mode === 'standalone' ? <LandingSections document={landing} context={context} checkout={<ProductDetailsSection context={context} instance={{ type: 'product-details' }} settings={{ show_share: false, show_wishlist: false }} purchaseOnly />} /> : null}
-        {template && (landing?.mode !== 'standalone' || !landing.sections.some(section => section.type === 'checkout')) ? <div data-landing-fallback><ThemeRenderer page={detail?.productPreferences?.hide_related_products ? { ...template, sections: template.sections.filter((section) => section.type !== 'related-products') } : template} context={context} /></div> : null}
-        {landing?.mode === 'below' ? <LandingSections document={landing} context={context} checkout={<ProductDetailsSection context={context} instance={{ type: 'product-details' }} settings={{ show_share: false, show_wishlist: false }} purchaseOnly />} /> : null}
-        </ProductPresetSurface>
+        {landing ? (
+          <Suspense fallback={null}><LandingProductLayout landing={landing} context={context} template={templateBody} /></Suspense>
+        ) : templateBody}
       </ProductPurchaseProvider>
     </>
   );

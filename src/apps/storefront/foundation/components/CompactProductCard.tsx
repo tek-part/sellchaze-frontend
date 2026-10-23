@@ -21,7 +21,7 @@ export function CompactProductCard(props: CompactProductCardProps): ReactElement
   return (
     <article className={cn('sf-ccard', className)}>
       <div className="sf-ccard__media">
-        <StoreImage className="sf-ccard__img" src={product.image?.src} alt={product.image?.alt ?? product.title} />
+        <StoreImage className="sf-ccard__img" sizes="160px" src={product.image?.src} alt={product.image?.alt ?? product.title} />
         {typeof rank === 'number' ? (
           <span className="sf-ccard__rank" aria-hidden>
             {String(rank).padStart(2, '0')}

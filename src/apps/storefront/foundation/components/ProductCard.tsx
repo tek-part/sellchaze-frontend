@@ -61,7 +61,7 @@ export function ProductCard(props: ProductCardProps): ReactElement {
           alt={product.image?.alt ?? product.title}
         />
         {product.hoverImage ? (
-          <StoreImage className="sf-product-card__img sf-product-card__img--hover" src={product.hoverImage.src} alt="" aria-hidden />
+          <StoreImage className="sf-product-card__img sf-product-card__img--hover" sizes="(min-width: 1024px) 25vw, 50vw" src={product.hoverImage.src} alt="" aria-hidden />
         ) : null}
 
         {product.badge ? (

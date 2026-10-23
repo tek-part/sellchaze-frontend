@@ -1389,3 +1389,7 @@
 .sf-option-value:focus-visible { outline: 2px solid currentColor; outline-offset: 3px; }
 .sf-option-swatch { display: block; width: 24px; height: 24px; border: 1px solid #8888; border-radius: 50%; }
 .sf-option-value img { width: 44px; height: 44px; object-fit: cover; border-radius: 4px; }
+
+/* Reserve the viewport for page content while routes and data load, so the footer starts below the
+   fold instead of jumping down when the content arrives (was CLS ≈ 0.35 on product and cart pages). */
+#sf-main { display: block; min-height: 100vh; min-height: 100svh; }

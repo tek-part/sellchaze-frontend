@@ -5,6 +5,7 @@
  * behind the text) and full-bleed-compact (short banner). Scroll-snap carousel with dots +
  * autoplay (pauses on hover/focus and under reduced motion).
  */
+import { responsiveImage } from '../../foundation/media/responsive';
 import type { CSSProperties, ReactElement } from 'react';
 import type { SectionRenderProps } from '../../theme-engine/rendering';
 import { cn } from '../../../../shared/utils/cn';
@@ -127,7 +128,7 @@ export function HeroSlider(props: SectionRenderProps): ReactElement | null {
               <video className="lib-hero__media lib-hero__video" src={video} poster={image || undefined} autoPlay muted loop playsInline aria-hidden />
             ) : (
               <picture className="lib-hero__media">
-                {mobile ? <source media="(max-width: 767px)" srcSet={mobile} /> : null}
+                {mobile ? <source media="(max-width: 767px)" srcSet={responsiveImage(mobile, [480, 800, 1280]).srcSet ?? mobile} sizes="100vw" /> : null}
                 <LibImage src={image} alt="" className="lib-hero__img" eager={i === 0} />
               </picture>
             )

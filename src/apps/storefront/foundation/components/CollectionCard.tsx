@@ -17,7 +17,7 @@ export function CollectionCard(props: CollectionCardProps): ReactElement {
   const { collection, eager = false, className } = props;
   return (
     <a href={collection.url} aria-label={collection.title} className={cn('sf-collection-card', className)}>
-      <StoreImage className="sf-collection-card__img" src={collection.image?.src} alt="" aria-hidden eager={eager} />
+      <StoreImage className="sf-collection-card__img" sizes="(min-width: 1024px) 25vw, 50vw" src={collection.image?.src} alt="" aria-hidden eager={eager} />
       <span className="sf-collection-card__overlay">
         {collection.subtitle ? <span className="sf-collection-card__subtitle">{collection.subtitle}</span> : null}
         <span className="sf-collection-card__title">{collection.title}</span>

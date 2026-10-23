@@ -27,7 +27,7 @@ export function CategoryCard(props: CategoryCardProps): ReactElement {
       style={style}
     >
       {variant !== 'text-only' ? (
-        <StoreImage className="sf-cat-card__img" src={category.image?.src} alt="" aria-hidden eager={eager} />
+        <StoreImage className="sf-cat-card__img" sizes="(min-width: 1024px) 25vw, 50vw" src={category.image?.src} alt="" aria-hidden eager={eager} />
       ) : null}
       <span className="sf-cat-card__overlay">
         {category.meta ? <span className="sf-cat-card__meta">{category.meta}</span> : null}

@@ -6,6 +6,7 @@
  * Sticky by default; a hairline gold rule + soft shadow appear once scrolled. Nav items with
  * children open a hover/focus panel; everything collapses to the MobileNav drawer below 1024px.
  */
+import { densityImage } from '../../../foundation/media/responsive';
 import { useEffect, useState, type ReactElement } from 'react';
 import { useTranslation } from 'react-i18next';
 import { cn } from '../../../../../shared/utils/cn';
@@ -86,7 +87,7 @@ export function Header(props: HeaderProps): ReactElement {
 
   const brand = (
     <a href="/" className="sh-brand" aria-label={storeName}>
-      {logoUrl ? <img src={logoUrl} alt="" className="sh-brand__logo" /> : <span className="sh-brand__name">{storeName}</span>}
+      {logoUrl ? <img {...densityImage(logoUrl, 240)} decoding="async" alt="" className="sh-brand__logo" /> : <span className="sh-brand__name">{storeName}</span>}
     </a>
   );
 

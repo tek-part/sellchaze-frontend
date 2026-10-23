@@ -48,7 +48,7 @@ export function HorizontalProductCard(props: HorizontalProductCardProps): ReactE
   return (
     <article className={cn('sf-hcard', className)}>
       <a href={product.url} className="sf-hcard__media" aria-label={product.title} tabIndex={-1}>
-        <StoreImage className="sf-hcard__img" src={product.image?.src} alt={product.image?.alt ?? product.title} />
+        <StoreImage className="sf-hcard__img" sizes="160px" src={product.image?.src} alt={product.image?.alt ?? product.title} />
       </a>
       <div className="sf-hcard__body">
         <div className="sf-hcard__row">

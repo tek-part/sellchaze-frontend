@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { GoogleLogin, GoogleOAuthProvider } from '@react-oauth/google';
@@ -17,6 +17,7 @@ export default function GoogleAuthButton({ redirectTo, onError, onBusy, text = '
     const { t, i18n } = useTranslation();
     const navigate = useNavigate();
     const { clientId, resolved } = useGoogleOAuthClientId();
+    const ready = useIdle();
 
     const handleSuccess = useCallback(async (cred) => {
         onError?.('');
@@ -49,6 +50,8 @@ export default function GoogleAuthButton({ redirectTo, onError, onBusy, text = '
 
     // Without a configured client there is no Google option, and no "or" divider either.
     if (!resolved || !clientId) return null;
+    // Google's script (~150 KB) waits until the page is idle; the placeholder keeps the layout still.
+    if (!ready) return <><div className="h-11" aria-hidden /><OrDivider /></>;
     return (
         <>
         <GoogleOAuthProvider clientId={clientId}>
@@ -68,4 +71,18 @@ export default function GoogleAuthButton({ redirectTo, onError, onBusy, text = '
         <OrDivider />
         </>
     );
+}
+
+/** True once the browser is idle after the first render (or after a short timeout). */
+function useIdle() {
+    const [idle, setIdle] = useState(false);
+    useEffect(() => {
+        if (typeof window.requestIdleCallback === 'function') {
+            const id = window.requestIdleCallback(() => setIdle(true), { timeout: 2000 });
+            return () => window.cancelIdleCallback(id);
+        }
+        const id = window.setTimeout(() => setIdle(true), 800);
+        return () => window.clearTimeout(id);
+    }, []);
+    return idle;
 }
