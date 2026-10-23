@@ -1,90 +1,33 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { GoogleLogin, GoogleOAuthProvider } from '@react-oauth/google';
-import { FcGoogle } from 'react-icons/fc';
 import toast from 'react-hot-toast';
 import api, { clearTokens, setTokens } from '../api/client';
-import LanguageSwitcher from '../components/LanguageSwitcher';
-import { useGoogleOAuthClientId } from '../hooks/useGoogleOAuthClientId';
 import { loginErrorMessage } from '../utils/apiError';
-import { savedPlatformReferral, clearPlatformReferral } from '../shared/marketing/platform-referral';
 import { safeRedirect } from '../lib/safeRedirect';
-import { marketingUrl } from '../config/marketing';
-
-function BackgroundDecor() {
-    return (
-        <>
-            <div
-                aria-hidden
-                className="pointer-events-none absolute inset-0 opacity-[0.35]"
-                style={{
-                    backgroundImage:
-                        'radial-gradient(circle at 1px 1px, rgba(15,23,42,0.08) 1px, transparent 0)',
-                    backgroundSize: '28px 28px',
-                }}
-            />
-            <div
-                aria-hidden
-                className="pointer-events-none absolute -left-32 -top-32 h-[420px] w-[420px] rounded-full blur-3xl sc-float"
-                style={{
-                    background: 'radial-gradient(closest-side, rgba(3,152,85,0.25), transparent 70%)',
-                    animationDuration: '7s',
-                }}
-            />
-            <div
-                aria-hidden
-                className="pointer-events-none absolute -right-32 bottom-0 h-[380px] w-[380px] rounded-full blur-3xl sc-float"
-                style={{
-                    background: 'radial-gradient(closest-side, rgba(50,213,131,0.2), transparent 70%)',
-                    animationDuration: '9s',
-                    animationDelay: '1s',
-                }}
-            />
-            <svg
-                aria-hidden
-                className="pointer-events-none absolute inset-0 h-full w-full sc-anim-draw"
-                viewBox="0 0 1200 900"
-                preserveAspectRatio="none"
-            >
-                <g stroke="rgba(3,152,85,0.18)" strokeDasharray="4 6" fill="none">
-                    <path d="M80,0 L80,360 Q80,400 120,400 L560,400" />
-                    <path d="M1120,0 L1120,360 Q1120,400 1080,400 L640,400" />
-                </g>
-            </svg>
-        </>
-    );
-}
+import AuthLayout from '../components/auth/AuthLayout';
+import GoogleAuthButton from '../components/auth/GoogleAuthButton';
+import { Field, FormError, PasswordInput, SubmitButton, inputClass } from '../components/auth/AuthFields';
 
 export default function Login() {
     const { t } = useTranslation();
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
     const redirectTo = safeRedirect(searchParams.get('redirect'));
-    const { clientId: googleClientId, resolved: googleConfigResolved } = useGoogleOAuthClientId();
-    const googleRegisterRole = 'Supplier';
-
-    useEffect(() => {
-        const token = localStorage.getItem('sellchase_access_token');
-        if (!token) return;
-        let cancelled = false;
-        (async () => {
-            try {
-                await api.get('/auth/me');
-                if (!cancelled) navigate(redirectTo, { replace: true });
-            } catch {
-                if (!cancelled) clearTokens();
-            }
-        })();
-        return () => { cancelled = true; };
-    }, [navigate, redirectTo]);
-
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
 
-    const hasGoogle = Boolean(googleConfigResolved && googleClientId);
+    // Already signed in (valid token): skip the form.
+    useEffect(() => {
+        if (!localStorage.getItem('sellchase_access_token')) return undefined;
+        let cancelled = false;
+        api.get('/auth/me')
+            .then(() => { if (!cancelled) navigate(redirectTo, { replace: true }); })
+            .catch(() => { if (!cancelled) clearTokens(); });
+        return () => { cancelled = true; };
+    }, [navigate, redirectTo]);
 
     async function onSubmit(e) {
         e.preventDefault();
@@ -96,148 +39,33 @@ export default function Login() {
             toast.success(t('toast_welcome'));
             navigate(redirectTo, { replace: true });
         } catch (err) {
-            const msg = loginErrorMessage(err, t);
-            setError(msg);
-            toast.error(msg);
+            setError(loginErrorMessage(err, t));
         } finally {
             setLoading(false);
         }
     }
 
-    // Stable callbacks: the Google button re-runs `google.accounts.id.initialize()` whenever its
-    // handlers change identity, which inline arrows did on every keystroke of the form.
-    const handleGoogleSuccess = useCallback(async (cred) => {
-        setError('');
-        setLoading(true);
-        try {
-            const { data } = await api.post('/auth/google', {
-                id_token: cred.credential,
-                registration_role: googleRegisterRole,
-                platform_referral_code: savedPlatformReferral(),
-            });
-            clearPlatformReferral();
-            if (data.pending_approval) {
-                if (data.access_token && data.refresh_token) {
-                    setTokens({ access_token: data.access_token, refresh_token: data.refresh_token });
-                }
-                toast.success(data.message || t('auth_register_pending_toast'));
-                navigate('/pending-approval', { replace: true });
-                return;
-            }
-            setTokens({ access_token: data.access_token, refresh_token: data.refresh_token });
-            toast.success(t('toast_welcome'));
-            navigate(redirectTo, { replace: true });
-        } catch (err) {
-            const msg = loginErrorMessage(err, t) || t('google_login_failed');
-            setError(msg);
-            toast.error(msg);
-        } finally {
-            setLoading(false);
-        }
-    }, [googleRegisterRole, navigate, redirectTo, t]);
-    const handleGoogleError = useCallback(() => {
-        const msg = t('google_login_failed');
-        setError(msg);
-        toast.error(msg);
-    }, [t]);
-
     return (
-        <div className="relative flex min-h-screen flex-col overflow-hidden bg-[#F6F9F7] text-slate-900">
-            <BackgroundDecor />
-
-            <header className="relative flex items-center justify-between px-4 py-4 md:px-8">
-                <a href={marketingUrl()} className="flex items-center" aria-label="Sellchaze">
-                    <img src="/brand/sellchaze-logo.svg" alt="Sellchaze" className="h-12 w-auto object-contain md:h-14" />
-                </a>
-                <LanguageSwitcher />
-            </header>
-
-            <div className="relative flex flex-1 items-center justify-center px-4 pb-16">
-                <div className="sc-anim-fade-up w-full max-w-md">
-                    <div className="rounded-3xl border border-slate-200/70 bg-white/95 p-6 shadow-[0_20px_60px_rgba(15,23,42,0.10)] backdrop-blur-sm md:p-8">
-                        <div className="text-center">
-                            <p className="inline-block rounded-full bg-brand/10 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-brand">
-                                {t('login')}
-                            </p>
-                            <h1 className="mt-3 text-2xl font-extrabold tracking-tight text-slate-900">{t('welcome')}</h1>
-                            <p className="mt-2 text-sm text-slate-500">{t('sign_in_subtitle')}</p>
-                        </div>
-
-                        {hasGoogle ? (
-                            <div className="mt-6 rounded-2xl border border-slate-200 bg-slate-50/70 p-4">
-                                <div className="mb-3 flex items-center justify-center gap-2">
-                                    <FcGoogle className="h-5 w-5" aria-hidden />
-                                    <span className="text-sm font-semibold text-slate-800">
-                                        {t('auth_login_google_section')}
-                                    </span>
-                                </div>
-                                <GoogleOAuthProvider clientId={googleClientId}>
-                                    <div className="flex justify-center [&>div]:flex [&>div]:w-full [&>div]:justify-center">
-                                        <GoogleLogin
-                                            onSuccess={handleGoogleSuccess}
-                                            onError={handleGoogleError}
-                                            theme="outline"
-                                            size="large"
-                                            text="continue_with"
-                                            shape="rectangular"
-                                        />
-                                    </div>
-                                </GoogleOAuthProvider>
-                            </div>
-                        ) : null}
-
-                        <form onSubmit={onSubmit} className="mt-6 space-y-4">
-                            {error ? (
-                                <div className="rounded-xl border border-red-200 bg-red-50/90 p-3 text-sm text-red-800">{error}</div>
-                            ) : null}
-                            <div>
-                                <label htmlFor="email" className="mb-1 block text-sm font-semibold text-slate-900">
-                                    {t('email')}
-                                </label>
-                                <input
-                                    id="email"
-                                    type="email"
-                                    autoComplete="email"
-                                    value={email}
-                                    onChange={(e) => setEmail(e.target.value)}
-                                    className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm outline-hidden transition focus:border-brand focus:bg-white focus:ring-2 focus:ring-brand/20"
-                                    required
-                                />
-                            </div>
-                            <div>
-                                <label htmlFor="password" className="mb-1 block text-sm font-semibold text-slate-900">
-                                    {t('password')}
-                                </label>
-                                <input
-                                    id="password"
-                                    type="password"
-                                    autoComplete="current-password"
-                                    value={password}
-                                    onChange={(e) => setPassword(e.target.value)}
-                                    className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm outline-hidden transition focus:border-brand focus:bg-white focus:ring-2 focus:ring-brand/20"
-                                    required
-                                />
-                            </div>
-                            <button
-                                type="submit"
-                                disabled={loading}
-                                className="mt-2 w-full rounded-full bg-brand py-3 text-sm font-semibold text-white shadow-lg shadow-brand/20 transition hover:brightness-110 disabled:opacity-60"
-                            >
-                                {loading ? '…' : t('login')}
-                            </button>
-                        </form>
-
-                        <div className="mt-5 flex flex-wrap justify-center gap-x-5 gap-y-2 border-t border-slate-100 pt-5 text-sm">
-                            <Link to="/register" className="font-medium text-brand hover:underline">
-                                {t('auth_create_account')}
-                            </Link>
-                            <Link to="/forgot-password" className="font-medium text-slate-600 hover:text-brand hover:underline">
-                                {t('auth_forgot_link')}
-                            </Link>
-                        </div>
+        <AuthLayout
+            title={t('auth_login_title')}
+            subtitle={t('auth_login_subtitle')}
+            footer={<>{t('auth_no_store')} <Link to="/register" className="font-semibold text-brand hover:underline">{t('auth_create_store_link')}</Link></>}
+        >
+            <GoogleAuthButton redirectTo={redirectTo} onError={setError} onBusy={setLoading} text="signin_with" />
+            <form onSubmit={onSubmit} className="grid gap-4">
+                <FormError>{error}</FormError>
+                <Field id="email" label={t('email')}>
+                    <input id="email" type="email" autoComplete="email" inputMode="email" dir="ltr" value={email} onChange={(e) => setEmail(e.target.value)} className={inputClass} required autoFocus />
+                </Field>
+                <div>
+                    <div className="mb-1.5 flex items-center justify-between">
+                        <label htmlFor="password" className="text-sm font-semibold text-slate-800">{t('password')}</label>
+                        <Link to="/forgot-password" className="text-sm font-medium text-brand hover:underline">{t('auth_forgot_link')}</Link>
                     </div>
+                    <PasswordInput id="password" value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="current-password" />
                 </div>
-            </div>
-        </div>
+                <SubmitButton loading={loading}>{t('auth_login_submit')}</SubmitButton>
+            </form>
+        </AuthLayout>
     );
 }
