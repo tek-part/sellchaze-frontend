@@ -224,12 +224,12 @@ for (const locale of ['ar', 'en'] as const) for (const width of [1920, 390, 320]
     });
     expect(geometry.firstMenuInset).toBe(48);
     expect(geometry.community).toBe(true);
-    expect(geometry.groups.map(group => group.height)).toEqual([711, 172]);
+    expect(geometry.groups.map(group => group.height)).toEqual([711, 204]);
     for (const group of geometry.groups) expect(group).toMatchObject({ paddingBottom: '4px', labelHeight: 28, labelInset: 12, labelPadding: '0px 8px', letterSpacing: '0.66px', textTransform: 'uppercase' });
     const newsletter = sidebar.locator('a[href="/store/newsletter"]');
     await expect(newsletter.locator('.ws-nav-badge')).toHaveCount(0);
     await expect(newsletter).toHaveCSS('transition-duration', '0s');
-    await expect(sidebar.locator('nav>div').last().locator('a')).toHaveCount(4);
+    await expect(sidebar.locator('nav>div').last().locator('a')).toHaveCount(5);
     const settings = sidebar.locator('nav a[href="/store/settings/general"]');
     await dashboard.focus();
     for (let index = 0; index < 70 && !await settings.evaluate(element => element === document.activeElement); index++) await page.keyboard.press('Tab');
