@@ -45,6 +45,9 @@ const ChatPage = lazy(() => import('./pages/ChatPage'));
 import MarketingRedirect from './components/MarketingRedirect';
 import BrandLoader from './components/BrandLoader';
 const AdminDashboardPage = lazy(() => import('./pages/AdminDashboardPage'));
+const SupportTicketsPage = lazy(() => import('./features/support/SupportTicketsPage'));
+const SupportNewTicketPage = lazy(() => import('./features/support/SupportNewTicketPage'));
+const SupportTicketPage = lazy(() => import('./features/support/SupportTicketPage'));
 const SectorsSettingsPage = lazy(() => import('./pages/SectorsSettingsPage'));
 const AdminReportsUsersPage = lazy(() => import('./pages/AdminReportsUsersPage'));
 const AdminReportsOrdersPage = lazy(() => import('./pages/AdminReportsOrdersPage'));
@@ -324,6 +327,11 @@ export default function App() {
                 <Route path="/reels" element={<ReelsPage />} />
                 <Route path="/pricing" element={<PricingPage />} />
                 <Route path="/admin/dashboard" element={<AdminDashboardPage />} />
+                <Route path="/admin/support" element={<SupportTicketsPage admin />} />
+                <Route path="/admin/support/:id" element={<SupportTicketPage admin />} />
+                <Route path="/support" element={<SupportTicketsPage />} />
+                <Route path="/support/new" element={<SupportNewTicketPage />} />
+                <Route path="/support/:id" element={<SupportTicketPage />} />
                 <Route path="/admin/reports/users" element={<AdminReportsUsersPage />} />
                 <Route path="/admin/reports/orders" element={<AdminReportsOrdersPage />} />
                 <Route path="/admin/reports/revenue" element={<AdminReportsRevenuePage />} />

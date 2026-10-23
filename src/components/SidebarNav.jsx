@@ -32,6 +32,7 @@ import {
     HiOutlineChartBar,
     HiOutlineNewspaper,
     HiOutlinePresentationChartLine,
+    HiOutlineQuestionMarkCircle,
     HiOutlineSparkles,
 } from './workspace/WorkspaceIcons';
 
@@ -293,6 +294,12 @@ function SidebarNavInner({ isAdmin = false, roles = [], permissions = [], onNavi
                         <HiOutlineUserGroup className="h-5 w-5 shrink-0 opacity-95" aria-hidden />
                         {t('nav_merchants')}
                     </NavLink>
+                    {permissions.includes('support-tickets-manage') ? (
+                        <NavLink to="/admin/support" className={navLinkClass}>
+                            <HiOutlineQuestionMarkCircle className="h-5 w-5 shrink-0 opacity-95" aria-hidden />
+                            {t('nav_admin_support', 'Support inbox')}
+                        </NavLink>
+                    ) : null}
                     {CHAT_ENABLED && (
                         <NavLink to="/chat" className={navLinkClass}>
                             <HiOutlineChatBubbleLeftRight className="h-5 w-5 shrink-0 opacity-95" aria-hidden />

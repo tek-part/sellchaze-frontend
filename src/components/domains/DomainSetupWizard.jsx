@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { makeDomainsApi, domainErrorMessage } from '../../api/domains';
 import DnsRecordRow from './DnsRecordRow';
 import useModalA11y from './useModalA11y';
-import { marketingUrl } from '../../config/marketing';
+import { Link } from 'react-router-dom';
 
 /**
  * Six-step onboarding for connecting a custom domain.
@@ -315,16 +315,13 @@ export default function DomainSetupWizard({ onClose, onCompleted, apiBase = '/my
                                 >
                                     {t('domain_wizard_added_records')}
                                 </button>
-                                {/* Escape hatch: not every owner manages their own DNS.
-                                    Opens the marketing site's contact page until a merchant support page exists. */}
-                                <a
-                                    href={marketingUrl('/contact')}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
+                                {/* Escape hatch: not every owner manages their own DNS. */}
+                                <Link
+                                    to="/support/new?category=domain"
                                     className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-center text-sm font-semibold text-slate-700 transition hover:border-brand hover:text-brand sm:w-auto"
                                 >
                                     {t('domain_help_cta', 'Request help')}
-                                </a>
+                                </Link>
                             </div>
                         </div>
                     )}

@@ -1,5 +1,5 @@
 import { buildStoreNav } from './storeNav';
-import { HiOutlineCube, HiOutlineUserGroup, HiOutlineCog6Tooth } from '../workspace/WorkspaceIcons';
+import { HiOutlineCube, HiOutlineUserGroup, HiOutlineCog6Tooth, HiOutlineQuestionMarkCircle } from '../workspace/WorkspaceIcons';
 import { OrdersIcon, ProductsIcon, DesignIcon, TrackingIcon, MarketingIcon, FunnelsIcon, MarketingServicesIcon, WalletReferenceIcon, AffiliateReferenceIcon, ServiceMarketplaceIcon, AppsReferenceIcon } from '../workspace/SidebarReferenceIcons';
 
 const SIDEBAR_APP_KEYS = new Set(['catalog', 'cross-selling', 'whatsapp-unofficial', 'top-media-buyer', 'social-proof']);
@@ -57,6 +57,7 @@ export function buildWorkspaceStoreNav(t, access, permissions = []) {
         { ...route('service-marketplace', '/services', t('service_marketplace_nav', 'Service marketplace'), ServiceMarketplaceIcon, access.isStoreOwner), single: true, section: 'other' },
         { ...absolute(item('marketing-services')), Icon: MarketingServicesIcon, single: true, section: 'other' },
         { ...route('platform-referral', '/referral', t('platform_referral_nav', 'Affiliate program'), AffiliateReferenceIcon, access.isStoreOwner), single: true, section: 'other' },
+        { ...route('support', '/support', t('nav_support', 'Support'), HiOutlineQuestionMarkCircle, access.isStoreOwner), single: true, section: 'other' },
         { ...group('settings', t('workspace_menu_settings', 'Settings'), HiOutlineCog6Tooth, settingsItems), single: true, section: 'other', to: settingsItems[0]?.to },
     ].filter((row) => row.single ? Boolean(row.to) : row.items.length > 0);
 }

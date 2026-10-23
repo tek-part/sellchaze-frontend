@@ -52,6 +52,23 @@ export function mapServerNotification(row, t) {
         };
     }
 
+    if (d.type === 'support_ticket') {
+        const ticketId = Number(d.ticket_id);
+        const url = typeof d.url === 'string' && /^\/(admin\/)?support\/\d+$/.test(d.url) ? d.url : '';
+        const titles = {
+            created: t('notification_support_created', 'New support ticket'),
+            replied: t('notification_support_replied', 'New reply on your support ticket'),
+            resolved: t('notification_support_resolved', 'Support ticket resolved'),
+            closed: t('notification_support_closed', 'Support ticket closed'),
+        };
+        return {
+            id: String(r.id), read, at,
+            title: titles[d.event] || titles.replied,
+            body: [d.reference, d.subject].filter(Boolean).map(String).join(' · '),
+            ...(url && Number.isSafeInteger(ticketId) && ticketId > 0 ? { link: url } : {}),
+        };
+    }
+
     if (d.type === 'domain') {
         return { id: String(r.id), read, at, title: String(d.title || t('notification_domain_title', 'Store domain alert')), body: String(d.message || ''), link: '/store/settings/domains' };
     }

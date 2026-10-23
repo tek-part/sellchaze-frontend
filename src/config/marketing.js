@@ -12,7 +12,8 @@ export function marketingUrl(path = '/', lang = currentLang()) {
     return `${MARKETING_URL}${lang === 'ar' ? '/ar' : ''}${clean}` || '/';
 }
 
-/** A company's public profile page on the marketing site. */
+/** A member's public community profile inside the app (absolute, so it can be copied and shared). */
 export function publicProfileUrl(username) {
-    return marketingUrl(`/u/${encodeURIComponent(username)}`);
+    const origin = typeof window === 'undefined' ? '' : window.location.origin;
+    return `${origin}/community/u/${encodeURIComponent(username)}`;
 }
