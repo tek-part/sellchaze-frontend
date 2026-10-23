@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { HiArrowLongRight, HiOutlineBolt, HiOutlineBuildingStorefront, HiOutlinePlayCircle, HiOutlineUserGroup } from 'react-icons/hi2';
+import { HiArrowLongRight, HiOutlineFire, HiOutlineMagnifyingGlass, HiOutlinePlayCircle, HiOutlineUserGroup } from 'react-icons/hi2';
 
 /**
  * Four entry points into the network, shown once under the composer.
@@ -11,8 +11,8 @@ import { HiArrowLongRight, HiOutlineBolt, HiOutlineBuildingStorefront, HiOutline
  * below stays the loudest thing on the page.
  */
 const ITEMS = [
-    { titleKey: 'community_hl_rfq', subtitleKey: 'community_hl_rfq_sub', Icon: HiOutlineBolt, to: '/community/trending', tone: 'bg-amber-50 text-amber-600 ring-amber-100' },
-    { titleKey: 'community_hl_factories', subtitleKey: 'community_hl_factories_sub', Icon: HiOutlineBuildingStorefront, to: '/directory', tone: 'bg-brand-light text-brand ring-brand/10' },
+    { titleKey: 'community_hl_trending', subtitleKey: 'community_hl_trending_sub', Icon: HiOutlineFire, to: '/community/trending', tone: 'bg-amber-50 text-amber-600 ring-amber-100' },
+    { titleKey: 'community_hl_people', subtitleKey: 'community_hl_people_sub', Icon: HiOutlineMagnifyingGlass, to: '/community/search', tone: 'bg-brand-light text-brand ring-brand/10' },
     { titleKey: 'community_hl_reels', subtitleKey: 'community_hl_reels_sub', Icon: HiOutlinePlayCircle, to: '/reels', tone: 'bg-fuchsia-50 text-fuchsia-600 ring-fuchsia-100' },
     { titleKey: 'community_hl_sector', subtitleKey: 'community_hl_sector_sub', Icon: HiOutlineUserGroup, to: '/community/groups', tone: 'bg-emerald-50 text-emerald-600 ring-emerald-100' },
 ];

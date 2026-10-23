@@ -1,7 +1,7 @@
 import { Navigate, Link } from 'react-router-dom';
 import { useOutletContext } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { HiOutlineArrowPath, HiOutlineEnvelope, HiOutlineCog6Tooth } from '../components/workspace/WorkspaceIcons';
+import { HiOutlineEnvelope, HiOutlineCog6Tooth } from '../components/workspace/WorkspaceIcons';
 import { FaGoogle } from 'react-icons/fa';
 
 export default function SettingsPage() {
@@ -24,12 +24,6 @@ export default function SettingsPage() {
             title: t('settings_google'),
             desc: t('settings_google_card_desc'),
             Icon: FaGoogle,
-        },
-        {
-            to: '/settings/wigpleasure-sync',
-            title: t('wigpleasure_sync_title'),
-            desc: t('wigpleasure_sync_card_desc'),
-            Icon: HiOutlineArrowPath,
         },
     ];
 

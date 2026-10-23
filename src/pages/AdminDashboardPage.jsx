@@ -17,7 +17,6 @@ import {
 import { Bar, Doughnut, Line } from 'react-chartjs-2';
 import {
     HiOutlineArrowTrendingUp,
-    HiOutlineBanknotes,
     HiOutlineClock,
     HiOutlineEnvelope,
     HiOutlineExclamationTriangle,
@@ -208,30 +207,23 @@ export default function AdminDashboardPage() {
                 <StatCard
                     index={3}
                     icon={HiOutlineShoppingBag}
-                    label={t('admin_dashboard_orders_30d', 'Orders (30d)')}
+                    label={t('admin_dashboard_orders_30d', 'Store orders (30d)')}
                     value={loading ? '…' : k.orders_30d}
                 />
                 <StatCard
                     index={4}
-                    icon={HiOutlineBanknotes}
-                    label={t('admin_dashboard_deals_usd_30d', 'Deals Accepted USD (30d)')}
-                    value={loading ? '…' : `$${Number(k.deals_accepted_usd_30d ?? 0).toLocaleString()}`}
-                    accent="text-blue-700"
-                />
-                <StatCard
-                    index={5}
                     icon={HiOutlineSignal}
                     label={t('admin_dashboard_active_sessions', 'Active Sessions')}
                     value={loading ? '…' : k.active_sessions}
                 />
                 <StatCard
-                    index={6}
+                    index={5}
                     icon={HiOutlineArrowTrendingUp}
                     label={t('admin_dashboard_new_users_30d', 'New Users (30d)')}
                     value={loading ? '…' : k.users_new_30d}
                 />
                 <StatCard
-                    index={7}
+                    index={6}
                     icon={HiOutlineEnvelope}
                     label={t('admin_dashboard_email_7d', 'Emails Sent (7d)')}
                     value={loading ? '…' : data?.email_stats_7d?.sent ?? 0}
@@ -269,7 +261,7 @@ export default function AdminDashboardPage() {
                 <div className="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-xs">
                     <h2 className="mb-2 flex items-center gap-2 text-sm font-semibold text-slate-800">
                         <HiOutlineShoppingBag className="h-5 w-5 text-indigo-500" aria-hidden />
-                        {t('admin_dashboard_orders_volume', 'Orders Volume (30d)')}
+                        {t('admin_dashboard_orders_volume', 'Store orders (30d)')}
                     </h2>
                     <div className="h-64">
                         <Bar data={ordersChart} options={chartOpts} />

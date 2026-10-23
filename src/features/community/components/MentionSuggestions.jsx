@@ -10,7 +10,7 @@ import { initials } from '../../../components/feed/helpers';
  * The composer watches the Quill document for an "@query" run before the
  * caret and mounts this list with the query; picking a company tells the
  * composer to replace the run with a mention link. Suggestions come from the
- * public supplier directory (username + company name search).
+ * community member search (username + name / company; only public profiles).
  */
 export default function MentionSuggestions({ query, onPick, onClose }) {
     const { t } = useTranslation();
@@ -21,17 +21,17 @@ export default function MentionSuggestions({ query, onPick, onClose }) {
     useEffect(() => {
         let alive = true;
         const timer = setTimeout(() => {
-            api.get('/public/suppliers', { params: { q: query, per_page: 6 } })
+            api.get('/community/members', { params: { q: query, per_page: 6 } })
                 .then(({ data }) => {
                     if (!alive) return;
-                    const rows = (data.data ?? data.suppliers ?? [])
+                    const rows = (data.data ?? [])
                         .filter((row) => row.username)
                         .map((row) => ({
                             username: row.username,
                             name: row.company || row.name,
                             city: row.city,
                             verified: !!row.is_verified,
-                            photo: row.photo || row.logo || null,
+                            photo: row.photo || null,
                         }));
                     setResults(rows);
                     setHighlight(0);

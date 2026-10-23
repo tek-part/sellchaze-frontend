@@ -15,7 +15,6 @@ const errorText = error => Object.values(error.response?.data?.errors || {}).fla
 const empty = { name: '', phone: '', email: '', phoneAlt: '', country: '', region: '', city: '', address: '', line2: '', note: '', override: null };
 const reasons = {
     shipment_exists: ['هذا الطلب مرتبط بشحنة. راجع تحديث بياناتها مع شركة الشحن قبل تغيير الطلب.', 'This order has a shipment. Review its details with the carrier before changing the order.'],
-    supplier_locked: ['بدأ تنفيذ الطلب لدى المورد. راجع التنفيذ قبل تعديل بياناته.', 'Supplier fulfillment has started. Review fulfillment before changing these details.'],
     order_closed: ['هذا الطلب مكتمل أو ملغى؛ بياناته محفوظة في السجل.', 'This order is completed or cancelled. Its details remain in the history.'],
     payment_or_inventory_locked: ['يمكن تصحيح بيانات العميل. تعديل المبالغ أو السلة يحتاج معالجة الدفع أو المخزون المسوّى أولًا.', 'Customer details can be corrected. Cart or amount changes require reviewing the payment or settled inventory first.'],
 };

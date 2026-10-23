@@ -4,7 +4,7 @@ import { buildStoreNav } from '../components/store/storeNav';
 const t = (_key, fallback) => fallback;
 describe('private store webhook and API credential configuration', () => {
     it('is visible to owners and global store administration', () => {
-        for (const access of [storeAccess(['Merchant']), storeAccess(['Supplier']), fullStoreAccess()]) {
+        for (const access of [storeAccess(['Merchant']), fullStoreAccess()]) {
             expect(access.canStoreWebhooks).toBe(true);
             expect(access.canStorePublicApi).toBe(true);
             expect(buildStoreNav(t, access).find(group => group.key === 'settings').items.some(item => item.key === 'webhooks')).toBe(true);

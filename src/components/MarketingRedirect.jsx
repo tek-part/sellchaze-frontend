@@ -4,13 +4,16 @@ import { useTranslation } from 'react-i18next';
 import { marketingUrl } from '../config/marketing';
 
 /**
- * Old public URLs (/features, /suppliers/…, /blog/…, /u/:username …) now belong to the marketing
- * site. Old links and bookmarks keep working: send the visitor to the same path there.
+ * Old public URLs (/features, /blog/…, /legal/… …) now belong to the marketing site. Old links and
+ * bookmarks keep working: send the visitor to the same path there, or to `to` when the page was
+ * retired (e.g. the old directory and public profiles go to the marketing home).
  */
-export default function MarketingRedirect() {
+export default function MarketingRedirect({ to }) {
     const { pathname, search } = useLocation();
     const { i18n } = useTranslation();
-    const target = `${marketingUrl(pathname, i18n.language === 'ar' ? 'ar' : 'en')}${search}`;
+    const target = to
+        ? marketingUrl(to, i18n.language === 'ar' ? 'ar' : 'en')
+        : `${marketingUrl(pathname, i18n.language === 'ar' ? 'ar' : 'en')}${search}`;
 
     useEffect(() => {
         window.location.replace(target);

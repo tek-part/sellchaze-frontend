@@ -24,7 +24,7 @@ const subscribeMobile = (listener) => {
 };
 const getMobile = () => window.matchMedia('(max-width: 767px)').matches;
 
-export default function WorkspaceHeader({ me, storeUrl, isSupplier, permissions, appearance, onLanguage, onNavigation, onToggleSidebar, sidebarToggleRef, collapsed, onSearch, onLogout, chatUnread, merchantWorkspace = false }) {
+export default function WorkspaceHeader({ me, storeUrl, permissions, appearance, onLanguage, onNavigation, onToggleSidebar, sidebarToggleRef, collapsed, onSearch, onLogout, chatUnread, merchantWorkspace = false }) {
     const { t, i18n } = useTranslation(); const ws = useWorkspaceCopy();
     const mobile = useSyncExternalStore(subscribeMobile, getMobile, () => false);
     const iconButton = 'ws-icon-button'; const menuRow = 'ws-menu-row';
@@ -41,7 +41,7 @@ export default function WorkspaceHeader({ me, storeUrl, isSupplier, permissions,
             <button type="button" className={`${iconButton} ws-refresh`} onClick={() => window.location.reload()} aria-label={ws('refresh')} title={ws('refresh')}><HiOutlineArrowPath aria-hidden /></button>
             {!mobile ? <WorkspaceAppearanceControl appearance={appearance} /> : null}
             {!mobile ? <button type="button" onClick={onLanguage} className={iconButton} aria-label={ws('language')} title={i18n.language.startsWith('ar') ? 'English' : 'العربية'}><HiOutlineLanguage aria-hidden /></button> : null}
-            {merchantWorkspace ? !mobile && <NotificationBell /> : <NotificationsMenu isSupplier={isSupplier} />}
+            {merchantWorkspace ? !mobile && <NotificationBell /> : <NotificationsMenu />}
             {!merchantWorkspace && CHAT_ENABLED ? <Link to="/chat" className={`${iconButton} ws-chat-link`} aria-label={t('nav_messages', 'Messages')}><HiOutlineChatBubbleLeftRight aria-hidden />{chatUnread > 0 ? <span className="ws-notification-dot">{chatUnread > 99 ? '99+' : chatUnread}</span> : null}</Link> : null}
             <Menu as="div" className="relative">
                 <MenuButton className="ws-account-button" aria-label={t('user_menu_aria', { name: me.name })}>

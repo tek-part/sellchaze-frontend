@@ -13,7 +13,7 @@ export default function PlatformWalletPage({ mode = 'wallet' }) {
     const { me } = useOutletContext();
     const [searchParams] = useSearchParams();
     const { i18n } = useTranslation(); const ar = i18n.language.startsWith('ar'); const text = (a, e) => ar ? a : e;
-    const owner = me?.roles?.some((role) => role === 'Merchant' || role === 'Supplier');
+    const owner = me?.roles?.includes('Merchant');
     const [data, setData] = useState(null); const [error, setError] = useState(''); const [retry, setRetry] = useState(0);
     const [page, setPage] = useState(1); const [perPage, setPerPage] = useState(25); const [sort, setSort] = useState('created_at'); const [direction, setDirection] = useState('desc');
     const [copied, setCopied] = useState(false); const [creating, setCreating] = useState(false);

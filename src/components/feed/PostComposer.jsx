@@ -26,6 +26,9 @@ import MentionSuggestions from '../../features/community/components/MentionSugge
 import { enqueuePublish } from '../../features/community/publish/publishQueue';
 import { extractHashtags } from '../../features/community/social/socialText';
 
+/** Store product names may come back as a plain string or a per-locale object. */
+const productLabel = (name, lang) => (name && typeof name === 'object' ? name[lang] || name.en || name.ar || Object.values(name).find(Boolean) : name);
+
 // Bold/italic/lists/link — links also carry mentions, so keep them enabled.
 const QUILL_MODULES = {
     toolbar: [['bold', 'italic'], [{ list: 'ordered' }, { list: 'bullet' }], ['link'], ['clean']],
@@ -97,11 +100,12 @@ export default function PostComposer({ onQueued, initialFormat = 'post', initial
             .catch(() => setOrganizations([]));
     }, []);
 
-    // Load the current user's products for the picker (debounced by its search box).
+    // Load the merchant's store products for the picker (debounced by its search box).
+    // Accounts without a store get a 404 here and simply see an empty picker.
     useEffect(() => {
         if (!showProduct) return;
         let alive = true;
-        api.get('/products', { params: { per_page: 20, ...(debouncedSearch.trim() ? { q: debouncedSearch.trim() } : {}) } })
+        api.get('/my-store/catalog/products', { params: { per_page: 20, ...(debouncedSearch.trim() ? { search: debouncedSearch.trim() } : {}) } })
             .then(({ data }) => {
                 if (alive) setProducts(data.data ?? []);
             })
@@ -400,7 +404,7 @@ export default function PostComposer({ onQueued, initialFormat = 'post', initial
                         onChange={(ev) => setProductId(ev.target.value)}
                         options={[
                             { value: '', label: t('feed_attach_product', 'Attach product') },
-                            ...products.map((p) => ({ value: String(p.id), label: p.name })),
+                            ...products.map((p) => ({ value: String(p.id), label: productLabel(p.name, lang) || `#${p.id}` })),
                         ]}
                     />
                 </div>

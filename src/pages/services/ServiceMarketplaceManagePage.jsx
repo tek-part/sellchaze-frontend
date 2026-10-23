@@ -17,7 +17,7 @@ function OwnedImage({ path }) {
     return url ? <img src={url} alt="" /> : null;
 }
 export default function ServiceMarketplaceManagePage() {
-    const { me } = useOutletContext(); const { ar, text } = useServiceCopy(); const owner = me.roles?.some((role) => ['Merchant', 'Supplier'].includes(role));
+    const { me } = useOutletContext(); const { ar, text } = useServiceCopy(); const owner = me.roles?.includes('Merchant');
     const [provider, setProvider] = useState(emptyProvider); const [rows, setRows] = useState([]); const [draft, setDraft] = useState(emptyService);
     const [loading, setLoading] = useState(true); const [busy, setBusy] = useState(false); const [error, setError] = useState(''); const [message, setMessage] = useState(''); const [retry, setRetry] = useState(0);
     useEffect(() => {

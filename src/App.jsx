@@ -24,20 +24,7 @@ const CommunityGroupsPage = lazy(() => import('./pages/CommunityGroupsPage'));
 const CommunityGroupPage = lazy(() => import('./pages/CommunityGroupPage'));
 const ReelsPage = lazy(() => import('./pages/ReelsPage'));
 const PricingPage = lazy(() => import('./pages/PricingPage'));
-const CompanyWorkspacePage = lazy(() => import('./pages/CompanyWorkspacePage'));
-const ProcurementWorkspacePage = lazy(() => import('./pages/ProcurementWorkspacePage'));
-const FinancingPage = lazy(() => import('./pages/FinancingPage'));
-const OpportunitiesPage = lazy(() => import('./pages/OpportunitiesPage'));
 const NotificationsPage = lazy(() => import('./pages/NotificationsPage'));
-const OrdersPage = lazy(() => import('./pages/OrdersPage'));
-const QuotationsPage = lazy(() => import('./pages/QuotationsPage'));
-const DealsPage = lazy(() => import('./pages/DealsPage'));
-const GatewaysPage = lazy(() => import('./pages/GatewaysPage'));
-const GatewayDetailPage = lazy(() => import('./pages/GatewayDetailPage'));
-const GatewayFormPage = lazy(() => import('./pages/GatewayFormPage'));
-const SuppliersPage = lazy(() => import('./pages/SuppliersPage'));
-const SupplierDetailPage = lazy(() => import('./pages/SupplierDetailPage'));
-const SupplierFormPage = lazy(() => import('./pages/SupplierFormPage'));
 const MerchantsPage = lazy(() => import('./pages/MerchantsPage'));
 const MerchantDetailPage = lazy(() => import('./pages/MerchantDetailPage'));
 const MerchantFormPage = lazy(() => import('./pages/MerchantFormPage'));
@@ -47,28 +34,13 @@ const AdminUserFormPage = lazy(() => import('./pages/AdminUserFormPage'));
 const AdminActivityPage = lazy(() => import('./pages/AdminActivityPage'));
 const AdminRolesPage = lazy(() => import('./pages/AdminRolesPage'));
 const AdminRoleFormPage = lazy(() => import('./pages/AdminRoleFormPage'));
-const ShippingCompaniesPage = lazy(() => import('./pages/ShippingCompaniesPage'));
-const ShippingCompanyFormPage = lazy(() => import('./pages/ShippingCompanyFormPage'));
-const DeliveriesPage = lazy(() => import('./pages/DeliveriesPage'));
 const MonitoringLivePage = lazy(() => import('./pages/MonitoringLivePage'));
 const MonitoringSessionsPage = lazy(() => import('./pages/MonitoringSessionsPage'));
 const ProfilePage = lazy(() => import('./pages/ProfilePage'));
 const SettingsPage = lazy(() => import('./pages/SettingsPage'));
 const EmailSettingsPage = lazy(() => import('./pages/EmailSettingsPage'));
 const GoogleSettingsPage = lazy(() => import('./pages/GoogleSettingsPage'));
-const WigpleasureSyncSettingsPage = lazy(() => import('./pages/WigpleasureSyncSettingsPage'));
-const TicketsPage = lazy(() => import('./pages/TicketsPage'));
-const TicketDetailPage = lazy(() => import('./pages/TicketDetailPage'));
-const ProductsPage = lazy(() => import('./pages/ProductsPage'));
-const InventoryPage = lazy(() => import('./pages/InventoryPage'));
-const StockTransfersPage = lazy(() => import('./pages/StockTransfersPage'));
-const StockTransferFormPage = lazy(() => import('./pages/StockTransferFormPage'));
-const CategoriesPage = lazy(() => import('./pages/CategoriesPage'));
-const BundlesPage = lazy(() => import('./pages/BundlesPage'));
-const AttributesPage = lazy(() => import('./pages/AttributesPage'));
-const PartnersPage = lazy(() => import('./pages/PartnersPage'));
 const EmployeesPage = lazy(() => import('./pages/EmployeesPage'));
-const LedgerPage = lazy(() => import('./pages/LedgerPage'));
 const ChatPage = lazy(() => import('./pages/ChatPage'));
 import MarketingRedirect from './components/MarketingRedirect';
 import BrandLoader from './components/BrandLoader';
@@ -77,20 +49,11 @@ const SectorsSettingsPage = lazy(() => import('./pages/SectorsSettingsPage'));
 const AdminReportsUsersPage = lazy(() => import('./pages/AdminReportsUsersPage'));
 const AdminReportsOrdersPage = lazy(() => import('./pages/AdminReportsOrdersPage'));
 const AdminReportsRevenuePage = lazy(() => import('./pages/AdminReportsRevenuePage'));
-const AdminReportsTicketsPage = lazy(() => import('./pages/AdminReportsTicketsPage'));
 const AdminArticlesPage = lazy(() => import('./pages/AdminArticlesPage'));
 const AdminThemeMarketplacePage = lazy(() => import('./pages/AdminThemeMarketplacePage'));
 const AdminArticleFormPage = lazy(() => import('./pages/AdminArticleFormPage'));
 const VerificationRequestPage = lazy(() => import('./pages/VerificationRequestPage'));
 const AdminVerificationsPage = lazy(() => import('./pages/AdminVerificationsPage'));
-const BalancePage = lazy(() => import('./pages/BalancePage'));
-const BundleDetailPage = lazy(() => import('./pages/BundleDetailPage'));
-const OrderDetailPage = lazy(() => import('./pages/OrderDetailPage'));
-const ProductDetailPage = lazy(() => import('./pages/ProductDetailPage'));
-const CategoryDetailPage = lazy(() => import('./pages/CategoryDetailPage'));
-const ProductFormPage = lazy(() => import('./pages/ProductFormPage'));
-const CategoryFormPage = lazy(() => import('./pages/CategoryFormPage'));
-const BundleFormPage = lazy(() => import('./pages/BundleFormPage'));
 const StoresPage = lazy(() => import('./pages/StoresPage'));
 const StoreFormPage = lazy(() => import('./pages/StoreFormPage'));
 const StoreLayout = lazy(() => import('./components/store/StoreLayout'));
@@ -215,7 +178,9 @@ function RootRoute() {
 }
 
 // Public pages moved to the marketing site; their old dashboard URLs forward there.
-const MARKETING_PATHS = ['/features', '/directory', '/suppliers/*', '/about', '/contact', '/legal/*', '/blog/*', '/u/:username'];
+const MARKETING_PATHS = ['/features', '/about', '/contact', '/legal/*', '/blog/*'];
+// Retired public pages (the old directory and public profiles) forward to the marketing home.
+const MARKETING_HOME_PATHS = ['/directory', '/suppliers/*', '/u/:username'];
 
 
 /** `/themes/:themeId/settings` (both scopes) → `/customize?tab=theme&theme=:themeId`. */
@@ -332,6 +297,7 @@ export default function App() {
             <Route path="/pending-approval" element={<PendingApprovalPage />} />
             <Route path="/" element={<RootRoute />} />
             {MARKETING_PATHS.map((path) => <Route key={path} path={path} element={<MarketingRedirect />} />)}
+            {MARKETING_HOME_PATHS.map((path) => <Route key={path} path={path} element={<MarketingRedirect to="/" />} />)}
             <Route
                 element={
                     <RequireAuth>
@@ -357,51 +323,24 @@ export default function App() {
                 <Route path="/community/groups/:id" element={<CommunityGroupPage />} />
                 <Route path="/reels" element={<ReelsPage />} />
                 <Route path="/pricing" element={<PricingPage />} />
-                <Route path="/company" element={<CompanyWorkspacePage />} />
-                <Route path="/procurement" element={<ProcurementWorkspacePage />} />
-                <Route path="/financing" element={<FinancingPage />} />
-                <Route path="/opportunities" element={<OpportunitiesPage />} />
                 <Route path="/admin/dashboard" element={<AdminDashboardPage />} />
                 <Route path="/admin/reports/users" element={<AdminReportsUsersPage />} />
                 <Route path="/admin/reports/orders" element={<AdminReportsOrdersPage />} />
                 <Route path="/admin/reports/revenue" element={<AdminReportsRevenuePage />} />
-                <Route path="/admin/reports/tickets" element={<AdminReportsTicketsPage />} />
                 <Route path="/admin/articles/new" element={<AdminArticleFormPage />} />
                 <Route path="/admin/articles/:id/edit" element={<AdminArticleFormPage />} />
                 <Route path="/admin/articles" element={<AdminArticlesPage />} />
                 <Route path="/admin/themes" element={<AdminThemeMarketplacePage />} />
                 <Route path="/notifications" element={<NotificationsPage />} />
-                <Route path="/orders/in" element={<OrdersPage direction="in" />} />
-                <Route path="/orders/out" element={<OrdersPage direction="out" />} />
-                <Route path="/orders/:code" element={<OrderDetailPage />} />
-                <Route path="/orders" element={<Navigate to="/orders/in" replace />} />
-                <Route path="/quotations" element={<QuotationsPage />} />
-                <Route path="/partners" element={<PartnersPage />} />
                 <Route path="/chat" element={<ChatPage />} />
                 <Route path="/employees" element={<EmployeesPage />} />
-                <Route path="/ledger" element={<LedgerPage />} />
                 <Route path="/settings/verification" element={<VerificationRequestPage />} />
                 <Route path="/settings/sectors" element={<SectorsSettingsPage />} />
                 <Route path="/admin/verifications" element={<AdminVerificationsPage />} />
-                <Route path="/quotations/in" element={<Navigate to="/quotations" replace />} />
-                <Route path="/quotations/out" element={<Navigate to="/quotations" replace />} />
-                <Route path="/deals/in" element={<DealsPage direction="in" />} />
-                <Route path="/deals/out" element={<DealsPage direction="out" />} />
-                <Route path="/gateways" element={<GatewaysPage />} />
-                <Route path="/gateways/:id" element={<GatewayDetailPage />} />
-                <Route path="/gateways/:id/edit" element={<GatewayFormPage />} />
-                <Route path="/crm/suppliers" element={<SuppliersPage />} />
-                <Route path="/crm/suppliers/new" element={<SupplierFormPage />} />
-                <Route path="/crm/suppliers/:id/edit" element={<SupplierFormPage />} />
-                <Route path="/crm/suppliers/:id" element={<SupplierDetailPage />} />
                 <Route path="/merchants" element={<MerchantsPage />} />
                 <Route path="/merchants/new" element={<MerchantFormPage />} />
                 <Route path="/merchants/:id/edit" element={<MerchantFormPage />} />
                 <Route path="/merchants/:id" element={<MerchantDetailPage />} />
-                <Route path="/shipping/deliveries" element={<DeliveriesPage />} />
-                <Route path="/shipping/companies/new" element={<ShippingCompanyFormPage />} />
-                <Route path="/shipping/companies/:id/edit" element={<ShippingCompanyFormPage />} />
-                <Route path="/shipping/companies" element={<ShippingCompaniesPage />} />
                 <Route path="/admin/users/new" element={<AdminUserFormPage />} />
                 <Route path="/admin/users/:id/edit" element={<AdminUserFormPage />} />
                 <Route path="/admin/users/:id" element={<AdminUserDetailPage />} />
@@ -416,24 +355,6 @@ export default function App() {
                 <Route path="/settings" element={<SettingsPage />} />
                 <Route path="/settings/email" element={<EmailSettingsPage />} />
                 <Route path="/settings/google" element={<GoogleSettingsPage />} />
-                <Route path="/settings/wigpleasure-sync" element={<WigpleasureSyncSettingsPage />} />
-                <Route path="/tickets" element={<TicketsPage />} />
-                <Route path="/tickets/:id" element={<TicketDetailPage />} />
-                <Route path="/inventory/transfers/new" element={<StockTransferFormPage />} />
-                <Route path="/inventory/transfers" element={<StockTransfersPage />} />
-                <Route path="/inventory" element={<InventoryPage />} />
-                <Route path="/products/new" element={<ProductFormPage />} />
-                <Route path="/products/:id/edit" element={<ProductFormPage />} />
-                <Route path="/products/:id" element={<ProductDetailPage />} />
-                <Route path="/products" element={<ProductsPage />} />
-                <Route path="/categories/new" element={<CategoryFormPage />} />
-                <Route path="/categories/:id/edit" element={<CategoryFormPage />} />
-                <Route path="/categories/:id" element={<CategoryDetailPage />} />
-                <Route path="/categories" element={<CategoriesPage />} />
-                <Route path="/bundles/new" element={<BundleFormPage />} />
-                <Route path="/bundles/:id/edit" element={<BundleFormPage />} />
-                <Route path="/bundles/:id" element={<BundleDetailPage />} />
-                <Route path="/bundles" element={<BundlesPage />} />
                 {/* Store admin — one route table rendered twice under a shared StoreLayout
                     (sidebar + store context): owners at /store/* (no id; useStoreScope resolves
                     the store via /my-store) and admins at /stores/:id/*. Absolute paths keep
@@ -449,11 +370,6 @@ export default function App() {
                 <Route path="/stores/new" element={<StoreFormPage />} />
                 <Route path="/stores/:id/edit" element={<StoreFormPage />} />
                 <Route path="/stores" element={<StoresPage />} />
-                <Route path="/attributes/groups" element={<AttributesPage />} />
-                <Route path="/attributes" element={<AttributesPage />} />
-                <Route path="/balance/in" element={<BalancePage />} />
-                <Route path="/balance/out" element={<BalancePage />} />
-                <Route path="/balance" element={<BalancePage />} />
                 <Route path="/top-up" element={<PlatformWalletPage key="wallet" />} />
                 <Route path="/subscriptions" element={<MerchantSubscriptionsPage />} />
                 <Route path="/transactions" element={<PlatformWalletPage key="transactions" mode="transactions" />} />

@@ -78,13 +78,13 @@ export default function MerchantsPage() {
         { key: 'name', header: t('col_name') },
         { key: 'email', header: t('email') },
         { key: 'status_col', header: t('col_status') },
-        { key: 'pending_col', header: t('suppliers_col_pending') },
+        { key: 'pending_col', header: t('merchants_col_pending') },
     ];
 
     const rowToExport = (row) => ({
         name: row.name,
         email: row.email,
-        status: row.pending_approval ? t('suppliers_pending_badge') : row.is_active !== false ? t('status_active') : t('status_inactive'),
+        status: row.pending_approval ? t('merchants_pending_badge') : row.is_active !== false ? t('status_active') : t('status_inactive'),
         pending: row.pending_approval ? t('yes') : t('no'),
     });
 
@@ -128,7 +128,7 @@ export default function MerchantsPage() {
         setDeleteLoading(true);
         try {
             await api.delete(`/merchants/${confirmDelete.id}`);
-            toast.success(t('merchant_deleted_toast') || t('deleted'));
+            toast.success(t('merchant_deleted_toast'));
             setConfirmDelete(null);
             setRows((prev) => prev.filter((r) => r.id !== confirmDelete.id));
         } catch (e) {
@@ -204,7 +204,7 @@ export default function MerchantsPage() {
         <div className="space-y-5">
             <div className="border-s-4 border-brand ps-4">
                 <h1 className="text-2xl font-semibold tracking-tight text-slate-900">{t('merchants')}</h1>
-                <p className="mt-1 text-sm text-slate-500">{t('merchants_help') || t('suppliers_help')}</p>
+                <p className="mt-1 text-sm text-slate-500">{t('merchants_help')}</p>
             </div>
             {err && (
                 <p className="rounded-lg border border-red-100 bg-red-50 px-3 py-2 text-sm text-red-700">{err}</p>
@@ -277,7 +277,7 @@ export default function MerchantsPage() {
                                 <th className="px-4 py-3.5">{t('col_name')}</th>
                                 <th className="px-4 py-3.5">{t('email')}</th>
                                 <th className="px-4 py-3.5">{t('col_status')}</th>
-                                <th className="px-4 py-3.5">{t('suppliers_col_pending')}</th>
+                                <th className="px-4 py-3.5">{t('merchants_col_pending')}</th>
                                 <th className="px-4 py-3.5">{t('col_actions')}</th>
                             </tr>
                         </thead>
@@ -310,7 +310,7 @@ export default function MerchantsPage() {
                                     <td className="px-4 py-3">
                                         {row.pending_approval ? (
                                             <span className="inline-flex rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-900">
-                                                {t('suppliers_pending_badge')}
+                                                {t('merchants_pending_badge')}
                                             </span>
                                         ) : (
                                             <span
@@ -364,8 +364,8 @@ export default function MerchantsPage() {
                                                     type="button"
                                                     disabled={loading}
                                                     onClick={() => setApproveTarget(row)}
-                                                    title={t('suppliers_approve_registration')}
-                                                    aria-label={t('suppliers_approve_registration')}
+                                                    title={t('merchants_approve_registration')}
+                                                    aria-label={t('merchants_approve_registration')}
                                                     className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-amber-300 bg-amber-50 text-amber-900 transition hover:bg-amber-100 disabled:opacity-40"
                                                 >
                                                     <HiOutlineCheckBadge className="h-4 w-4" aria-hidden />
@@ -404,8 +404,8 @@ export default function MerchantsPage() {
             <ConfirmDialog
                 open={Boolean(approveTarget)}
                 onClose={() => !approveLoading && setApproveTarget(null)}
-                title={t('suppliers_approve_registration')}
-                body={t('suppliers_approve_confirm_body', { name: approveTarget?.name ?? '' })}
+                title={t('merchants_approve_registration')}
+                body={t('merchants_approve_confirm_body', { name: approveTarget?.name ?? '' })}
                 confirmLabel={t('admin_user_approve_registration')}
                 cancelLabel={t('cancel')}
                 loading={approveLoading}
@@ -415,7 +415,7 @@ export default function MerchantsPage() {
             <ConfirmDialog
                 open={Boolean(confirmDelete)}
                 onClose={() => !deleteLoading && setConfirmDelete(null)}
-                title={t('confirm_delete_merchant_title') || t('confirm_delete_supplier_title')}
+                title={t('confirm_delete_merchant_title')}
                 body={t('confirm_delete_merchant_body', { name: confirmDelete?.name ?? '' })}
                 confirmLabel={t('action_delete')}
                 cancelLabel={t('cancel')}
@@ -427,7 +427,7 @@ export default function MerchantsPage() {
                 open={confirmBulkDelete}
                 onClose={() => !deleteLoading && setConfirmBulkDelete(false)}
                 title={t('confirm_bulk_delete_title')}
-                body={t('confirm_bulk_delete_merchants_body') || t('confirm_bulk_delete_suppliers_body')}
+                body={t('confirm_bulk_delete_merchants_body')}
                 confirmLabel={t('action_delete')}
                 cancelLabel={t('cancel')}
                 danger

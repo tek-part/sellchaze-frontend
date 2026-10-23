@@ -76,7 +76,7 @@ export default function useStoreLocales(options = {}) {
     // Owner scope with a user who is not a store owner (admin without a store): skip the request.
     const roles = Array.isArray(outlet?.me?.roles) ? outlet.me.roles : null;
     const ownerScope = apiBase === '/my-store';
-    const isOwnerUser = roles ? roles.some((r) => r === 'Merchant' || r === 'Supplier') : true;
+    const isOwnerUser = roles ? roles.includes('Merchant') : true;
     const shouldFetch = !fromLayout && options.enabled !== false && (!ownerScope || isOwnerUser);
 
     const cached = shouldFetch ? cache.get(apiBase) : undefined;
