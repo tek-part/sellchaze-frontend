@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState, Suspense } from 'react';
 import { Dialog, DialogBackdrop, DialogPanel, DialogTitle } from '@headlessui/react';
 import { motion, useReducedMotion } from 'framer-motion';
 import { Link, Navigate, Outlet, useLocation, useNavigate } from 'react-router-dom';
@@ -21,6 +21,7 @@ import { storeAccess } from '../lib/storeAccess';
 import { merchantWorkspaceRouteAllowed } from '../lib/merchantWorkspaceRoutes';
 import { WorkspaceIconProvider } from './workspace/WorkspaceIcons';
 import { marketingUrl } from '../config/marketing';
+import BrandLoader from './BrandLoader';
 
 function unwrapUser(payload) {
     if (!payload) {
@@ -180,17 +181,7 @@ export default function AppLayout() {
     }
 
     if (!me) {
-        return (
-            <div className="flex h-dvh items-center justify-center bg-surface">
-                <motion.div
-                    initial={{ opacity: 0.5 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ repeat: Infinity, duration: 1.2, repeatType: 'reverse' }}
-                    className="h-10 w-10 rounded-full border-2 border-brand border-t-transparent"
-                    aria-hidden
-                />
-            </div>
-        );
+        return <BrandLoader fullScreen />;
     }
 
     const isAdmin = Array.isArray(me.roles) && me.roles.includes('Admin');
@@ -256,14 +247,14 @@ export default function AppLayout() {
                 <WorkspaceHeader merchantWorkspace={merchantWorkspace} me={me} permissions={permissions} storeUrl={storeUrl} isSupplier={isSupplier} chatUnread={chatUnread} appearance={appearance} onLanguage={toggleLanguage} onNavigation={openMobileNavigation} onToggleSidebar={() => setSidebarCollapsed((value) => !value)} sidebarToggleRef={sidebarToggleRef} collapsed={sidebarCollapsed} onSearch={() => setSearchOpen(true)} onLogout={() => setLogoutOpen(true)} />
                 </div>
                 <main id="workspace-content" tabIndex={-1} className="ws-main-scroll">
-                    <div key={location.pathname} className="ws-page"><Outlet context={{ me, isAdmin, isSupplier, permissions, unifiedStoreNavigation: !isAdminOnly }} /></div>
+                    <div key={location.pathname} className="ws-page"><Suspense fallback={<BrandLoader />}><Outlet context={{ me, isAdmin, isSupplier, permissions, unifiedStoreNavigation: !isAdminOnly }} /></Suspense></div>
                 </main>
             </div>
             <Dialog open={mobileNavOpen} onClose={() => setMobileNavOpen(false)} className="ws-dialog-layer">
                 <DialogBackdrop transition className="ws-backdrop" />
                 <div className="ws-drawer-position" dir={currentLng === 'ar' ? 'rtl' : 'ltr'} style={mobileDrawerViewportWidth ? { width: mobileDrawerViewportWidth, left: 0, right: 'auto' } : undefined}>
                     <DialogPanel transition className="ws-sidebar ws-drawer" style={{ width: mobileDrawerWidth ?? undefined }} data-workspace-theme={appearance.theme}>
-                        <div className="ws-sidebar-brand"><Link to={isAdminOnly ? '/admin/dashboard' : '/dashboard'}><img src="/icon.png" alt="" /><DialogTitle as="strong">Sellchaze</DialogTitle></Link><div className="ws-sidebar-brand-actions">{merchantWorkspace && storeUrl ? <a href={storeUrl} target="_blank" rel="noopener noreferrer" className="ws-icon-button" aria-label={t('view_store', 'View store')} title={t('view_store', 'View store')}><HiOutlineEye aria-hidden /></a> : null}<button type="button" className="ws-icon-button" onClick={() => setMobileNavOpen(false)} aria-label={t('close')}><HiOutlineXMark aria-hidden /></button></div></div>
+                        <div className="ws-sidebar-brand"><Link to={isAdminOnly ? '/admin/dashboard' : '/dashboard'}><img src="/brand/sellchaze-mark.svg" alt="" /><DialogTitle as="strong">Sellchaze</DialogTitle></Link><div className="ws-sidebar-brand-actions">{merchantWorkspace && storeUrl ? <a href={storeUrl} target="_blank" rel="noopener noreferrer" className="ws-icon-button" aria-label={t('view_store', 'View store')} title={t('view_store', 'View store')}><HiOutlineEye aria-hidden /></a> : null}<button type="button" className="ws-icon-button" onClick={() => setMobileNavOpen(false)} aria-label={t('close')}><HiOutlineXMark aria-hidden /></button></div></div>
                         {!merchantWorkspace ? <div className="ws-sidebar-tools"><label className="ws-sidebar-search"><HiOutlineMagnifyingGlass aria-hidden /><input value={navigationQuery} onChange={(e) => setNavigationQuery(e.target.value)} placeholder={ws('search')} aria-label={ws('search')} /></label></div> : null}
                         <div className={`ws-sidebar-scroll${merchantWorkspace ? ' ws-sidebar-scroll--merchant' : ''}`}><SidebarNav {...navigationProps} query={merchantWorkspace ? '' : navigationQuery} onNavigate={() => setMobileNavOpen(false)} />
                             {merchantWorkspace ? <div className="ws-mobile-sidebar-preferences"><WorkspaceAppearanceControl appearance={appearance} inDrawer /><button type="button" className="ws-icon-button" onClick={toggleLanguage} aria-label={ws('language')}><HiOutlineLanguage aria-hidden /></button></div> : null}

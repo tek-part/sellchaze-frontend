@@ -77,7 +77,7 @@ export default function ForgotPasswordPage() {
 
             <header className="relative flex items-center justify-between px-4 py-4 md:px-8">
                 <a href={marketingUrl()} className="flex items-center" aria-label="Sellchaze">
-                    <img src="/logo.png" alt="Sellchaze" className="h-12 w-auto object-contain md:h-14" />
+                    <img src="/brand/sellchaze-logo.svg" alt="Sellchaze" className="h-12 w-auto object-contain md:h-14" />
                 </a>
                 <LanguageSwitcher />
             </header>

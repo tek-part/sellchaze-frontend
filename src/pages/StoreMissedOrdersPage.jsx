@@ -17,14 +17,18 @@ function MissedOrders({ apiBase }) {
     const [source, setSource] = useState(''); const [from, setFrom] = useState(''); const [to, setTo] = useState(''); const [filters, setFilters] = useState(false);
     const [page, setPage] = useState(1); const [result, setResult] = useState(null); const [loading, setLoading] = useState(true); const [error, setError] = useState(''); const [reload, setReload] = useState(0);
     const [selected, setSelected] = useState(new Map()); const [busy, setBusy] = useState(false);
+    // The 45 s auto-refresh runs in the background: it keeps the current rows on screen instead of
+    // flashing the loading state, which made the page look like it kept reloading.
+    const backgroundRefresh = useRef(false);
     const path = `${apiBase}/missed-orders`;
     const params = { ...(status ? { status } : {}), ...(search ? { search } : {}), ...(source ? { source } : {}), ...(from ? { date_from: from } : {}), ...(to ? { date_to: to } : {}) };
     useEffect(() => {
-        let active = true; setLoading(true); setError('');
-        api.get(path, { params: { status, search, source, date_from: from, date_to: to, page, per_page: 25 } }).then(({ data }) => { if (active) setResult(data); }).catch((e) => { if (active) setError(e.response?.data?.message || e.message); }).finally(() => { if (active) setLoading(false); });
+        let active = true; const quiet = backgroundRefresh.current; backgroundRefresh.current = false;
+        if (!quiet) { setLoading(true); setError(''); }
+        api.get(path, { params: { status, search, source, date_from: from, date_to: to, page, per_page: 25 } }).then(({ data }) => { if (active) setResult(data); }).catch((e) => { if (active && !quiet) setError(e.response?.data?.message || e.message); }).finally(() => { if (active && !quiet) setLoading(false); });
         return () => { active = false; };
     }, [path, status, search, source, from, to, page, reload]);
-    useEffect(() => { const timer = window.setInterval(() => { if (document.visibilityState !== 'hidden' && !busy) setReload((value) => value + 1); }, 45000); return () => window.clearInterval(timer); }, [busy]);
+    useEffect(() => { const timer = window.setInterval(() => { if (document.visibilityState !== 'hidden' && !busy) { backgroundRefresh.current = true; setReload((value) => value + 1); } }, 45000); return () => window.clearInterval(timer); }, [busy]);
     const pending = loading || query !== search; const rows = result?.data || [];
     const count = (result?.counts?.under_review || 0) + (result?.counts?.completed || 0);
     const tabs = [['', text('جميع الطلبات', 'All orders'), count], ['completed', text('مكتمل', 'Completed'), result?.counts?.completed || 0], ['under_review', text('تحت المراجعة', 'Under review'), result?.counts?.under_review || 0]];
