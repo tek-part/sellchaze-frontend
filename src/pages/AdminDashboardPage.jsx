@@ -97,7 +97,7 @@ export default function AdminDashboardPage() {
                 {
                     label: t('admin_dashboard_new_users', 'New users'),
                     data: rows.map((r) => r.count),
-                    borderColor: '#0b63ce',
+                    borderColor: '#039855',
                     backgroundColor: 'rgba(11,99,206,0.12)',
                     tension: 0.35,
                     fill: true,
@@ -129,7 +129,7 @@ export default function AdminDashboardPage() {
             datasets: [
                 {
                     data: rows.map((r) => r.count),
-                    backgroundColor: ['#0b63ce', '#3184df', '#71a9e6', '#8b5cf6', '#f59e0b', '#ef4444', '#38bdf8'],
+                    backgroundColor: ['#039855', '#32d583', '#a6f4c5', '#8b5cf6', '#f59e0b', '#ef4444', '#38bdf8'],
                     borderWidth: 0,
                 },
             ],
@@ -147,7 +147,7 @@ export default function AdminDashboardPage() {
 
     return (
         <div className="w-full space-y-5 pb-8">
-            <Reveal as="header" index={0} className="relative overflow-hidden rounded-3xl bg-linear-to-br from-[#0a3d7c] via-[#0b63ce] to-[#2585e7] px-5 py-6 text-white shadow-[0_22px_55px_-32px_rgba(11,99,206,0.65)] md:px-7 md:py-7">
+            <Reveal as="header" index={0} className="relative overflow-hidden rounded-3xl bg-linear-to-br from-brand-dark via-brand to-[#2585e7] px-5 py-6 text-white shadow-[0_22px_55px_-32px_rgba(11,99,206,0.65)] md:px-7 md:py-7">
                 <div className="absolute -end-16 -top-24 h-64 w-64 rounded-full border-[42px] border-white/8" aria-hidden />
                 <div className="absolute bottom-0 end-40 h-28 w-28 rounded-full bg-blue-300/10 blur-2xl" aria-hidden />
                 <div className="relative flex flex-col justify-between gap-5 xl:flex-row xl:items-end">
@@ -162,7 +162,7 @@ export default function AdminDashboardPage() {
                         </p>
                     </div>
                     <div className="flex flex-wrap gap-2">
-                        <Link to="/admin/users?pending=1" className="inline-flex items-center gap-2 rounded-xl bg-white px-3.5 py-2.5 text-sm font-semibold text-[#0a3d7c] shadow-sm transition hover:-translate-y-0.5 hover:bg-blue-50">
+                        <Link to="/admin/users?pending=1" className="inline-flex items-center gap-2 rounded-xl bg-white px-3.5 py-2.5 text-sm font-semibold text-brand-dark shadow-sm transition hover:-translate-y-0.5 hover:bg-blue-50">
                             {t('admin_dashboard_pending_regs', 'Pending registrations')}
                             <HiOutlineArrowRight className="h-4 w-4 rtl:rotate-180" aria-hidden />
                         </Link>

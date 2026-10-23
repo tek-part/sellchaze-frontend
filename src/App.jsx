@@ -1,6 +1,6 @@
 import { lazy, Suspense } from 'react';
 import PlatformReferralCapture from './components/PlatformReferralCapture';
-import { Routes, Route, Navigate, useParams } from 'react-router-dom';
+import { Routes, Route, Navigate, useLocation, useParams } from 'react-router-dom';
 import useStoreScope from './hooks/useStoreScope';
 import AppErrorBoundary from './components/AppErrorBoundary';
 import AppLayout from './components/AppLayout';
@@ -70,23 +70,7 @@ const PartnersPage = lazy(() => import('./pages/PartnersPage'));
 const EmployeesPage = lazy(() => import('./pages/EmployeesPage'));
 const LedgerPage = lazy(() => import('./pages/LedgerPage'));
 const ChatPage = lazy(() => import('./pages/ChatPage'));
-const DirectoryPage = lazy(() => import('./pages/public/DirectoryPage'));
-// Public supplier-directory pages are code-split so the marketing/landing entry
-// stays lean — they load on demand when a visitor opens /suppliers/*.
-const SuppliersDirectoryPage = lazy(() => import('./pages/public/SuppliersDirectoryPage'));
-const SectorPage = lazy(() => import('./pages/public/SectorPage'));
-const SpecialtyPage = lazy(() => import('./pages/public/SpecialtyPage'));
-const CityPage = lazy(() => import('./pages/public/CityPage'));
-const PublicProfilePage = lazy(() => import('./pages/public/PublicProfilePage'));
-import PublicLayout from './layouts/PublicLayout';
-import LandingPage from './pages/public/LandingPage';
-const FeaturesPage = lazy(() => import('./pages/public/FeaturesPage'));
-const AboutPage = lazy(() => import('./pages/public/AboutPage'));
-const ContactPage = lazy(() => import('./pages/public/ContactPage'));
-const TermsPage = lazy(() => import('./pages/public/TermsPage'));
-const PrivacyPage = lazy(() => import('./pages/public/PrivacyPage'));
-const BlogIndexPage = lazy(() => import('./pages/public/BlogIndexPage'));
-const BlogArticlePage = lazy(() => import('./pages/public/BlogArticlePage'));
+import MarketingRedirect from './components/MarketingRedirect';
 const AdminDashboardPage = lazy(() => import('./pages/AdminDashboardPage'));
 const SectorsSettingsPage = lazy(() => import('./pages/SectorsSettingsPage'));
 const AdminReportsUsersPage = lazy(() => import('./pages/AdminReportsUsersPage'));
@@ -210,18 +194,27 @@ const SessionExpiredPage = lazy(() => import('./pages/SessionExpiredPage'));
 const OfflinePage = lazy(() => import('./pages/OfflinePage'));
 
 function RequireAuth({ children }) {
+    const { pathname, search } = useLocation();
     const token = localStorage.getItem('sellchase_access_token');
     if (!token) {
-        return <Navigate to="/" replace />;
+        // Login honours ?redirect=, so the visitor lands back where they were headed.
+        const target = `${pathname}${search}`;
+        return <Navigate to={target === '/' ? '/login' : `/login?redirect=${encodeURIComponent(target)}`} replace />;
     }
     return children;
 }
 
+/** app.sellchaze.com/ is the dashboard; the marketing home page lives on sellchaze.com. */
 function RootRoute() {
-    // Public landing is always viewable — logged-in users can browse back to the
-    // marketing site (the public header shows a "Dashboard" button to return).
-    return <LandingPage />;
+    return (
+        <RequireAuth>
+            <Navigate to="/dashboard" replace />
+        </RequireAuth>
+    );
 }
+
+// Public pages moved to the marketing site; their old dashboard URLs forward there.
+const MARKETING_PATHS = ['/features', '/directory', '/suppliers/*', '/about', '/contact', '/legal/*', '/blog/*', '/u/:username'];
 
 
 /** `/themes/:themeId/settings` (both scopes) → `/customize?tab=theme&theme=:themeId`. */
@@ -336,24 +329,8 @@ export default function App() {
             <Route path="/forgot-password" element={<ForgotPasswordPage />} />
             <Route path="/reset-password" element={<ResetPasswordPage />} />
             <Route path="/pending-approval" element={<PendingApprovalPage />} />
-            <Route path="/u/:username" element={<PublicProfilePage />} />
-            <Route element={<PublicLayout />}>
-                <Route path="/" element={<RootRoute />} />
-                <Route path="/features" element={<FeaturesPage />} />
-                <Route path="/directory" element={<DirectoryPage />} />
-                <Route path="/suppliers" element={<SuppliersDirectoryPage />} />
-                <Route path="/suppliers/:sector" element={<SectorPage />} />
-                {/* City landing pages sit on a reserved `city` segment so they never
-                    collide with a specialty slug. Declared before the specialty route. */}
-                <Route path="/suppliers/:sector/city/:city" element={<CityPage />} />
-                <Route path="/suppliers/:sector/:specialty" element={<SpecialtyPage />} />
-                <Route path="/about" element={<AboutPage />} />
-                <Route path="/contact" element={<ContactPage />} />
-                <Route path="/legal/terms" element={<TermsPage />} />
-                <Route path="/legal/privacy" element={<PrivacyPage />} />
-                <Route path="/blog" element={<BlogIndexPage />} />
-                <Route path="/blog/:slug" element={<BlogArticlePage />} />
-            </Route>
+            <Route path="/" element={<RootRoute />} />
+            {MARKETING_PATHS.map((path) => <Route key={path} path={path} element={<MarketingRedirect />} />)}
             <Route
                 element={
                     <RequireAuth>

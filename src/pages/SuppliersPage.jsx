@@ -13,6 +13,7 @@ import ConfirmDialog from '../components/ConfirmDialog';
 import { exportRowsToExcel } from '../utils/exportExcel';
 import { fetchAllPages } from '../utils/fetchAllPages';
 import { impersonateUserId } from '../utils/impersonationApi';
+import { publicProfileUrl } from '../config/marketing';
 
 export default function SuppliersPage() {
     const { t } = useTranslation();
@@ -369,7 +370,7 @@ export default function SuppliersPage() {
                                         <div className="flex flex-wrap items-center gap-1">
                                             {row.username ? (
                                                 <a
-                                                    href={`/u/${encodeURIComponent(row.username)}`}
+                                                    href={publicProfileUrl(row.username)}
                                                     target="_blank"
                                                     rel="noopener noreferrer"
                                                     title={t('view_public_profile') || 'View public profile'}

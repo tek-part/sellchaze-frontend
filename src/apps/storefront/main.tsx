@@ -192,7 +192,7 @@ async function bootstrap(): Promise<void> {
 warmNativeCatalogPreview(window.location);
 void bootstrap();
 
-const platformHosts = new Set(['sellchaze.com', 'www.sellchaze.com']);
+const platformHosts = new Set(['app.sellchaze.com', 'sellchaze.com', 'www.sellchaze.com']);
 const isStoreHost = !platformHosts.has(window.location.hostname.toLowerCase());
 
 if ('serviceWorker' in navigator && import.meta.env.PROD && isStoreHost) {

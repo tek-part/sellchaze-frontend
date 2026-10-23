@@ -39,6 +39,9 @@ jobs:
       SSH_HOST: ${{ secrets.SSH_HOST }}
       SSH_USER: ${{ secrets.SSH_USERNAME }}
       SSH_FINGERPRINT: ${{ secrets.SSH_HOST_FINGERPRINT }}
+      # Document root of the dashboard. Set the APP_WEB_ROOT repository variable to the
+      # app.sellchaze.com docroot once that subdomain exists; until then the old root is kept.
+      APP_WEB_ROOT: ${{ vars.APP_WEB_ROOT || '/home/sellchaze/public_html' }}
 
     steps:
       - name: Resolve commit and Quality run
@@ -119,7 +122,9 @@ jobs:
           cat > remote.sh <<'REMOTE'
           set -e
           RELEASE="/home/sellchaze/releases/$DEPLOY_SHA"
-          WEB_ROOT=/home/sellchaze/public_html
+          WEB_ROOT="$APP_WEB_ROOT"
+          case "$WEB_ROOT" in /home/sellchaze/*) ;; *) echo "Refusing unexpected web root: $WEB_ROOT"; exit 1 ;; esac
+          mkdir -p "$WEB_ROOT"
           printf '%s\n' "$DEPLOY_SHA" | grep -Eq '^[0-9a-f]{40}$'
           test -f "$RELEASE/index.html"
           test -f "$RELEASE/storefront.html"
@@ -178,7 +183,7 @@ jobs:
           OPTS="-i $HOME/.ssh/deploy_key -o BatchMode=yes -o StrictHostKeyChecking=accept-new -o ConnectTimeout=25 -o ServerAliveInterval=15"
           for i in $(seq 1 30); do
             # Capture ssh's own exit status (after an `if` statement `$?` would be the if's, i.e. 0).
-            if ssh $OPTS -p 22 "$SSH_USER@$SSH_HOST" DEPLOY_SHA="$DEPLOY_SHA" 'bash -s' < remote.sh; then
+            if ssh $OPTS -p 22 "$SSH_USER@$SSH_HOST" DEPLOY_SHA="$DEPLOY_SHA" APP_WEB_ROOT="$APP_WEB_ROOT" 'bash -s' < remote.sh; then
               exit 0
             else
               rc=$?

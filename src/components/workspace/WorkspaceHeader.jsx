@@ -15,6 +15,7 @@ import { MobileMenuIcon } from './SidebarReferenceIcons';
 import { CHAT_ENABLED } from '../../lib/features';
 import useWorkspaceCopy from './workspaceCopy';
 import WorkspaceAppearanceControl from './WorkspaceAppearanceControl';
+import { marketingUrl, publicProfileUrl } from '../../config/marketing';
 
 const subscribeMobile = (listener) => {
     const query = window.matchMedia('(max-width: 767px)');
@@ -50,8 +51,8 @@ export default function WorkspaceHeader({ me, storeUrl, isSupplier, permissions,
                     <div className="ws-account-summary"><strong>{me.name}</strong><span>{me.email}</span></div>
                     <MenuItem><button type="button" onClick={onSearch} className={menuRow} aria-keyshortcuts="Control+K Meta+K"><HiOutlineMagnifyingGlass aria-hidden />{ws('searchTitle')}<kbd className="ws-menu-shortcut">Ctrl K</kbd></button></MenuItem>
                     <MenuItem><Link to="/settings/profile" className={menuRow}><HiOutlineUserCircle aria-hidden />{t('nav_profile', 'My profile')}</Link></MenuItem>
-                    <MenuItem><Link to={`/u/${publicSlug}`} className={menuRow}><HiOutlineArrowTopRightOnSquare aria-hidden />{t('view_public_profile', 'View public profile')}</Link></MenuItem>
-                    {!merchantWorkspace ? <MenuItem><Link to="/" className={menuRow}><HiOutlineArrowTopRightOnSquare aria-hidden />{t('nav_visit_website', 'Visit website')}</Link></MenuItem> : null}
+                    <MenuItem><a href={publicProfileUrl(publicSlug)} target="_blank" rel="noopener noreferrer" className={menuRow}><HiOutlineArrowTopRightOnSquare aria-hidden />{t('view_public_profile', 'View public profile')}</a></MenuItem>
+                    {!merchantWorkspace ? <MenuItem><a href={marketingUrl('/')} target="_blank" rel="noopener noreferrer" className={menuRow}><HiOutlineArrowTopRightOnSquare aria-hidden />{t('nav_visit_website', 'Visit website')}</a></MenuItem> : null}
                     {storeUrl ? <MenuItem><a href={storeUrl} target="_blank" rel="noopener noreferrer" className={menuRow}><HiOutlineArrowTopRightOnSquare aria-hidden />{t('view_store', 'View store')}</a></MenuItem> : null}
                     {!merchantWorkspace && permissions.includes('wavex-access') ? <MenuItem><Link to="/wavex/chats" className={menuRow}><FaWhatsapp aria-hidden />{t('wavex_nav_chats')}</Link></MenuItem> : null}
                     {!merchantWorkspace && permissions.includes('monitoring-live-view') ? <MenuItem><Link to="/admin/monitoring/live" className={menuRow}><HiOutlineSignal aria-hidden />{t('monitoring_live_title', 'Live monitoring')}</Link></MenuItem> : null}
