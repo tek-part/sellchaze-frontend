@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { makeDomainsApi, domainErrorMessage } from '../../api/domains';
 import DnsRecordRow from './DnsRecordRow';
 import useModalA11y from './useModalA11y';
+import { Link } from 'react-router-dom';
 
 /**
  * Six-step onboarding for connecting a custom domain.
@@ -314,16 +315,13 @@ export default function DomainSetupWizard({ onClose, onCompleted, apiBase = '/my
                                 >
                                     {t('domain_wizard_added_records')}
                                 </button>
-                                {/* Escape hatch: not every owner manages their own DNS.
-                                    Opens a support ticket pre-filled with the domain. */}
-                                <a
-                                    href={`/tickets?subject=${encodeURIComponent(
-                                        t('domain_help_subject', 'Help connecting my custom domain'),
-                                    )}&domain=${encodeURIComponent(domain?.host ?? '')}`}
+                                {/* Escape hatch: not every owner manages their own DNS. */}
+                                <Link
+                                    to="/support/new?category=domain"
                                     className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-center text-sm font-semibold text-slate-700 transition hover:border-brand hover:text-brand sm:w-auto"
                                 >
                                     {t('domain_help_cta', 'Request help')}
-                                </a>
+                                </Link>
                             </div>
                         </div>
                     )}

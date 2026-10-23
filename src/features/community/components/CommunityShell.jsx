@@ -90,28 +90,6 @@ function MobileLink({ to, end, labelKey, Icon, ActiveIcon }) {
     );
 }
 
-/** The recurring promo card at the top of the right rail. */
-function OpportunitiesPromo() {
-    const { t } = useTranslation();
-    return (
-        <section className="group relative isolate min-h-48 overflow-hidden rounded-2xl text-white shadow-[0_14px_40px_-26px_rgba(15,23,42,.6)]">
-            <img
-                src="/media/community/b2b-opportunity-cover-v1.png"
-                alt=""
-                loading="lazy"
-                decoding="async"
-                className="absolute inset-0 -z-10 h-full w-full object-cover transition duration-700 group-hover:scale-105"
-            />
-            <div className="absolute inset-0 -z-10 bg-gradient-to-t from-slate-950 via-slate-950/60 to-transparent" />
-            <div className="flex h-full min-h-48 flex-col justify-end p-5">
-                <p className="text-[11px] font-bold uppercase tracking-widest text-blue-200">{t('community_promo_eyebrow')}</p>
-                <h2 className="mt-1 text-lg font-bold leading-snug">{t('community_promo_title')}</h2>
-                <p className="mt-1.5 text-xs leading-5 text-white/80">{t('community_promo_body')}</p>
-            </div>
-        </section>
-    );
-}
-
 /**
  * Three-column frame shared by every community surface. The middle column is
  * capped at a comfortable reading width; the rails hold context, never the
@@ -198,7 +176,6 @@ export default function CommunityShell({ children, rightRail = true }) {
 
                 {rightRail ? (
                     <aside className="sticky top-1 hidden space-y-4 xl:block">
-                        <OpportunitiesPromo />
                         <FollowSuggestions />
                     </aside>
                 ) : null}

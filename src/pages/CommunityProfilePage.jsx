@@ -376,8 +376,6 @@ export default function CommunityProfilePage() {
                                 <Link to={`/community/connections/${profile.username}?tab=following`} className="hover:underline">
                                     <strong>{stats.following_count ?? 0}</strong> {t('following_title', 'Following')}
                                 </Link>
-                                {' · '}{stats.partners_count ?? 0} {t('profile_partners', 'Partners')}
-                                {stats.products_count ? <> · {stats.products_count} {t('profile_products', 'Products')}</> : null}
                                 {memberYear ? <span className="text-slate-400"> · {t('profile_member_since', 'Member since {{year}}', { year: memberYear })}</span> : null}
                             </p>
                         </div>

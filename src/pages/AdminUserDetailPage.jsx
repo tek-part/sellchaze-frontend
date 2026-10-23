@@ -38,7 +38,6 @@ export default function AdminUserDetailPage() {
     const [sessionsPage, setSessionsPage] = useState(1);
     const [sessionsLoading, setSessionsLoading] = useState(false);
     const [approving, setApproving] = useState(false);
-    const [approvalRole, setApprovalRole] = useState('Staff');
     const [impersonateLoading, setImpersonateLoading] = useState(false);
     const [notifRows, setNotifRows] = useState([]);
     const [notifLoading, setNotifLoading] = useState(false);
@@ -64,14 +63,6 @@ export default function AdminUserDetailPage() {
             active = false;
         };
     }, [id]);
-
-    useEffect(() => {
-        if (user?.pending_approval && (user.registration_role === 'Staff' || user.registration_role === 'Supplier')) {
-            setApprovalRole(user.registration_role);
-        } else if (user && !user.pending_approval) {
-            setApprovalRole('Staff');
-        }
-    }, [user]);
 
     useEffect(() => {
         let active = true;
@@ -155,7 +146,7 @@ export default function AdminUserDetailPage() {
         try {
             await api.patch(`/admin/users/${id}`, {
                 approve_pending_registration: true,
-                approval_role: approvalRole,
+                approval_role: 'Staff',
             });
             toast.success(t('admin_user_approved_toast'));
             const { data } = await api.get(`/admin/users/${id}`);
@@ -178,29 +169,7 @@ export default function AdminUserDetailPage() {
                     </p>
                     {canApproveRegistration ? (
                         <>
-                            <p className="font-semibold text-amber-900">{t('admin_user_approval_pick_role')}</p>
-                            <div className="flex flex-wrap gap-4">
-                                <label className="flex cursor-pointer items-center gap-2">
-                                    <input
-                                        type="radio"
-                                        name="approval-role"
-                                        checked={approvalRole === 'Staff'}
-                                        onChange={() => setApprovalRole('Staff')}
-                                        className="text-amber-800"
-                                    />
-                                    {t('auth_role_staff')}
-                                </label>
-                                <label className="flex cursor-pointer items-center gap-2">
-                                    <input
-                                        type="radio"
-                                        name="approval-role"
-                                        checked={approvalRole === 'Supplier'}
-                                        onChange={() => setApprovalRole('Supplier')}
-                                        className="text-amber-800"
-                                    />
-                                    {t('auth_role_supplier')}
-                                </label>
-                            </div>
+                            <p className="text-amber-900">{t('admin_user_approve_staff_pending_body')}</p>
                             <button
                                 type="button"
                                 onClick={() => void approveRegistration()}

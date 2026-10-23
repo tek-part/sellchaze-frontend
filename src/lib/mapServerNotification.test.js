@@ -13,6 +13,14 @@ describe('notification content', () => {
         expect(mapServerNotification({ data: { internal_id: 42, secret: 'internal' } }, t).body).toBe('notif_type_generic_body');
         expect(mapServerNotification({ data: { preview: 'Readable alert' } }, t).body).toBe('Readable alert');
     });
+    it('shows notifications left over from the retired B2B system as generic ones without dead links', () => {
+        for (const type of ['order', 'quotation', 'ticket_reply', 'ticket_created', 'shipping_updated', 'order_assigned_to_supplier', 'invitation']) {
+            const row = mapServerNotification({ id: 1, data: { type, order_code: 'B2B-1', ticket_id: 3 } }, t);
+            expect(row.title).toBe('notif_type_generic_title');
+            expect(row.link).toBeUndefined();
+        }
+        expect(mapServerNotification({ id: 2, data: { type: 'inventory_low', product_id: 5, qty_available: 1 } }, t).link).toBeUndefined();
+    });
     it('renders real stored fulfillment notifications in both languages without claiming a payment refund', () => {
         const statuses = ['waiting_for_pickup', 'returning_from_delivery', 'request_refund', 'refund_in_progress', 'refunded'];
         for (const lng of ['ar', 'en']) {

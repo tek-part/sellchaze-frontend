@@ -12,7 +12,6 @@ export function usePermissions() {
     return {
         me: ctx.me ?? null,
         isAdmin: Boolean(ctx.isAdmin),
-        isSupplier: Boolean(ctx.isSupplier),
         permissions,
         can,
     };

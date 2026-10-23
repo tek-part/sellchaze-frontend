@@ -14,19 +14,17 @@ import { DashboardIcon, SidebarChevronIcon } from './workspace/SidebarReferenceI
 import { FaGoogle, FaWhatsapp } from 'react-icons/fa';
 import {
     HiOutlineBanknotes,
-    HiOutlineRocketLaunch,
-    HiOutlineBuildingOffice2,
     HiOutlineChatBubbleLeftRight,
     HiOutlineChevronDown,
     HiOutlineClipboardDocumentList,
     HiOutlineCog6Tooth,
     HiOutlineDocumentText,
     HiOutlineEnvelope,
+    HiOutlineHome,
     HiOutlineRectangleStack,
     HiOutlineShieldCheck,
     HiOutlineShoppingBag,
     HiOutlineSquares2X2,
-    HiOutlineTicket,
     HiOutlineUserCircle,
     HiOutlineUserGroup,
     HiOutlineUsers,
@@ -34,6 +32,7 @@ import {
     HiOutlineChartBar,
     HiOutlineNewspaper,
     HiOutlinePresentationChartLine,
+    HiOutlineQuestionMarkCircle,
     HiOutlineSparkles,
 } from './workspace/WorkspaceIcons';
 
@@ -191,7 +190,7 @@ export default function SidebarNav({ variant = 'list', expandedGroup = '', exclu
     );
 }
 
-function SidebarNavInner({ isAdmin = false, isSupplier = false, roles = [], permissions = [], onNavigate, onExpand, compact = false, variant = 'list', query = '', search = false }) {
+function SidebarNavInner({ isAdmin = false, roles = [], permissions = [], onNavigate, onExpand, compact = false, variant = 'list', query = '', search = false }) {
     const { t } = useTranslation();
     const ws = useWorkspaceCopy();
     const mega = variant === 'mega';
@@ -212,11 +211,11 @@ function SidebarNavInner({ isAdmin = false, isSupplier = false, roles = [], perm
     const openWavex = usePathPrefix('/wavex');
     // Show the Admin section only when at least one of its links will render —
     // mirror its actual contents (users/roles/verifications/activity/monitoring)
-    // so it never appears as an empty header (e.g. a merchant with suppliers-list).
-    // Admin-only sidebar: user has Admin role with no business role (Merchant/Supplier/Customer/Employee).
+    // so it never appears as an empty header.
+    // Admin-only sidebar: user has Admin role with no business role (Merchant/Customer/Employee).
     const hasBusinessRole = Array.isArray(roles)
-        && roles.some((r) => ['Merchant', 'Supplier', 'Customer', 'Employee'].includes(r));
-    const isAdminOnly = isAdmin && !isSupplier && !hasBusinessRole;
+        && roles.some((r) => ['Merchant', 'Customer', 'Employee'].includes(r));
+    const isAdminOnly = isAdmin && !hasBusinessRole;
     // Type-based store access (owners see everything; employees/admin-internal
     // users need store.* grants) — shared with StoreLayout via lib/storeAccess.
     const access = storeAccess(roles, permissions);
@@ -291,26 +290,16 @@ function SidebarNavInner({ isAdmin = false, isSupplier = false, roles = [], perm
                         <HiOutlineNewspaper className="h-5 w-5 shrink-0 opacity-95" aria-hidden />
                         {t('feed_title', 'Community')}
                     </NavLink>
-                    <NavLink to="/financing" className={navLinkClass}>
-                        <HiOutlineBanknotes className="h-5 w-5 shrink-0 opacity-95" aria-hidden />
-                        {t('nav_financing', 'Financing')}
-                    </NavLink>
-                    <NavLink to="/opportunities" className={navLinkClass}>
-                        <HiOutlineRocketLaunch className="h-5 w-5 shrink-0 opacity-95" aria-hidden />
-                        {t('nav_opportunities', 'Opportunities')}
-                    </NavLink>
-                    <NavLink to="/crm/suppliers" className={navLinkClass}>
-                        <HiOutlineBuildingOffice2 className="h-5 w-5 shrink-0 opacity-95" aria-hidden />
-                        {t('suppliers')}
-                    </NavLink>
                     <NavLink to="/merchants" className={navLinkClass}>
                         <HiOutlineUserGroup className="h-5 w-5 shrink-0 opacity-95" aria-hidden />
                         {t('nav_merchants')}
                     </NavLink>
-                    <NavLink to="/partners" className={navLinkClass}>
-                        <HiOutlineUsers className="h-5 w-5 shrink-0 opacity-95" aria-hidden />
-                        {t('nav_partners')}
-                    </NavLink>
+                    {permissions.includes('support-tickets-manage') ? (
+                        <NavLink to="/admin/support" className={navLinkClass}>
+                            <HiOutlineQuestionMarkCircle className="h-5 w-5 shrink-0 opacity-95" aria-hidden />
+                            {t('nav_admin_support', 'Support inbox')}
+                        </NavLink>
+                    ) : null}
                     {CHAT_ENABLED && (
                         <NavLink to="/chat" className={navLinkClass}>
                             <HiOutlineChatBubbleLeftRight className="h-5 w-5 shrink-0 opacity-95" aria-hidden />
@@ -378,10 +367,6 @@ function SidebarNavInner({ isAdmin = false, isSupplier = false, roles = [], perm
                         <NavLink to="/admin/reports/revenue" className={subNavLinkClass}>
                             <HiOutlineBanknotes className="h-4 w-4 shrink-0 opacity-90" aria-hidden />
                             {t('admin_reports_revenue', 'Revenue')}
-                        </NavLink>
-                        <NavLink to="/admin/reports/tickets" className={subNavLinkClass}>
-                            <HiOutlineTicket className="h-4 w-4 shrink-0 opacity-90" aria-hidden />
-                            {t('admin_reports_tickets', 'Tickets')}
                         </NavLink>
                     </NavGroup>
                 </div>

@@ -351,7 +351,7 @@ export default function PostCard({ post: postProp, onDeleted, index = 0 }) {
                         ) : null}
                     </div>
                     <div className="flex flex-wrap items-center gap-x-1.5 text-[12px] text-slate-500">
-                        {/* The member's type leads the meta row — supplier or merchant, not just "member". */}
+                        {/* The member's type leads the meta row — merchant or member. */}
                         {author.role ? (
                             <>
                                 <span className="font-semibold text-slate-600">{t(`role_${author.role}`, author.role)}</span>

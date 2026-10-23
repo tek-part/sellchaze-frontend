@@ -59,7 +59,7 @@ export default function FeedPage({ initialScope = 'all', titleKey = null, title 
 
     // Sector options for the filter dropdown.
     useEffect(() => {
-        api.get('/public/sectors', { params: { lang } })
+        api.get('/community/sectors', { params: { lang } })
             .then(({ data }) => setSectors(data.sectors ?? []))
             .catch(() => setSectors([]));
     }, [lang]);

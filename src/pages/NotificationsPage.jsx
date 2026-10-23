@@ -9,11 +9,11 @@ import { HiCheck as HiOutlineCheck, HiOutlineArrowPath } from '../components/wor
 
 export default function NotificationsPage() {
     const { t, i18n } = useTranslation(); const ar = i18n.language.startsWith('ar'); const text = (a, e) => ar ? a : e;
-    const navigate = useNavigate(); const { isSupplier, me } = useOutletContext() ?? {};
-    const admin = me?.roles?.includes('Admin') && !me.roles.some((role) => ['Merchant', 'Supplier'].includes(role));
+    const navigate = useNavigate(); const { me } = useOutletContext() ?? {};
+    const admin = me?.roles?.includes('Admin') && !me.roles.includes('Merchant');
     const [page, setPage] = useState(1); const [status, setStatus] = useState('all');
     const feed = useNotificationFeed({ page, status, onPageChange: setPage });
-    const items = feed.items.map((row) => ({ ...mapServerNotification(row, t, { isSupplier }), row }));
+    const items = feed.items.map((row) => ({ ...mapServerNotification(row, t), row }));
     const date = (at) => Number.isFinite(at) ? new Intl.DateTimeFormat(ar ? 'ar-EG' : 'en', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(at)) : '';
     async function open(item) {
         const link = notificationDestination(item.link, window.location.origin, !admin);

@@ -12,10 +12,7 @@ import { followNotificationLink, mapServerNotification } from '../utils/mapServe
 
 const POLL_MS = 45000;
 
-/**
- * @param {{ isSupplier?: boolean }} props
- */
-export default function NotificationsMenu({ isSupplier = false }) {
+export default function NotificationsMenu() {
     const { t } = useTranslation();
     const navigate = useNavigate();
     const [items, setItems] = useState(/** @type {DisplayItem[]} */ ([]));
@@ -35,7 +32,7 @@ export default function NotificationsMenu({ isSupplier = false }) {
         try {
             const { data } = await api.get('/notifications', { params: { per_page: 30 } });
             const rows = Array.isArray(data?.data) ? data.data : [];
-            const mapped = rows.map((row) => mapServerNotification(row, t, { isSupplier }));
+            const mapped = rows.map((row) => mapServerNotification(row, t));
             setItems(mapped);
             const uc = typeof data?.unread_count === 'number' ? data.unread_count : mapped.filter((i) => !i.read).length;
             setUnreadCount(uc);
@@ -59,7 +56,7 @@ export default function NotificationsMenu({ isSupplier = false }) {
         } finally {
             setLoading(false);
         }
-    }, [t, permission, isSupplier]);
+    }, [t, permission]);
 
     useEffect(() => {
         void fetchNotifications();

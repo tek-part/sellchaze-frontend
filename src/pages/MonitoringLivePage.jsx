@@ -17,14 +17,12 @@ import SearchableSelect from '../components/ui/SearchableSelect';
 const EMPTY_STATS = {
     active_total: 0,
     active_staff: 0,
-    active_suppliers: 0,
     active_merchants: 0,
     active_customers: 0,
     by_bucket: {
         admin: 0,
         manager: 0,
         staff: 0,
-        supplier: 0,
         merchant: 0,
         customer: 0,
         mixed: 0,
@@ -109,7 +107,7 @@ export default function MonitoringLivePage() {
     const inactiveRows = useMemo(() => sorted.filter((row) => !row?.session?.active_now), [sorted]);
 
     const byBucket = stats.by_bucket || EMPTY_STATS.by_bucket;
-    const bucketOrder = ['admin', 'manager', 'staff', 'supplier', 'merchant', 'customer', 'mixed'];
+    const bucketOrder = ['admin', 'manager', 'staff', 'merchant', 'customer', 'mixed'];
 
     if (!canView) {
         return <Navigate to="/dashboard" replace />;
@@ -206,10 +204,9 @@ export default function MonitoringLivePage() {
 
             {err ? <p className="rounded-lg border border-red-100 bg-red-50 px-3 py-2 text-sm text-red-700">{err}</p> : null}
 
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
                 <StatCard title={t('monitoring_stat_total')} value={stats.active_total} />
                 <StatCard title={t('monitoring_stat_staff')} value={stats.active_staff} />
-                <StatCard title={t('monitoring_stat_suppliers')} value={stats.active_suppliers} />
                 <StatCard title={t('monitoring_stat_merchants')} value={stats.active_merchants ?? 0} />
                 <StatCard title={t('monitoring_stat_customers')} value={stats.active_customers ?? 0} />
             </div>

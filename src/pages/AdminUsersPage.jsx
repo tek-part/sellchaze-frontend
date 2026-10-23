@@ -54,7 +54,6 @@ export default function AdminUsersPage() {
     const [searchParams, setSearchParams] = useSearchParams();
     const pendingTab = searchParams.get('pending') === '1';
     const [approveTarget, setApproveTarget] = useState(null);
-    const [approveRole, setApproveRole] = useState('Staff');
     const [approveLoading, setApproveLoading] = useState(false);
     const [impersonateBusyId, setImpersonateBusyId] = useState(null);
 
@@ -215,16 +214,15 @@ export default function AdminUsersPage() {
     const runApproveFromList = async () => {
         if (!approveTarget) return;
         const id = approveTarget.id;
-        const role = pendingTab ? 'Staff' : approveRole;
         setApproveLoading(true);
         try {
             await api.patch(`/admin/users/${id}`, {
                 approve_pending_registration: true,
-                approval_role: role,
+                approval_role: 'Staff',
             });
             toast.success(t('admin_user_approved_toast'));
             setApproveTarget(null);
-            if (pendingTab || role === 'Supplier') {
+            if (pendingTab) {
                 setRows((prev) => prev.filter((r) => r.id !== id));
             } else {
                 setRows((prev) =>
@@ -471,10 +469,7 @@ export default function AdminUsersPage() {
                                                 <button
                                                     type="button"
                                                     disabled={loading}
-                                                    onClick={() => {
-                                                        setApproveRole('Staff');
-                                                        setApproveTarget(u);
-                                                    }}
+                                                    onClick={() => setApproveTarget(u)}
                                                     className="rounded-lg border border-amber-300 bg-amber-50 px-2 py-1 text-[11px] font-semibold text-amber-900 hover:bg-amber-100"
                                                 >
                                                     {t('admin_user_approve_registration')}
@@ -504,33 +499,7 @@ export default function AdminUsersPage() {
                 open={Boolean(approveTarget)}
                 onClose={() => !approveLoading && setApproveTarget(null)}
                 title={t('admin_user_approve_registration')}
-                body={
-                    pendingTab ? (
-                        <p className="text-start">{t('admin_user_approve_staff_pending_body')}</p>
-                    ) : (
-                        <div className="space-y-3 text-start">
-                            <p>{t('admin_user_approval_pick_role')}</p>
-                            <label className="flex cursor-pointer items-center gap-2">
-                                <input
-                                    type="radio"
-                                    name="list-approve-role"
-                                    checked={approveRole === 'Staff'}
-                                    onChange={() => setApproveRole('Staff')}
-                                />
-                                {t('auth_role_staff')}
-                            </label>
-                            <label className="flex cursor-pointer items-center gap-2">
-                                <input
-                                    type="radio"
-                                    name="list-approve-role"
-                                    checked={approveRole === 'Supplier'}
-                                    onChange={() => setApproveRole('Supplier')}
-                                />
-                                {t('auth_role_supplier')}
-                            </label>
-                        </div>
-                    )
-                }
+                body={<p className="text-start">{t('admin_user_approve_staff_pending_body')}</p>}
                 confirmLabel={t('admin_user_approve_registration')}
                 cancelLabel={t('cancel')}
                 loading={approveLoading}

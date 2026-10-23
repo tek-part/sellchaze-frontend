@@ -1,7 +1,8 @@
 // Shared helpers for the Community feed components.
 
 /** The five post types (value → i18n key). Labels resolve via t(`feed_type_${value}`). */
-export const POST_TYPES = ['new_product', 'ad_offer', 'rfq', 'update_news', 'question'];
+// Types a member can create. Older 'rfq' (supply request) posts still render but can no longer be created.
+export const POST_TYPES = ['new_product', 'ad_offer', 'update_news', 'question'];
 
 /** Initials from a name/company (up to two letters), matching the dashboard avatar look. */
 export function initials(name) {

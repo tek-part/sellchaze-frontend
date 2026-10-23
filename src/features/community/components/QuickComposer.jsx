@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { HiOutlineDocumentText, HiOutlinePhoto, HiOutlinePlayCircle, HiOutlineShoppingBag } from 'react-icons/hi2';
+import { HiOutlineDocumentText, HiOutlinePhoto, HiOutlinePlayCircle } from 'react-icons/hi2';
 import api from '../../../api/client';
 import { initials } from '../../../components/feed/helpers';
 
@@ -14,7 +14,6 @@ const ACTIONS = [
     { labelKey: 'community_composer_post', to: '/community/create', Icon: HiOutlineDocumentText, tone: 'text-brand', hover: 'hover:bg-brand-light' },
     { labelKey: 'community_composer_photo', to: '/community/create?media=image', Icon: HiOutlinePhoto, tone: 'text-emerald-500', hover: 'hover:bg-emerald-50' },
     { labelKey: 'community_composer_video', to: '/community/create?format=reel', Icon: HiOutlinePlayCircle, tone: 'text-fuchsia-500', hover: 'hover:bg-fuchsia-50' },
-    { labelKey: 'community_composer_rfq', to: '/community/create?type=rfq', Icon: HiOutlineShoppingBag, tone: 'text-amber-500', hover: 'hover:bg-amber-50' },
 ];
 
 export default function QuickComposer() {

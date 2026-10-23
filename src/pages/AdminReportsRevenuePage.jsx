@@ -6,11 +6,11 @@ export default function AdminReportsRevenuePage() {
     return (
         <ReportShell
             title={t('admin_reports_revenue', 'Revenue')}
-            subtitle={t('admin_reports_revenue_sub', 'Total accepted deal value (USD) over time.')}
+            subtitle={t('admin_reports_revenue_sub', 'Store order revenue over time.')}
             endpoint="/admin/reports/revenue"
             chartType="line"
             valueKey="amount"
-            formatValue={(_, v) => (typeof v === 'number' ? `$${v.toLocaleString()}` : v)}
+            formatValue={(_, v) => (typeof v === 'number' ? v.toLocaleString() : v)}
         />
     );
 }

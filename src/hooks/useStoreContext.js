@@ -4,7 +4,6 @@ import { useOutletContext } from 'react-router-dom';
  * @typedef {Object} StoreOutletContext
  * @property {object|null} me                 Authenticated user (from AppLayout).
  * @property {boolean} isAdmin
- * @property {boolean} isSupplier
  * @property {string[]} permissions
  * @property {object|null} store              StoreResource payload, loaded by StoreLayout.
  * @property {(store: object) => void} setStore

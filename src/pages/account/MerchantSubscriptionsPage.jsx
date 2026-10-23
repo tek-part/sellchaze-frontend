@@ -15,7 +15,7 @@ function failureMessage(failure, text) {
 }
 export default function MerchantSubscriptionsPage() {
     const { me } = useOutletContext(); const { i18n } = useTranslation(); const ar = i18n.language.startsWith('ar'); const text = (a, e) => ar ? a : e;
-    const owner = me?.roles?.some(role => ['Merchant', 'Supplier'].includes(role)) && !me?.parent_user_id;
+    const owner = me?.roles?.includes('Merchant') && !me?.parent_user_id;
     const [data, setData] = useState(null); const [retry, setRetry] = useState(0); const [error, setError] = useState(''); const [busy, setBusy] = useState(false);
     const [choice, setChoice] = useState(null); const [autoRenew, setAutoRenew] = useState(false); const dialog = useRef(null);
     const request = useRef(null);

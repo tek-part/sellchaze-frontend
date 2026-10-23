@@ -16,7 +16,7 @@ const TYPES = [
     { id: 'interested', labelKey: 'feed_react_interested', emoji: '🎯' },
 ];
 
-const ROLE_KEYS = { supplier: 'role_supplier', merchant: 'role_merchant', user: 'role_user' };
+const ROLE_KEYS = { merchant: 'role_merchant', user: 'role_user' };
 
 /**
  * Who reacted to a post: tabs per reaction type with counts in the header,

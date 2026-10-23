@@ -1,5 +1,5 @@
 /**
- * Store Theme Manager — the merchant/supplier Appearance dashboard.
+ * Store Theme Manager — the merchant Appearance dashboard.
  *
  * The backend theme registry and per-store install state are the source of truth.
  * Every lifecycle action below is persisted through `/my-store/themes` (or the

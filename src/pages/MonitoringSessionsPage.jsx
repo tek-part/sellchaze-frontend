@@ -151,8 +151,8 @@ export default function MonitoringSessionsPage() {
                         <label className="mb-1 block text-[11px] font-semibold uppercase text-slate-500">{t('monitoring_filter_role_type')}</label>
                         <SearchableSelect value={roleType} onChange={(e) => setRoleType(e.target.value)} className="w-full">
                             <option value="">{t('filter_all')}</option>
+                            <option value="merchant">{t('monitoring_role_merchant')}</option>
                             <option value="staff">{t('monitoring_role_staff')}</option>
-                            <option value="supplier">{t('monitoring_role_supplier')}</option>
                         </SearchableSelect>
                     </div>
                     <div className="grid grid-cols-2 gap-2 xl:col-span-1">

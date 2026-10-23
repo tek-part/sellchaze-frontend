@@ -9,7 +9,7 @@ export default function Dashboard() {
     const { me, permissions = [] } = useOutletContext();
     const { i18n } = useTranslation();
     const roles = me?.roles ?? [];
-    if (roles.includes('Admin') && !roles.some((role) => ['Merchant', 'Supplier', 'Customer', 'Employee'].includes(role))) return <Navigate to="/admin/dashboard" replace />;
+    if (roles.includes('Admin') && !roles.some((role) => ['Merchant', 'Customer', 'Employee'].includes(role))) return <Navigate to="/admin/dashboard" replace />;
     const access = storeAccess(roles, permissions);
     if (!access.hasStoreAccess) return <Navigate to="/community" replace />;
     return <MerchantDashboard key={me?.id} access={access} ar={i18n.language.startsWith('ar')} />;

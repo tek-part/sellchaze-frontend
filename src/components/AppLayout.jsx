@@ -91,7 +91,7 @@ export default function AppLayout() {
     useEffect(() => {
         document.body.setAttribute('data-workspace-theme', appearance.theme);
         const roles = me?.roles || [];
-        const operator = roles.includes('Admin') && !roles.some((role) => ['Merchant', 'Supplier', 'Customer', 'Employee'].includes(role));
+        const operator = roles.includes('Admin') && !roles.some((role) => ['Merchant', 'Customer', 'Employee'].includes(role));
         document.body.setAttribute('data-workspace-merchant', String(Boolean(me) && !operator));
         return () => { document.body.removeAttribute('data-workspace-theme'); document.body.removeAttribute('data-workspace-merchant'); };
     }, [appearance.theme, me]);
@@ -143,12 +143,12 @@ export default function AppLayout() {
         };
     }, [navigate]);
 
-    // Owners (Merchant/Supplier, non-admin) own exactly one store — resolve its
+    // Owners (Merchant, non-admin) own exactly one store — resolve its
     // public storefront URL so the header can offer a direct "View store" link.
     // Owners without a published store (404, draft, or no URL yet) get no button at all.
     useEffect(() => {
         const roles = Array.isArray(me?.roles) ? me.roles : [];
-        const owner = !roles.includes('Admin') && (roles.includes('Merchant') || roles.includes('Supplier'));
+        const owner = !roles.includes('Admin') && roles.includes('Merchant');
         if (!owner) {
             setStoreUrl(null);
             return undefined;
@@ -185,9 +185,8 @@ export default function AppLayout() {
     }
 
     const isAdmin = Array.isArray(me.roles) && me.roles.includes('Admin');
-    const isSupplier = Array.isArray(me.roles) && me.roles.includes('Supplier');
     const hasBusinessRole = Array.isArray(me.roles)
-        && me.roles.some((role) => ['Merchant', 'Supplier', 'Customer', 'Employee'].includes(role));
+        && me.roles.some((role) => ['Merchant', 'Customer', 'Employee'].includes(role));
     const isAdminOnly = isAdmin && !hasBusinessRole;
     const permissions = Array.isArray(me?.permissions) ? me.permissions : [];
     const currentLng = i18n.language?.startsWith('ar') ? 'ar' : 'en';
@@ -229,7 +228,7 @@ export default function AppLayout() {
     const hasOwnedWorkspace = storeAccess(me.roles ?? [], permissions).hasStoreAccess;
     if (merchantWorkspace && (!merchantWorkspaceRouteAllowed(location.pathname) || (!hasOwnedWorkspace && location.pathname === '/dashboard'))) return <Navigate to={hasOwnedWorkspace ? '/dashboard' : '/community'} replace />;
 
-    const navigationProps = { isAdmin, isSupplier, roles: me.roles ?? [], permissions };
+    const navigationProps = { isAdmin, roles: me.roles ?? [], permissions };
     const Sidebar = isAdminOnly ? AdminSidebar : MerchantSidebar;
     return (
         <WorkspaceIconProvider><div className="sc-workspace ws-frame" data-workspace-theme={appearance.theme} data-merchant-workspace={merchantWorkspace || undefined}>
@@ -244,10 +243,10 @@ export default function AppLayout() {
                     <p><HiOutlineArrowUturnLeft aria-hidden />{t('impersonation_banner')}</p>
                     <button type="button" disabled={impersonationExitLoading} onClick={() => void handleExitImpersonation()}>{impersonationExitLoading ? '…' : t('impersonation_exit')}</button>
                 </div> : null}
-                <WorkspaceHeader merchantWorkspace={merchantWorkspace} me={me} permissions={permissions} storeUrl={storeUrl} isSupplier={isSupplier} chatUnread={chatUnread} appearance={appearance} onLanguage={toggleLanguage} onNavigation={openMobileNavigation} onToggleSidebar={() => setSidebarCollapsed((value) => !value)} sidebarToggleRef={sidebarToggleRef} collapsed={sidebarCollapsed} onSearch={() => setSearchOpen(true)} onLogout={() => setLogoutOpen(true)} />
+                <WorkspaceHeader merchantWorkspace={merchantWorkspace} me={me} permissions={permissions} storeUrl={storeUrl} chatUnread={chatUnread} appearance={appearance} onLanguage={toggleLanguage} onNavigation={openMobileNavigation} onToggleSidebar={() => setSidebarCollapsed((value) => !value)} sidebarToggleRef={sidebarToggleRef} collapsed={sidebarCollapsed} onSearch={() => setSearchOpen(true)} onLogout={() => setLogoutOpen(true)} />
                 </div>
                 <main id="workspace-content" tabIndex={-1} className="ws-main-scroll">
-                    <div key={location.pathname} className="ws-page"><Suspense fallback={<BrandLoader />}><Outlet context={{ me, isAdmin, isSupplier, permissions, unifiedStoreNavigation: !isAdminOnly }} /></Suspense></div>
+                    <div key={location.pathname} className="ws-page"><Suspense fallback={<BrandLoader />}><Outlet context={{ me, isAdmin, permissions, unifiedStoreNavigation: !isAdminOnly }} /></Suspense></div>
                 </main>
             </div>
             <Dialog open={mobileNavOpen} onClose={() => setMobileNavOpen(false)} className="ws-dialog-layer">
@@ -258,7 +257,7 @@ export default function AppLayout() {
                         {!merchantWorkspace ? <div className="ws-sidebar-tools"><label className="ws-sidebar-search"><HiOutlineMagnifyingGlass aria-hidden /><input value={navigationQuery} onChange={(e) => setNavigationQuery(e.target.value)} placeholder={ws('search')} aria-label={ws('search')} /></label></div> : null}
                         <div className={`ws-sidebar-scroll${merchantWorkspace ? ' ws-sidebar-scroll--merchant' : ''}`}><SidebarNav {...navigationProps} query={merchantWorkspace ? '' : navigationQuery} onNavigate={() => setMobileNavOpen(false)} />
                             {merchantWorkspace ? <div className="ws-mobile-sidebar-preferences"><WorkspaceAppearanceControl appearance={appearance} inDrawer /><button type="button" className="ws-icon-button" onClick={toggleLanguage} aria-label={ws('language')}><HiOutlineLanguage aria-hidden /></button></div> : null}
-                            {merchantWorkspace && me.roles?.some(role => ['Merchant', 'Supplier'].includes(role)) && !me.parent_user_id ? <MerchantSidebarFooter onNavigate={() => setMobileNavOpen(false)} /> : null}
+                            {merchantWorkspace && me.roles?.includes('Merchant') && !me.parent_user_id ? <MerchantSidebarFooter onNavigate={() => setMobileNavOpen(false)} /> : null}
                         </div>
                         {!merchantWorkspace ? <div className="ws-sidebar-footer"><div className="ws-drawer-preferences"><WorkspaceAppearanceControl appearance={appearance} inDrawer /><button type="button" className="ws-icon-button" onClick={toggleLanguage} aria-label={ws('language')}><HiOutlineLanguage aria-hidden /></button></div><a href={marketingUrl('/contact')} target="_blank" rel="noopener noreferrer" onClick={() => setMobileNavOpen(false)}>{ws('help')}</a></div> : null}
                     </DialogPanel>

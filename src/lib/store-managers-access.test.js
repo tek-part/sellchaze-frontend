@@ -8,7 +8,7 @@ const settings = (access) => buildStoreNav(t, access).find(group => group.key ==
 
 describe('Store manager navigation and catalog controls', () => {
     it('exposes account administration only to store owners, never through a settings grant', () => {
-        for (const role of ['Merchant', 'Supplier']) expect(settings(storeAccess([role])).some(item => item.key === 'managers')).toBe(true);
+        for (const role of ['Merchant']) expect(settings(storeAccess([role])).some(item => item.key === 'managers')).toBe(true);
         for (const access of [storeAccess(['StoreManager'], ['store.view', 'store.settings.manage']), storeAccess(['Employee'], ['store.settings.manage']), fullStoreAccess()]) {
             expect(access.canStoreManagers).toBe(false);
             expect(settings(access).some(item => item.key === 'managers')).toBe(false);

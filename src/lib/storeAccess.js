@@ -1,5 +1,5 @@
 /**
- * Type-based store access. A Merchant/Supplier OWNS exactly one store and
+ * Type-based store access. A Merchant OWNS exactly one store and
  * sees its full dashboard by virtue of their account type — no per-feature
  * permission needed. Granular store.* permissions still apply to their
  * employees and to admin-internal users (who are not owners themselves).
@@ -10,7 +10,7 @@
 export function storeAccess(roles = [], permissions = []) {
     const can = (p) => permissions.includes(p);
     const manager = roles.includes('StoreManager');
-    const isStoreOwner = Array.isArray(roles) && roles.some((r) => ['Merchant', 'Supplier'].includes(r));
+    const isStoreOwner = Array.isArray(roles) && roles.includes('Merchant');
     const canStoreView = isStoreOwner || can('store.view');
     const canStoreProducts = isStoreOwner || can('store.products.manage');
     const canStoreCategories = isStoreOwner || can('store.categories.manage');
