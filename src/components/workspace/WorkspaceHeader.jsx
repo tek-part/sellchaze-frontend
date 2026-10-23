@@ -35,7 +35,7 @@ export default function WorkspaceHeader({ me, storeUrl, isSupplier, permissions,
             {mobile && merchantWorkspace ? <NotificationBell className="ws-mobile-notifications" /> : null}
             {!merchantWorkspace ? <button ref={sidebarToggleRef} type="button" className={`${iconButton} ws-expand`} onClick={onToggleSidebar} aria-label={ws(collapsed ? 'expand' : 'collapse')} aria-expanded={!collapsed} aria-controls="workspace-sidebar"><HiOutlineBars3 aria-hidden /></button> : null}
         </div>
-        {mobile ? <Link className="ws-mobile-brand" to="/dashboard" aria-label={t('dashboard')}><img src="/icon.png" alt="" /><strong>Sellchaze</strong></Link> : null}
+        {mobile ? <Link className="ws-mobile-brand" to="/dashboard" aria-label={t('dashboard')}><img src="/brand/sellchaze-mark.svg" alt="" /><strong>Sellchaze</strong></Link> : null}
         <div className="ws-header-actions">
             {storeUrl && !merchantWorkspace ? <a href={storeUrl} target="_blank" rel="noopener noreferrer" className={`${iconButton} ws-store-link`} aria-label={t('view_store', 'View store')} title={t('view_store', 'View store')}><HiOutlineEye aria-hidden /></a> : null}
             <button type="button" className={`${iconButton} ws-refresh`} onClick={() => window.location.reload()} aria-label={ws('refresh')} title={ws('refresh')}><HiOutlineArrowPath aria-hidden /></button>

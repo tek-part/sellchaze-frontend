@@ -30,7 +30,7 @@ export function useBrowserNotificationPermission() {
                 return;
             }
             try {
-                new Notification(title, { icon: '/icon.png', ...options });
+                new Notification(title, { icon: '/brand/sellchaze-icon-192.png', ...options });
             } catch {
                 /* ignore */
             }

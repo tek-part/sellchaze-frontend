@@ -47,7 +47,7 @@ export default function NotificationsMenu({ isSupplier = false }) {
                     try {
                         new Notification(t('app_name'), {
                             body: `${n.title}: ${n.body}`.slice(0, 180),
-                            icon: '/icon.png',
+                            icon: '/brand/sellchaze-icon-192.png',
                         });
                     } catch {
                         /* ignore */
@@ -89,7 +89,7 @@ export default function NotificationsMenu({ isSupplier = false }) {
             try {
                 new Notification(t('app_name'), {
                     body: t('notifications_test_native'),
-                    icon: '/icon.png',
+                    icon: '/brand/sellchaze-icon-192.png',
                 });
             } catch {
                 /* ignore */
