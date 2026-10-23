@@ -71,6 +71,7 @@ const EmployeesPage = lazy(() => import('./pages/EmployeesPage'));
 const LedgerPage = lazy(() => import('./pages/LedgerPage'));
 const ChatPage = lazy(() => import('./pages/ChatPage'));
 import MarketingRedirect from './components/MarketingRedirect';
+import BrandLoader from './components/BrandLoader';
 const AdminDashboardPage = lazy(() => import('./pages/AdminDashboardPage'));
 const SectorsSettingsPage = lazy(() => import('./pages/SectorsSettingsPage'));
 const AdminReportsUsersPage = lazy(() => import('./pages/AdminReportsUsersPage'));
@@ -322,7 +323,7 @@ export default function App() {
     return (
         <AppErrorBoundary>
         <PlatformReferralCapture />
-        <Suspense fallback={<div className="flex min-h-[40vh] items-center justify-center text-sm text-slate-500">…</div>}>
+        <Suspense fallback={<BrandLoader />}>
         <Routes>
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<RegisterPage />} />

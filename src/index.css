@@ -179,6 +179,20 @@ div#_rht_toaster {
    Landing page entrance animations
    ============================================================ */
 
+/* Brand loader: the Sellchaze mark breathing gently (static when motion is reduced). */
+.sc-brand-loader__mark {
+  width: 56px;
+  height: 56px;
+  animation: sc-brand-pulse 1.4s ease-in-out infinite;
+}
+@keyframes sc-brand-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.55; transform: scale(0.92); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sc-brand-loader__mark { animation: none; }
+}
+
 @keyframes sc-fade-up {
     0% {
         opacity: 0;
