@@ -205,6 +205,23 @@ export const THEME_CATALOG: ThemeCatalog = [
     changelog: [{ version: '1.0.0', date: '2026-10-24', notes: ['Initial release — home décor theme with shop-the-room, shop by room, seasonal mood board, material & care notes and a gift guide.'] }],
     load: THEME_LOADERS.maison,
   },
+  {
+    id: 'glow',
+    name: 'Glow',
+    version: '1.0.0',
+    archetype: 'Beauty & Skincare',
+    description: 'Beauty, skincare and cosmetics with shop-by-concern, an ingredient spotlight, a one-tap routine and a claim-by-claim trust strip.',
+    author: 'Sellchaze',
+    tags: ['beauty', 'skincare', 'cosmetics', 'makeup', 'haircare', 'blush', 'serif', 'arabic', 'rtl'],
+    accent: '#3D2A2E',
+    accentAlt: '#E7B9B3',
+    previewImage: '/media/theme-previews/glow.jpg',
+    minEngineVersion: '1.0.0',
+    capabilities: ['rtl', 'dark-mode', 'search-overlay', 'cart-drawer', 'wishlist', 'quick-add', 'reviews', 'newsletter'],
+    license: { type: 'free', sku: 'theme-glow' },
+    changelog: [{ version: '1.0.0', date: '2026-10-24', notes: ['Initial release — beauty / skincare theme on the shared section library with six signature sections.'] }],
+    load: THEME_LOADERS.glow,
+  },
 ];
 
 /** All catalog entries. */

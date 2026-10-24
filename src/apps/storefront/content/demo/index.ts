@@ -16,6 +16,7 @@ import { VOLTAGE_CATALOG } from './voltage';
 import type { DemoCatalog } from './types';
 import { applyOverlay, type CatalogOverlay } from './localize';
 import { LUXURY_AR } from './luxury.ar';
+import { ROUGE_AR } from './rouge.ar';
 import { HEARTH_AR } from './hearth.ar';
 import { VOLTAGE_AR } from './voltage.ar';
 import { SPHINX_CATALOG, SPHINX_AR } from './sphinx';
@@ -46,6 +47,7 @@ const BY_THEME: Readonly<Record<string, DemoCatalog>> = {
   sahra: LUXURY_CATALOG,
   techno: VOLTAGE_CATALOG,
   maison: HEARTH_CATALOG,
+  glow: ROUGE_CATALOG,
 };
 
 /**
@@ -68,6 +70,7 @@ const AR_OVERLAY: Readonly<Record<string, CatalogOverlay>> = {
   sahra: LUXURY_AR,
   techno: VOLTAGE_AR,
   maison: HEARTH_AR,
+  glow: ROUGE_AR,
 };
 
 /**

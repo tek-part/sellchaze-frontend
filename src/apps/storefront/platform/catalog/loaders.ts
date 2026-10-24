@@ -17,4 +17,5 @@ export const THEME_LOADERS = {
   fresh: () => import('../../themes/fresh').then(module => module.freshTheme),
   techno: () => import('../../themes/techno').then(module => module.technoTheme),
   maison: () => import('../../themes/maison').then(module => module.maisonTheme),
+  glow: () => import('../../themes/glow').then(module => module.glowTheme),
 } satisfies Readonly<Record<string, ThemeLoader>>;
