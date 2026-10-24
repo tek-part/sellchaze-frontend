@@ -9,7 +9,8 @@ import { fileURLToPath } from 'node:url';
  * storefront.html that, while the entry JS is still downloading:
  *
  *   1. starts the bootstrap read (`GET {api}/storefront?lang=…`) and the current route's data reads
- *      (home: `/home`, `/layout?template=home`), parked on `window.__sfEarly[url]`; `api/client.ts`
+ *      (home: `/home`, `/layout?template=home`; product: `/products/{slug}`), parked on
+ *      `window.__sfEarly[url]`; `api/client.ts`
  *      adopts one only when the URL matches exactly the one it would have requested, so a mismatch
  *      simply costs one extra request;
  *   2. modulepreloads the current route's page chunk (home, product, collection, cart, checkout);
@@ -22,10 +23,13 @@ const LOADERS = fileURLToPath(new URL('../src/apps/storefront/platform/catalog/l
 const ALIASES = fileURLToPath(new URL('../src/apps/storefront/theme-resolution.ts', import.meta.url));
 const I18N = fileURLToPath(new URL('../src/apps/storefront/i18n/index.ts', import.meta.url));
 
-/** [path pattern, page module, storefront API reads the page always makes on first render]. */
+/**
+ * [path pattern, page module, storefront API reads the page always makes on first render]. `$1` in
+ * a read is the pattern's first capture, re-encoded the way the page's API call encodes it.
+ */
 const ROUTES = [
   ['^/$', 'pages/HomePage.tsx', ['/home', '/layout?template=home']],
-  ['^/products/[^/]+/?$', 'pages/ProductPage.tsx'],
+  ['^/products/([^/]+)/?$', 'pages/ProductPage.tsx', ['/products/$1']],
   ['^/(shop|collections/[^/]+|categories/[^/]+)/?$', 'pages/CategoryPage.tsx'],
   ['^/cart/?$', 'pages/CartPage.tsx'],
   ['^/checkout/?$', 'pages/CheckoutPage.tsx'],
@@ -98,11 +102,12 @@ export function buildBootData(bundle, entryFileName, apiBase) {
 /* Kept ES5-only and defensive: it runs before any polyfill and must never block the real boot. */
 const SCRIPT = `(function(M){try{
 var d=document,q=new URLSearchParams(location.search),seen={},reads=[];
-var s=d.querySelector('script[type="module"][src*="/assets/"]');
-var b=s?s.src.slice(0,s.src.indexOf('/assets/')+1):'/';
+var s=d.querySelector('link[data-sf-assets]');
+var b=s?s.href.slice(0,s.href.lastIndexOf('/assets/')+1):'/';
 function pre(list){(list||[]).forEach(function(i){var f=M.f[i];if(seen[f])return;seen[f]=1;var k=d.createElement('link');if(/\\.css$/.test(f)){k.rel='preload';k.as='style'}else{k.rel='modulepreload'}k.crossOrigin='';k.href=b+f;d.head.appendChild(k)})}
 function theme(key){key=M.a[key]||key;pre(M.t[key])}
-M.p.forEach(function(r){if(new RegExp(r[0]).test(location.pathname)){pre(r[1]);reads=r[2]}});
+M.p.forEach(function(r){var m=new RegExp(r[0]).exec(location.pathname);if(!m)return;pre(r[1]);
+reads=r[2].map(function(x){var v='';try{v=m[1]?encodeURIComponent(decodeURIComponent(m[1])):''}catch(e){return null}return x.replace('$1',v)}).filter(Boolean)});
 if(q.get('theme'))theme(q.get('theme'));
 if(q.has('__preview')||q.has('preview')||q.has('customize')||q.has('settings')||!window.fetch)return;
 var lang=q.get('lang'),token=null;
@@ -129,7 +134,13 @@ export function storefrontBoot(apiBase = '/api/v1') {
       handler(html, context) {
         if (!context.filename.endsWith('storefront.html') || !context.bundle || !context.chunk) return html;
         const data = JSON.stringify(buildBootData(context.bundle, context.chunk.fileName, apiBase)).replace(/</g, '\\u003c');
-        return html.replace('</head>', `<script>${SCRIPT.replace('__DATA__', () => data)}</script>\n</head>`);
+        // Right after the charset (which must stay in the first 1024 bytes) and before any stylesheet:
+        // a classic script waits for every stylesheet above it, so after the CSS links it ran only
+        // once they had loaded. The production shell rewrites the `/assets/` href to the asset
+        // origin, which is where the script reads its base from.
+        const boot = `<link data-sf-assets rel="preconnect" href="/assets/" crossorigin>\n<script>${SCRIPT.replace('__DATA__', () => data)}</script>`;
+        const anchor = /<meta\s+charset=[^>]*>/i.test(html) ? /<meta\s+charset=[^>]*>/i : /<head[^>]*>/i;
+        return html.replace(anchor, match => `${match}\n${boot}`);
       },
     },
   };
