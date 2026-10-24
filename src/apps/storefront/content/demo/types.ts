@@ -52,6 +52,11 @@ export const SWATCH: Readonly<Record<string, string>> = {
   Silver: '#C9CDD2', Cyan: '#22D3EE', Lime: '#A3E635', White: '#FFFFFF',
   Rose: '#B23052', Nude: '#E0B49C', Gold: '#C79A6D', Plum: '#5C2A3E',
   Walnut: '#5B4636', Oak: '#C8A97E', Brass: '#B08D57', Clay: '#C07A5B',
+  // Jewellery metals (Karat) and sportswear colourways (Stride).
+  'Yellow Gold': '#D4AF37', 'White Gold': '#E3E1DC', 'Rose Gold': '#C9967F', 'Sterling Silver': '#C0C4C8',
+  Grey: '#8A8A8A', Volt: '#D4FF1E', Orange: '#F97316', Purple: '#7C3AED', Pink: '#F2A7B8',
+  Red: '#D0101A', Blue: '#1D4ED8', Green: '#3F6F55', Teal: '#2BA59B', Sand: '#D9C7A7',
+  Sky: '#9CC3E6', Mustard: '#D4A53A', Fuchsia: '#E5266B',
 };
 
 /**
@@ -73,6 +78,8 @@ export function product(input: {
   reviews: number;
   badge?: string;
   soldOut?: boolean;
+  /** Units left; set on a few products so low-stock badges have something real to show. */
+  stock?: number;
   currency: string;
   colors?: ReadonlyArray<string>;
   sizes?: ReadonlyArray<string>;
@@ -100,6 +107,7 @@ export function product(input: {
     ...(input.was ? { compareAtPrice: input.was } : {}),
     ...(input.badge ? { badge: input.badge } : {}),
     ...(input.soldOut ? { soldOut: true } : {}),
+    ...(typeof input.stock === 'number' ? { availableStock: input.stock } : {}),
     ...(input.colors
       ? {
           colors: input.colors.map((name) => ({

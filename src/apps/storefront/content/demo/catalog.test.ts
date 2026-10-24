@@ -1,17 +1,37 @@
 /**
  * Demo catalogues are shipped data that drives every preview, so their invariants are pinned here.
- * The important one is distinctness: the four catalogues cover four verticals, and a copy-paste
+ * The important one is distinctness: the core catalogues cover six verticals, and a copy-paste
  * regression that made two of them share goods would silently undo that.
  */
 import { describe, expect, it } from 'vitest';
-import { catalogFor, HEARTH_CATALOG, LUXURY_CATALOG, ROUGE_CATALOG, VOLTAGE_CATALOG } from './index';
+import {
+  catalogFor,
+  HEARTH_CATALOG,
+  JEWEL_CATALOG,
+  LUXURY_CATALOG,
+  ROUGE_CATALOG,
+  SPORT_CATALOG,
+  VOLTAGE_CATALOG,
+} from './index';
 
 const ALL = [
   ['luxury', LUXURY_CATALOG],
   ['rouge', ROUGE_CATALOG],
   ['hearth', HEARTH_CATALOG],
   ['voltage', VOLTAGE_CATALOG],
+  ['jewel', JEWEL_CATALOG],
+  ['sport', SPORT_CATALOG],
 ] as const;
+
+/**
+ * Minimum category count per catalogue. The first four were written with twelve merchandising
+ * categories each; the jewellery and sportswear catalogues are scoped to the 7–8 departments those
+ * stores actually run (rings, bridal, gold… / running, football, apparel…), and every product's
+ * `categorySlug` must resolve to one of them — a tighter check than a bare count.
+ */
+const MIN_CATEGORIES: Readonly<Record<(typeof ALL)[number][0], number>> = {
+  luxury: 12, rouge: 12, hearth: 12, voltage: 12, jewel: 7, sport: 7,
+};
 
 const THEME_TO_CATALOG = [
   ['naseem', HEARTH_CATALOG],
@@ -19,6 +39,8 @@ const THEME_TO_CATALOG = [
   ['fresh', HEARTH_CATALOG],
   ['sahra', LUXURY_CATALOG],
   ['techno', VOLTAGE_CATALOG],
+  ['karat', JEWEL_CATALOG],
+  ['stride', SPORT_CATALOG],
 ] as const;
 
 describe('catalogFor', () => {
@@ -34,9 +56,9 @@ describe('catalogFor', () => {
 });
 
 describe('catalogue shape', () => {
-  it.each(ALL)('%s is richly populated', (_id, cat) => {
+  it.each(ALL)('%s is richly populated', (id, cat) => {
     expect(cat.products.length).toBeGreaterThanOrEqual(16);
-    expect(cat.categories.length).toBeGreaterThanOrEqual(12);
+    expect(cat.categories.length).toBeGreaterThanOrEqual(MIN_CATEGORIES[id]);
     expect(cat.brands.length).toBeGreaterThanOrEqual(12);
     expect(cat.testimonials.length).toBeGreaterThanOrEqual(8);
     expect(cat.faqs.length).toBeGreaterThanOrEqual(12);
@@ -50,6 +72,11 @@ describe('catalogue shape', () => {
     expect(new Set(ids).size).toBe(ids.length);
     expect(new Set(handles).size).toBe(handles.length);
     expect(new Set(urls).size).toBe(urls.length);
+  });
+
+  it.each([['jewel', JEWEL_CATALOG], ['sport', SPORT_CATALOG]] as const)('%s files every product under one of its categories', (_id, cat) => {
+    const slugs = new Set(cat.categories.map((c) => c.url.replace('/collections/', '')));
+    for (const p of cat.products) expect(slugs.has(p.categorySlug ?? ''), `${p.title} → ${p.categorySlug}`).toBe(true);
   });
 
   it.each(ALL)('%s uses verified https imagery with alt text', (_id, cat) => {
