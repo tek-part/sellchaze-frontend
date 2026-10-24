@@ -129,6 +129,7 @@ export function buildStoreNav(t, access = {}) {
                 { key: 'payments', to: 'settings/payments', label: t('store_nav_payments', 'Payment gateways'), Icon: HiOutlineCreditCard, show: access.canStorePayments },
                 { key: 'shipping', to: 'settings/shipping', label: t('store_nav_shipping', 'Shipping & tax'), Icon: HiOutlineTruck, show: access.canStoreSettings },
                 { key: 'digital-delivery', to: 'settings/digital-delivery', label: t('store_nav_digital_delivery', 'Digital delivery'), Icon: HiOutlineDocumentText, show: access.canStoreSettings },
+                { key: 'notifications', to: 'settings/notifications', label: t('store_nav_notifications', 'Notifications'), Icon: HiOutlineBell, show: access.canStoreSettings },
                 { key: 'order-limits', to: 'settings/order-limits', label: t('store_nav_order_limits', 'Order limits'), Icon: HiOutlineDocumentText, show: access.canStoreSettings },
                 { key: 'phone-verification', to: 'settings/phone-verification', label: t('store_nav_phone_verification', 'Phone verification'), Icon: HiOutlineDocumentText, show: access.canStoreSettings },
                 { key: 'domains', to: 'settings/domains', label: t('store_nav_domains', 'Domains'), Icon: HiOutlineGlobeAlt, show: access.canStoreSettings },

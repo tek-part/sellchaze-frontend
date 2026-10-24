@@ -59,7 +59,7 @@ export default function StoreSettingsNavigation({ items, uiBase, rel, label }) {
     }, [rel, ar]);
     const referenceLabels = { general: 'اعدادات المتجر', domains: 'اعدادات الدومين', 'store-info': 'سياسات المتجر',
         'head-code': 'اضافة كود للهيد', 'seo-settings': 'اعدادات ال SEO', payments: 'بوابات الدفع',
-        'digital-delivery': 'إعدادات تسليم المنتجات الرقمية', 'order-push': 'اشعارات الطلبات', shipping: 'اعدادات الشحن',
+        'digital-delivery': 'إعدادات تسليم المنتجات الرقمية', notifications: 'الإشعارات', 'order-push': 'اشعارات الطلبات', shipping: 'اعدادات الشحن',
         'social-links': 'روابط التواصل الاجتماعي', managers: 'اعدادات المديرين', 'login-sessions': 'جلسات الدخول', 'phone-verification': 'رقم الهاتف' };
     const apiItems = items.filter(item => ['webhooks', 'public-api'].includes(item.key));
     return <nav ref={navigation} className="ws-settings-navigation" aria-label={label}>{items.map(item => {
@@ -67,7 +67,7 @@ export default function StoreSettingsNavigation({ items, uiBase, rel, label }) {
         return <Link key={item.key} to={`${uiBase}/${item.to}`} aria-current={item.isActive(rel) ? 'page' : undefined}>
             <StoreSettingsReferenceIcon itemKey={item.key} fallback={item.Icon} aria-hidden />
             <span>{ar && referenceLabels[item.key] ? referenceLabels[item.key] : item.key === 'general' ? t('nav_store_settings', 'Store settings') : item.label}</span>
-            {item.key === 'digital-delivery' ? <small className="ws-nav-badge">{t('workspace_new', 'New')}</small> : null}
+            {['digital-delivery', 'notifications'].includes(item.key) ? <small className="ws-nav-badge">{t('workspace_new', 'New')}</small> : null}
         </Link>;
     })}</nav>;
 }
