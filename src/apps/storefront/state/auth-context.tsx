@@ -14,7 +14,7 @@ import {
   type ReactNode,
 } from 'react';
 import { getAccount, login as loginReq, logout as logoutReq, register as registerReq } from '../api/storefront';
-import { ApiError, setAuthToken } from '../api/client';
+import { ApiError, getAuthToken, setAuthToken } from '../api/client';
 
 export interface Customer {
   id: string;
@@ -45,6 +45,13 @@ export function AuthProvider(props: { children: ReactNode }): ReactElement {
   const [loading, setLoading] = useState(true);
 
   const refresh = useCallback(async () => {
+    // Customer routes authenticate by bearer token only, so a guest's /account read is always a
+    // 401: skip the request (one less PHP round trip on every first view).
+    if (!getAuthToken()) {
+      setCustomer(null);
+      setLoading(false);
+      return;
+    }
     try {
       const res = await getAccount();
       setCustomer(normalize((res as { data?: unknown }).data ?? res));
