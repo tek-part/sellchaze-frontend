@@ -47,9 +47,7 @@ for (const [path, text] of PAGES) {
     await page.goto(path);
     await expect(page.locator('.ws-dt-card .ws-dt-table')).toContainText(text);
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)).toBe(true);
-    // aria-required-children: the shared IndexFilters view tablist also holds the "Save as new view"
-    // button (src/components/data-table); tracked separately from these page migrations.
-    const result = await new AxeBuilder({ page }).include('.ws-dt-card').disableRules(['aria-required-children']).analyze();
+    const result = await new AxeBuilder({ page }).include('.ws-dt-card').analyze();
     expect(result.violations.map(v => `${v.id}: ${v.nodes.map(n => n.target.join(' ')).join(' | ')}`)).toEqual([]);
   });
 }
