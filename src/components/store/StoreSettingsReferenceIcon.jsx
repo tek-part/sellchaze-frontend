@@ -8,6 +8,7 @@ import SeoIcon from '@hugeicons/core-free-icons/SeoIcon';
 import CreditCardPosIcon from '@hugeicons/core-free-icons/CreditCardPosIcon';
 import MailSetting02Icon from '@hugeicons/core-free-icons/MailSetting02Icon';
 import Notification03Icon from '@hugeicons/core-free-icons/Notification03Icon';
+import MailSend01Icon from '@hugeicons/core-free-icons/MailSend01Icon';
 import DeliveryTruck02Icon from '@hugeicons/core-free-icons/DeliveryTruck02Icon';
 import InstagramIcon from '@hugeicons/core-free-icons/InstagramIcon';
 import SourceCodeSquareIcon from '@hugeicons/core-free-icons/SourceCodeSquareIcon';
@@ -17,7 +18,7 @@ import SmartPhone01Icon from '@hugeicons/core-free-icons/SmartPhone01Icon';
 
 // Geometry matched against the reference DOM and the installed Hugeicons package.
 const icons = { general: StoreIcon, domains: WebValidationIcon, 'store-info': StoreVerifiedIcon, 'head-code': CommandLineIcon,
-    'seo-settings': SeoIcon, payments: CreditCardPosIcon, 'digital-delivery': MailSetting02Icon, 'order-push': Notification03Icon,
+    'seo-settings': SeoIcon, payments: CreditCardPosIcon, 'digital-delivery': MailSetting02Icon, notifications: MailSend01Icon, 'order-push': Notification03Icon,
     managers: UserGroupIcon, shipping: DeliveryTruck02Icon, 'social-links': InstagramIcon, 'public-api-group': SourceCodeSquareIcon,
     webhooks: WebhookIcon, 'login-sessions': LockPasswordIcon, 'phone-verification': SmartPhone01Icon };
 

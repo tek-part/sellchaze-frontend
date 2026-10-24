@@ -14,6 +14,7 @@ import StatusBadge from '../components/StatusBadge';
 import StoreOrderShipment from '../components/store/StoreOrderShipment';
 import StoreOrderDigitalEmail from '../components/store/StoreOrderDigitalEmail';
 import StoreOrderDigitalDelivery from '../components/store/StoreOrderDigitalDelivery';
+import StoreOrderNotifications from '../components/store/StoreOrderNotifications';
 import StoreOrderCashPayment from '../components/store/StoreOrderCashPayment';
 import StoreOrderEditModal from '../components/store/orders/StoreOrderEditModal';
 import { orderBotLabel } from '../components/store/orders/OrderBotVerification';
@@ -115,6 +116,7 @@ export default function StoreOrderDetailPage() {
                 <StoreOrderCashPayment key={`cash-${endpoint}`} order={order} apiBase={apiBase} onOrderUpdated={() => void load()} />
                 {requiresShipping ? <StoreOrderShipment key={`shipment-${endpoint}`} order={order} apiBase={apiBase} uiBase={uiBase} onOrderUpdated={() => void load()} /> : <DetailCard title={text('التسليم الرقمي', 'Digital delivery')}><p>{text('يتاح للمشتري الإيصال الخاص والمنتجات بعد تأكيد الدفع.', 'The private receipt and products become available to the buyer after payment confirmation.')}</p></DetailCard>}
                 {digital ? <><StoreOrderDigitalEmail key={`email-${endpoint}`} order={order} apiBase={apiBase} onOrderUpdated={() => void load()} /><StoreOrderDigitalDelivery key={`delivery-${endpoint}`} order={order} apiBase={apiBase} onOrderUpdated={() => void load()} /></> : null}
+                <StoreOrderNotifications key={`notifications-${endpoint}`} order={order} apiBase={apiBase} />
             </div></details> : null}
             <DetailCard title={text('سجل الطلب', 'Order history')}><ol className="ws-order-history">{(order.timeline || []).map((event, index) => <li key={index}><strong>{eventLabels[event.source]?.[ar ? 0 : 1] || (event.from_status === event.to_status && event.notes ? text('ملاحظة', 'Note') : orderStatusLabel(event.to_status, ar))}</strong><small>{event.actor || text('النظام أو العميل', 'System or customer')} · {date(event.created_at)}</small>{event.notes ? <p>{event.notes}</p> : null}</li>)}</ol>{!order.timeline?.length ? <p className="ws-order-muted">{text('لا توجد أحداث بعد.', 'No events yet.')}</p> : null}</DetailCard>
         </div><aside className="ws-order-secondary">
