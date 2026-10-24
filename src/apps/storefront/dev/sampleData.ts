@@ -116,6 +116,13 @@ export function sampleProductDetail(slug: string, themeId?: string, locale?: str
   if (themeId === 'hype-perfumes') {
     return { ...base, images: [base.image, base.hoverImage].filter((image): image is NonNullable<typeof image> => Boolean(image)), inStock: true, sku: `PREVIEW-${base.id}`, descriptionHtml: locale === 'ar' ? '<p>بيانات معاينة فقط. يضيف المتجر صور منتجاته ووصفها وخياراتها الفعلية.</p>' : '<p>Preview content only. Each store supplies its actual fragrance photographs, descriptions and options.</p>' };
   }
+  if (themeId === 'glow') {
+    const ar = locale === 'ar';
+    const volumes = (base.sizes ?? []).filter((size) => /^\d+\s*ml$/i.test(size));
+    return { ...base, images: [base.image, base.hoverImage].filter((image): image is NonNullable<typeof image> => Boolean(image)), inStock: true, sku: `GLOW-${base.id}`,
+      descriptionHtml: ar ? '<p>بيانات معاينة فقط. يضيف المتجر وصف منتجاته ومكوّناتها وطريقة استخدامها الفعلية.</p>' : '<p>Preview content only. Each store supplies its own product descriptions, full ingredient lists and directions.</p>',
+      variants: volumes.map((size, i) => ({ id: `glow-${size.toLowerCase().replace(/\s+/g, '')}`, label: ar ? size.replace(/ml$/i, ' مل') : size.replace(/ml$/i, ' ml'), options: { [ar ? 'الحجم' : 'Size']: ar ? size.replace(/ml$/i, ' مل') : size.replace(/ml$/i, ' ml') }, price: Math.round(base.price * (1 + i * 0.6)), available: true, availableStock: 6 })) };
+  }
   if (themeId === 'blast-pets' || themeId === 'nature-pets') {
     const ar = locale === 'ar'; const source = base.image?.src;
     return { ...base, images: source ? [{ src: source, alt: base.title }] : [], inStock: true, sku: `PETS-${base.id}`, descriptionHtml: ar ? '<p>بيانات معاينة فقط. يحدد كل متجر صور منتجاته ووصفها وخياراتها الفعلية.</p>' : '<p>Preview content only. Each store supplies its own product photographs, descriptions and options.</p>', variants: base.categorySlug === 'beds-accessories' ? [

@@ -387,10 +387,10 @@ describe('updates', () => {
 /* -------------------------------------------------------------- catalog + bridge */
 describe('catalog + registry bridge', () => {
   it('the catalog includes independent furniture layouts alongside the five original themes', () => {
-    expect(THEME_CATALOG).toHaveLength(14);
+    expect(THEME_CATALOG).toHaveLength(15);
     const ids = THEME_CATALOG.map((e) => e.id);
     expect(new Set(ids).size).toBe(ids.length);
-    expect(ids).toEqual(['elite-wallets', 'hype-fashion', 'hype-perfumes', 'nature-pets', 'blast-pets', 'elite-furniture', 'nature-kids', 'pure-furniture', 'sphinx-v3', 'naseem', 'bazaar', 'sahra', 'fresh', 'techno']);
+    expect(ids).toEqual(['elite-wallets', 'hype-fashion', 'hype-perfumes', 'nature-pets', 'blast-pets', 'elite-furniture', 'nature-kids', 'pure-furniture', 'sphinx-v3', 'naseem', 'bazaar', 'sahra', 'fresh', 'techno', 'glow']);
   });
   it('registers every catalogued theme into a fresh registry', () => {
     const registry = new ThemeRegistry();
