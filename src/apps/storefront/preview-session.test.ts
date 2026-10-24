@@ -40,7 +40,7 @@ describe('signed storefront preview capability', () => {
     vi.stubGlobal('fetch', fetch); vi.stubGlobal('window', { location: { search: query } }); setApiLocale('ar');
     await apiFetch('/'); await apiFetch('/layout?template=home');
     await apiFetch('/checkout', { method: 'POST', body: JSON.stringify({ phone: 'fixture-only' }) }); await apiRootFetch('/auth/login', { method: 'POST' });
-    expect(fetch.mock.calls[0]?.[0]).toBe(`/api/v1/storefront/?__preview=${token}&lang=ar`);
+    expect(fetch.mock.calls[0]?.[0]).toBe(`/api/v1/storefront?__preview=${token}&lang=ar`);
     expect(fetch.mock.calls[1]?.[0]).toBe(`/api/v1/storefront/layout?template=home&__preview=${token}&lang=ar`);
     expect(fetch.mock.calls[2]?.[0]).toBe('/api/v1/storefront/checkout?lang=ar'); expect(fetch.mock.calls[2]?.[1].body).toBe('{"phone":"fixture-only"}');
     expect(fetch.mock.calls[3]?.[0]).toBe('/api/v1/auth/login');

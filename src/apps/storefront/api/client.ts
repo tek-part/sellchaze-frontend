@@ -80,10 +80,57 @@ export class ApiError extends Error {
   }
 }
 
+/**
+ * Full URL of a storefront API request. The root (`/`) is requested WITHOUT a trailing slash:
+ * `/storefront/` costs a 301 round trip on the production Apache rewrite before every first view.
+ */
+export function storefrontRequestUrl(path: string, method = 'GET'): string {
+  const previewPath = withPreviewRead(path, method, typeof window !== 'undefined' ? window.location.search : '');
+  const tail = previewPath === '/' || previewPath.startsWith('/?') ? previewPath.slice(1) : previewPath;
+  return `${API_BASE}/storefront${withLang(tail)}`;
+}
+
+/** A read the inline boot script (vite/storefront-boot.js) started before this module loaded. */
+type EarlyRead = Promise<{ status: number; body: unknown }>;
+
+const EARLY_READ_TTL_MS = 30_000;
+
+declare global {
+  interface Window {
+    __sfEarly?: Record<string, EarlyRead>;
+  }
+}
+
+/**
+ * Take (once) the early read for exactly this URL. The boot script builds its URLs the same way
+ * this client does, so a mismatch (another language, a preview token) simply means no early read.
+ */
+function takeEarlyRead(url: string): EarlyRead | null {
+  const early = typeof window !== 'undefined' ? window.__sfEarly : undefined;
+  if (!early || !Object.prototype.hasOwnProperty.call(early, url)) return null;
+  const read = early[url]!;
+  delete early[url];
+  // A read the first render never claimed must not answer a much later client-side navigation.
+  return typeof performance !== 'undefined' && performance.now() > EARLY_READ_TTL_MS ? null : read;
+}
+
 export async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
   const hasBody = init?.body !== undefined && init.body !== null;
-  const previewPath = withPreviewRead(path, init?.method ?? 'GET', typeof window !== 'undefined' ? window.location.search : '');
-  const response = await fetch(`${API_BASE}/storefront${withLang(previewPath)}`, {
+  const method = init?.method ?? 'GET';
+  const url = storefrontRequestUrl(path, method);
+  const early = method.toUpperCase() === 'GET' && !hasBody ? takeEarlyRead(url) : null;
+  if (early) {
+    // An HTTP error is the server's answer and is reported as such; only a network failure
+    // falls through to a normal request.
+    const settled = await early.catch(() => null);
+    if (settled) {
+      const { status, body } = settled;
+      if (status >= 200 && status < 300) return (status === 204 ? undefined : body) as T;
+      const message = (body as { message?: unknown } | null)?.message;
+      throw new ApiError(status, typeof message === 'string' && message ? message : `Request failed (${status})`, body ?? undefined);
+    }
+  }
+  const response = await fetch(url, {
     credentials: 'include',
     ...init,
     headers: {

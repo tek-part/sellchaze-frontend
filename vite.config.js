@@ -1,6 +1,7 @@
 import { defineConfig, loadEnv } from 'vite';
 import react from '@vitejs/plugin-react';
 import { fileURLToPath } from 'node:url';
+import { storefrontBoot } from './vite/storefront-boot.js';
 
 /**
  * Dev-only: serve the storefront document for storefront URLs.
@@ -47,7 +48,7 @@ export default defineConfig(({ mode }) => {
     const proxyTarget = env.VITE_PROXY_TARGET || 'http://127.0.0.1:8000';
 
     return {
-        plugins: [react(), storefrontPreviewRouting(env.VITE_DEV_STOREFRONT_ONLY === '1')],
+        plugins: [react(), storefrontPreviewRouting(env.VITE_DEV_STOREFRONT_ONLY === '1'), storefrontBoot(env.VITE_API_BASE || '/api/v1')],
         build: {
             chunkSizeWarningLimit: 900,
             rollupOptions: {
