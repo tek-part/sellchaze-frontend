@@ -54,21 +54,24 @@ function ViewTabs({ table }) {
     const run = async (action) => { setBusy(true); setError(''); try { await action(); } catch (e) { setError(errorText(e)); } finally { setBusy(false); } };
 
     return <div className="ws-dt-views">
-        <div className="ws-dt-tabs" role="tablist" aria-label={text('طرق العرض', 'Views')}>
-            {table.views.map((view) => {
-                const active = view.id === table.activeView?.id;
-                return <div key={view.id} className={`ws-dt-tab ${active ? 'is-active' : ''}`}>
-                    <button type="button" role="tab" aria-selected={active} onClick={() => table.selectView(view)}>{view.label || allLabel}{active && table.viewChanged ? <span className="ws-dt-dot" aria-label={text('تغييرات غير محفوظة', 'Unsaved changes')} /> : null}</button>
-                    {active && !view.builtIn ? <Popover className="ws-dt-popover">
-                        <PopoverButton className="ws-dt-icon" aria-label={text('خيارات طريقة العرض', 'View options')}><HiOutlineEllipsisHorizontal aria-hidden /></PopoverButton>
-                        <PopoverPanel anchor="bottom start" className="ws-dt-menu">{({ close }) => <>
-                            <button type="button" disabled={busy || !table.viewChanged} onClick={() => run(() => table.updateView(view)).then(close)}>{text('حفظ التغييرات على طريقة العرض', 'Save changes to view')}</button>
-                            <button type="button" disabled={busy} onClick={() => { setNaming(view); setName(view.label); close(); }}>{text('إعادة التسمية', 'Rename')}</button>
-                            <button type="button" className="is-danger" disabled={busy} onClick={() => run(() => table.deleteView(view)).then(close)}>{text('حذف طريقة العرض', 'Delete view')}</button>
-                        </>}</PopoverPanel>
-                    </Popover> : null}
-                </div>;
-            })}
+        <div className="ws-dt-tabs">
+            {/* role=tablist may only contain tabs: the view menu and "+" sit beside it. */}
+            <div className="ws-dt-tablist" role="tablist" aria-label={text('طرق العرض', 'Views')}>
+                {table.views.map((view) => {
+                    const active = view.id === table.activeView?.id;
+                    return <button key={view.id} type="button" role="tab" aria-selected={active} className={`ws-dt-tab ${active ? 'is-active' : ''}`} onClick={() => table.selectView(view)}>
+                        {view.label || allLabel}{active && table.viewChanged ? <span className="ws-dt-dot" aria-label={text('تغييرات غير محفوظة', 'Unsaved changes')} /> : null}
+                    </button>;
+                })}
+            </div>
+            {table.activeView && !table.activeView.builtIn ? <Popover className="ws-dt-popover">
+                <PopoverButton className="ws-dt-icon" aria-label={text('خيارات طريقة العرض', 'View options')}><HiOutlineEllipsisHorizontal aria-hidden /></PopoverButton>
+                <PopoverPanel anchor="bottom start" className="ws-dt-menu">{({ close }) => <>
+                    <button type="button" disabled={busy || !table.viewChanged} onClick={() => run(() => table.updateView(table.activeView)).then(close)}>{text('حفظ التغييرات على طريقة العرض', 'Save changes to view')}</button>
+                    <button type="button" disabled={busy} onClick={() => { setNaming(table.activeView); setName(table.activeView.label); close(); }}>{text('إعادة التسمية', 'Rename')}</button>
+                    <button type="button" className="is-danger" disabled={busy} onClick={() => run(() => table.deleteView(table.activeView)).then(close)}>{text('حذف طريقة العرض', 'Delete view')}</button>
+                </>}</PopoverPanel>
+            </Popover> : null}
             {table.savedViewsEnabled ? <button type="button" className="ws-dt-icon" aria-label={text('حفظ كطريقة عرض جديدة', 'Save as new view')} title={text('حفظ كطريقة عرض جديدة', 'Save as new view')} onClick={() => { setNaming('new'); setName(''); setError(''); }}><HiOutlinePlus aria-hidden /></button> : null}
         </div>
         {naming ? <form className="ws-dt-name" onSubmit={submit}>
