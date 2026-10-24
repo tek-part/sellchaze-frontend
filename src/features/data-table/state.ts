@@ -6,7 +6,7 @@
 // Filter values: select/text -> raw string, multi -> comma list, range -> "<min>..<max>".
 
 export type SortDirection = 'asc' | 'desc';
-export type FilterType = 'select' | 'multi' | 'text' | 'range' | 'date-range';
+export type FilterType = 'select' | 'multi' | 'text' | 'range' | 'date-range' | 'custom';
 export type RangeValue = { min?: string; max?: string };
 export type FilterValue = string | string[] | RangeValue;
 
@@ -19,6 +19,8 @@ export interface FilterDef {
   options?: FilterOption[];
   /** API parameter name (defaults to key). Ranges send `<param>_min`/`<param>_max`, date ranges `<param>_from`/`<param>_to`. */
   param?: string;
+  /** `custom` filters hold a plain string and supply their own chip text (the editor is rendered by IndexFilters). */
+  describe?: (value: string) => string;
 }
 
 export interface TableState {
@@ -142,6 +144,7 @@ export function toApiParams(state: TableState, defs: FilterDef[]): Record<string
 /** Human-readable chip text for an applied filter, e.g. "Status: Active, Draft" or "Price: 10 – 50". */
 export function describeFilter(def: FilterDef, value: FilterValue, words: { from?: string; to?: string } = {}): string {
   const label = (item: string) => def.options?.find((option) => option.value === item)?.label ?? item;
+  if (def.type === 'custom' && def.describe) return `${def.label}: ${def.describe(String(value))}`;
   if (isRange(def.type)) {
     const range = value as RangeValue;
     const min = (range.min ?? '').trim();

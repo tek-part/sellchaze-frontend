@@ -14,6 +14,15 @@ function useText() {
 }
 const errorText = (error) => Object.values(error?.response?.data?.errors || {}).flat().join(' ') || error?.response?.data?.message || error?.message || '';
 
+/** `custom` filters (e.g. a product search) render their own editor; others use the built-in ones. */
+function FilterEditorFor(props) {
+    return props.def.type === 'custom' ? <CustomFilterEditor {...props} /> : <FilterEditor {...props} />;
+}
+
+function CustomFilterEditor({ def, value, onApply, onClose }) {
+    return <div className="ws-dt-filter-editor"><strong>{def.label}</strong>{def.editor({ value: value ?? '', onApply: (next) => { onApply(next); if (next) onClose?.(); } })}</div>;
+}
+
 function FilterEditor({ def, value, onApply, onClose }) {
     const [text] = useText();
     const [draft, setDraft] = useState(() => value ?? (def.type === 'multi' ? [] : def.type.endsWith('range') ? { min: '', max: '' } : ''));
@@ -162,7 +171,7 @@ export default function IndexFilters({ table, searchPlaceholder, onExport, expor
                     <PopoverButton className="ws-dt-chip-label">{describeFilter(def, table.state.filters[def.key], words)}</PopoverButton>
                     <button type="button" aria-label={text(`إزالة فلتر ${def.label}`, `Remove ${def.label} filter`)} onClick={() => table.removeFilter(def.key)}><HiOutlineXMark aria-hidden /></button>
                 </span>
-                <PopoverPanel anchor="bottom start" className="ws-dt-menu">{({ close }) => <FilterEditor def={def} value={table.state.filters[def.key]} onApply={(value) => table.setFilter(def.key, value)} onClose={close} />}</PopoverPanel>
+                <PopoverPanel anchor="bottom start" className="ws-dt-menu">{({ close }) => <FilterEditorFor def={def} value={table.state.filters[def.key]} onApply={(value) => table.setFilter(def.key, value)} onClose={close} />}</PopoverPanel>
             </Popover>)}
             <button type="button" className="ws-dt-link" onClick={table.clearFilters}>{text('مسح الكل', 'Clear all')}</button>
         </div> : null}
@@ -171,6 +180,6 @@ export default function IndexFilters({ table, searchPlaceholder, onExport, expor
 
 function FilterPicker({ defs, table, close }) {
     const [current, setCurrent] = useState(null);
-    if (current) return <FilterEditor def={current} value={table.state.filters[current.key]} onApply={(value) => table.setFilter(current.key, value)} onClose={close} />;
+    if (current) return <FilterEditorFor def={current} value={table.state.filters[current.key]} onApply={(value) => table.setFilter(current.key, value)} onClose={close} />;
     return <ul className="ws-dt-picker">{defs.map((def) => <li key={def.key}><button type="button" onClick={() => setCurrent(def)}>{def.label}</button></li>)}</ul>;
 }
