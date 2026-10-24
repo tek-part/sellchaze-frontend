@@ -7,7 +7,14 @@ import StoreOrdersPage from '../pages/StoreOrdersPage';
 import api from '../api/client';
 const scope = vi.hoisted(() => ({ meId: 1, storeId: 1 }));
 
-vi.mock('../api/client', () => ({ default: { get: vi.fn(), post: vi.fn() } }));
+vi.mock('../api/client', () => {
+    const list = vi.fn();
+    // Saved views come from /table-views (none in this suite); every other GET is the orders list mock.
+    const get = vi.fn((path, config) => (path === '/table-views' ? Promise.resolve({ data: { data: [] } }) : list(path, config)));
+    get.mockResolvedValue = (value) => list.mockResolvedValue(value);
+    get.mockReturnValue = (value) => list.mockReturnValue(value);
+    return { default: { get, post: vi.fn(), list } };
+});
 vi.mock('../hooks/useStoreScope', () => ({ default: () => ({ apiBase: '/my-store', uiBase: '/store' }) }));
 vi.mock('../hooks/useDebounced', () => ({ useDebounced: value => value }));
 vi.mock('react-router-dom', async () => ({ ...await vi.importActual('react-router-dom'), useOutletContext: () => ({ permissions: ['store.orders.manage'], me: { id: scope.meId }, store: { id: scope.storeId } }) }));
@@ -36,7 +43,7 @@ describe('merchant order list lifecycle and review actions', () => {
         let finish; api.get.mockReturnValue(new Promise(resolve => { finish = resolve; }));
         scope.meId = 2; scope.storeId = 2; await render();
         expect(host.textContent).not.toContain('Synthetic customer');
-        expect(host.querySelector('.ws-orders-selection')).toBeNull(); expect(document.querySelector('[role="dialog"]')).toBeNull();
+        expect(host.querySelector('.ws-dt-bulk')).toBeNull(); expect(document.querySelector('[role="dialog"]')).toBeNull();
         await act(async () => finish({ data: { data: [{ ...fixture, id: 8, customer: { name: 'Current account customer' } }], meta: { total: 1, last_page: 1 } } }));
         expect(host.textContent).toContain('Current account customer'); expect(host.textContent).not.toContain('Synthetic customer');
     });
@@ -66,11 +73,11 @@ describe('merchant order list lifecycle and review actions', () => {
         await render();
         expect(host.querySelectorAll('[role="tab"]')).toHaveLength(17);
         expect(host.querySelectorAll('thead th')).toHaveLength(8);
-        expect(host.querySelector('.ws-orders-selection')).toBeNull();
+        expect(host.querySelector('.ws-dt-bulk')).toBeNull();
         await click(button('High Risk'));
-        expect(api.get).toHaveBeenLastCalledWith('/my-store/orders', { params: { classification: 'high_risk', page: 1, per_page: 25, sort: 'created_at', dir: 'desc' } });
+        expect(api.list).toHaveBeenLastCalledWith('/my-store/orders', { params: { classification: 'high_risk', page: 1, per_page: 25, sort: 'created_at', dir: 'desc' } });
         await click(button('Waiting for pickup'));
-        expect(api.get).toHaveBeenLastCalledWith('/my-store/orders', { params: { status: 'waiting_for_pickup', page: 1, per_page: 25, sort: 'created_at', dir: 'desc' } });
+        expect(api.list).toHaveBeenLastCalledWith('/my-store/orders', { params: { status: 'waiting_for_pickup', page: 1, per_page: 25, sort: 'created_at', dir: 'desc' } });
     });
     it('sends expected review version and eligible-only mode and reports actual updated and skipped counts', async () => {
         api.post.mockResolvedValue({ data: { updated: 0, skipped: 1, unchanged: 0 } });
@@ -83,7 +90,7 @@ describe('merchant order list lifecycle and review actions', () => {
         await click(button('Update orders'));
         expect(api.post).toHaveBeenCalledWith('/my-store/orders/bulk-status', { status: 'high_risk', eligible_only: true, orders: [{ id: 7, status: 'processing', review_version: 3 }] });
         expect(host.textContent).toContain('0 orders updated. Ineligible: 1, unchanged: 0.');
-        expect(host.querySelector('.ws-orders-selection')).toBeNull();
+        expect(host.querySelector('.ws-dt-bulk')).toBeNull();
     });
     it('keeps a failed update reviewable without pretending the selected orders changed', async () => {
         api.post.mockRejectedValue({ response: { data: { message: 'Review changed. Reload before updating it.' } } });

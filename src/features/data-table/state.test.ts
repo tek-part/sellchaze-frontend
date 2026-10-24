@@ -41,6 +41,10 @@ describe('API params', () => {
 });
 
 describe('chips and views', () => {
+  it('lets custom filters describe their own value', () => {
+    expect(describeFilter({ key: 'product', label: 'Product', type: 'custom', describe: (id) => `#${id}` }, '12')).toBe('Product: #12');
+  });
+
   it('describes filters with option labels and open ranges', () => {
     expect(describeFilter(defs[0], ['active', 'draft'])).toBe('Status: Active, Draft');
     expect(describeFilter(defs[2], { min: '10', max: '50' })).toBe('Price: 10 – 50');

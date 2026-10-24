@@ -1,20 +1,22 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Dialog, DialogBackdrop, DialogPanel, DialogTitle, Popover, PopoverButton, PopoverPanel } from '@headlessui/react';
-import { Link, useNavigate, useOutletContext, useSearchParams } from 'react-router-dom';
+import { Dialog, DialogBackdrop, DialogPanel, DialogTitle } from '@headlessui/react';
+import { Link, useOutletContext, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import api from '../api/client';
 import useStoreScope from '../hooks/useStoreScope';
-import { useDebounced } from '../hooks/useDebounced';
 import useWorkspaceAppearance from '../components/workspace/useWorkspaceAppearance';
-import { HiOutlineArrowDownTray, HiOutlineArrowUp, HiOutlineArrowDown, HiOutlineChevronUpDown, HiOutlineChevronRight, HiOutlineXMark, HiOutlinePrinter, HiOutlinePlus } from '../components/workspace/WorkspaceIcons';
+import { HiOutlineArrowPath, HiOutlinePrinter, HiOutlinePlus, HiOutlineShoppingBag } from '../components/workspace/WorkspaceIcons';
+import { IndexFilters, IndexTable, useIndexTable } from '../components/data-table';
 import OrderExportDialog from '../components/store/orders/OrderExportDialog';
 import { OrderBotWarning } from '../components/store/orders/OrderBotVerification';
 import OrderBulkPaymentReview from '../components/store/orders/OrderBulkPaymentReview';
 import OrderProductFilter from '../components/store/orders/OrderProductFilter';
-import { ORDER_FILTERS, ORDER_STATUSES, ORDER_BULK_STATUSES, ORDER_PAYMENT_TARGETS, ORDER_RISK_STATUSES, ORDER_RETURN_STATUSES, orderAddress, orderFilterParams, orderStatusLabel } from '../components/store/orders/order-workspace';
+import { ORDER_STATUSES, ORDER_BULK_STATUSES, ORDER_PAYMENT_TARGETS, ORDER_RISK_STATUSES, ORDER_RETURN_STATUSES, orderAddress, orderStatusLabel } from '../components/store/orders/order-workspace';
 import '../components/store/orders/orders-workspace.css';
 
 const uuid = /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i;
+const DEFAULTS = { sort: { by: 'created_at', direction: 'desc' }, perPage: 25, perPageOptions: [25, 50, 100] };
+const PAYMENT_LABELS = { pending: ['في انتظار الدفع', 'Awaiting payment'], paid: ['تم الدفع', 'Paid'], failed: ['فشل الدفع', 'Payment failed'], refunded: ['مسترد', 'Refunded'] };
 
 function ExportFile({ id, apiBase, ar, onClose, theme }) {
     const text = (a, e) => ar ? a : e; const [row, setRow] = useState(null); const [error, setError] = useState(''); const [busy, setBusy] = useState(false);
@@ -31,67 +33,104 @@ function ExportFile({ id, apiBase, ar, onClose, theme }) {
 }
 
 export default function StoreOrdersPage() {
-    const { apiBase, uiBase } = useStoreScope(); const { i18n } = useTranslation(); const ar = i18n.language.startsWith('ar'); const text = (a, e) => ar ? a : e; const navigate = useNavigate(); const { permissions = [], me, store } = useOutletContext(); const { theme } = useWorkspaceAppearance(); const [urlParams, setUrlParams] = useSearchParams();
+    const { apiBase, uiBase } = useStoreScope(); const { i18n } = useTranslation(); const ar = i18n.language.startsWith('ar'); const text = (a, e) => ar ? a : e;
+    const { permissions = [], me, store } = useOutletContext(); const { theme } = useWorkspaceAppearance(); const [urlParams, setUrlParams] = useSearchParams();
     const scopeIdentity = `${apiBase}:${me?.id ?? ''}:${store?.id ?? ''}`;
-    const [status, setStatus] = useState(''); const [payment, setPayment] = useState(''); const [classification, setClassification] = useState(''); const [filters, setFilters] = useState(() => (urlParams.get('search') ? { search: urlParams.get('search').slice(0, 200) } : {})); const debounced = useDebounced(filters, 350);
-    const [page, setPage] = useState(1); const [perPage, setPerPage] = useState(25); const [sort, setSort] = useState('created_at'); const [dir, setDir] = useState('desc'); const [reload, setReload] = useState(0); const [result, setResult] = useState(null); const [error, setError] = useState(''); const [loading, setLoading] = useState(true);
-    const [selected, setSelected] = useState(() => new Map()); const [exportOpen, setExportOpen] = useState(false); const [statusOpen, setStatusOpen] = useState(false); const [nextStatus, setNextStatus] = useState(''); const [busy, setBusy] = useState(false); const [notice, setNotice] = useState(''); const pageCheckbox = useRef(null); const tabRefs = useRef([]);
+    const [reload, setReload] = useState(0); const [result, setResult] = useState(null); const [loadError, setLoadError] = useState(''); const [error, setError] = useState(''); const [loading, setLoading] = useState(true);
+    const [exportOpen, setExportOpen] = useState(false); const [statusOpen, setStatusOpen] = useState(false); const [nextStatus, setNextStatus] = useState(''); const [busy, setBusy] = useState(false); const [notice, setNotice] = useState('');
+    const productNames = useRef(new Map());
     const activeResult = result?.scope === scopeIdentity ? result.payload : null;
-    const canManage = permissions.includes('store.orders.manage'); const rows = useMemo(() => activeResult?.data || [], [activeResult]); const pending = loading || filters !== debounced; const allSelected = rows.length > 0 && rows.every(row => selected.has(row.id));
-    const query = { ...orderFilterParams(debounced), ...(status ? { status } : {}), ...(payment ? { payment_status: payment } : {}), ...(classification ? { classification } : {}) }; const queryKey = JSON.stringify(query);
-    useEffect(() => { let active = true; setLoading(true); setError(''); api.get(`${apiBase}/orders`, { params: { ...JSON.parse(queryKey), page, per_page: perPage, sort, dir } }).then(({ data }) => { if (active) setResult({ scope: scopeIdentity, payload: data }); }).catch(e => { if (active) setError(e.response?.data?.message || e.message); }).finally(() => { if (active) setLoading(false); }); return () => { active = false; }; }, [apiBase, scopeIdentity, queryKey, page, perPage, sort, dir, reload]);
-    useEffect(() => { setPage(1); setSelected(new Map()); setStatusOpen(false); }, [status, payment, classification, filters, perPage, sort, dir, scopeIdentity]);
-    useEffect(() => { if (pageCheckbox.current) pageCheckbox.current.indeterminate = !allSelected && rows.some(row => selected.has(row.id)); }, [allSelected, rows, selected]);
-    const tabs = [
-        ['', '', '', text('كل الطلبات', 'All orders')],
-        ...ORDER_STATUSES.slice(0, 2).map(([key, a, e]) => [key, '', '', ar ? a : e]),
-        ['', 'pending', '', text('في انتظار الدفع', 'Awaiting payment')], ['', 'paid', '', text('تم الدفع', 'Paid')], ['', 'failed', '', text('فشل الدفع', 'Payment failed')],
-        ...ORDER_STATUSES.slice(2).map(([key, a, e]) => [key, '', '', ar ? a : e]),
-        ...ORDER_RISK_STATUSES.map(([key, a, e]) => ['', '', key, ar ? a : e]),
-    ];
-    const tabList = useRef(null);
+    const canManage = permissions.includes('store.orders.manage');
+    const rows = useMemo(() => activeResult?.data || [], [activeResult]);
+
+    // Older links (customers page, notifications) used ?search=; the table reads ?q=.
     useEffect(() => {
-        const strip = tabList.current;
-        if (!strip) return undefined;
-        function revealSelectedTab() {
-            const selectedTab = tabRefs.current.find(tab => tab?.getAttribute('aria-selected') === 'true');
-            if (!selectedTab) return;
-            const bounds = strip.getBoundingClientRect();
-            const selectedBounds = selectedTab.getBoundingClientRect();
-            const left = bounds.left + strip.clientLeft;
-            const right = left + strip.clientWidth;
-            const delta = selectedBounds.left < left ? selectedBounds.left - left : selectedBounds.right > right ? selectedBounds.right - right : 0;
-            // Move only the tab strip; resizing must not jump the page away from an order.
-            if (delta) strip.scrollBy?.({ left: delta, behavior: 'auto' });
-        }
-        revealSelectedTab();
-        if (typeof ResizeObserver === 'undefined') return undefined;
-        const observer = new ResizeObserver(revealSelectedTab);
-        observer.observe(strip);
-        return () => observer.disconnect();
-    }, [status, payment, classification, ar]);
-    useEffect(() => { setBusy(false); setNotice(''); }, [scopeIdentity]);
-    function chooseTab(index) { setStatus(tabs[index][0]); setPayment(tabs[index][1]); setClassification(tabs[index][2]); }
-    function tabKey(event, index) { let next; if (event.key === 'Home') next = 0; else if (event.key === 'End') next = tabs.length - 1; else if (event.key === 'ArrowRight') next = (index + (ar ? -1 : 1) + tabs.length) % tabs.length; else if (event.key === 'ArrowLeft') next = (index + (ar ? 1 : -1) + tabs.length) % tabs.length; if (next != null) { event.preventDefault(); chooseTab(next); tabRefs.current[next]?.focus(); } }
-    function toggle(row, checked) { setSelected(current => { const next = new Map(current); if (checked && next.size < 100) next.set(row.id, row); else if (!checked) next.delete(row.id); return next; }); }
-    function sortBy(key) { setSort(key); setDir(sort === key && dir === 'asc' ? 'desc' : 'asc'); }
-    const header = (key, label) => <th aria-sort={sort === key ? dir === 'asc' ? 'ascending' : 'descending' : 'none'}><button type="button" onClick={() => sortBy(key)} aria-label={`${text('رتب حسب', 'Sort by')} ${label} ${sort === key && dir === 'asc' ? text('تنازلي', 'descending') : text('تصاعدي', 'ascending')}`}>{sort === key ? dir === 'asc' ? <HiOutlineArrowUp aria-hidden /> : <HiOutlineArrowDown aria-hidden /> : <HiOutlineChevronUpDown aria-hidden />}{label}</button></th>;
-    function filterValue(key, value) { setFilters(old => ({ ...old, [key]: value })); }
-    function filterToggle(key, enabled) { setFilters(old => { const next = { ...old }; if (enabled) next[key] = ''; else delete next[key]; return next; }); }
-    async function updateStatuses() { if (busy || !nextStatus || !selected.size) return; setBusy(true); setError(''); try { const { data } = await api.post(`${apiBase}/orders/bulk-status`, { status: nextStatus, eligible_only: true, orders: [...selected.values()].map(row => ({ id: row.id, status: row.status, review_version: row.review?.version || 0 })) }); setSelected(new Map()); setStatusOpen(false); setReload(value => value + 1); setNotice(text(`تم تحديث ${data.updated} طلب. غير مؤهل: ${data.skipped}، دون تغيير: ${data.unchanged}.`, `${data.updated} orders updated. Ineligible: ${data.skipped}, unchanged: ${data.unchanged}.`)); } catch (e) { setError(e.response?.data?.message || e.message); } finally { setBusy(false); } }
+        if (!urlParams.has('search') || urlParams.has('q')) return;
+        const next = new URLSearchParams(urlParams); next.set('q', String(urlParams.get('search')).slice(0, 200)); next.delete('search'); setUrlParams(next, { replace: true });
+    }, [urlParams, setUrlParams]);
+
+    const option = ([value, a, e]) => ({ value, label: ar ? a : e });
+    const filters = useMemo(() => [
+        { key: 'status', label: text('حالة الطلب', 'Order status'), type: 'select', options: ORDER_STATUSES.map(option) },
+        { key: 'payment', param: 'payment_status', label: text('حالة الدفع', 'Payment status'), type: 'select', options: ['pending', 'paid', 'failed'].map((key) => ({ value: key, label: PAYMENT_LABELS[key][ar ? 0 : 1] })) },
+        { key: 'risk', param: 'classification', label: text('تصنيف المخاطر', 'Risk'), type: 'select', options: ORDER_RISK_STATUSES.map(option) },
+        { key: 'product', param: 'product_id', label: text('المنتج', 'Product'), type: 'custom',
+            describe: (id) => productNames.current.get(String(id)) || `#${id}`,
+            editor: ({ value, onApply }) => <OrderProductFilter apiBase={apiBase} value={value} ar={ar} onChange={(id, chosen) => { if (chosen?.name) productNames.current.set(String(id), chosen.name); onApply(id); }} /> },
+        { key: 'date', label: text('تاريخ الطلب', 'Order date'), type: 'date-range' },
+        { key: 'order_id', label: text('رقم الطلب', 'Order ID'), type: 'text' },
+        { key: 'customer', label: text('اسم العميل', 'Customer name'), type: 'text' },
+        { key: 'customer_phone', label: text('رقم هاتف العميل', 'Customer phone'), type: 'text' },
+        { key: 'address', label: text('عنوان العميل', 'Customer address'), type: 'text' },
+        { key: 'coupon', label: text('الكوبون', 'Coupon'), type: 'text' },
+        { key: 'source', label: text('مصدر الحملة', 'Campaign source'), type: 'text' },
+        { key: 'campaign', label: text('اسم الحملة', 'Campaign name'), type: 'text' },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    ], [ar, apiBase]);
+    // The 17 order tabs merchants know, as built-in views (fulfilment, payment and risk are independent filters).
+    const views = useMemo(() => [
+        { id: 'all', label: text('كل الطلبات', 'All orders'), state: { filters: {} } },
+        ...ORDER_STATUSES.slice(0, 2).map(([key, a, e]) => ({ id: key, label: ar ? a : e, state: { filters: { status: key } } })),
+        ...['pending', 'paid', 'failed'].map((key) => ({ id: `payment-${key}`, label: PAYMENT_LABELS[key][ar ? 0 : 1], state: { filters: { payment: key } } })),
+        ...ORDER_STATUSES.slice(2).map(([key, a, e]) => ({ id: key, label: ar ? a : e, state: { filters: { status: key } } })),
+        ...ORDER_RISK_STATUSES.map(([key, a, e]) => ({ id: key, label: ar ? a : e, state: { filters: { risk: key } } })),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    ], [ar]);
+    const money = (value, currency) => { const amount = Number(value); return Number.isFinite(amount) ? new Intl.NumberFormat(ar ? 'ar-EG' : 'en', currency ? { style: 'currency', currency, maximumFractionDigits: 2 } : { maximumFractionDigits: 2 }).format(amount) : value; };
+    const columns = useMemo(() => [
+        { key: 'order', header: text('الطلب', 'Order'), hideable: false, sortKey: 'id', csv: (row) => row.order_number || row.id,
+            render: (row) => <div><Link className="ws-dt-title" to={`${uiBase}/orders/${row.id}`}>#{row.id}</Link><OrderBotWarning verified={row.bot_verified} ar={ar} /></div> },
+        { key: 'customer', header: text('العميل', 'Customer'), primary: true, sortKey: 'customer_name', csv: (row) => row.customer?.name ?? '',
+            render: (row) => <div><span className="ws-dt-title">{row.customer?.name || '—'}</span><span className="ws-dt-sub" dir="ltr">{row.customer?.phone || '—'}</span></div> },
+        { key: 'address', header: text('العنوان', 'Address'), csv: (row) => orderAddress(row.shipping_address), render: (row) => <span className="ws-orders-address">{orderAddress(row.shipping_address) || '—'}</span> },
+        { key: 'total', header: text('الإجمالي', 'Total'), sortKey: 'grand_total', align: 'end', csv: (row) => row.grand_total, render: (row) => <span className="ws-dt-num">{money(row.grand_total, row.currency)}</span> },
+        { key: 'status', header: text('حالة الطلب', 'Order status'), sortKey: 'status', csv: (row) => row.status,
+            render: (row) => <span className="ws-orders-status-cell"><span className={`ws-orders-status is-${row.status}`}>{orderStatusLabel(row.status, ar)}</span>{row.review?.classification ? <small className={`ws-orders-review is-${row.review.classification}`}>{ORDER_RISK_STATUSES.find(([key]) => key === row.review.classification)?.[ar ? 1 : 2] || text('طلب مزعج', 'Spam')}</small> : null}</span> },
+        { key: 'payment', header: text('الدفع', 'Payment'), defaultHidden: true, csv: (row) => row.payment_status ?? '',
+            render: (row) => row.payment_status ? <span className={`ws-dt-badge ${row.payment_status === 'paid' ? 'is-success' : row.payment_status === 'failed' ? 'is-critical' : 'is-warning'}`}>{PAYMENT_LABELS[row.payment_status]?.[ar ? 0 : 1] ?? row.payment_status}</span> : '—' },
+        { key: 'ip_country', header: 'IP Country', csv: (row) => row.ip_country ?? '', render: (row) => row.ip_country ?? '' },
+        { key: 'date', header: text('تاريخ الطلب', 'Order date'), sortKey: 'created_at', csv: (row) => row.created_at ?? '', render: (row) => <span className="ws-dt-num">{row.created_at ? new Date(row.created_at).toLocaleString(ar ? 'ar-EG' : 'en-GB') : '—'}</span> },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    ], [ar, uiBase]);
+    const table = useIndexTable({ scope: `store:${store?.id ?? apiBase}:orders`, filters, columns, views, defaults: DEFAULTS });
+
+    // The orders endpoint names its sort parameters `sort`/`dir`.
+    const { sort_by: sortBy, sort_direction: sortDirection, ...listParams } = table.apiParams;
+    const query = Object.fromEntries(Object.entries(listParams).filter(([key]) => !['page', 'per_page'].includes(key)));
+    const params = { ...listParams, sort: sortBy ?? 'created_at', dir: sortDirection ?? 'desc' };
+    const paramsKey = JSON.stringify(params);
+    useEffect(() => {
+        let active = true; setLoading(true); setLoadError('');
+        api.get(`${apiBase}/orders`, { params: JSON.parse(paramsKey) }).then(({ data }) => { if (active) setResult({ scope: scopeIdentity, payload: data }); })
+            .catch((e) => { if (active) setLoadError(e.response?.data?.message || e.message); }).finally(() => { if (active) setLoading(false); });
+        return () => { active = false; };
+    }, [apiBase, scopeIdentity, paramsKey, reload]);
+    // Another account behind the same /my-store endpoint: drop its selection and dialogs at once.
+    useEffect(() => { table.clearSelection(); setStatusOpen(false); setBusy(false); setNotice(''); }, [scopeIdentity]); // eslint-disable-line react-hooks/exhaustive-deps
+
+    const selected = table.selected;
+    async function updateStatuses() { if (busy || !nextStatus || !selected.size) return; setBusy(true); setError(''); try { const { data } = await api.post(`${apiBase}/orders/bulk-status`, { status: nextStatus, eligible_only: true, orders: [...selected.values()].map(row => ({ id: row.id, status: row.status, review_version: row.review?.version || 0 })) }); table.clearSelection(); setStatusOpen(false); setReload(value => value + 1); setNotice(text(`تم تحديث ${data.updated} طلب. غير مؤهل: ${data.skipped}، دون تغيير: ${data.unchanged}.`, `${data.updated} orders updated. Ineligible: ${data.skipped}, unchanged: ${data.unchanged}.`)); } catch (e) { setError(e.response?.data?.message || e.message); } finally { setBusy(false); } }
     const paymentTarget = ORDER_PAYMENT_TARGETS[nextStatus];
-    const exportId = urlParams.get('export'); const showExport = exportId && uuid.test(exportId); const meta = activeResult?.meta; const total = Number(meta?.total || 0); const from = total ? (page - 1) * perPage + 1 : 0; const to = Math.min(page * perPage, total);
-    return <div className="ws-orders"><header className="ws-orders-heading"><h1>{text('الطلبات', 'Orders')}</h1><p>{text('يمكنك التحكم في طلباتك وفلترتها حسب الحالة ويمكنك عرض أي طلب بالضغط عليه وتعديل حالته.', 'Manage and filter orders by status. Open any order to review it and change its status.')}</p></header>
-        <div ref={tabList} className="ws-orders-tabs" role="tablist" aria-label={text('حالات الطلبات', 'Order statuses')}>{tabs.map(([s, p, c, label], index) => <button ref={element => { tabRefs.current[index] = element; }} type="button" role="tab" key={`${s}:${p}:${c}`} aria-selected={status === s && payment === p && classification === c} tabIndex={status === s && payment === p && classification === c ? 0 : -1} onKeyDown={event => tabKey(event, index)} onClick={() => chooseTab(index)}>{label}</button>)}</div>
-        <div className="ws-orders-toolbar">{canManage ? <Link to={`${uiBase}/orders/create`} className="ws-orders-create"><HiOutlinePlus aria-hidden />{text('أنشاء طلب', 'Create order')}</Link> : null}<button type="button" disabled={!canManage || pending} onClick={() => setExportOpen(true)}><HiOutlineArrowDownTray aria-hidden />{text('تصدير', 'Export')}</button><Popover className="ws-orders-filter-popover"><PopoverButton><HiOutlinePlus aria-hidden />{text('إضافة فلتر', 'Add filter')}</PopoverButton><PopoverPanel anchor="bottom end" className="ws-orders-filter-menu" data-workspace-theme={theme}>{ORDER_FILTERS.map(([key, a, e]) => <label key={key}><input type="checkbox" checked={Object.hasOwn(filters, key)} onChange={event => filterToggle(key, event.target.checked)} />{ar ? a : e}</label>)}</PopoverPanel></Popover></div>
-        {Object.keys(filters).length ? <div className="ws-orders-filters">{ORDER_FILTERS.filter(([key]) => Object.hasOwn(filters, key)).map(([key, a, e, type]) => <div className="ws-orders-filter" key={key}><label>{ar ? a : e}{type === 'product' ? <OrderProductFilter apiBase={apiBase} value={filters[key]} ar={ar} onChange={value => filterValue(key, value)} /> : <input type={type} min={type === 'number' ? 1 : undefined} maxLength={type === 'text' ? 200 : undefined} value={filters[key]} onChange={event => filterValue(key, event.target.value)} />}</label><button type="button" onClick={() => filterToggle(key, false)} aria-label={`${text('إزالة فلتر', 'Remove filter')} ${ar ? a : e}`}><HiOutlineXMark aria-hidden /></button></div>)}</div> : null}
-        {error ? <p role="alert" className="ws-orders-error">{error}<button type="button" onClick={() => setReload(value => value + 1)}>{text('إعادة التحميل', 'Reload')}</button></p> : null}{notice ? <p role="status" className="ws-orders-notice">{notice}</p> : null}{meta?.locked_orders > 0 ? <p role="status" className="ws-orders-notice">{text('توجد طلبات جديدة محجوبة بسبب مديونية المحفظة. تظل الطلبات القديمة متاحة ويستمر المتجر في استقبال الطلبات.', 'New orders are hidden because of wallet debt. Existing orders remain accessible and the store can still accept orders.')} <Link to="/top-up">{text('عرض المحفظة', 'View wallet')}</Link></p> : null}
-        {selected.size > 0 ? <div className="ws-orders-selection"><button type="button" onClick={() => setSelected(new Map())} aria-label={text('إلغاء التحديد', 'Clear selection')} disabled={!selected.size}><HiOutlineXMark aria-hidden /></button><span>{selected.size} {text('العناصر المحددة', 'selected items')}</span><button type="button" disabled={!canManage || !selected.size || pending || busy} onClick={() => { setNextStatus(''); setStatusOpen(true); }}>{text('تحديث حالة الطلب', 'Update order status')}</button>{selected.size && canManage ? <Link target="_blank" rel="noopener noreferrer" to={`${uiBase}/orders/print?ids=${[...selected.keys()].join(',')}`}><HiOutlinePrinter aria-hidden />{text('طباعة الطلبات المحددة', 'Print selected orders')}</Link> : <span aria-disabled="true"><HiOutlinePrinter aria-hidden />{text('طباعة الطلبات المحددة', 'Print selected orders')}</span>}</div> : null}
-        <div className="ws-orders-table-scroll" aria-busy={pending}><table><thead><tr><th><input ref={pageCheckbox} type="checkbox" checked={allSelected} aria-label={text('اختيار الكل', 'Select all')} disabled={!rows.length || pending} onChange={event => setSelected(current => { const next = new Map(current); rows.forEach(row => { if (!event.target.checked) next.delete(row.id); else if (next.size < 100) next.set(row.id, row); }); return next; })} /></th>{header('id', text('المعرف', 'ID'))}{header('customer_name', text('العميل', 'Customer'))}<th>{text('العنوان', 'Address')}</th>{header('grand_total', text('المبلغ الإجمالي', 'Total amount'))}{header('status', text('حالة الطلب', 'Order status'))}<th>IP Country</th>{header('created_at', text('تاريخ الطلب', 'Order date'))}</tr></thead><tbody>{rows.map(row => <tr key={row.id} onClick={() => navigate(`${uiBase}/orders/${row.id}`)}><td onClick={event => event.stopPropagation()}><input type="checkbox" aria-label={`${text('اختيار طلب', 'Select order')} ${row.id}`} checked={selected.has(row.id)} disabled={pending || !selected.has(row.id) && selected.size >= 100} onChange={event => toggle(row, event.target.checked)} /></td><td><Link to={`${uiBase}/orders/${row.id}`}>{row.id}</Link><OrderBotWarning verified={row.bot_verified} ar={ar} /></td><td><span>{row.customer?.name || '—'}</span><small dir="ltr">{row.customer?.phone || '—'}</small></td><td>{orderAddress(row.shipping_address) || '—'}</td><td>{row.grand_total}</td><td><span className={`ws-orders-status is-${row.status}`}>{orderStatusLabel(row.status, ar)}</span>{row.review?.classification ? <small className={`ws-orders-review is-${row.review.classification}`}>{ORDER_RISK_STATUSES.find(([key]) => key === row.review.classification)?.[ar ? 1 : 2] || text('طلب مزعج', 'Spam')}</small> : null}</td><td>{row.ip_country ?? ''}</td><td>{row.created_at ? new Date(row.created_at).toLocaleString(ar ? 'ar-EG' : 'en-GB') : '—'}</td></tr>)}</tbody></table></div>
-        {!rows.length && !error ? <p role="status" className="ws-orders-empty">{pending ? text('جارٍ تحميل الطلبات…', 'Loading orders…') : text('لا توجد طلبات لهذه الفلاتر.', 'No orders match these filters.')}</p> : null}
-        <footer className="ws-orders-pagination"><label>{text('الصفوف لكل صفحة:', 'Rows per page:')}<select aria-label={text('الصفوف لكل صفحة', 'Rows per page')} value={perPage} onChange={event => setPerPage(Number(event.target.value))}>{[10, 25, 50, 100].map(value => <option key={value} value={value}>{value}</option>)}</select></label><div className="ws-orders-pagination-controls"><span>{from}-{to} {text('من', 'of')} {total}</span><button type="button" aria-label={text('الصفحة السابقة', 'Previous page')} disabled={pending || page <= 1} onClick={() => setPage(value => value - 1)}>{ar ? <HiOutlineChevronRight /> : <HiOutlineChevronRight className="rotate-180" />}</button><button type="button" aria-label={text('الصفحة التالية', 'Next page')} disabled={pending || page >= Number(meta?.last_page || 1)} onClick={() => setPage(value => value + 1)}>{ar ? <HiOutlineChevronRight className="rotate-180" /> : <HiOutlineChevronRight />}</button></div></footer>
+    const exportId = urlParams.get('export'); const showExport = exportId && uuid.test(exportId); const meta = activeResult?.meta;
+    const bulkActions = canManage ? [
+        { key: 'status', label: text('تحديث حالة الطلب', 'Update order status'), icon: HiOutlineArrowPath, disabled: () => loading || busy, onAction: () => { setNextStatus(''); setError(''); setStatusOpen(true); } },
+        { key: 'print', label: text('طباعة الطلبات المحددة', 'Print selected orders'), icon: HiOutlinePrinter, onAction: (list) => window.open(`${uiBase}/orders/print?ids=${list.map((row) => row.id).join(',')}`, '_blank', 'noopener') },
+    ] : [];
+
+    return <div className="ws-orders ws-orders-index">
+        <header className="ws-orders-heading ws-orders-heading-row"><div><h1>{text('الطلبات', 'Orders')}</h1><p>{text('يمكنك التحكم في طلباتك وفلترتها حسب الحالة ويمكنك عرض أي طلب بالضغط عليه وتعديل حالته.', 'Manage and filter orders by status. Open any order to review it and change its status.')}</p></div>
+            {canManage ? <Link to={`${uiBase}/orders/create`} className="ws-dt-button ws-dt-button-primary"><HiOutlinePlus aria-hidden />{text('أنشاء طلب', 'Create order')}</Link> : null}</header>
+        {notice ? <p role="status" className="ws-orders-notice">{notice}</p> : null}
+        {meta?.locked_orders > 0 ? <p role="status" className="ws-orders-notice">{text('توجد طلبات جديدة محجوبة بسبب مديونية المحفظة. تظل الطلبات القديمة متاحة ويستمر المتجر في استقبال الطلبات.', 'New orders are hidden because of wallet debt. Existing orders remain accessible and the store can still accept orders.')} <Link to="/top-up">{text('عرض المحفظة', 'View wallet')}</Link></p> : null}
+        <div className="ws-dt-card">
+            <IndexFilters table={table} searchPlaceholder={text('ابحث برقم الطلب أو اسم العميل أو الهاتف أو البريد', 'Search order number, customer, phone or email')}
+                onExport={canManage ? () => setExportOpen(true) : undefined} exportDisabled={loading} />
+            <IndexTable table={table} rows={rows} loading={loading && !activeResult} error={loadError} onRetry={() => setReload((value) => value + 1)} meta={meta}
+                label={text('الطلبات', 'Orders')} bulkActions={bulkActions} maxSelection={100} rowHref={(row) => `${uiBase}/orders/${row.id}`}
+                emptyState={{ icon: HiOutlineShoppingBag, title: text('لا توجد طلبات بعد', 'No orders yet'), description: text('ستظهر هنا طلبات متجرك فور وصولها.', 'Your store’s orders will appear here as they arrive.') }} />
+        </div>
         {exportOpen ? <OrderExportDialog open apiBase={apiBase} filters={query} ar={ar} theme={theme} onClose={() => setExportOpen(false)} onQueued={() => setNotice(text('سيظهر ملف التصدير في الإشعارات عند جاهزيته.', 'The export file will appear in notifications when ready.'))} /> : null}
         {showExport ? <ExportFile id={exportId} apiBase={apiBase} ar={ar} theme={theme} onClose={() => { const next = new URLSearchParams(urlParams); next.delete('export'); setUrlParams(next, { replace: true }); }} /> : null}
-        <Dialog open={statusOpen} onClose={() => { if (!busy) setStatusOpen(false); }} className="ws-orders-dialog" dir={ar ? 'rtl' : 'ltr'} data-workspace-theme={theme}><DialogBackdrop className="ws-orders-backdrop" /><div className="ws-orders-dialog-position"><DialogPanel className="ws-orders-export-panel"><DialogTitle>{text('تحديث حالة الطلبات المحددة', 'Update selected orders')}</DialogTitle><div className="ws-orders-export-content"><p>{text(`لقد اخترت ${selected.size} من الطلبات.`, `You selected ${selected.size} orders.`)}</p><label>{text('حالة الطلب', 'Order status')}<select value={nextStatus} disabled={busy} onChange={event => { setNextStatus(event.target.value); setError(''); }}><option value="">{text('اختر الحالة', 'Choose status')}</option>{ORDER_BULK_STATUSES.map(([key, a, e]) => <option key={key} value={key}>{ar ? a : e}</option>)}</select></label>{paymentTarget ? <OrderBulkPaymentReview key={`${scopeIdentity}:${nextStatus}`} ids={[...selected.keys()]} target={paymentTarget} apiBase={apiBase} uiBase={uiBase} ar={ar} onCancel={() => setStatusOpen(false)} onBusy={setBusy} onComplete={data => { setSelected(new Map()); setStatusOpen(false); setReload(value => value + 1); setNotice(text(`تم تحديث دفع ${data.updated} طلب. غير مؤهل: ${data.skipped}، دون تغيير: ${data.unchanged}.`, `Payment updated for ${data.updated} orders. Ineligible: ${data.skipped}, unchanged: ${data.unchanged}.`)); }} /> : <p>{text('سيتم تطبيق الحالة الجديدة على الطلبات المؤهلة فقط وفقًا لدورة حياة الطلب.', 'The new status will be applied only to eligible orders according to their lifecycle.')}</p>}{ORDER_RETURN_STATUSES.includes(nextStatus) ? <p>{text('تتبع إرجاع المنتجات لا يصدر استردادًا ماليًا ولا يعيد المخزون تلقائيًا.', 'Tracking a product return does not issue a payment refund or automatically restock products.')}</p> : null}{ORDER_RISK_STATUSES.some(([key]) => key === nextStatus) ? <p>{text('تصنيف يدوي للمراجعة؛ تبقى حالة الطلب والدفع كما هي.', 'A manual review classification. Order and payment status stay as recorded.')}</p> : null}{error ? <p role="alert">{error}</p> : null}</div>{!paymentTarget ? <footer><button type="button" disabled={busy} onClick={() => setStatusOpen(false)}>{text('إلغاء', 'Cancel')}</button><button type="button" disabled={busy || !nextStatus} onClick={() => void updateStatuses()}>{text('تحديث حالة الطلبات', 'Update orders')}</button></footer> : null}</DialogPanel></div></Dialog>
+        <Dialog open={statusOpen} onClose={() => { if (!busy) setStatusOpen(false); }} className="ws-orders-dialog" dir={ar ? 'rtl' : 'ltr'} data-workspace-theme={theme}><DialogBackdrop className="ws-orders-backdrop" /><div className="ws-orders-dialog-position"><DialogPanel className="ws-orders-export-panel"><DialogTitle>{text('تحديث حالة الطلبات المحددة', 'Update selected orders')}</DialogTitle><div className="ws-orders-export-content"><p>{text(`لقد اخترت ${selected.size} من الطلبات.`, `You selected ${selected.size} orders.`)}</p><label>{text('حالة الطلب', 'Order status')}<select value={nextStatus} disabled={busy} onChange={event => { setNextStatus(event.target.value); setError(''); }}><option value="">{text('اختر الحالة', 'Choose status')}</option>{ORDER_BULK_STATUSES.map(([key, a, e]) => <option key={key} value={key}>{ar ? a : e}</option>)}</select></label>{paymentTarget ? <OrderBulkPaymentReview key={`${scopeIdentity}:${nextStatus}`} ids={[...selected.keys()]} target={paymentTarget} apiBase={apiBase} uiBase={uiBase} ar={ar} onCancel={() => setStatusOpen(false)} onBusy={setBusy} onComplete={data => { table.clearSelection(); setStatusOpen(false); setReload(value => value + 1); setNotice(text(`تم تحديث دفع ${data.updated} طلب. غير مؤهل: ${data.skipped}، دون تغيير: ${data.unchanged}.`, `Payment updated for ${data.updated} orders. Ineligible: ${data.skipped}, unchanged: ${data.unchanged}.`)); }} /> : <p>{text('سيتم تطبيق الحالة الجديدة على الطلبات المؤهلة فقط وفقًا لدورة حياة الطلب.', 'The new status will be applied only to eligible orders according to their lifecycle.')}</p>}{ORDER_RETURN_STATUSES.includes(nextStatus) ? <p>{text('تتبع إرجاع المنتجات لا يصدر استردادًا ماليًا ولا يعيد المخزون تلقائيًا.', 'Tracking a product return does not issue a payment refund or automatically restock products.')}</p> : null}{ORDER_RISK_STATUSES.some(([key]) => key === nextStatus) ? <p>{text('تصنيف يدوي للمراجعة؛ تبقى حالة الطلب والدفع كما هي.', 'A manual review classification. Order and payment status stay as recorded.')}</p> : null}{error ? <p role="alert">{error}</p> : null}</div>{!paymentTarget ? <footer><button type="button" disabled={busy} onClick={() => setStatusOpen(false)}>{text('إلغاء', 'Cancel')}</button><button type="button" disabled={busy || !nextStatus} onClick={() => void updateStatuses()}>{text('تحديث حالة الطلبات', 'Update orders')}</button></footer> : null}</DialogPanel></div></Dialog>
     </div>;
 }
