@@ -9,7 +9,7 @@
 import { describe, expect, it } from 'vitest';
 import { catalogFor } from './index';
 
-const THEMES = ['naseem', 'bazaar', 'sahra', 'fresh', 'techno'] as const;
+const THEMES = ['naseem', 'bazaar', 'sahra', 'fresh', 'techno', 'karat', 'stride'] as const;
 const ARABIC = /[؀-ۿ]/;
 
 describe.each(THEMES)('%s catalogue localisation', (theme) => {

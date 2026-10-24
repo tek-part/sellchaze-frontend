@@ -1,10 +1,11 @@
 /**
  * Demo catalogue selection.
  *
- * Resolves the catalogue for the active theme so each preview shows its own vertical. The four
- * catalogues (fashion, beauty, home, electronics) are shipped data; each of the five library-based
- * themes is keyed to the closest one: Sahra (luxury gifts) previews the fashion catalogue, Techno
- * electronics, and Naseem / Bazaar / Fresh the home catalogue until they get their own.
+ * Resolves the catalogue for the active theme so each preview shows its own vertical. The core
+ * catalogues (fashion, beauty, home, electronics, jewellery, sportswear) are shipped data; each
+ * library-based theme is keyed to the closest one: Sahra (luxury gifts) previews the fashion
+ * catalogue, Techno electronics, Naseem / Bazaar / Fresh the home catalogue until they get their
+ * own, Karat the jewellery catalogue and Stride the sportswear one.
  *
  * DEV-only by construction — every caller is behind `import.meta.env.DEV`, which Vite replaces with
  * `false` in production, so Rollup eliminates this module and the catalogues it imports.
@@ -19,7 +20,10 @@ import { LUXURY_AR } from './luxury.ar';
 import { ROUGE_AR } from './rouge.ar';
 import { HEARTH_AR } from './hearth.ar';
 import { VOLTAGE_AR } from './voltage.ar';
-import { STRIDE_CATALOG } from './stride';
+import { JEWEL_CATALOG } from './jewel';
+import { JEWEL_AR } from './jewel.ar';
+import { SPORT_CATALOG } from './sport';
+import { SPORT_AR } from './sport.ar';
 import { SPHINX_CATALOG, SPHINX_AR } from './sphinx';
 import { KIDS_CATALOG, KIDS_AR } from './kids';
 import { PETS_CATALOG, PETS_AR } from './pets';
@@ -49,8 +53,8 @@ const BY_THEME: Readonly<Record<string, DemoCatalog>> = {
   techno: VOLTAGE_CATALOG,
   maison: HEARTH_CATALOG,
   glow: ROUGE_CATALOG,
-  karat: LUXURY_CATALOG,
-  stride: STRIDE_CATALOG,
+  karat: JEWEL_CATALOG,
+  stride: SPORT_CATALOG,
 };
 
 /**
@@ -74,8 +78,8 @@ const AR_OVERLAY: Readonly<Record<string, CatalogOverlay>> = {
   techno: VOLTAGE_AR,
   maison: HEARTH_AR,
   glow: ROUGE_AR,
-  karat: LUXURY_AR,
-  stride: VOLTAGE_AR,
+  karat: JEWEL_AR,
+  stride: SPORT_AR,
 };
 
 /**
@@ -101,4 +105,4 @@ export function catalogFor(themeId: string | undefined, locale = 'en'): DemoCata
   return localized;
 }
 
-export { LUXURY_CATALOG, ROUGE_CATALOG, HEARTH_CATALOG, VOLTAGE_CATALOG };
+export { LUXURY_CATALOG, ROUGE_CATALOG, HEARTH_CATALOG, VOLTAGE_CATALOG, JEWEL_CATALOG, SPORT_CATALOG };

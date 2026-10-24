@@ -108,6 +108,17 @@ export const sampleFooter = (themeId?: string, t?: Translator, locale?: string):
 
 export const sampleAnnouncements = (themeId?: string, locale?: string): string[] => [...catalogFor(themeId, locale).announcements];
 
+/**
+ * Gallery frames for a demo PDP: the card image and its hover frame, or — for a product photographed
+ * once — the same photo again with a closer crop, so the gallery always has a second view to show.
+ */
+function galleryImages(base: ProductCardModel): ProductDetailModel['images'] {
+  const frames = [base.image, base.hoverImage].filter((image): image is NonNullable<typeof image> => Boolean(image));
+  const first = frames[0];
+  if (frames.length !== 1 || !first) return frames;
+  return [first, { src: first.src.replace('fit=crop', 'fit=crop&crop=focalpoint&fp-x=0.5&fp-y=0.5&fp-z=1.6'), alt: first.alt }];
+}
+
 export function sampleProductDetail(slug: string, themeId?: string, locale?: string): ProductDetailModel {
   const base = sampleNewest(themeId, locale).find((p) => p.handle === slug) ?? sampleNewest(themeId, locale)[0]!;
   if (themeId === 'elite-wallets') {
@@ -118,9 +129,32 @@ export function sampleProductDetail(slug: string, themeId?: string, locale?: str
     const sizes = base.sizes?.length ? base.sizes.slice(0, 3) : [];
     const sizeKey = ar ? 'المقاس' : 'Size';
     const stock = [6, 2, 0];
-    return { ...base, images: [base.image, base.hoverImage].filter((image): image is NonNullable<typeof image> => Boolean(image)), inStock: true, sku: `STRIDE-${base.id}`,
+    return { ...base, images: galleryImages(base), inStock: true, sku: `STRIDE-${base.id}`,
       descriptionHtml: ar ? '<p>بيانات معاينة فقط. يضيف كل متجر صور منتجاته ووصفها وجدول المقاسات الفعلي.</p>' : '<p>Preview content only. Each store supplies its own product photographs, descriptions and size chart.</p>',
       variants: sizes.map((size, i) => ({ id: `stride-${i}`, label: size, options: { [sizeKey]: size }, price: base.price, available: (stock[i] ?? 0) > 0, availableStock: stock[i] ?? 0 })) };
+  }
+  if (themeId === 'karat') {
+    // Jewellery is bought by metal and size: build the option grid from the piece's own metals
+    // (its colour swatches) × its first three sizes, with one combination sold out so the PDP shows
+    // an unavailable choice. Nothing here invents a fact the catalogue does not already carry.
+    const ar = locale === 'ar';
+    const metalKey = ar ? 'المعدن' : 'Metal';
+    const sizeKey = ar ? 'المقاس' : 'Size';
+    const metals = (base.colors ?? []).map((swatch) => swatch.label);
+    const sizes = (base.sizes ?? []).slice(0, 3);
+    const metalAxis: ReadonlyArray<string | undefined> = metals.length > 1 ? metals : [undefined];
+    const sizeAxis: ReadonlyArray<string | undefined> = sizes.length > 0 ? sizes : [undefined];
+    const combos = metalAxis.flatMap((metal) => sizeAxis.map((size) => ({ metal, size }))).filter((c) => c.metal || c.size);
+    return { ...base, images: galleryImages(base), inStock: true, sku: `KARAT-${base.id}`,
+      descriptionHtml: ar ? '<p>بيانات معاينة فقط. يضيف كل متجر صور قطعه ووزنها وعيارها وشهاداتها الفعلية.</p>' : '<p>Preview content only. Each store supplies its own photographs, gram weights, karat and certificates.</p>',
+      variants: combos.map(({ metal, size }, i) => ({
+        id: `karat-${i}`,
+        label: [metal, size].filter(Boolean).join(' / '),
+        options: { ...(metal ? { [metalKey]: metal } : {}), ...(size ? { [sizeKey]: size } : {}) },
+        price: base.price,
+        available: i !== combos.length - 1 || combos.length === 1,
+        availableStock: i === combos.length - 1 && combos.length > 1 ? 0 : i === 0 ? 4 : 1,
+      })) };
   }
   if (themeId === 'hype-perfumes') {
     return { ...base, images: [base.image, base.hoverImage].filter((image): image is NonNullable<typeof image> => Boolean(image)), inStock: true, sku: `PREVIEW-${base.id}`, descriptionHtml: locale === 'ar' ? '<p>بيانات معاينة فقط. يضيف المتجر صور منتجاته ووصفها وخياراتها الفعلية.</p>' : '<p>Preview content only. Each store supplies its actual fragrance photographs, descriptions and options.</p>' };
