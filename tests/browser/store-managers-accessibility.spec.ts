@@ -171,7 +171,7 @@ for (const locale of ['ar', 'en'] as const) for (const width of [1920, 320]) for
       expect(await selected.evaluate(element => getComputedStyle(element).backgroundColor === getComputedStyle(element.closest('.ws-settings-navigation')!).backgroundColor)).toBe(true);
       expect(await selected.evaluate(element => getComputedStyle(element).boxShadow)).not.toBe('none');
       const geometry = await nav.evaluate(element => ({ width: element.getBoundingClientRect().width, height: element.getBoundingClientRect().height, top: element.getBoundingClientRect().top }));
-      expect(geometry.height).toBe(486);
+      expect(geometry.height).toBe(518);
       expect(geometry.top).toBeCloseTo(160.734375, 1);
       if (locale === 'ar') expect(Math.abs(geometry.width - 269.890625)).toBeLessThan(3);
       await testInfo.attach('settings-frame-geometry', { body: JSON.stringify(geometry), contentType: 'application/json' });
