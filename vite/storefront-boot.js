@@ -8,9 +8,10 @@ import { fileURLToPath } from 'node:url';
  * active theme's chunks → the route's page chunk → images. This plugin inlines a tiny script into
  * storefront.html that, while the entry JS is still downloading:
  *
- *   1. starts the bootstrap request (`GET {api}/storefront?lang=…`) and parks the promise on
- *      `window.__sfBoot`; `api/bootstrap.ts` adopts it only when the URL matches exactly the one it
- *      would have requested, so a mismatch simply costs one extra request;
+ *   1. starts the bootstrap read (`GET {api}/storefront?lang=…`) and the current route's data reads
+ *      (home: `/home`, `/layout?template=home`), parked on `window.__sfEarly[url]`; `api/client.ts`
+ *      adopts one only when the URL matches exactly the one it would have requested, so a mismatch
+ *      simply costs one extra request;
  *   2. modulepreloads the current route's page chunk (home, product, collection, cart, checkout);
  *   3. modulepreloads the active theme's chunks as soon as the bootstrap names the theme.
  *
@@ -21,8 +22,9 @@ const LOADERS = fileURLToPath(new URL('../src/apps/storefront/platform/catalog/l
 const ALIASES = fileURLToPath(new URL('../src/apps/storefront/theme-resolution.ts', import.meta.url));
 const I18N = fileURLToPath(new URL('../src/apps/storefront/i18n/index.ts', import.meta.url));
 
+/** [path pattern, page module, storefront API reads the page always makes on first render]. */
 const ROUTES = [
-  ['^/$', 'pages/HomePage.tsx'],
+  ['^/$', 'pages/HomePage.tsx', ['/home', '/layout?template=home']],
   ['^/products/[^/]+/?$', 'pages/ProductPage.tsx'],
   ['^/(shop|collections/[^/]+|categories/[^/]+)/?$', 'pages/CategoryPage.tsx'],
   ['^/cart/?$', 'pages/CartPage.tsx'],
@@ -86,32 +88,36 @@ export function buildBootData(bundle, entryFileName, apiBase) {
     if (list) themes[key] = list;
   }
   const routes = [];
-  for (const [pattern, module] of ROUTES) {
+  for (const [pattern, module, reads = []] of ROUTES) {
     const list = listFor(`/src/apps/storefront/${module}`);
-    if (list) routes.push([pattern, list]);
+    if (list) routes.push([pattern, list, reads]);
   }
   return { f: files, t: themes, a: legacyAliases(), p: routes, l: locales(), api: apiBase };
 }
 
 /* Kept ES5-only and defensive: it runs before any polyfill and must never block the real boot. */
 const SCRIPT = `(function(M){try{
-var d=document,q=new URLSearchParams(location.search),seen={};
+var d=document,q=new URLSearchParams(location.search),seen={},reads=[];
 var s=d.querySelector('script[type="module"][src*="/assets/"]');
 var b=s?s.src.slice(0,s.src.indexOf('/assets/')+1):'/';
 function pre(list){(list||[]).forEach(function(i){var f=M.f[i];if(seen[f])return;seen[f]=1;var k=d.createElement('link');if(/\\.css$/.test(f)){k.rel='preload';k.as='style'}else{k.rel='modulepreload'}k.crossOrigin='';k.href=b+f;d.head.appendChild(k)})}
 function theme(key){key=M.a[key]||key;pre(M.t[key])}
-M.p.forEach(function(r){if(new RegExp(r[0]).test(location.pathname))pre(r[1])});
+M.p.forEach(function(r){if(new RegExp(r[0]).test(location.pathname)){pre(r[1]);reads=r[2]}});
 if(q.get('theme'))theme(q.get('theme'));
 if(q.has('__preview')||q.has('preview')||q.has('customize')||q.has('settings')||!window.fetch)return;
-var lang=q.get('lang');
+var lang=q.get('lang'),token=null;
 if(M.l.indexOf(lang)<0){try{lang=localStorage.getItem('sf:locale')}catch(e){lang=null}}
 if(M.l.indexOf(lang)<0)lang=(navigator.language||'').slice(0,2).toLowerCase();
 if(M.l.indexOf(lang)<0)lang=M.l[0];
-var u=M.api+'/storefront?lang='+encodeURIComponent(lang);
-var p=fetch(u,{credentials:'include',headers:{Accept:'application/json','Accept-Language':lang}}).then(function(r){
+try{token=localStorage.getItem('sf:auth-token')}catch(e){}
+var h={Accept:'application/json','Accept-Language':lang};if(token)h.Authorization='Bearer '+token;
+var E=window.__sfEarly={};
+function get(path){var u=M.api+'/storefront'+path+(path.indexOf('?')<0?'?':'&')+'lang='+encodeURIComponent(lang);
+var p=E[u]=fetch(u,{credentials:'include',headers:h}).then(function(r){
 return r.json().then(function(j){return{status:r.status,body:j}},function(){return{status:r.status,body:null}})});
-window.__sfBoot={url:u,promise:p};
-p.then(function(r){if(!q.get('theme')&&r.status===200&&r.body&&r.body.theme)theme(r.body.theme.key)},function(){});
+p.catch(function(){});return p}
+get('').then(function(r){if(!q.get('theme')&&r.status===200&&r.body&&r.body.theme)theme(r.body.theme.key)},function(){});
+reads.forEach(get);
 }catch(e){}})(__DATA__);`;
 
 export function storefrontBoot(apiBase = '/api/v1') {
