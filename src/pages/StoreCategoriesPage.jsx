@@ -1,53 +1,101 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useOutletContext } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import api from '../api/client';
 import useStoreScope from '../hooks/useStoreScope';
-import { useDebounced } from '../hooks/useDebounced';
 import { fetchAllPages } from '../utils/fetchAllPages';
-import { HiOutlinePlus, HiOutlineEye, HiOutlinePencilSquare, HiOutlineChevronUpDown } from '../components/workspace/WorkspaceIcons';
+import ConfirmDialog from '../components/ConfirmDialog';
+import { IndexFilters, IndexTable, downloadCsv, useIndexTable } from '../components/data-table';
+import { HiOutlinePlus, HiOutlineEye, HiOutlinePencilSquare, HiOutlineTrash, HiOutlineArrowDownTray, HiOutlineRectangleStack } from '../components/workspace/WorkspaceIcons';
+
+const errorText = (e) => Object.values(e.response?.data?.errors || {}).flat().join(' ') || e.response?.data?.message || e.message;
+const DEFAULTS = { sort: null, perPage: 25 };
+const NO_FILTERS = []; // the endpoint only supports search and sorting
+
+function CategoryImage({ url }) {
+    const [failed, setFailed] = useState(false);
+    return <span className="ws-dt-thumb">{url && !failed ? <img src={url} alt="" loading="lazy" onError={() => setFailed(true)} /> : <HiOutlineRectangleStack aria-hidden />}</span>;
+}
 
 export default function StoreCategoriesPage() {
     const { apiBase, uiBase } = useStoreScope(); const { permissions = [], store } = useOutletContext();
     const { i18n } = useTranslation(); const ar = i18n.language.startsWith('ar'); const text = (a, e) => ar ? a : e;
-    const [query, setQuery] = useState(''); const search = useDebounced(query, 250);
-    const [page, setPage] = useState(1); const [perPage, setPerPage] = useState(20); const [sortBy, setSortBy] = useState('position'); const [direction, setDirection] = useState('asc');
     const [result, setResult] = useState(null); const [loading, setLoading] = useState(true); const [error, setError] = useState(''); const [reload, setReload] = useState(0);
-    const [selected, setSelected] = useState(new Map()); const [confirm, setConfirm] = useState(false); const [busy, setBusy] = useState(false);
-    const path = `${apiBase}/catalog/categories`; const params = { search, page, per_page: perPage, sort_by: sortBy, sort_direction: direction };
+    const [actionError, setActionError] = useState(''); const [confirm, setConfirm] = useState(null); const [busy, setBusy] = useState(false);
+    const path = `${apiBase}/catalog/categories`;
+    const scope = useRef(apiBase); scope.current = apiBase;
+    const publicUrl = store?.storefront_url || store?.public_url;
+    const canEdit = permissions.includes('categories-edit');
+
+    const columns = useMemo(() => [
+        { key: 'name', header: text('اسم القسم', 'Category name'), hideable: false, primary: true, sortKey: 'name', csv: (row) => row.name,
+            render: (row) => <div className="ws-dt-cell-media"><CategoryImage key={row.image_url || 'empty'} url={row.image_url} /><div><Link className="ws-dt-title" to={`${uiBase}/categories/${row.id}/edit`}>{row.name}</Link>{row.slug ? <span className="ws-dt-sub" dir="ltr">/{row.slug}</span> : null}</div></div> },
+        { key: 'visibility', header: text('الظهور', 'Visibility'), csv: (row) => (row.is_hidden ? 'hidden' : 'visible'),
+            render: (row) => <span className={`ws-dt-badge ${row.is_hidden ? '' : 'is-success'}`}>{row.is_hidden ? text('مخفي', 'Hidden') : text('ظاهر', 'Visible')}</span> },
+        { key: 'products', header: text('المنتجات', 'Products'), align: 'end', csv: (row) => row.products_count ?? '', render: (row) => <span className="ws-dt-num">{row.products_count ?? '—'}</span> },
+        { key: 'children', header: text('أقسام فرعية', 'Subcategories'), align: 'end', csv: (row) => row.children_count || 0, render: (row) => <span className="ws-dt-num">{row.children_count || 0}</span> },
+        { key: 'header', header: text('إظهار في الهيدر', 'Show in header'), sortKey: 'show_in_header', csv: (row) => (row.show_in_header ? 'yes' : 'no'),
+            render: (row) => <span className={`ws-dt-badge ${row.show_in_header ? 'is-info' : ''}`}>{row.show_in_header ? text('نعم', 'Yes') : text('لا', 'No')}</span> },
+        { key: 'position', header: text('الترتيب', 'Position'), sortKey: 'position', align: 'end', defaultHidden: true, csv: (row) => row.position ?? '', render: (row) => <span className="ws-dt-num">{row.position ?? '—'}</span> },
+        { key: 'actions', header: <span className="sr-only">{text('إجراءات', 'Actions')}</span>, hideable: false, align: 'end',
+            render: (row) => <div className="ws-dt-row-actions">
+                {publicUrl && row.is_active ? <a className="ws-dt-icon" href={`${publicUrl.replace(/\/$/, '')}/collections/${row.slug}`} target="_blank" rel="noreferrer" aria-label={`${text('عرض', 'View')} ${row.name}`} title={text('مشاهدة في المتجر', 'View in store')}><HiOutlineEye aria-hidden /></a> : null}
+                {canEdit ? <Link className="ws-dt-icon" to={`${uiBase}/categories/${row.id}/edit`} aria-label={`${text('تعديل', 'Edit')} ${row.name}`} title={text('تعديل', 'Edit')}><HiOutlinePencilSquare aria-hidden /></Link> : null}
+            </div> },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    ], [ar, uiBase, publicUrl, canEdit]);
+
+    const table = useIndexTable({ scope: `store:${store?.id ?? apiBase}:categories`, filters: NO_FILTERS, columns, defaults: DEFAULTS });
+    const paramsKey = JSON.stringify(table.apiParams);
     useEffect(() => {
         let active = true; setLoading(true); setError('');
-        api.get(path, { params: { search, page, per_page: perPage, sort_by: sortBy, sort_direction: direction } }).then(({ data }) => { if (active) setResult(data); }).catch((e) => { if (active) setError(e.response?.data?.message || e.message); }).finally(() => { if (active) setLoading(false); });
+        api.get(path, { params: table.apiParams }).then(({ data }) => { if (active) setResult(data); }).catch((e) => { if (active) setError(e.response?.data?.message || e.message); }).finally(() => { if (active) setLoading(false); });
         return () => { active = false; };
-    }, [path, search, page, perPage, sortBy, direction, reload]);
-    useEffect(() => { setSelected(new Map()); setConfirm(false); setPage(1); }, [path]);
-    const pending = loading || query !== search; const rows = result?.data || [];
-    const toggle = (row, checked) => setSelected((current) => { const next = new Map(current); if (checked) next.set(row.id, row); else next.delete(row.id); return next; });
-    const sort = (key) => { setSortBy(key); setDirection(sortBy === key && direction === 'asc' ? 'desc' : 'asc'); setPage(1); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [path, paramsKey, reload]);
+    useEffect(() => { table.clearSelection(); setConfirm(null); setActionError(''); setBusy(false); setResult(null); }, [path]); // eslint-disable-line react-hooks/exhaustive-deps
+
+    const rows = result?.data || [];
+    const selectedRows = [...table.selected.values()];
+    const pending = loading || table.searching;
+
     async function destroy() {
-        if (busy) return; setBusy(true); setError('');
-        try { await api.post(`${path}/bulk-delete`, { categories: [...selected.values()].map((row) => ({ id: row.id, version: row.edit_version })) }); setSelected(new Map()); setConfirm(false); setReload((v) => v + 1); }
-        catch (e) { setError(Object.values(e.response?.data?.errors || {}).flat().join(' ') || e.response?.data?.message || e.message); }
-        finally { setBusy(false); }
+        if (busy || !confirm) return; const origin = scope.current; setBusy(true); setActionError('');
+        try {
+            await api.post(`${path}/bulk-delete`, { categories: confirm.map((row) => ({ id: row.id, version: row.edit_version })) });
+            if (scope.current !== origin) return;
+            table.clearSelection(); setConfirm(null); setReload((v) => v + 1);
+        } catch (e) { if (scope.current === origin) { setActionError(errorText(e)); setConfirm(null); } }
+        finally { if (scope.current === origin) setBusy(false); }
     }
     async function exportRows() {
-        setBusy(true); setError('');
+        setBusy(true); setActionError('');
         try {
-            if (!selected.size && result?.meta?.total > 10000) throw new Error(text('ضيّق البحث لتصدير 10,000 قسم أو أقل.', 'Narrow the search to export 10,000 categories or fewer.'));
-            const data = selected.size ? [...selected.values()] : await fetchAllPages(path, { ...params, per_page: 100 });
+            if (!selectedRows.length && result?.meta?.total > 10000) throw new Error(text('ضيّق البحث لتصدير 10,000 قسم أو أقل.', 'Narrow the search to export 10,000 categories or fewer.'));
+            const { page: _page, per_page: _perPage, ...filters } = table.apiParams;
+            const data = selectedRows.length ? selectedRows : await fetchAllPages(path, filters);
             const safe = data.map(({ id, name, slug, image_url, position, parent_id, show_in_header, is_hidden, children_count }) => ({ id, name, slug, image_url, position, parent_id, show_in_header, is_hidden, children_count }));
             const href = URL.createObjectURL(new Blob([JSON.stringify(safe, null, 2)], { type: 'application/json;charset=utf-8' })); const a = document.createElement('a'); a.href = href; a.download = 'store-categories.json'; a.click(); URL.revokeObjectURL(href);
-        } catch (e) { setError(e.message); } finally { setBusy(false); }
+        } catch (e) { setActionError(e.message); } finally { setBusy(false); }
     }
-    const header = (key, title) => <th aria-sort={sortBy === key ? direction === 'asc' ? 'ascending' : 'descending' : 'none'}><button className="ws-catalog-sort" onClick={() => sort(key)}>{title}<HiOutlineChevronUpDown aria-hidden /></button></th>;
-    const publicUrl = store?.storefront_url || store?.public_url;
-    return <div className="ws-catalog space-y-5">
-        <header className="ws-catalog-heading"><div><h1>{text('الأقسام', 'Categories')}</h1><p>{text('نظّم أقسام متجرك ورتّب ظهورها.', 'Organize your store categories and their display order.')}</p></div><div className="ws-catalog-actions"><button className="ws-catalog-button" disabled={busy || pending} onClick={exportRows}>{text('تصدير', 'Export')}</button>{permissions.includes('categories-create') ? <Link className="ws-catalog-button ws-catalog-button--primary" to={`${uiBase}/categories/new`}><HiOutlinePlus />{text('إنشاء قسم', 'Create category')}</Link> : null}</div></header>
-        {error ? <p role="alert" className="rounded-lg bg-red-50 p-3 text-red-700">{error}<button className="ms-3 underline" onClick={() => setReload((v) => v + 1)}>{text('إعادة التحميل', 'Reload')}</button></p> : null}
-        <section className="ws-catalog-card"><div className="ws-catalog-toolbar"><input className="ws-catalog-filter" aria-label={text('بحث الأقسام', 'Search categories')} placeholder={text('بحث بالاسم أو الرابط', 'Search name or slug')} value={query} onChange={(e) => { setQuery(e.target.value); setPage(1); }} /><span>{selected.size ? `${selected.size} ${text('محدد', 'selected')}` : ''}</span>{selected.size && permissions.includes('categories-delete') ? <button className="ws-catalog-button" disabled={busy || selected.size > 100 || [...selected.values()].some((row) => !row.edit_version)} onClick={() => setConfirm(true)}>{text('حذف المحدد', 'Delete selected')}</button> : null}</div>
-            {confirm ? <div role="alert" className="m-4 rounded-lg border border-red-200 bg-red-50 p-4"><p>{text('حذف الأقسام المحددة؟ ستبقى المنتجات وتصبح دون قسم، وستُفصل الأقسام الفرعية عن الأب المحذوف.', 'Delete selected categories? Products are preserved without a category, and children are detached from the deleted parent.')}</p><div className="mt-3 flex gap-3"><button className="ws-catalog-button" disabled={busy} onClick={destroy}>{text('تأكيد الحذف', 'Confirm deletion')}</button><button className="ws-catalog-button" disabled={busy} onClick={() => setConfirm(false)}>{text('إلغاء', 'Cancel')}</button></div></div> : null}
-            <div className="ws-catalog-table"><table><thead><tr><th><input type="checkbox" disabled={pending || !rows.length} aria-label={text('اختيار الصفحة', 'Select page')} checked={rows.length > 0 && rows.every((row) => selected.has(row.id))} onChange={(e) => rows.forEach((row) => toggle(row, e.target.checked))} /></th><th>{text('الصورة', 'Image')}</th>{header('name', text('اسم القسم', 'Category name'))}<th>{text('أقسام فرعية', 'Subcategories')}</th>{header('show_in_header', text('إظهار في الهيدر', 'Show in header'))}<th>{text('مشاهدة', 'View')}</th><th>{text('تعديل', 'Edit')}</th></tr></thead><tbody>{!pending ? rows.map((row) => <tr key={row.id}><td><input type="checkbox" aria-label={`${text('اختيار', 'Select')} ${row.name}`} checked={selected.has(row.id)} onChange={(e) => toggle(row, e.target.checked)} /></td><td>{row.image_url ? <img className="h-20 w-20 rounded-lg object-cover" src={row.image_url} alt="" /> : <span className="ws-catalog-image">—</span>}</td><td><Link to={`${uiBase}/categories/${row.id}/edit`}>{row.name}</Link>{row.is_hidden ? <small className="ms-2">{text('مخفي', 'Hidden')}</small> : null}</td><td>{row.children_count || 0}</td><td>{row.show_in_header ? text('نعم', 'Yes') : text('لا', 'No')}</td><td>{publicUrl && row.is_active ? <a href={`${publicUrl.replace(/\/$/, '')}/collections/${row.slug}`} target="_blank" rel="noreferrer" aria-label={`${text('عرض', 'View')} ${row.name}`}><HiOutlineEye className="h-5 w-5" /></a> : '—'}</td><td>{permissions.includes('categories-edit') ? <Link to={`${uiBase}/categories/${row.id}/edit`} aria-label={`${text('تعديل', 'Edit')} ${row.name}`}><HiOutlinePencilSquare className="h-5 w-5" /></Link> : '—'}</td></tr>) : <tr><td colSpan={7} role="status">{text('جارٍ التحميل…', 'Loading…')}</td></tr>}{!pending && !rows.length ? <tr><td colSpan={7}>{text('لا توجد أقسام.', 'No categories.')}</td></tr> : null}</tbody></table></div>
-            <footer className="ws-catalog-pagination"><label>{text('عدد الصفوف', 'Rows per page')}<select value={perPage} onChange={(e) => { setPerPage(Number(e.target.value)); setPage(1); }}>{[10, 20, 50, 100].map((n) => <option key={n}>{n}</option>)}</select></label><span>{result?.meta?.total || 0} · {page}/{result?.meta?.last_page || 1}</span><button disabled={pending || page <= 1} onClick={() => setPage(page - 1)}>{text('السابق', 'Previous')}</button><button disabled={pending || page >= (result?.meta?.last_page || 1)} onClick={() => setPage(page + 1)}>{text('التالي', 'Next')}</button></footer>
-        </section>
-    </div>;
+    const bulkActions = permissions.includes('categories-delete') ? [
+        { key: 'delete', label: text('حذف المحدد', 'Delete selected'), icon: HiOutlineTrash, tone: 'danger', disabled: (list) => busy || list.some((row) => !row.edit_version), onAction: (list) => { setActionError(''); setConfirm(list); } },
+    ] : [];
+
+    return <section className="ws-catalog-page">
+        <header className="ws-catalog-heading"><div><h1>{text('الأقسام', 'Categories')}</h1><p>{text('نظّم أقسام متجرك ورتّب ظهورها.', 'Organize your store categories and their display order.')}</p></div><div className="ws-catalog-actions"><button type="button" className="ws-dt-button" disabled={busy || pending} onClick={exportRows}><HiOutlineArrowDownTray aria-hidden />{selectedRows.length ? text('تصدير المحدد JSON', 'Export selected (JSON)') : text('تصدير JSON', 'Export JSON')}</button>{permissions.includes('categories-create') ? <Link className="ws-dt-button ws-dt-button-primary" to={`${uiBase}/categories/new`}><HiOutlinePlus aria-hidden />{text('إنشاء قسم', 'Create category')}</Link> : null}</div></header>
+        {actionError ? <p role="alert" className="rounded-lg bg-red-50 p-3 text-red-700">{actionError}</p> : null}
+        <div className="ws-dt-card">
+            <IndexFilters table={table} searchPlaceholder={text('بحث بالاسم أو الرابط', 'Search name or slug')} exportDisabled={!rows.length}
+                onExport={() => downloadCsv(`categories-${new Date().toISOString().slice(0, 10)}.csv`, table.visibleColumns, selectedRows.length ? selectedRows : rows)} />
+            <IndexTable table={table} rows={rows} loading={loading} error={error} onRetry={() => setReload((v) => v + 1)} meta={result?.meta}
+                label={text('الأقسام', 'Categories')} bulkActions={bulkActions} maxSelection={100} rowHref={(row) => `${uiBase}/categories/${row.id}/edit`}
+                emptyState={{ icon: HiOutlineRectangleStack, title: text('لا توجد أقسام.', 'No categories.'), description: text('أنشئ أقسامًا لتنظيم منتجاتك وتسهيل تصفحها.', 'Create categories to organize your products and make browsing easier.'),
+                    action: permissions.includes('categories-create') ? <Link className="ws-dt-button ws-dt-button-primary" to={`${uiBase}/categories/new`}>{text('إنشاء قسم', 'Create category')}</Link> : null }} />
+        </div>
+        <ConfirmDialog open={Boolean(confirm)} onClose={() => setConfirm(null)} danger loading={busy} onConfirm={destroy}
+            title={text('حذف الأقسام المحددة', 'Delete selected categories')}
+            body={text(`حذف ${confirm?.length ?? 0} قسم؟ ستبقى المنتجات وتصبح دون قسم، وستُفصل الأقسام الفرعية عن الأب المحذوف.`, `Delete ${confirm?.length ?? 0} categories? Products are preserved without a category, and children are detached from the deleted parent.`)}
+            confirmLabel={text('تأكيد الحذف', 'Confirm deletion')} cancelLabel={text('إلغاء', 'Cancel')} />
+    </section>;
 }

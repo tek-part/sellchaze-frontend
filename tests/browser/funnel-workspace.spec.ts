@@ -67,21 +67,18 @@ for (const language of ['ar', 'en'] as const) for (const width of [320, 390]) {
     const api = await fixture(page, language); api.state.emptyList = true;
     await page.setViewportSize({ width, height: 844 });
     await page.goto('/store/funnels');
-    const region = page.getByRole('region', { name: 'Product Funnels', exact: true });
-    const empty = page.locator('.fw-empty');
+    // Shared index table: on phones rows stack as cards, so nothing scrolls sideways.
+    const table = page.getByRole('table', { name: 'Product Funnels', exact: true });
+    const empty = page.locator('.ws-dt-empty strong');
     await expect(empty).toHaveText(language === 'ar' ? 'لا توجد مسارات مطابقة' : 'No matching funnels');
     await expect(empty).toBeInViewport({ ratio: 1 });
     const pageFits = () => page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth);
     expect(await pageFits()).toBe(true);
-    expect(await region.evaluate(e => e.scrollWidth > e.clientWidth)).toBe(true);
-    await region.focus(); await page.keyboard.press(language === 'ar' ? 'ArrowLeft' : 'ArrowRight');
-    await expect.poll(() => region.evaluate(e => Math.abs(e.scrollLeft))).toBeGreaterThan(0);
-    await expect(empty).toBeInViewport({ ratio: 1 });
     expect(await page.evaluate(() => window.scrollX)).toBe(0);
     api.state.emptyList = false; await page.reload();
-    await expect(region).toContainText(original.title);
+    await expect(table).toContainText(original.title);
     expect(await pageFits()).toBe(true);
-    await accessible(page, '.fw-workspace');
+    await accessible(page, '.fw-list');
     expect(api.writes).toEqual([]);
   });
 }
@@ -211,7 +208,7 @@ test('Table sorting and all-or-nothing deletion preserve rows after cancel or se
   await expect(page.getByRole('cell', {name: 'Original campaign', exact: true})).toBeVisible();
   await page.getByRole('button', {name: 'Sort by Funnel name ascending', exact: true}).click();
   await expect.poll(() => api.reads.some(read => read.includes('sort=title') && read.includes('direction=asc'))).toBe(true);
-  await page.getByRole('checkbox', {name: 'Select funnel: Original campaign'}).check();
+  await page.getByRole('row', {name: /Original campaign/}).getByRole('checkbox').check();
   await page.getByRole('button', {name: 'Delete', exact: true}).click();
   await page.getByRole('dialog').getByRole('button', {name: 'Cancel', exact: true}).click();
   expect(api.writes).toEqual([]);

@@ -1,9 +1,10 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Dialog, DialogBackdrop, DialogPanel, DialogTitle } from '@headlessui/react';
 import { Navigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import api from '../../api/client';
 import useStoreContext from '../../hooks/useStoreContext';
+import { IndexFilters, IndexTable, downloadCsv, useIndexTable } from '../../components/data-table';
 import { equalTraffic, trafficTotal } from './ab-traffic';
 import './merchant-catalog.css';
 import './merchant-ab-tests.css';
@@ -14,20 +15,16 @@ export default function StoreAbTestsPage() {
     const context = useStoreContext();
     return <AbTests key={context.apiBase} context={context} />;
 }
-function AbTests({ context: { apiBase, uiBase, access } }) {
+// The A/B tests endpoint pages 20 tests at a time (newest first) without search, filters, sorting or a total.
+const DEFAULTS = { sort: null, perPage: 20, perPageOptions: [20] };
+const NO_FILTERS = [];
+function AbTests({ context: { apiBase, uiBase, access, store } }) {
     const { i18n } = useTranslation(); const ar = i18n.language.startsWith('ar'); const text = (a, e) => ar ? a : e;
-    const [rows, setRows] = useState([]); const [page, setPage] = useState(1); const [last, setLast] = useState(1); const [origin, setOrigin] = useState('');
-    const [loading, setLoading] = useState(true); const [error, setError] = useState(''); const [reload, setReload] = useState(0);
+    const [result, setResult] = useState(null); const [origin, setOrigin] = useState('');
+    const [loading, setLoading] = useState(true); const [loadError, setLoadError] = useState(''); const [error, setError] = useState(''); const [reload, setReload] = useState(0);
     const [editor, setEditor] = useState(null); const [detail, setDetail] = useState(null); const [busy, setBusy] = useState(false); const [deleting, setDeleting] = useState(null); const [notice, setNotice] = useState('');
     const operation = useRef(0); const mounted = useRef(true);
     useEffect(() => { mounted.current = true; return () => { mounted.current = false; }; }, []);
-    useEffect(() => {
-        if (!access.canStoreProducts) return;
-        let active = true; setLoading(true); setError('');
-        api.get(`${apiBase}/ab-tests`, { params: { page } }).then(({ data }) => { if (active) { setRows(data.data); setLast(data.meta.last_page); setOrigin(data.storefront_url.replace(/\/$/, "")); } }).catch((e) => { if (active) setError(failureText(e)); }).finally(() => { if (active) setLoading(false); });
-        return () => { active = false; };
-    }, [apiBase, access.canStoreProducts, page, reload]);
-    if (!access.canStoreProducts) return <Navigate to={`${uiBase}/overview`} replace />;
     const open = async (row, edit, revisionsPage = 1) => {
         if (busy) return;
         const request = ++operation.current; setBusy(true); setError('');
@@ -36,16 +33,39 @@ function AbTests({ context: { apiBase, uiBase, access } }) {
         } catch (e) { if (mounted.current && request === operation.current) setError(failureText(e)); }
         finally { if (mounted.current && request === operation.current) setBusy(false); }
     };
+    const columns = useMemo(() => [
+        { key: 'name', header: text('الاسم', 'Name'), hideable: false, primary: true, csv: (row) => row.name, render: (row) => <span className="ws-dt-title">{row.name}</span> },
+        { key: 'status', header: text('الحالة', 'Status'), csv: (row) => (row.active ? 'active' : 'inactive'),
+            render: (row) => <span className={`ws-dt-badge ${row.active ? 'is-success' : ''}`}>{row.active ? text('نشط', 'Active') : text('غير نشط', 'Inactive')}</span> },
+        { key: 'link', header: text('الرابط', 'Link'), csv: (row) => `${origin}/ab/${row.slug}`, render: (row) => <a dir="ltr" href={`${origin}/ab/${row.slug}`} target="_blank" rel="noreferrer">/ab/{row.slug}</a> },
+        { key: 'actions', header: <span className="sr-only">{text('الإجراءات', 'Actions')}</span>, hideable: false, align: 'end',
+            render: (row) => <div className="ws-dt-row-actions"><button type="button" className="ws-dt-button" disabled={busy} onClick={() => open(row, false)}>{text('النتائج', 'Results')}</button><button type="button" className="ws-dt-button" disabled={busy} onClick={() => open(row, true)}>{text('تعديل', 'Edit')}</button><button type="button" className="ws-dt-button" disabled={busy} onClick={() => setDeleting(row)}>{text('حذف', 'Delete')}</button></div> },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    ], [ar, origin, busy, apiBase]);
+    const table = useIndexTable({ scope: `store:${store?.id ?? apiBase}:ab-tests`, filters: NO_FILTERS, columns, defaults: DEFAULTS, savedViews: false });
+    const page = table.state.page;
+    useEffect(() => {
+        if (!access.canStoreProducts) return;
+        let active = true; setLoading(true); setLoadError('');
+        api.get(`${apiBase}/ab-tests`, { params: { page } }).then(({ data }) => { if (active) { setResult(data); setOrigin(data.storefront_url.replace(/\/$/, '')); } }).catch((e) => { if (active) setLoadError(failureText(e)); }).finally(() => { if (active) setLoading(false); });
+        return () => { active = false; };
+    }, [apiBase, access.canStoreProducts, page, reload]);
+    if (!access.canStoreProducts) return <Navigate to={`${uiBase}/overview`} replace />;
+    const rows = result?.data ?? [];
+    const startOver = () => { if (page > 1) table.setPage(1); setReload((n) => n + 1); };
     return <div className="ws-ab-tests" dir={ar ? 'rtl' : 'ltr'}>
-        <header className="ws-catalog-header"><div><h1>{text('اختبارات A/B', 'A/B Tests')}</h1><p>{text('قم بإنشاء وإدارة اختبارات A/B لمنتجاتك لمعرفة أي منها يحقق أفضل النتائج.', 'Create and manage A/B tests for your products to find which perform best.')}</p></div></header>
-        {error ? <div role="alert" className="ws-catalog-error">{error}<button onClick={() => setReload((n) => n + 1)}>{text('إعادة المحاولة', 'Try again')}</button></div> : null}
+        <header className="ws-catalog-header"><div><h1>{text('اختبارات A/B', 'A/B Tests')}</h1><p>{text('قم بإنشاء وإدارة اختبارات A/B لمنتجاتك لمعرفة أي منها يحقق أفضل النتائج.', 'Create and manage A/B tests for your products to find which perform best.')}</p></div><button type="button" className="ws-ab-create" onClick={() => { setNotice(''); setEditor({ name: '', slug: '', active: true, targets: [] }); }}><Icon />{text('إنشاء', 'Create')}</button></header>
+        {error && !detail && !deleting ? <div role="alert" className="ws-catalog-error">{error}</div> : null}
         {notice ? <p role="status">{notice}</p> : null}
-        {loading ? <p role="status">{text('جارٍ التحميل…', 'Loading…')}</p> : <>{!rows.length ? <div className="ws-ab-empty"><h2>{text('لا يوجد A/b tests حتي الان', 'No A/b tests yet')}</h2></div> : <div className="ws-ab-table-wrap"><table><thead><tr><th>{text('الاسم', 'Name')}</th><th>{text('الحالة', 'Status')}</th><th>{text('الرابط', 'Link')}</th><th>{text('الإجراءات', 'Actions')}</th></tr></thead><tbody>{rows.map((row) => <tr key={row.id}><td>{row.name}</td><td>{row.active ? text('نشط', 'Active') : text('غير نشط', 'Inactive')}</td><td><a dir="ltr" href={`${origin}/ab/${row.slug}`} target="_blank" rel="noreferrer">/ab/{row.slug}</a></td><td><div className="ws-ab-actions"><button disabled={busy} onClick={() => open(row, false)}>{text('النتائج', 'Results')}</button><button disabled={busy} onClick={() => open(row, true)}>{text('تعديل', 'Edit')}</button><button disabled={busy} onClick={() => setDeleting(row)}>{text('حذف', 'Delete')}</button></div></td></tr>)}</tbody></table></div>}
-            {last > 1 ? <nav className="ws-ab-actions" aria-label={text('صفحات التجارب', 'Test pages')}><button disabled={page <= 1} onClick={() => setPage((n) => n - 1)}>{text('السابق', 'Previous')}</button><span>{page}/{last}</span><button disabled={page >= last} onClick={() => setPage((n) => n + 1)}>{text('التالي', 'Next')}</button></nav> : null}
-            <button className="ws-ab-create" onClick={() => { setNotice(''); setEditor({ name: '', slug: '', active: true, targets: [] }); }}><Icon />{text('إنشاء', 'Create')}</button></>}
-        {editor ? <AbEditor apiBase={apiBase} initial={editor} ar={ar} onClose={() => setEditor(null)} onSaved={() => { setEditor(null); setPage(1); setReload((n) => n + 1); setNotice(text('تم حفظ اختبار A/B', 'A/B test saved')); }} /> : null}
+        <div className="ws-dt-card">
+            <IndexFilters table={table} searchable={false} showViews={false} exportDisabled={!rows.length}
+                onExport={() => downloadCsv(`ab-tests-${new Date().toISOString().slice(0, 10)}.csv`, table.visibleColumns, rows)} />
+            <IndexTable table={table} rows={rows} loading={loading} error={loadError} onRetry={() => setReload((n) => n + 1)} meta={result?.meta}
+                label={text('اختبارات A/B', 'A/B Tests')} emptyState={{ title: text('لا يوجد A/b tests حتي الان', 'No A/b tests yet'), description: text('أنشئ اختبارًا لتوزيع زوار رابط واحد على عدة منتجات ومقارنة طلباتها.', 'Create a test to split the visitors of one link across products and compare their orders.') }} />
+        </div>
+        {editor ? <AbEditor apiBase={apiBase} initial={editor} ar={ar} onClose={() => setEditor(null)} onSaved={() => { setEditor(null); startOver(); setNotice(text('تم حفظ اختبار A/B', 'A/B test saved')); }} /> : null}
         {detail ? <AbModal title={`${text('النتائج', 'Results')}: ${detail.data.name}`} ar={ar} onClose={() => setDetail(null)} wide><p>{text('كل إصدار يعرض زواره وطلباته بشكل مستقل. التحويل هو أول طلب يحتوي المنتج لكل زائر خلال 30 يومًا. المبالغ أدناه للطلبات المدفوعة غير الملغاة؛ الطلب المسجل لا يعني تحصيل الدفع.', 'Each revision has separate visits and orders. A conversion is the first order containing the assigned product per visitor within 30 days. Amounts below are paid, non-cancelled order totals; placing an order does not mean payment was collected.')}</p>{detail.revisions.map((revision) => <section key={revision.id}><h3>{text('الإصدار', 'Revision')} {revision.version}</h3><div className="ws-ab-table-wrap"><table><thead><tr>{[text('المنتج', 'Product'), text('نسبة الترافيك', 'Traffic'), text('الزوار', 'Visitors'), text('الطلبات', 'Orders'), text('الملغاة', 'Cancelled'), text('التحويل', 'Conversion'), text('إجمالي الطلبات المدفوعة', 'Paid order totals')].map((label) => <th key={label}>{label}</th>)}</tr></thead><tbody>{revision.targets.map((target) => <tr key={target.product_id}><td>{target.name}</td><td>{target.weight / 100}%</td><td>{target.visits}</td><td>{target.orders}</td><td>{target.cancelled_orders}</td><td>{target.visits ? (100 * target.orders / target.visits).toFixed(2) : '0'}%</td><td>{target.paid.length ? target.paid.map((sum) => `${sum.total} ${sum.currency}`).join(' / ') : '—'}</td></tr>)}</tbody></table></div></section>)}{detail.meta.last_page > 1 ? <nav className="ws-ab-actions" aria-label={text('صفحات الإصدارات', 'Revision pages')}><button disabled={busy || detail.meta.current_page <= 1} onClick={() => open(detail.data, false, detail.meta.current_page - 1)}>{text('السابق', 'Previous')}</button><span>{detail.meta.current_page}/{detail.meta.last_page}</span><button disabled={busy || detail.meta.current_page >= detail.meta.last_page} onClick={() => open(detail.data, false, detail.meta.current_page + 1)}>{text('التالي', 'Next')}</button></nav> : null}{error ? <p role="alert" className="ws-ab-error">{error}</p> : null}</AbModal> : null}
-        {deleting ? <AbModal title={text('حذف اختبار A/B', 'Delete A/B test')} ar={ar} onClose={() => { if (!busy) setDeleting(null); }}><p>{text('سيتوقف الرابط عن استقبال زيارات جديدة. تبقى بيانات الإسناد السابقة محفوظة.', 'The link will stop receiving new visits. Previous attribution data is retained.')}</p><p>{deleting.name}</p>{error ? <p role="alert" className="ws-ab-error">{error}</p> : null}<button disabled={busy} className="ws-ab-create" onClick={async () => { setBusy(true); setError(''); try { await api.delete(`${apiBase}/ab-tests/${deleting.id}`, { data: { version: deleting.version } }); if (mounted.current) { setDeleting(null); setPage(1); setReload((n) => n + 1); } } catch (e) { if (mounted.current) setError(failureText(e)); } finally { if (mounted.current) setBusy(false); } }}>{text('تأكيد الحذف', 'Confirm deletion')}</button></AbModal> : null}
+        {deleting ? <AbModal title={text('حذف اختبار A/B', 'Delete A/B test')} ar={ar} onClose={() => { if (!busy) setDeleting(null); }}><p>{text('سيتوقف الرابط عن استقبال زيارات جديدة. تبقى بيانات الإسناد السابقة محفوظة.', 'The link will stop receiving new visits. Previous attribution data is retained.')}</p><p>{deleting.name}</p>{error ? <p role="alert" className="ws-ab-error">{error}</p> : null}<button disabled={busy} className="ws-ab-create" onClick={async () => { setBusy(true); setError(''); try { await api.delete(`${apiBase}/ab-tests/${deleting.id}`, { data: { version: deleting.version } }); if (mounted.current) { setDeleting(null); startOver(); } } catch (e) { if (mounted.current) setError(failureText(e)); } finally { if (mounted.current) setBusy(false); } }}>{text('تأكيد الحذف', 'Confirm deletion')}</button></AbModal> : null}
     </div>;
 }
 function AbModal({ title, ar, onClose, wide, children }) {

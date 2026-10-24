@@ -1,6 +1,5 @@
 .ws-ab-tests { width:100%;min-width:0; }
 .ws-ab-tests .ws-catalog-header { margin-bottom:16px; }
-.sc-workspace .ws-page .ws-ab-empty h2 { font-size:20px;font-weight:500;line-height:32px;margin:8px 0 16px; }
 .ws-ab-create,.ws-ab-save { display:inline-flex;align-items:center;gap:8px;min-height:34px;padding:6px 12px;border-radius:8px;background:#303030;color:white;font-size:13px;cursor:pointer; }
 .ws-ab-create svg,.ws-ab-save svg,.ws-ab-modal header svg { width:18px;height:18px;fill:currentColor; }
 .ws-ab-table-wrap { overflow-x:auto;border:1px solid var(--ws-border,#ddd);border-radius:10px;margin:16px 0; }

@@ -1,64 +1,82 @@
-import { useCallback, useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { Link, useOutletContext } from 'react-router-dom';
 import useStoreScope from '../hooks/useStoreScope';
 import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
 import api from '../api/client';
-import { useDebounced } from '../hooks/useDebounced';
-import ListToolbar from '../components/table/ListToolbar';
-import PaginationBar from '../components/table/PaginationBar';
-import TableLoadingOverlay from '../components/table/TableLoadingOverlay';
-import TableIconActions from '../components/table/TableIconActions';
 import ConfirmDialog from '../components/ConfirmDialog';
-import StatusBadge from '../components/StatusBadge';
-import { HiOutlinePlus } from '../components/workspace/WorkspaceIcons';
+import { IndexFilters, IndexTable, downloadCsv, useIndexTable } from '../components/data-table';
+import { HiOutlinePlus, HiOutlinePencilSquare, HiOutlineTrash, HiOutlineTicket } from '../components/workspace/WorkspaceIcons';
+
+// The coupons endpoint supports a code search and pagination only (newest first).
+const DEFAULTS = { sort: null, perPage: 25 };
+const NO_FILTERS = [];
 
 export default function StoreCouponsPage() {
     const { id, apiBase, uiBase } = useStoreScope();
-    const { t } = useTranslation();
-    const navigate = useNavigate();
+    const { store } = useOutletContext() ?? {};
+    const { t, i18n } = useTranslation();
+    const ar = i18n.language?.startsWith('ar'); const text = (a, e) => (ar ? a : e);
 
-    const [rows, setRows] = useState([]);
-    const [meta, setMeta] = useState(null);
+    const [result, setResult] = useState(null);
     const [err, setErr] = useState('');
-    const [loading, setLoading] = useState(false);
-    const [page, setPage] = useState(1);
-    const [perPage, setPerPage] = useState(15);
-    const [searchInput, setSearchInput] = useState('');
-    const debouncedSearch = useDebounced(searchInput, 400);
+    const [loading, setLoading] = useState(true);
+    const [reload, setReload] = useState(0);
     const [confirmOne, setConfirmOne] = useState(null);
     const [deleting, setDeleting] = useState(false);
+    const scope = useRef(apiBase); scope.current = apiBase;
 
-    const loadParams = useCallback(() => ({
-        page,
-        per_page: perPage,
-        ...(debouncedSearch.trim() ? { search: debouncedSearch.trim() } : {}),
-    }), [page, perPage, debouncedSearch]);
+    const fmtValue = (row) => (row.type === 'percentage' ? `${Number(row.value)}%` : Number(row.value).toFixed(2));
+    const fmtDate = (d) => (d ? new Date(d).toLocaleDateString() : '—');
+    const expired = (row) => Boolean(row.expires_at) && new Date(row.expires_at) < new Date();
 
-    useEffect(() => setPage(1), [debouncedSearch, perPage]);
+    const columns = useMemo(() => [
+        { key: 'code', header: t('coupon_code', 'Code'), hideable: false, primary: true, csv: (row) => row.code,
+            render: (row) => <Link className="ws-dt-title font-mono" dir="ltr" to={`${uiBase}/coupons/${row.id}/edit`}>{row.code}</Link> },
+        { key: 'type', header: t('coupon_type', 'Type'), csv: (row) => row.type, render: (row) => t(`coupon_type_${row.type}`, row.type) },
+        { key: 'value', header: t('coupon_value', 'Value'), align: 'end', csv: (row) => fmtValue(row), render: (row) => <span className="ws-dt-num">{fmtValue(row)}</span> },
+        { key: 'status', header: t('col_status', 'Status'), csv: (row) => (row.is_active ? 'active' : 'inactive'),
+            render: (row) => <span className={`ws-dt-badge ${row.is_active ? (expired(row) ? 'is-warning' : 'is-success') : ''}`}>{row.is_active ? (expired(row) ? text('منتهي', 'Expired') : t('status_active', 'Active')) : t('status_inactive', 'Inactive')}</span> },
+        { key: 'used', header: t('coupon_used', 'Used'), align: 'end', csv: (row) => row.used_count ?? 0,
+            render: (row) => <span className="ws-dt-num">{row.used_count ?? 0}{row.max_uses ? ` / ${row.max_uses}` : ''}</span> },
+        { key: 'minimum', header: text('الحد الأدنى للطلب', 'Minimum order'), align: 'end', defaultHidden: true, csv: (row) => row.minimum_order_amount ?? '',
+            render: (row) => <span className="ws-dt-num">{row.minimum_order_amount ? Number(row.minimum_order_amount).toFixed(2) : '—'}</span> },
+        { key: 'starts', header: text('يبدأ', 'Starts'), defaultHidden: true, csv: (row) => row.starts_at ?? '', render: (row) => <span className="ws-dt-num">{fmtDate(row.starts_at)}</span> },
+        { key: 'expires', header: t('coupon_expires', 'Expires'), csv: (row) => row.expires_at ?? '', render: (row) => <span className="ws-dt-num">{fmtDate(row.expires_at)}</span> },
+        { key: 'created', header: text('تاريخ الإنشاء', 'Created'), defaultHidden: true, csv: (row) => row.created_at ?? '', render: (row) => <span className="ws-dt-num">{fmtDate(row.created_at)}</span> },
+        { key: 'actions', header: <span className="sr-only">{t('col_actions', 'Actions')}</span>, hideable: false, align: 'end',
+            render: (row) => <div className="ws-dt-row-actions">
+                <Link className="ws-dt-icon" to={`${uiBase}/coupons/${row.id}/edit`} aria-label={`${t('action_edit', 'Edit')} ${row.code}`} title={t('action_edit', 'Edit')}><HiOutlinePencilSquare aria-hidden /></Link>
+                <button type="button" className="ws-dt-icon" disabled={deleting} onClick={() => setConfirmOne(row.id)} aria-label={`${t('action_delete', 'Delete')} ${row.code}`} title={t('action_delete', 'Delete')}><HiOutlineTrash aria-hidden /></button>
+            </div> },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    ], [ar, t, uiBase, deleting]);
 
-    const reload = useCallback(() => {
-        setLoading(true);
-        setErr('');
-        api.get(`${apiBase}/coupons`, { params: loadParams() })
-            .then(({ data }) => {
-                setRows(data.data ?? []);
-                setMeta(data.meta ?? null);
-            })
-            .catch((e) => setErr(e.response?.data?.message || e.message))
-            .finally(() => setLoading(false));
-    }, [apiBase, loadParams]);
+    const table = useIndexTable({ scope: `store:${store?.id ?? apiBase}:coupons`, filters: NO_FILTERS, columns, defaults: DEFAULTS });
+    const paramsKey = JSON.stringify(table.apiParams);
+    useEffect(() => {
+        let active = true; setLoading(true); setErr('');
+        api.get(`${apiBase}/coupons`, { params: table.apiParams })
+            .then(({ data }) => { if (active) setResult(data); })
+            .catch((e) => { if (active) setErr(e.response?.data?.message || e.message); })
+            .finally(() => { if (active) setLoading(false); });
+        return () => { active = false; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [apiBase, paramsKey, reload]);
+    useEffect(() => { setConfirmOne(null); setResult(null); }, [apiBase]);
 
-    useEffect(() => { reload(); }, [reload]);
+    const rows = result?.data ?? [];
 
     const runDelete = async () => {
         if (!confirmOne) return;
+        const origin = scope.current;
         setDeleting(true);
         try {
             await api.delete(`${apiBase}/coupons/${confirmOne}`);
+            if (scope.current !== origin) return;
             toast.success(t('action_delete'));
             setConfirmOne(null);
-            setRows((r) => r.filter((x) => x.id !== confirmOne));
+            setResult((current) => (current ? { ...current, data: current.data.filter((x) => x.id !== confirmOne) } : current));
         } catch (e) {
             toast.error(e.response?.data?.message || e.message);
         } finally {
@@ -66,76 +84,26 @@ export default function StoreCouponsPage() {
         }
     };
 
-    const fmtValue = (row) => (row.type === 'percentage' ? `${Number(row.value)}%` : Number(row.value).toFixed(2));
-    const fmtDate = (d) => (d ? new Date(d).toLocaleDateString() : '—');
-
     return (
-        <div className="space-y-5">
-            <div className="flex flex-wrap items-center justify-between gap-3">
-                <div className="border-s-4 border-brand ps-4">
-                    <h1 className="text-2xl font-semibold tracking-tight text-slate-900">{t('coupons_title', 'Coupons')}</h1>
-                    <p className="mt-1 text-sm text-slate-500">{t('coupons_subtitle', 'Create and manage discount codes for this store.')}</p>
+        <section className="ws-catalog-page">
+            <header className="ws-catalog-heading">
+                <div>
+                    <h1>{t('coupons_title', 'Coupons')}</h1>
+                    <p>{t('coupons_subtitle', 'Create and manage discount codes for this store.')}</p>
                 </div>
-                <div className="flex items-center gap-2">
-                    {id ? <Link to="/stores" className="text-sm text-brand hover:underline">← {t('stores_title', 'Stores')}</Link> : null}
-                    <button
-                        type="button"
-                        onClick={() => navigate(`${uiBase}/coupons/new`)}
-                        className="inline-flex items-center gap-1.5 rounded-xl bg-brand px-4 py-2 text-sm font-semibold text-white shadow-xs transition hover:bg-brand-dark"
-                    >
-                        <HiOutlinePlus className="h-4 w-4" aria-hidden />
-                        {t('coupon_create', 'New coupon')}
-                    </button>
+                <div className="ws-catalog-actions">
+                    {id ? <Link to="/stores" className="ws-dt-button">← {t('stores_title', 'Stores')}</Link> : null}
+                    <Link to={`${uiBase}/coupons/new`} className="ws-dt-button ws-dt-button-primary"><HiOutlinePlus aria-hidden />{t('coupon_create', 'New coupon')}</Link>
                 </div>
-            </div>
-            {err && <p className="rounded-lg border border-red-100 bg-red-50 px-3 py-2 text-sm text-red-700">{err}</p>}
+            </header>
 
-            <div className="overflow-hidden rounded-2xl border border-slate-200/80 shadow-card">
-                <ListToolbar
-                    searchValue={searchInput}
-                    onSearchChange={setSearchInput}
-                    perPage={perPage}
-                    onPerPageChange={(n) => { setPerPage(n); setPage(1); }}
-                />
-                <div className="relative min-h-48 overflow-auto bg-white">
-                    <TableLoadingOverlay show={loading} />
-                    <table className="min-w-full text-start text-sm">
-                        <thead className="bg-surface-muted/90 text-xs font-semibold uppercase tracking-wide text-slate-600">
-                            <tr>
-                                <th className="px-4 py-3.5">{t('coupon_code', 'Code')}</th>
-                                <th className="px-4 py-3.5">{t('coupon_type', 'Type')}</th>
-                                <th className="px-4 py-3.5">{t('coupon_value', 'Value')}</th>
-                                <th className="px-4 py-3.5">{t('col_status', 'Status')}</th>
-                                <th className="px-4 py-3.5">{t('coupon_used', 'Used')}</th>
-                                <th className="px-4 py-3.5">{t('coupon_expires', 'Expires')}</th>
-                                <th className="px-4 py-3.5">{t('col_actions', 'Actions')}</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {rows.length === 0 && !loading ? (
-                                <tr><td colSpan={7} className="px-4 py-14 text-center text-sm text-slate-500">{t('empty', 'Nothing here yet.')}</td></tr>
-                            ) : null}
-                            {rows.map((row) => (
-                                <tr key={row.id} className="border-t border-slate-100 transition-colors hover:bg-slate-50/60">
-                                    <td className="px-4 py-3 font-mono font-medium text-slate-900">{row.code}</td>
-                                    <td className="px-4 py-3 text-slate-700">{t(`coupon_type_${row.type}`, row.type)}</td>
-                                    <td className="px-4 py-3 font-medium text-slate-900">{fmtValue(row)}</td>
-                                    <td className="px-4 py-3"><StatusBadge status={row.is_active ? 'active' : 'inactive'} label={row.is_active ? t('status_active', 'Active') : t('status_inactive', 'Inactive')} /></td>
-                                    <td className="px-4 py-3 text-slate-600">{row.used_count ?? 0}{row.max_uses ? ` / ${row.max_uses}` : ''}</td>
-                                    <td className="px-4 py-3 text-slate-600">{fmtDate(row.expires_at)}</td>
-                                    <td className="px-4 py-3">
-                                        <TableIconActions
-                                            editTo={`${uiBase}/coupons/${row.id}/edit`}
-                                            onDelete={() => setConfirmOne(row.id)}
-                                            deleteDisabled={deleting}
-                                        />
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
-                <PaginationBar meta={meta} loading={loading} onPageChange={setPage} />
+            <div className="ws-dt-card">
+                <IndexFilters table={table} searchPlaceholder={text('ابحث بكود الكوبون', 'Search by coupon code')} exportDisabled={!rows.length}
+                    onExport={() => downloadCsv(`coupons-${new Date().toISOString().slice(0, 10)}.csv`, table.visibleColumns, rows)} />
+                <IndexTable table={table} rows={rows} loading={loading} error={err} onRetry={() => setReload((value) => value + 1)} meta={result?.meta}
+                    label={t('coupons_title', 'Coupons')} rowHref={(row) => `${uiBase}/coupons/${row.id}/edit`}
+                    emptyState={{ icon: HiOutlineTicket, title: text('لا توجد كوبونات بعد', 'No coupons yet'), description: t('coupons_subtitle', 'Create and manage discount codes for this store.'),
+                        action: <Link className="ws-dt-button ws-dt-button-primary" to={`${uiBase}/coupons/new`}>{t('coupon_create', 'New coupon')}</Link> }} />
             </div>
 
             <ConfirmDialog
@@ -149,6 +117,6 @@ export default function StoreCouponsPage() {
                 loading={deleting}
                 onConfirm={runDelete}
             />
-        </div>
+        </section>
     );
 }

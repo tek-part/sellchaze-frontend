@@ -102,16 +102,18 @@ export default function IndexTable({
 
 function Pagination({ table, meta, loading, text, ar }) {
     const { page, perPage } = table.state;
+    // Some endpoints have a fixed page size (one option: no picker) or omit the total (no range text).
+    const hasTotal = meta.total !== undefined && meta.total !== null;
     const total = Number(meta.total ?? 0);
     const last = Number(meta.last_page ?? 1);
     const from = total ? (page - 1) * perPage + 1 : 0;
     const to = Math.min(page * perPage, total);
     const options = table.defaults.perPageOptions ?? [25, 50, 100];
     return <footer className="ws-dt-footer">
-        <label className="ws-dt-per">{text('صفوف لكل صفحة', 'Rows per page')}
+        {options.length > 1 ? <label className="ws-dt-per">{text('صفوف لكل صفحة', 'Rows per page')}
             <select value={perPage} onChange={(event) => table.setPerPage(Number(event.target.value))}>{options.map((value) => <option key={value} value={value}>{value}</option>)}</select>
-        </label>
-        <span className="ws-dt-range-text"><bdi dir="ltr">{from}–{to}</bdi> {text('من', 'of')} <bdi dir="ltr">{total}</bdi></span>
+        </label> : null}
+        {hasTotal ? <span className="ws-dt-range-text"><bdi dir="ltr">{from}–{to}</bdi> {text('من', 'of')} <bdi dir="ltr">{total}</bdi></span> : null}
         <div className="ws-dt-pager">
             <button type="button" className="ws-dt-icon" disabled={loading || page <= 1} onClick={() => table.setPage(page - 1)} aria-label={text('الصفحة السابقة', 'Previous page')}>{ar ? '›' : '‹'}</button>
             <span><bdi dir="ltr">{page}</bdi> / <bdi dir="ltr">{Math.max(last, 1)}</bdi></span>

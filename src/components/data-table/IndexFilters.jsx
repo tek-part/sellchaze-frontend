@@ -129,8 +129,9 @@ function ColumnsMenu({ table }) {
 /**
  * Shopify-style toolbar for an index table: views as tabs, search, filter chips with an
  * "Add filter" menu, sort, columns/density and CSV export. Pair with `useIndexTable` and `IndexTable`.
+ * Pass `searchable={false}` when the endpoint has no free-text search.
  */
-export default function IndexFilters({ table, searchPlaceholder, onExport, exportDisabled, actions, showViews = true }) {
+export default function IndexFilters({ table, searchPlaceholder, onExport, exportDisabled, actions, showViews = true, searchable = true }) {
     const [text] = useText();
     const sortable = table.columns.filter((column) => column.sortKey);
     const applied = table.filterDefs.filter((def) => !isEmptyValue(table.state.filters[def.key]));
@@ -140,11 +141,11 @@ export default function IndexFilters({ table, searchPlaceholder, onExport, expor
     return <div className="ws-dt-toolbar">
         {showViews ? <ViewTabs table={table} /> : null}
         <div className="ws-dt-controls">
-            <label className="ws-dt-search">
+            {searchable ? <label className="ws-dt-search">
                 <HiOutlineMagnifyingGlass aria-hidden />
                 <input type="search" aria-label={searchPlaceholder || text('بحث', 'Search')} placeholder={searchPlaceholder || text('بحث', 'Search')} value={table.searchInput} onChange={(event) => table.setSearch(event.target.value)} />
                 {table.searchInput ? <button type="button" className="ws-dt-icon" aria-label={text('مسح البحث', 'Clear search')} onClick={() => table.setSearch('')}><HiOutlineXMark aria-hidden /></button> : null}
-            </label>
+            </label> : null}
             {table.filterDefs.length ? <Popover className="ws-dt-popover">
                 <PopoverButton className="ws-dt-button" aria-label={text('إضافة فلتر', 'Add filter')}><HiOutlineFunnel aria-hidden /><span className="ws-dt-hide-sm">{text('فلتر', 'Filter')}</span><HiOutlineChevronDown aria-hidden /></PopoverButton>
                 <PopoverPanel anchor="bottom start" className="ws-dt-menu ws-dt-filter-menu">{({ close }) => <FilterPicker defs={available.length ? available : table.filterDefs} table={table} close={close} />}</PopoverPanel>

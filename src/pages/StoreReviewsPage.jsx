@@ -1,63 +1,54 @@
-import { useCallback, useEffect, useState } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { Link, useOutletContext, useSearchParams } from 'react-router-dom';
 import useStoreScope from '../hooks/useStoreScope';
 import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
 import api from '../api/client';
-import ListToolbar from '../components/table/ListToolbar';
-import PaginationBar from '../components/table/PaginationBar';
-import TableLoadingOverlay from '../components/table/TableLoadingOverlay';
 import ConfirmDialog from '../components/ConfirmDialog';
-import SearchableSelect from '../components/ui/SearchableSelect';
-import StatusBadge from '../components/StatusBadge';
+import { IndexFilters, IndexTable, downloadCsv, useIndexTable } from '../components/data-table';
+import { HiOutlineStar } from '../components/workspace/WorkspaceIcons';
 
-const REVIEW_STATUS_STYLE = {
-    approved: 'active',
-    pending: 'pending',
-    rejected: 'cancelled',
-    hidden: 'inactive',
-};
+const STATUSES = ['pending', 'approved', 'rejected', 'hidden'];
+const STATUS_TONE = { approved: 'is-success', pending: 'is-warning', rejected: 'is-critical', hidden: '' };
+// The reviews endpoint filters by status and product only (no search or sorting; newest first).
+const DEFAULTS = { sort: null, perPage: 25 };
 
 export default function StoreReviewsPage() {
     const { id, apiBase } = useStoreScope();
-    const { t } = useTranslation();
+    const { store } = useOutletContext() ?? {};
+    const { t, i18n } = useTranslation();
+    const ar = i18n.language?.startsWith('ar'); const text = (a, e) => (ar ? a : e);
     const [searchParams, setSearchParams] = useSearchParams();
     const productId = searchParams.get('product') || '';
     const productName = searchParams.get('product_name') || '';
 
-    const [rows, setRows] = useState([]);
-    const [meta, setMeta] = useState(null);
+    const [result, setResult] = useState(null);
     const [err, setErr] = useState('');
-    const [loading, setLoading] = useState(false);
-    const [page, setPage] = useState(1);
-    const [perPage, setPerPage] = useState(15);
-    const [status, setStatus] = useState('');
+    const [loading, setLoading] = useState(true);
+    const [reload, setReload] = useState(0);
     const [busyId, setBusyId] = useState(null);
     const [confirmDelete, setConfirmDelete] = useState(null);
     const [deleting, setDeleting] = useState(false);
+    const scope = useRef(apiBase); scope.current = apiBase;
 
-    const loadParams = useCallback(() => ({
-        page, per_page: perPage, ...(status ? { status } : {}), ...(productId ? { product_id: productId } : {}),
-    }), [page, perPage, status, productId]);
-
-    useEffect(() => setPage(1), [status, perPage, productId]);
-
-    const reload = useCallback(() => {
-        setLoading(true);
-        setErr('');
-        api.get(`${apiBase}/reviews`, { params: loadParams() })
-            .then(({ data }) => { setRows(data.data ?? []); setMeta(data.meta ?? null); })
-            .catch((e) => setErr(e.response?.data?.message || e.message))
-            .finally(() => setLoading(false));
-    }, [apiBase, loadParams]);
-
-    useEffect(() => { reload(); }, [reload]);
+    const statusLabel = (status) => t(`review_status_${status}`, status);
+    const filters = useMemo(() => [
+        { key: 'status', label: t('col_status', 'Status'), type: 'select', options: STATUSES.map((status) => ({ value: status, label: statusLabel(status) })) },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    ], [ar, t]);
+    const views = useMemo(() => [
+        { id: 'all', label: text('الكل', 'All'), state: { filters: {} } },
+        ...STATUSES.map((status) => ({ id: status, label: statusLabel(status), state: { filters: { status } } })),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    ], [ar, t]);
 
     const moderate = async (review, next) => {
+        const origin = scope.current;
         setBusyId(review.id);
         try {
             const { data } = await api.patch(`${apiBase}/reviews/${review.id}/status`, { status: next });
-            setRows((r) => r.map((x) => (x.id === review.id ? data.data : x)));
+            if (scope.current !== origin) return;
+            setResult((current) => (current ? { ...current, data: current.data.map((x) => (x.id === review.id ? data.data : x)) } : current));
             toast.success(t(`review_status_${next}`, next));
         } catch (e) {
             toast.error(e.response?.data?.message || e.message);
@@ -66,32 +57,80 @@ export default function StoreReviewsPage() {
         }
     };
 
+    const actionBtn = 'rounded-lg border px-2 py-1 text-xs font-medium disabled:opacity-40';
+    const date = (value) => (value ? new Date(value).toLocaleDateString(ar ? 'ar-EG' : 'en-GB') : '—');
+    const columns = useMemo(() => [
+        { key: 'review', header: text('التقييم', 'Review'), hideable: false, primary: true, csv: (row) => [row.title, row.body].filter(Boolean).join(' — '),
+            render: (row) => <div className="max-w-88">
+                <span className="whitespace-nowrap text-amber-500" role="img" aria-label={text(`${row.rating} من 5`, `${row.rating} out of 5`)}>{'★'.repeat(row.rating)}<span className="text-slate-300">{'★'.repeat(5 - row.rating)}</span></span>
+                {row.title ? <p className="font-medium text-slate-800">{row.title}</p> : null}
+                <p className="ws-dt-sub whitespace-normal">{row.body}</p>
+            </div> },
+        { key: 'rating', header: t('review_rating', 'Rating'), align: 'end', defaultHidden: true, csv: (row) => row.rating, render: (row) => <span className="ws-dt-num">{row.rating} / 5</span> },
+        { key: 'product', header: t('review_product', 'Product'), csv: (row) => row.product?.name ?? '', render: (row) => row.product?.name || '—' },
+        { key: 'customer', header: t('review_customer', 'Customer'), csv: (row) => row.author ?? '', render: (row) => row.author || '—' },
+        { key: 'status', header: t('col_status', 'Status'), csv: (row) => row.status, render: (row) => <span className={`ws-dt-badge ${STATUS_TONE[row.status] ?? ''}`}>{statusLabel(row.status)}</span> },
+        { key: 'created', header: text('التاريخ', 'Date'), csv: (row) => row.created_at ?? '', render: (row) => <span className="ws-dt-num">{date(row.created_at)}</span> },
+        { key: 'actions', header: <span className="sr-only">{t('col_actions', 'Actions')}</span>, hideable: false, align: 'end',
+            render: (row) => <div className="ws-dt-row-actions flex-wrap gap-1.5">
+                {row.status !== 'approved' && (
+                    <button type="button" disabled={busyId === row.id} onClick={() => moderate(row, 'approved')} className={`${actionBtn} border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100`}>{t('review_approve', 'Approve')}</button>
+                )}
+                {row.status !== 'hidden' && (
+                    <button type="button" disabled={busyId === row.id} onClick={() => moderate(row, 'hidden')} className={`${actionBtn} border-slate-200 bg-white text-slate-600 hover:bg-slate-50`}>{t('review_hide', 'Hide')}</button>
+                )}
+                {row.status !== 'rejected' && (
+                    <button type="button" disabled={busyId === row.id} onClick={() => moderate(row, 'rejected')} className={`${actionBtn} border-amber-200 bg-amber-50 text-amber-700 hover:bg-amber-100`}>{t('review_reject', 'Reject')}</button>
+                )}
+                <button type="button" disabled={busyId === row.id} onClick={() => setConfirmDelete(row.id)} className={`${actionBtn} border-red-200 bg-red-50 text-red-700 hover:bg-red-100`}>{t('action_delete', 'Delete')}</button>
+            </div> },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    ], [ar, t, busyId, apiBase]);
+
+    const table = useIndexTable({ scope: `store:${store?.id ?? apiBase}:reviews`, filters, columns, views, defaults: DEFAULTS });
+    const { search: _search, ...apiParams } = table.apiParams;
+    const params = { ...apiParams, ...(productId ? { product_id: productId } : {}) };
+    const paramsKey = JSON.stringify(params);
+    useEffect(() => {
+        let active = true; setLoading(true); setErr('');
+        api.get(`${apiBase}/reviews`, { params })
+            .then(({ data }) => { if (active) setResult(data); })
+            .catch((e) => { if (active) setErr(e.response?.data?.message || e.message); })
+            .finally(() => { if (active) setLoading(false); });
+        return () => { active = false; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [apiBase, paramsKey, reload]);
+    useEffect(() => { setConfirmDelete(null); setResult(null); }, [apiBase]);
+
+    const rows = result?.data ?? [];
+
     const runDelete = async () => {
         if (!confirmDelete) return;
+        const origin = scope.current;
         setDeleting(true);
         try {
             await api.delete(`${apiBase}/reviews/${confirmDelete}`);
+            if (scope.current !== origin) return;
             toast.success(t('action_delete', 'Delete'));
             setConfirmDelete(null);
-            setRows((r) => r.filter((x) => x.id !== confirmDelete));
+            setResult((current) => (current ? { ...current, data: current.data.filter((x) => x.id !== confirmDelete) } : current));
         } catch (e) {
             toast.error(e.response?.data?.message || e.message);
         } finally {
             setDeleting(false);
         }
     };
-
-    const actionBtn = 'rounded-lg border px-2 py-1 text-xs font-medium disabled:opacity-40';
+    const showAll = () => setSearchParams((current) => { const next = new URLSearchParams(current); next.delete('product'); next.delete('product_name'); next.delete('page'); return next; }, { replace: true });
 
     return (
-        <div className="space-y-5">
-            <div className="flex flex-wrap items-center justify-between gap-3">
-                <div className="border-s-4 border-brand ps-4">
-                    <h1 className="text-2xl font-semibold tracking-tight text-slate-900">{t('reviews_title', 'Reviews')}</h1>
-                    <p className="mt-1 text-sm text-slate-500">{t('reviews_subtitle', 'Moderate customer reviews for this store.')}</p>
+        <section className="ws-catalog-page">
+            <header className="ws-catalog-heading">
+                <div>
+                    <h1>{t('reviews_title', 'Reviews')}</h1>
+                    <p>{t('reviews_subtitle', 'Moderate customer reviews for this store.')}</p>
                 </div>
-                {id ? <Link to="/stores" className="text-sm text-brand hover:underline">← {t('stores_title', 'Stores')}</Link> : null}
-            </div>
+                {id ? <div className="ws-catalog-actions"><Link to="/stores" className="ws-dt-button">← {t('stores_title', 'Stores')}</Link></div> : null}
+            </header>
 
             {productId ? (
                 <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-brand/20 bg-brand/5 px-4 py-2.5">
@@ -99,79 +138,18 @@ export default function StoreReviewsPage() {
                         {t('reviews_filtered_by_product', 'Showing reviews for:')}{' '}
                         <span className="font-semibold text-slate-900">{productName || `#${productId}`}</span>
                     </p>
-                    <button
-                        type="button"
-                        onClick={() => setSearchParams({})}
-                        className="text-sm font-medium text-brand hover:underline"
-                    >
+                    <button type="button" onClick={showAll} className="text-sm font-medium text-brand hover:underline">
                         {t('reviews_show_all', 'Show all reviews')}
                     </button>
                 </div>
             ) : null}
 
-            {err && <p className="rounded-lg border border-red-100 bg-red-50 px-3 py-2 text-sm text-red-700">{err}</p>}
-
-            <div className="overflow-hidden rounded-2xl border border-slate-200/80 shadow-card">
-                <ListToolbar
-                    perPage={perPage}
-                    onPerPageChange={(n) => { setPerPage(n); setPage(1); }}
-                    advanced={
-                        <div>
-                            <label className="mb-1 block text-[11px] font-semibold uppercase text-slate-500">{t('col_status', 'Status')}</label>
-                            <SearchableSelect value={status} onChange={(e) => setStatus(e.target.value)} className="w-full sm:w-48">
-                                <option value="">—</option>
-                                {['approved', 'pending', 'rejected', 'hidden'].map((s) => <option key={s} value={s}>{t(`review_status_${s}`, s)}</option>)}
-                            </SearchableSelect>
-                        </div>
-                    }
-                />
-                <div className="relative min-h-48 overflow-auto bg-white">
-                    <TableLoadingOverlay show={loading} />
-                    <table className="min-w-full text-start text-sm">
-                        <thead className="bg-surface-muted/90 text-xs font-semibold uppercase tracking-wide text-slate-600">
-                            <tr>
-                                <th className="px-4 py-3.5">{t('review_rating', 'Rating')}</th>
-                                <th className="px-4 py-3.5">{t('review_product', 'Product')}</th>
-                                <th className="px-4 py-3.5">{t('review_customer', 'Customer')}</th>
-                                <th className="px-4 py-3.5">{t('review_comment', 'Comment')}</th>
-                                <th className="px-4 py-3.5">{t('col_status', 'Status')}</th>
-                                <th className="px-4 py-3.5">{t('col_actions', 'Actions')}</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {rows.length === 0 && !loading ? (
-                                <tr><td colSpan={6} className="px-4 py-14 text-center text-sm text-slate-500">{t('empty', 'Nothing here yet.')}</td></tr>
-                            ) : null}
-                            {rows.map((row) => (
-                                <tr key={row.id} className="border-t border-slate-100 align-top hover:bg-slate-50/60">
-                                    <td className="whitespace-nowrap px-4 py-3 text-amber-500">{'★'.repeat(row.rating)}<span className="text-slate-300">{'★'.repeat(5 - row.rating)}</span></td>
-                                    <td className="px-4 py-3 text-slate-700">{row.product?.name || '—'}</td>
-                                    <td className="px-4 py-3 text-slate-700">{row.author || '—'}</td>
-                                    <td className="max-w-88 px-4 py-3 text-slate-600">
-                                        {row.title ? <p className="font-medium text-slate-800">{row.title}</p> : null}
-                                        <p className="text-slate-600">{row.body}</p>
-                                    </td>
-                                    <td className="px-4 py-3"><StatusBadge status={REVIEW_STATUS_STYLE[row.status] || 'inactive'} label={t(`review_status_${row.status}`, row.status)} /></td>
-                                    <td className="px-4 py-3">
-                                        <div className="flex flex-wrap gap-1.5">
-                                            {row.status !== 'approved' && (
-                                                <button type="button" disabled={busyId === row.id} onClick={() => moderate(row, 'approved')} className={`${actionBtn} border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100`}>{t('review_approve', 'Approve')}</button>
-                                            )}
-                                            {row.status !== 'hidden' && (
-                                                <button type="button" disabled={busyId === row.id} onClick={() => moderate(row, 'hidden')} className={`${actionBtn} border-slate-200 bg-white text-slate-600 hover:bg-slate-50`}>{t('review_hide', 'Hide')}</button>
-                                            )}
-                                            {row.status !== 'rejected' && (
-                                                <button type="button" disabled={busyId === row.id} onClick={() => moderate(row, 'rejected')} className={`${actionBtn} border-amber-200 bg-amber-50 text-amber-700 hover:bg-amber-100`}>{t('review_reject', 'Reject')}</button>
-                                            )}
-                                            <button type="button" disabled={busyId === row.id} onClick={() => setConfirmDelete(row.id)} className={`${actionBtn} border-red-200 bg-red-50 text-red-700 hover:bg-red-100`}>{t('action_delete', 'Delete')}</button>
-                                        </div>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
-                <PaginationBar meta={meta} loading={loading} onPageChange={setPage} />
+            <div className="ws-dt-card">
+                <IndexFilters table={table} searchable={false} exportDisabled={!rows.length}
+                    onExport={() => downloadCsv(`reviews-${new Date().toISOString().slice(0, 10)}.csv`, table.visibleColumns, rows)} />
+                <IndexTable table={table} rows={rows} loading={loading} error={err} onRetry={() => setReload((value) => value + 1)} meta={result?.meta}
+                    label={t('reviews_title', 'Reviews')}
+                    emptyState={{ icon: HiOutlineStar, title: text('لا توجد تقييمات بعد', 'No reviews yet'), description: text('تظهر هنا تقييمات العملاء لمنتجاتك لمراجعتها ونشرها.', 'Customer reviews of your products appear here for moderation.') }} />
             </div>
 
             <ConfirmDialog
@@ -185,6 +163,6 @@ export default function StoreReviewsPage() {
                 loading={deleting}
                 onConfirm={runDelete}
             />
-        </div>
+        </section>
     );
 }
