@@ -1,3 +1,4 @@
+import { densityImage } from '../../../foundation/media/responsive';
 import { PaymentMark } from '../../../shared-ui/PaymentMarks';
 import { MerchantContact } from '../../../shared-ui/MerchantContact';
 /**
@@ -55,7 +56,7 @@ export function Footer(props: FooterProps): ReactElement {
         <div className="tk-footer__grid">
           <div className="tk-footer__brand">
             <a href="/" className="tk-brand" aria-label={storeName}>
-              {logoUrl ? <img src={logoUrl} alt="" className="tk-brand__logo" /> : (
+              {logoUrl ? <img {...densityImage(logoUrl, 240)} decoding="async" alt="" className="tk-brand__logo" /> : (
                 <span className="tk-brand__name"><span className="tk-brand__mark" aria-hidden><IconBolt width={14} height={14} /></span>{storeName}</span>
               )}
             </a>

@@ -25,7 +25,7 @@ export function BlogCard(props: BlogCardProps): ReactElement {
   return (
     <article className={cn('sf-blog-card', className)}>
       <a href={article.url} className="sf-blog-card__media" tabIndex={-1} aria-hidden>
-        <StoreImage className="sf-blog-card__img" src={article.image?.src} alt="" />
+        <StoreImage className="sf-blog-card__img" sizes="(min-width: 1024px) 33vw, 100vw" src={article.image?.src} alt="" />
       </a>
       {article.category ? <Eyebrow>{article.category}</Eyebrow> : null}
       <Heading className="sf-blog-card__title">

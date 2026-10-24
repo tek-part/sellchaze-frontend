@@ -6,6 +6,7 @@
  * Sticky by default; a soft shadow appears once scrolled. Everything collapses to the MobileNav
  * drawer and the bottom tab bar below 1024px.
  */
+import { densityImage } from '../../../foundation/media/responsive';
 import { useEffect, useState, type FormEvent, type ReactElement } from 'react';
 import { useTranslation } from 'react-i18next';
 import { cn } from '../../../../../shared/utils/cn';
@@ -130,7 +131,7 @@ export function Header(props: HeaderProps): ReactElement {
             </button>
 
             <a href="/" className="fr-brand" aria-label={storeName}>
-              {logoUrl ? <img src={logoUrl} alt="" className="fr-brand__logo" /> : (
+              {logoUrl ? <img {...densityImage(logoUrl, 240)} decoding="async" alt="" className="fr-brand__logo" /> : (
                 <>
                   <span className="fr-brand__mark" aria-hidden><IconLeaf width={20} height={20} /></span>
                   <span className="fr-brand__name">{storeName}</span>

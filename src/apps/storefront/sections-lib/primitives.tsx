@@ -4,6 +4,7 @@
  * category cards, skeleton and empty states. Class prefix `lib-`; every value in `styles.css` reads
  * a `var(--token)` so each theme's tokens do the visual differentiation.
  */
+import { responsiveImage } from '../foundation/media/responsive';
 import {
   Children,
   useCallback,
@@ -249,6 +250,7 @@ export function LibImage(props: LibImageProps): ReactElement {
   const { src, alt, className, eager = false, sizes, srcSet, monogram } = props;
   const resolvedSrc = themeCampaignAsset(src);
   const [failed, setFailed] = useState<string>();
+  const responsive = srcSet ? { src: resolvedSrc, srcSet } : responsiveImage(resolvedSrc);
   if (!resolvedSrc || failed === resolvedSrc) {
     const letter = (monogram ?? alt.trim().charAt(0) ?? '').toUpperCase();
     return (
@@ -259,14 +261,14 @@ export function LibImage(props: LibImageProps): ReactElement {
   }
   return (
     <img
-      src={resolvedSrc}
+      src={responsive.src}
       alt={alt}
       className={cn('lib-img', className)}
       loading={eager ? 'eager' : 'lazy'}
       decoding="async"
       fetchPriority={eager ? 'high' : 'auto'}
-      sizes={sizes}
-      srcSet={srcSet}
+      sizes={responsive.srcSet ? sizes ?? '100vw' : sizes}
+      srcSet={responsive.srcSet}
       onError={() => setFailed(resolvedSrc)}
     />
   );

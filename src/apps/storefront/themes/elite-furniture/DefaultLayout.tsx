@@ -1,3 +1,4 @@
+import { densityImage } from '../../foundation/media/responsive';
 import { StorePaymentMarks } from '../../shared-ui/PaymentMarks';
 import { ProductHeaderChrome } from '../../state/product-presentation';
 import { useEffect, useId, useRef, useState, type CSSProperties, type FormEvent, type ReactElement } from 'react';
@@ -45,7 +46,7 @@ function Chrome({ context, children, checkout = false }: LayoutRenderProps & { c
   useEffect(() => {
     const link = document.createElement('link'); link.rel = 'stylesheet'; link.href = 'https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap'; document.head.appendChild(link); return () => link.remove();
   }, []);
-  const brand = <a href="/" className="elt-brand" aria-label={store.name}>{store.logoUrl ? <img src={store.logoUrl} alt={store.name} /> : <span>{store.name}</span>}</a>;
+  const brand = <a href="/" className="elt-brand" aria-label={store.name}>{store.logoUrl ? <img {...densityImage(store.logoUrl, 240)} decoding="async" alt={store.name} /> : <span>{store.name}</span>}</a>;
   const categoryLinks = data.allCategoryNavigation ?? data.categoryNavigation ?? [];
   return <div ref={root} className={`elt-root${checkout ? ' elt-checkout' : ''}`} style={{ '--font': tokens.typography.fontSans, '--font-arabic': tokens.typography.fontArabic, '--heading': tokens.typography.fontSerif } as CSSProperties}>
     <ProductHeaderChrome><UiBlock slot="before_header" /><header className="elt-header"><button className="elt-menu-trigger" type="button" onClick={() => setMenuOpen(true)} aria-label={text('افتح القائمة', 'Open menu')}><EliteIcon kind="menu" /></button><nav className="elt-header-nav" aria-label={text('القائمة الرئيسية', 'Main navigation')}>{nav.slice(0, 5).map(item => <a key={`${item.url}-${item.label}`} href={item.url}>{item.label}</a>)}{nav.length > 5 ? <details><summary>{text('المزيد', 'More')} <EliteIcon kind="down" /></summary><div>{nav.slice(5).map(item => <a key={`${item.url}-${item.label}`} href={item.url}>{item.label}</a>)}</div></details> : null}</nav>{brand}<div className="elt-header-actions"><a href="/search" aria-label={text('البحث', 'Search')}><EliteIcon kind="search" /></a>{store.supportedLocales.includes('ar') && store.supportedLocales.includes('en') ? <button type="button" onClick={() => setLocale(ar ? 'en' : 'ar')} aria-label={text('تغيير اللغة', 'Change language')}>{ar ? 'EN' : 'ع'}</button> : null}<button type="button" onClick={() => setCartOpen(true)} aria-label={`${text('السلة', 'Cart')} (${totals.count})`}><EliteIcon kind="bag" />{totals.count ? <span className="elt-bag-count">{totals.count}</span> : null}</button></div></header><UiBlock slot="after_header" /></ProductHeaderChrome>

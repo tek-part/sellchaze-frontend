@@ -6,6 +6,7 @@
  * The main bar + category row are sticky when `sticky_header`; below 1024px the nav collapses into
  * the MobileNav drawer and the search bar becomes an icon that opens the overlay.
  */
+import { densityImage } from '../../../foundation/media/responsive';
 import { useEffect, useId, useRef, useState, type FormEvent, type ReactElement } from 'react';
 import { useTranslation } from 'react-i18next';
 import { cn } from '../../../../../shared/utils/cn';
@@ -197,7 +198,7 @@ export function Header(props: HeaderProps): ReactElement {
               <IconMenu />
             </button>
             <a href="/" className="tk-brand" aria-label={storeName}>
-              {logoUrl ? <img src={logoUrl} alt="" className="tk-brand__logo" /> : (
+              {logoUrl ? <img {...densityImage(logoUrl, 240)} decoding="async" alt="" className="tk-brand__logo" /> : (
                 <span className="tk-brand__name"><span className="tk-brand__mark" aria-hidden><IconBolt width={14} height={14} /></span>{storeName}</span>
               )}
             </a>

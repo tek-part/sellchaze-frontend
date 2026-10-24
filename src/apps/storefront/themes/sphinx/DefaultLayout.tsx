@@ -1,3 +1,4 @@
+import { densityImage } from '../../foundation/media/responsive';
 import { StorePaymentMarks } from '../../shared-ui/PaymentMarks';
 import { ProductHeaderChrome } from '../../state/product-presentation';
 import { useEffect, useState, type CSSProperties, type ReactElement } from 'react';
@@ -63,7 +64,7 @@ function Chrome({ context, children, checkout = false }: LayoutRenderProps & { c
     return () => link.remove();
   }, [fonts]);
 
-  const brand = <a href="/" className="sph-brand" aria-label={store.name}>{store.logoUrl ? <img src={store.logoUrl} alt="" /> : <span>{store.name}</span>}</a>;
+  const brand = <a href="/" className="sph-brand" aria-label={store.name}>{store.logoUrl ? <img {...densityImage(store.logoUrl, 240)} decoding="async" alt="" /> : <span>{store.name}</span>}</a>;
   if (checkout) return <div className="sph-root sph-checkout" style={{ '--font': tokens.typography.fontSans, '--heading': tokens.typography.fontSerif, '--font-arabic': tokens.typography.fontSerif } as CSSProperties}>
     <header className="sph-checkout__header sph-container">{brand}</header>
     <main id="sf-main">{children}</main>

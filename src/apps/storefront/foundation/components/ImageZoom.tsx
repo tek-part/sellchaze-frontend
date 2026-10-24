@@ -39,7 +39,7 @@ export function ImageZoom(props: ImageZoomProps): ReactElement {
       onMouseMove={onMove}
       onClick={() => setZoomed((z) => !z)}
     >
-      <StoreImage className="sf-zoom__img" src={src} alt={alt} eager={eager} style={origin} />
+      <StoreImage className="sf-zoom__img" src={src} alt={alt} eager={eager} style={origin} sizes="(min-width: 1024px) 50vw, 100vw" />
     </div>
   );
 }
