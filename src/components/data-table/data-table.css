@@ -77,7 +77,7 @@
 .ws-dt { position:relative;min-width:0; }
 .ws-dt-scroll { overflow-x:auto; }
 .sc-workspace .ws-dt .ws-dt-table, .ws-dt-table { width:100%;border-collapse:separate;border-spacing:0;font-size:13px;color:var(--ws-text); }
-.sc-workspace .ws-dt .ws-dt-table th, .ws-dt .ws-dt-table th { position:sticky;top:0;z-index:1;height:37px;padding:0 12px;line-height:1.2;border-bottom:1px solid var(--ws-border);background:var(--ws-panel-soft);color:var(--ws-muted);font-size:12px;font-weight:500;text-align:start;white-space:nowrap; }
+.sc-workspace .ws-dt .ws-dt-table th, .ws-dt .ws-dt-table th { position:sticky;top:0;z-index:1;height:37px;padding:0 12px;line-height:1.2;border-bottom:1px solid var(--ws-border);background:var(--ws-panel-soft);color:color-mix(in srgb, var(--ws-muted) 78%, var(--ws-text));font-size:12px;font-weight:500;text-align:start;white-space:nowrap; }
 .sc-workspace .ws-dt .ws-dt-table td, .ws-dt .ws-dt-table td { padding:10px 12px;border-bottom:1px solid var(--ws-border);vertical-align:middle;text-align:start; }
 .ws-dt-compact .ws-dt-table td { padding-block:5px !important; }
 .ws-dt-table tbody tr:last-child td { border-bottom:0; }
@@ -124,7 +124,7 @@ th[aria-sort] .ws-dt-sort { color:var(--ws-text);font-weight:600; }
 .ws-dt-error { display:flex;flex-direction:column;align-items:center;gap:10px;padding:40px 16px;color:#b42318;font-size:13px;text-align:center; }
 .ws-dt-error-inline { margin:0;color:#b42318;font-size:12.5px; }
 
-.ws-dt-footer { display:flex;align-items:center;justify-content:flex-end;flex-wrap:wrap;gap:16px;min-height:48px;padding:8px 12px;border-top:1px solid var(--ws-border);color:var(--ws-muted);font-size:12.5px; }
+.ws-dt-footer { display:flex;align-items:center;justify-content:flex-end;flex-wrap:wrap;gap:16px;min-height:48px;padding:8px 12px;border-top:1px solid var(--ws-border);color:color-mix(in srgb, var(--ws-muted) 78%, var(--ws-text));font-size:12.5px; }
 .ws-dt-per { display:flex;align-items:center;gap:6px; }
 .ws-dt-per select { height:28px;padding:0 6px;border:1px solid var(--ws-border);border-radius:7px;background:var(--ws-panel);color:var(--ws-text); }
 .ws-dt-pager { display:flex;align-items:center;gap:6px; }
