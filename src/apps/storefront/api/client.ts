@@ -80,10 +80,19 @@ export class ApiError extends Error {
   }
 }
 
+/**
+ * Full URL of a storefront API request. The root (`/`) is requested WITHOUT a trailing slash:
+ * `/storefront/` costs a 301 round trip on the production Apache rewrite before every first view.
+ */
+export function storefrontRequestUrl(path: string, method = 'GET'): string {
+  const previewPath = withPreviewRead(path, method, typeof window !== 'undefined' ? window.location.search : '');
+  const tail = previewPath === '/' || previewPath.startsWith('/?') ? previewPath.slice(1) : previewPath;
+  return `${API_BASE}/storefront${withLang(tail)}`;
+}
+
 export async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
   const hasBody = init?.body !== undefined && init.body !== null;
-  const previewPath = withPreviewRead(path, init?.method ?? 'GET', typeof window !== 'undefined' ? window.location.search : '');
-  const response = await fetch(`${API_BASE}/storefront${withLang(previewPath)}`, {
+  const response = await fetch(storefrontRequestUrl(path, init?.method ?? 'GET'), {
     credentials: 'include',
     ...init,
     headers: {
