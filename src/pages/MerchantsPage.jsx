@@ -45,16 +45,21 @@ export default function MerchantsPage() {
     const statusOf = (row) => (row.pending_approval ? 'pending' : row.is_active !== false ? 'active' : 'inactive');
     const statusLabel = (row) => ({ pending: t('merchants_pending_badge'), active: t('status_active'), inactive: t('status_inactive') })[statusOf(row)];
 
+    const statusOptions = [{ value: 'pending', label: t('merchants_pending_badge') }, { value: 'active', label: t('status_active') }, { value: 'inactive', label: t('status_inactive') }];
     const filters = useMemo(() => [
+        { key: 'status', label: t('col_status'), type: 'select', options: statusOptions },
         { key: 'created', param: 'date', label: t('col_created'), type: 'date-range' },
     // eslint-disable-next-line react-hooks/exhaustive-deps
     ], [i18n.language]);
+    const views = useMemo(() => [
+        { id: 'all', label: t('filter_all'), state: { filters: {} } },
+        ...statusOptions.map((option) => ({ id: option.value, label: option.label, state: { filters: { status: option.value } } })),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    const views = useMemo(() => [{ id: 'all', label: t('filter_all'), state: { filters: {} } }], [i18n.language]);
+    ], [i18n.language]);
     const columns = useMemo(() => [
-        { key: 'name', header: t('col_name'), hideable: false, primary: true, csv: (row) => row.name,
+        { key: 'name', header: t('col_name'), hideable: false, primary: true, sortKey: 'name', csv: (row) => row.name,
             render: (row) => <div><Link className="ws-dt-title" to={`/merchants/${row.id}`}>{row.name}</Link>{row.username ? <span className="ws-dt-sub" dir="ltr">@{row.username}</span> : null}</div> },
-        { key: 'email', header: t('email'), csv: (row) => row.email, render: (row) => <span dir="ltr">{row.email}</span> },
+        { key: 'email', header: t('email'), sortKey: 'email', csv: (row) => row.email, render: (row) => <span dir="ltr">{row.email}</span> },
         { key: 'status', header: t('col_status'), csv: statusLabel,
             render: (row) => <span className={`ws-dt-badge ${{ pending: 'is-warning', active: 'is-success', inactive: '' }[statusOf(row)]}`}>{statusLabel(row)}</span> },
         { key: 'pending', header: t('merchants_col_pending'), csv: (row) => (row.pending_approval ? t('yes') : t('no')),
