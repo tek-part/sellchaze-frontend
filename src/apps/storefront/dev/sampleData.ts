@@ -141,6 +141,18 @@ export function sampleProductDetail(slug: string, themeId?: string, locale?: str
       ],
     };
   }
+  if (themeId === 'maison') {
+    const ar = locale === 'ar';
+    const images = [base.image, base.hoverImage].filter((image): image is NonNullable<typeof image> => Boolean(image)).map((image) => ({ src: image.src, alt: base.title }));
+    const finish = ar ? 'اللون' : 'Colour';
+    return { ...base, images, sku: `MAISON-${base.id}`, inStock: true,
+      descriptionHtml: ar ? '<p>قطعة للبيت بخامات طبيعية وتفاصيل هادئة تناسب الاستخدام اليومي. هذه بيانات معاينة؛ يضيف كل متجر صور منتجاته ومقاساتها وخاماتها الفعلية.</p>' : '<p>A piece for the home in natural materials, with quiet details made for everyday use. This is preview content; each store supplies its own photographs, dimensions and materials.</p>',
+      variants: [
+        { id: 'clay', label: ar ? 'طيني' : 'Clay', options: { [finish]: ar ? 'طيني' : 'Clay' }, available: true, price: base.price, availableStock: 6 },
+        { id: 'sand', label: ar ? 'رملي' : 'Sand', options: { [finish]: ar ? 'رملي' : 'Sand' }, available: true, price: base.price, availableStock: 2 },
+        { id: 'olive', label: ar ? 'زيتوني' : 'Olive', options: { [finish]: ar ? 'زيتوني' : 'Olive' }, available: false, price: base.price },
+      ] };
+  }
   return {
     ...base,
     images: [{ src: img('sc-0') }, { src: img('sc-0-b') }, { src: img('sc-0-c') }],

@@ -1,0 +1,55 @@
+/*
+ * Maison — SHARED-PAGE SKIN. The transactional/static routes (cart, checkout, account, auth, search,
+ * wishlist, blog, policies, 404) and the product page buy box render the default `.sf-*` component
+ * library; Maison re-skins that surface in its own language — serif headings, pill buttons, soft
+ * radii, warm hairlines. Scoped to `.mai-root` so it never leaks into another theme. Tokens only.
+ */
+.mai-root .sf-container { max-width: var(--container); padding-inline: var(--gutter); }
+.mai-root .sf-section { padding-block: var(--section-y); }
+.mai-root :is(.sf-page-head__title, .sf-section-head__title, .sf-heading, .sf-pdp__title, .sf-overlay__title) {
+  font-family: var(--heading);
+  font-weight: var(--mai-heading-weight);
+  letter-spacing: -0.01em;
+}
+[dir='rtl'] .mai-root :is(.sf-page-head__title, .sf-section-head__title, .sf-heading, .sf-pdp__title) { letter-spacing: 0; line-height: 1.35; }
+.mai-root .sf-pdp__title { font-size: calc(var(--fs-3xl) * var(--mai-display-scale)); line-height: 1.08; text-wrap: balance; }
+.mai-root .sf-eyebrow { color: var(--accent-ink); letter-spacing: var(--tracking-eyebrow); }
+.mai-root .sf-pdp__vendor { color: var(--muted); letter-spacing: var(--tracking-caps); font-size: var(--fs-xs); }
+
+/* Buttons: pills, sentence case, calm hover. */
+.mai-root .sf-btn { min-height: var(--tap); padding-inline: var(--sp-6); border-radius: var(--radius-pill); text-transform: none; letter-spacing: 0.01em; font-weight: 600; font-size: var(--fs-sm); }
+.mai-root .sf-btn--lg { min-height: 54px; font-size: var(--fs-base); }
+.mai-root .sf-btn--primary { background: var(--primary); color: var(--on-primary); border-color: var(--primary); }
+.mai-root .sf-btn--primary:hover:not(:disabled) { background: color-mix(in srgb, var(--primary) 86%, var(--text)); border-color: color-mix(in srgb, var(--primary) 86%, var(--text)); }
+.mai-root .sf-btn--primary .sf-btn__label::after { display: none; }
+.mai-root .sf-btn--secondary { background: transparent; color: var(--text); border-color: var(--border-strong); }
+.mai-root .sf-btn--secondary:hover:not(:disabled) { background: var(--text); color: var(--bg); border-color: var(--text); }
+.mai-root .sf-btn--ghost { color: var(--text); }
+.mai-root .sf-icon-btn { border-radius: var(--radius-pill); }
+.mai-root .sf-icon-btn:hover:not(:disabled) { background: color-mix(in srgb, var(--text) 7%, transparent); }
+.mai-root .sf-link { color: var(--text); text-decoration: underline; text-underline-offset: 4px; }
+.mai-root .sf-link:hover { color: var(--primary); }
+
+/* Fields */
+.mai-root :is(.sf-control, .sf-input, .sf-textarea, .sf-select) { border-radius: var(--radius); border-color: var(--border-strong); background: var(--surface); }
+.mai-root :is(.sf-control, .sf-input, .sf-textarea, .sf-select):focus { border-color: var(--primary); box-shadow: var(--shadow-focus); }
+.mai-root .sf-field__label { text-transform: none; letter-spacing: 0; font-weight: 600; color: var(--text); }
+
+/* Surfaces */
+.mai-root :is(.sf-product-card, .sf-card, .sf-cat-card, .sf-review-card, .sf-blog-card, .sf-editorial-card) { border-radius: var(--radius-lg); overflow: hidden; background: var(--surface); }
+.mai-root :is(.sf-product-card__img, .sf-cat-card__img) { border-radius: var(--radius); }
+.mai-root .sf-badge { border-radius: var(--radius-pill); background: var(--surface); color: var(--text); text-transform: none; letter-spacing: 0.02em; box-shadow: var(--shadow-sm); }
+.mai-root :is(.sf-price--sale .sf-price__now, .sf-price--sale) { color: var(--sale); }
+.mai-root .sf-tabs__tab[aria-selected='true'] { color: var(--text); border-color: var(--primary); }
+.mai-root .sf-overlay__panel { border-radius: var(--radius-lg); }
+.mai-root :is(.sf-overlay--drawer-end, .sf-overlay--drawer-start) .sf-overlay__panel { border-radius: 0; }
+.mai-root :is(.sf-empty, .sf-error, .sf-state) { border-radius: var(--radius-lg); }
+.mai-root .sf-pagination__page[aria-current='page'] { background: var(--text); color: var(--bg); border-radius: var(--radius-pill); }
+.mai-root .sf-stepper__step--active { color: var(--primary); }
+.mai-root :is(.sf-cart-page__line, .sf-order-card, .sf-address-card) { border-radius: var(--radius-lg); background: var(--surface); }
+
+/* Product page: soft gallery frames and a calm buy box. */
+.mai-root .sf-pdp__media :is(img, .sf-gallery__main, .sf-gallery__thumb) { border-radius: var(--radius-lg); }
+.mai-root .sf-pdp__price { font-size: var(--fs-xl); font-weight: 600; }
+.mai-root .sf-pdp__accordion { border-color: var(--border); }
+.mai-root .sf-pdp__desc { color: var(--muted); }

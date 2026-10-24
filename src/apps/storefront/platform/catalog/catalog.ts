@@ -188,6 +188,23 @@ export const THEME_CATALOG: ThemeCatalog = [
     changelog: [{ version: '1.0.0', date: '2026-09-05', notes: ['Initial release — electronics / gadgets theme on the shared section library.'] }],
     load: THEME_LOADERS.techno,
   },
+  {
+    id: 'maison',
+    name: 'Maison',
+    version: '1.0.0',
+    archetype: 'Home Decor',
+    description: 'Warm, editorial home décor: shop-the-room hotspots, shop by room, a seasonal mood board, material & care notes and a gift guide by price.',
+    author: 'Sellchaze',
+    tags: ['home-decor', 'lighting', 'textiles', 'kitchenware', 'gifts', 'editorial', 'warm', 'terracotta', 'olive', 'arabic'],
+    accent: '#B0533A',
+    accentAlt: '#5B6B3C',
+    previewImage: '/media/theme-previews/maison.jpg',
+    minEngineVersion: '1.0.0',
+    capabilities: ['rtl', 'dark-mode', 'search-overlay', 'cart-drawer', 'wishlist', 'quick-add', 'newsletter', 'lookbook', 'reviews'],
+    license: { type: 'free', sku: 'theme-maison' },
+    changelog: [{ version: '1.0.0', date: '2026-10-24', notes: ['Initial release — home décor theme with shop-the-room, shop by room, seasonal mood board, material & care notes and a gift guide.'] }],
+    load: THEME_LOADERS.maison,
+  },
 ];
 
 /** All catalog entries. */
