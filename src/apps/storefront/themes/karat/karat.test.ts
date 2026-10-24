@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { getCatalogEntry } from '../../platform/catalog/catalog';
 import { buildBackendManifest } from '../../platform/export/theme-manifest-export';
 import { sampleNewest } from '../../dev/sampleData';
-import { LUXURY_CATALOG, catalogFor } from '../../content/demo';
+import { JEWEL_CATALOG, catalogFor } from '../../content/demo';
 import { resolveSectionSettings } from '../../sections-lib/schema';
 import type { ProductCardModel } from '../../types/catalog';
 import { KARAT_SECTION_SCHEMAS, createKaratTokens, karatTheme } from './index';
@@ -89,8 +89,15 @@ describe('Karat theme contract', () => {
     expect(whatsappHref('+20 100 123 4567', 'Hi there')).toBe('https://wa.me/201001234567?text=Hi%20there');
   });
 
-  it('previews with the luxury demo catalogue in both languages', () => {
-    expect(catalogFor('karat')).toBe(LUXURY_CATALOG);
+  it('previews with the jewellery demo catalogue in both languages', () => {
+    expect(catalogFor('karat')).toBe(JEWEL_CATALOG);
+    // The card's spec line has real data to show: every piece except the watches carries its karat
+    // or gram weight, and the English and Arabic cards read the same facts.
+    const specced = JEWEL_CATALOG.products.filter((p) => p.categorySlug !== 'watches');
+    for (const p of specced) expect(specLine(jewelSpecs(p)).length, p.title).toBeGreaterThanOrEqual(2);
+    const arFirst = catalogFor('karat', 'ar').products[0]!;
+    expect(jewelSpecs(arFirst).karat).toBe(jewelSpecs(JEWEL_CATALOG.products[0]!).karat);
+    expect(jewelSpecs(arFirst).weight).toBe(jewelSpecs(JEWEL_CATALOG.products[0]!).weight);
     const en = sampleNewest('karat', 'en');
     const ar = sampleNewest('karat', 'ar');
     expect(en.length).toBeGreaterThanOrEqual(12);
