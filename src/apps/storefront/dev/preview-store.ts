@@ -3,6 +3,7 @@ import type { StoreInfo } from '../state/store-context';
 export function previewStore(base: StoreInfo, themeId: string | null): StoreInfo {
   if (themeId === 'elite-wallets') return { ...base, name: 'Sellchaze Accessories', logoUrl: undefined };
   if (themeId === 'hype-fashion') return { ...base, name: 'Sellchaze Apparel', logoUrl: undefined };
+  if (themeId === 'karat') return { ...base, name: 'Sellchaze Fine Jewellery', logoUrl: undefined, phone: '+201000000000' };
   const store = ['sphinx-v3', 'elite-furniture', 'pure-furniture', 'nature-kids', 'blast-pets', 'nature-pets', 'hype-perfumes'].includes(themeId ?? '')
     ? { ...base, currency: 'EGP', baseCurrency: 'EGP', supportedCurrencies: ['EGP'], currencyMultipliers: { EGP: 1 } }
     : base;
