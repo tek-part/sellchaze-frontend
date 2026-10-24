@@ -1,12 +1,17 @@
-import { useEffect, useId, useRef, useState } from 'react';
+import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import api from '../../../api/client';
 import useStoreContext from '../../../hooks/useStoreContext';
 import MerchantSettingsHeading from '../../../components/store/MerchantSettingsHeading';
+import { IndexFilters, IndexTable, useIndexTable } from '../../../components/data-table';
+import { HiOutlineUsers } from '../../../components/workspace/WorkspaceIcons';
 import './store-managers.css';
 
 const blank = () => ({ name: '', email: '', password: '', is_active: true, permissions: ['store.view'] });
+// The managers endpoint pages by 20 and only understands search, status and page.
+const DEFAULTS = { perPage: 20, perPageOptions: [20] };
+const EMPTY_META = { current_page: 1, last_page: 1, total: 0 };
 
 export default function StoreManagersPage() {
     const context = useStoreContext();
@@ -20,12 +25,10 @@ function Managers({ context }) {
     const allowed = context.access.isStoreOwner && !context.isAdminScope && !context.me?.parent_user_id;
     const [rows, setRows] = useState([]);
     const [catalog, setCatalog] = useState([]);
-    const [meta, setMeta] = useState({ current_page: 1, last_page: 1, total: 0 });
-    const [search, setSearch] = useState('');
-    const [status, setStatus] = useState('all');
-    const [page, setPage] = useState(1);
+    const [meta, setMeta] = useState(EMPTY_META);
     const [reload, setReload] = useState(0);
     const [loading, setLoading] = useState(true);
+    const [loadError, setLoadError] = useState('');
     const [busy, setBusy] = useState(false);
     const [error, setError] = useState('');
     const [notice, setNotice] = useState('');
@@ -37,17 +40,47 @@ function Managers({ context }) {
     const prefix = useId();
     const endpoint = `${context.apiBase}/managers`;
 
+    const statusLabels = { active: text('مفعّل', 'Active'), inactive: text('معطّل', 'Inactive'), removed: text('المحذوفون', 'Removed') };
+    const filters = useMemo(() => [
+        { key: 'status', label: text('الحالة', 'Status'), type: 'select', options: Object.entries(statusLabels).map(([value, label]) => ({ value, label })) },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    ], [ar]);
+    const views = useMemo(() => [
+        { id: 'all', label: text('كل المديرين', 'All managers'), state: { filters: {} } },
+        ...Object.entries(statusLabels).map(([value, label]) => ({ id: value, label, state: { filters: { status: value } } })),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    ], [ar]);
+    const edit = (row) => {
+        setError(''); setNotice('');
+        setEditor(row ? { id: row.id, form: { name: row.name, email: row.email, password: '', is_active: row.is_active, permissions: row.permissions, version: row.version } } : { form: blank() });
+    };
+    const columns = useMemo(() => [
+        { key: 'name', header: text('الاسم', 'Name'), primary: true, hideable: false, render: (row) => <strong className="ws-manager-name">{row.name}</strong> },
+        { key: 'email', header: text('البريد الإلكتروني', 'Email'), render: (row) => <span className="ws-manager-email" dir="ltr">{row.email}</span> },
+        { key: 'status', header: text('الحالة', 'Status'), render: (row) => <span className={`ws-dt-badge ${row.deleted_at ? 'is-critical' : row.is_active ? 'is-success' : ''}`}>{row.deleted_at ? text('محذوف', 'Removed') : row.is_active ? text('مفعّل', 'Active') : text('معطّل', 'Inactive')}</span> },
+        { key: 'permissions', header: text('الصلاحيات', 'Permissions'), render: (row) => <span className="ws-dt-num">{row.permissions.length} {text('صلاحيات', 'permissions')}</span> },
+        { key: 'actions', header: text('الإجراءات', 'Actions'), hideable: false, align: 'end', render: (row) => <div className="ws-dt-row-actions ws-manager-actions">
+            {row.deleted_at ? <button type="button" className="ws-dt-button" disabled={busy} onClick={() => { setError(''); setConfirm({ type: 'restore', row }); }} aria-label={`${text('استعادة', 'Restore')} ${row.name}`}>{text('استعادة', 'Restore')}</button> : <>
+                <button type="button" className="ws-dt-button" disabled={busy} onClick={() => edit(row)} aria-label={`${text('تعديل', 'Edit')} ${row.name}`}>{text('تعديل', 'Edit')}</button>
+                <button type="button" className="ws-dt-button ws-manager-remove" disabled={busy} onClick={() => { setError(''); setConfirm({ type: 'remove', row }); }} aria-label={`${text('حذف', 'Remove')} ${row.name}`}>{text('حذف', 'Remove')}</button>
+            </>}
+        </div> },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    ], [ar, busy]);
+    const table = useIndexTable({ scope: `store:${context.store?.id ?? context.apiBase}:managers`, filters, columns, views, defaults: DEFAULTS, savedViews: false });
+    const search = table.state.search.slice(0, 150);
+    const status = table.state.filters.status || 'all';
+    const page = table.state.page;
+
     useEffect(() => {
         if (!allowed) return;
         let active = true;
-        setLoading(true);
-        const timer = window.setTimeout(() => {
-            api.get(endpoint, { params: { search, status, page } }).then(({ data }) => {
-                if (active) { setRows(data.data); setCatalog(data.permissions); setMeta(data.meta); }
-            }).catch((failure) => { if (active) setError(failure.response?.data?.message || failure.message); })
-                .finally(() => { if (active) setLoading(false); });
-        }, 200);
-        return () => { active = false; window.clearTimeout(timer); };
+        setLoading(true); setLoadError('');
+        api.get(endpoint, { params: { search, status, page } }).then(({ data }) => {
+            if (active) { setRows(data.data); setCatalog(data.permissions); setMeta(data.meta); }
+        }).catch((failure) => { if (active) setLoadError(failure.response?.data?.message || failure.message); })
+            .finally(() => { if (active) setLoading(false); });
+        return () => { active = false; };
     }, [allowed, endpoint, search, status, page, reload]);
 
     useEffect(() => {
@@ -63,10 +96,6 @@ function Managers({ context }) {
     }, [confirm]);
 
     if (!allowed) return <Navigate to={`${context.uiBase}/overview`} replace />;
-    const edit = (row) => {
-        setError(''); setNotice('');
-        setEditor(row ? { id: row.id, form: { name: row.name, email: row.email, password: '', is_active: row.is_active, permissions: row.permissions, version: row.version } } : { form: blank() });
-    };
     const change = (key, value) => setEditor((current) => ({ ...current, form: { ...current.form, [key]: value } }));
     const run = async (operation, message) => {
         if (working.current) return;
@@ -92,19 +121,16 @@ function Managers({ context }) {
         {notice ? <p className="ws-settings-feedback" role="status">{notice}</p> : null}
         {!editor && !confirm ? feedback : null}
         <section className="ws-settings-card">
-            <MerchantSettingsHeading title={text('المديرين', 'Managers')} description={text('تحديد الصلاحيات لكل مدير للتحكم في متجرك. إضافة وتعديل وحذف المديرين من هنا.', 'Choose each manager’s store permissions. Add, edit and remove manager accounts here.')} />
-            <div className="ws-managers-toolbar">
-                <label><span>{text('بحث المديرين', 'Search managers')}</span><input type="search" maxLength={150} value={search} onChange={(event) => { setSearch(event.target.value); setPage(1); }} placeholder={text('الاسم أو البريد الإلكتروني', 'Name or email')} /></label>
-                <label><span>{text('الحالة', 'Status')}</span><select value={status} onChange={(event) => { setStatus(event.target.value); setPage(1); }}>{[['all', text('كل المديرين', 'All managers')], ['active', text('مفعّل', 'Active')], ['inactive', text('معطّل', 'Inactive')], ['removed', text('المحذوفون', 'Removed')]].map(([value, label]) => <option value={value} key={value}>{label}</option>)}</select></label>
-                <button type="button" className="ws-managers-primary" disabled={loading || busy || !catalog.length} onClick={() => edit(null)}>{text('إضافة مدير', 'Add manager')}</button>
+            <div className="ws-managers-head">
+                <MerchantSettingsHeading title={text('المديرين', 'Managers')} description={text('تحديد الصلاحيات لكل مدير للتحكم في متجرك. إضافة وتعديل وحذف المديرين من هنا.', 'Choose each manager’s store permissions. Add, edit and remove manager accounts here.')} />
+                <button type="button" className="ws-managers-add ws-managers-primary" disabled={loading || busy || !catalog.length} onClick={() => edit(null)}>{text('إضافة مدير', 'Add manager')}</button>
             </div>
-            {loading ? <p className="ws-managers-empty" role="status">{text('جارٍ التحميل…', 'Loading…')}</p> : <>
-                <div className="ws-managers-table" role="region" aria-label={text('قائمة المديرين', 'Managers list')} tabIndex={0}><table><thead><tr>
-                    {[text('الاسم', 'Name'), text('البريد الإلكتروني', 'Email'), text('الحالة', 'Status'), text('الصلاحيات', 'Permissions'), text('الإجراءات', 'Actions')].map((label) => <th key={label}>{label}</th>)}
-                </tr></thead><tbody>{rows.map((row) => <tr key={row.id}><td>{row.name}</td><td dir="ltr">{row.email}</td><td><span className="ws-manager-status" data-active={row.is_active && !row.deleted_at}>{row.deleted_at ? text('محذوف', 'Removed') : row.is_active ? text('مفعّل', 'Active') : text('معطّل', 'Inactive')}</span></td><td>{row.permissions.length} {text('صلاحيات', 'permissions')}</td><td><div className="ws-manager-actions">{row.deleted_at ? <button type="button" disabled={busy} onClick={() => { setError(''); setConfirm({ type: 'restore', row }); }}>{text('استعادة', 'Restore')}</button> : <><button type="button" disabled={busy} onClick={() => edit(row)} aria-label={`${text('تعديل', 'Edit')} ${row.name}`}>{text('تعديل', 'Edit')}</button><button type="button" disabled={busy} className="ws-manager-remove" onClick={() => { setError(''); setConfirm({ type: 'remove', row }); }} aria-label={`${text('حذف', 'Remove')} ${row.name}`}>{text('حذف', 'Remove')}</button></>}</div></td></tr>)}</tbody></table></div>
-                {!rows.length ? <p className="ws-managers-empty">{text('لا يوجد مديرون مطابقون للبحث.', 'No managers match this search.')}</p> : null}
-                <div className="ws-managers-pagination"><span>{meta.total} {text('مدير', 'managers')} · {meta.current_page} / {meta.last_page}</span><button type="button" disabled={page <= 1 || busy} onClick={() => setPage((value) => value - 1)}>{text('السابق', 'Previous')}</button><button type="button" disabled={page >= meta.last_page || busy} onClick={() => setPage((value) => value + 1)}>{text('التالي', 'Next')}</button></div>
-            </>}
+            <div className="ws-dt-card ws-managers-list">
+                <IndexFilters table={table} searchPlaceholder={text('الاسم أو البريد الإلكتروني', 'Name or email')} />
+                <IndexTable table={table} rows={rows} loading={loading} error={loadError} onRetry={() => setReload((value) => value + 1)} meta={meta}
+                    label={text('قائمة المديرين', 'Managers list')}
+                    emptyState={{ icon: HiOutlineUsers, title: text('لا يوجد مديرون بعد', 'No managers yet'), description: text('أضف مديرًا وحدد صلاحياته في متجرك.', 'Add a manager and choose their store permissions.') }} />
+            </div>
         </section>
         <dialog ref={editorDialog} className="ws-manager-dialog" aria-labelledby={`${prefix}-title`} onCancel={(event) => { event.preventDefault(); if (!busy) setEditor(null); }}>
             {editor ? <form onSubmit={save}><header><h2 id={`${prefix}-title`}>{editor.id ? text('تعديل المدير', 'Edit manager') : text('إضافة مدير', 'Add manager')}</h2><button type="button" disabled={busy} aria-label={text('إغلاق', 'Close')} onClick={() => setEditor(null)}>×</button></header>

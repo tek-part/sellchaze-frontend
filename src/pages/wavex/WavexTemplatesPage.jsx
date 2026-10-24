@@ -1,20 +1,23 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, Navigate, useOutletContext } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import {
     HiOutlineArrowPath,
     HiOutlineDocumentDuplicate,
-    HiOutlineDocumentText,
     HiOutlineEye,
-    HiOutlineFilm,
     HiOutlinePencilSquare,
-    HiOutlinePhoto,
     HiOutlinePlus,
     HiOutlineTrash,
 } from '../../components/workspace/WorkspaceIcons';
+import { IndexTable, useIndexTable } from '../../components/data-table';
 import api from '../../api/client';
 import { getPaginatedRows } from '../../utils/apiPagination';
+
+// The templates endpoint pages by 50 and has no search or sort parameters.
+const DEFAULTS = { perPage: 50, perPageOptions: [50] };
+const NO_FILTERS = [];
+const NO_VIEWS = [];
 
 function mediaTypeLabel(t, type) {
     if (type === 'image') return t('wavex_template_media_type_image');
@@ -23,50 +26,63 @@ function mediaTypeLabel(t, type) {
     return '';
 }
 
-function MediaIcon({ type }) {
-    if (type === 'image') return <HiOutlinePhoto className="h-3.5 w-3.5" />;
-    if (type === 'video') return <HiOutlineFilm className="h-3.5 w-3.5" />;
-    return <HiOutlineDocumentText className="h-3.5 w-3.5" />;
-}
-
 export default function WavexTemplatesPage() {
     const { t } = useTranslation();
     const { permissions } = useOutletContext();
     const canAccessWavex = permissions.includes('wavex-access');
 
-    const [rows, setRows] = useState([]);
+    const [result, setResult] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [loadErr, setLoadErr] = useState('');
     const [err, setErr] = useState('');
-    const [selected, setSelected] = useState([]);
     const [busy, setBusy] = useState(false);
+    const latest = useRef(0);
+    // Row actions call the latest handler (it depends on the current page).
+    const removeOne = useRef(null);
+
+    const columns = useMemo(() => [
+        { key: 'name', header: t('wavex_template_name'), primary: true, hideable: false,
+            render: (row) => <Link className="ws-dt-title" to={`/wavex/templates/${row.id}`}>{row.name}</Link> },
+        { key: 'body', header: t('wavex_template_body'),
+            render: (row) => <p className="line-clamp-2 max-w-xs whitespace-pre-wrap text-xs text-slate-600">{row.body}</p> },
+        { key: 'attachment', header: t('wavex_template_attachment'),
+            render: (row) => (row.media_type ? <span className="ws-dt-badge is-info">{mediaTypeLabel(t, row.media_type)}</span> : <span className="ws-dt-sub">{'—'}</span>) },
+        { key: 'actions', header: t('wavex_cg_actions'), hideable: false, align: 'end',
+            render: (row) => <div className="ws-dt-row-actions">
+                <Link className="ws-dt-icon" to={`/wavex/templates/${row.id}`} title={t('wavex_tpl_view')} aria-label={`${t('wavex_tpl_view')} ${row.name}`}><HiOutlineEye aria-hidden /></Link>
+                <Link className="ws-dt-icon" to={`/wavex/templates/${row.id}/edit`} title={t('wavex_template_edit')} aria-label={`${t('wavex_template_edit')} ${row.name}`}><HiOutlinePencilSquare aria-hidden /></Link>
+                <button type="button" className="ws-dt-icon" onClick={() => void removeOne.current?.(row.id)} disabled={busy} title={t('wavex_template_delete')} aria-label={`${t('wavex_template_delete')} ${row.name}`}><HiOutlineTrash aria-hidden /></button>
+            </div> },
+    ], [t, busy]);
+
+    const table = useIndexTable({ scope: 'wavex:templates', filters: NO_FILTERS, columns, views: NO_VIEWS, defaults: DEFAULTS, savedViews: false });
+    const page = table.state.page;
 
     const load = useCallback(async () => {
-        setErr('');
+        const request = ++latest.current;
+        setLoadErr('');
         setLoading(true);
         try {
-            const { data } = await api.get('/wavex/templates');
-            setRows(getPaginatedRows(data));
-            setSelected([]);
+            const { data } = await api.get('/wavex/templates', { params: { page } });
+            if (request === latest.current) setResult(data);
         } catch (e) {
-            setErr(e.response?.data?.message || e.message);
-            setRows([]);
+            if (request === latest.current) { setLoadErr(e.response?.data?.message || e.message); setResult(null); }
         } finally {
-            setLoading(false);
+            if (request === latest.current) setLoading(false);
         }
-    }, []);
+    }, [page]);
 
     useEffect(() => {
         if (!canAccessWavex) return;
         void load();
     }, [load, canAccessWavex]);
 
-    const toggleSelect = (id) => {
-        setSelected((prev) => prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]);
+    const reload = async () => {
+        table.clearSelection();
+        await load();
     };
 
-    const toggleAll = () => {
-        setSelected(selected.length === rows.length ? [] : rows.map((r) => r.id));
-    };
+    useEffect(() => { removeOne.current = deleteTemplate; });
 
     async function deleteTemplate(id) {
         if (!confirm(t('wavex_tpl_confirm_delete'))) return;
@@ -74,7 +90,7 @@ export default function WavexTemplatesPage() {
         setErr('');
         try {
             await api.delete(`/wavex/templates/${id}`);
-            await load();
+            await reload();
         } catch (e) {
             setErr(e.response?.data?.message || e.message);
         } finally {
@@ -82,14 +98,14 @@ export default function WavexTemplatesPage() {
         }
     }
 
-    async function bulkDelete() {
-        if (selected.length === 0) return;
-        if (!confirm(t('wavex_tpl_confirm_bulk_delete', { count: selected.length }))) return;
+    async function bulkDelete(ids) {
+        if (ids.length === 0) return;
+        if (!confirm(t('wavex_tpl_confirm_bulk_delete', { count: ids.length }))) return;
         setBusy(true);
         setErr('');
         try {
-            await api.post('/wavex/templates/bulk-destroy', { ids: selected });
-            await load();
+            await api.post('/wavex/templates/bulk-destroy', { ids });
+            await reload();
         } catch (e) {
             setErr(e.response?.data?.message || e.message);
         } finally {
@@ -98,6 +114,17 @@ export default function WavexTemplatesPage() {
     }
 
     if (!canAccessWavex) return <Navigate to="/dashboard" replace />;
+
+    const rows = getPaginatedRows(result);
+    const createLink = (
+        <Link
+            to="/wavex/templates/new"
+            className="inline-flex items-center gap-1 rounded-lg bg-brand px-4 py-2 text-sm font-semibold text-white hover:bg-brand-dark"
+        >
+            <HiOutlinePlus className="h-4 w-4" />
+            {t('wavex_template_create')}
+        </Link>
+    );
 
     return (
         <div className="mx-auto max-w-5xl space-y-6">
@@ -112,150 +139,33 @@ export default function WavexTemplatesPage() {
                 <div className="flex items-center gap-2">
                     <button
                         type="button"
-                        onClick={() => void load()}
+                        onClick={() => void reload()}
                         className="inline-flex items-center gap-1 rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50"
                     >
                         <HiOutlineArrowPath className={loading ? 'h-4 w-4 animate-spin' : 'h-4 w-4'} />
                         {t('wavex_groups_reload')}
                     </button>
-                    <Link
-                        to="/wavex/templates/new"
-                        className="inline-flex items-center gap-1 rounded-lg bg-brand px-4 py-2 text-sm font-semibold text-white hover:bg-brand-dark"
-                    >
-                        <HiOutlinePlus className="h-4 w-4" />
-                        {t('wavex_template_create')}
-                    </Link>
+                    {createLink}
                 </div>
             </div>
 
             {err && (
-                <p className="rounded-lg border border-red-100 bg-red-50 px-3 py-2 text-sm text-red-700">{err}</p>
+                <p role="alert" className="rounded-lg border border-red-100 bg-red-50 px-3 py-2 text-sm text-red-700">{err}</p>
             )}
 
-            {selected.length > 0 && (
-                <motion.div
-                    initial={{ opacity: 0, y: -6 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="flex items-center gap-3 rounded-xl border border-red-100 bg-red-50 px-4 py-3"
-                >
-                    <span className="text-sm font-medium text-red-800">
-                        {t('wavex_cg_selected_count', { count: selected.length })}
-                    </span>
-                    <button
-                        type="button"
-                        onClick={bulkDelete}
-                        disabled={busy}
-                        className="inline-flex items-center gap-1 rounded-lg bg-red-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-red-700 disabled:opacity-50"
-                    >
-                        <HiOutlineTrash className="h-4 w-4" />
-                        {t('wavex_cg_delete_selected')}
-                    </button>
-                    <button
-                        type="button"
-                        onClick={() => setSelected([])}
-                        className="text-xs font-medium text-red-700 hover:underline"
-                    >
-                        {t('wavex_cg_deselect_all')}
-                    </button>
-                </motion.div>
-            )}
-
-            <motion.div
-                initial={{ opacity: 0, y: 6 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="rounded-2xl border border-slate-200/80 bg-white shadow-card"
-            >
-                {loading ? (
-                    <p className="p-8 text-center text-sm text-slate-500">{t('table_loading')}</p>
-                ) : rows.length === 0 ? (
-                    <div className="p-10 text-center">
-                        <HiOutlineDocumentDuplicate className="mx-auto h-12 w-12 text-slate-300" />
-                        <p className="mt-2 text-sm text-slate-500">{t('empty')}</p>
-                        <Link
-                            to="/wavex/templates/new"
-                            className="mt-4 inline-flex items-center gap-1 rounded-lg bg-brand px-4 py-2 text-sm font-semibold text-white hover:bg-brand-dark"
-                        >
-                            <HiOutlinePlus className="h-4 w-4" />
-                            {t('wavex_template_create')}
-                        </Link>
-                    </div>
-                ) : (
-                    <div className="overflow-x-auto">
-                        <table className="w-full text-left text-sm">
-                            <thead className="border-b border-slate-100 bg-slate-50/80 text-xs text-slate-600">
-                                <tr>
-                                    <th className="w-10 px-4 py-3">
-                                        <input
-                                            type="checkbox"
-                                            checked={selected.length === rows.length && rows.length > 0}
-                                            onChange={toggleAll}
-                                            className="rounded-sm border-slate-300"
-                                        />
-                                    </th>
-                                    <th className="px-4 py-3">{t('wavex_template_name')}</th>
-                                    <th className="px-4 py-3">{t('wavex_template_body')}</th>
-                                    <th className="px-4 py-3 text-center">{t('wavex_template_attachment')}</th>
-                                    <th className="w-48 px-4 py-3 text-center">{t('wavex_cg_actions')}</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-slate-100">
-                                {rows.map((row) => (
-                                    <tr key={row.id} className={selected.includes(row.id) ? 'bg-brand/5' : 'hover:bg-slate-50'}>
-                                        <td className="px-4 py-3">
-                                            <input
-                                                type="checkbox"
-                                                checked={selected.includes(row.id)}
-                                                onChange={() => toggleSelect(row.id)}
-                                                className="rounded-sm border-slate-300"
-                                            />
-                                        </td>
-                                        <td className="px-4 py-3 font-medium text-slate-900">{row.name}</td>
-                                        <td className="max-w-xs px-4 py-3">
-                                            <p className="line-clamp-2 whitespace-pre-wrap text-xs text-slate-600">{row.body}</p>
-                                        </td>
-                                        <td className="px-4 py-3 text-center">
-                                            {row.media_type ? (
-                                                <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600">
-                                                    <MediaIcon type={row.media_type} />
-                                                    {mediaTypeLabel(t, row.media_type)}
-                                                </span>
-                                            ) : (
-                                                <span className="text-xs text-slate-400">{'\u2014'}</span>
-                                            )}
-                                        </td>
-                                        <td className="px-4 py-3">
-                                            <div className="flex items-center justify-center gap-1">
-                                                <Link
-                                                    to={`/wavex/templates/${row.id}`}
-                                                    className="rounded-lg p-2 text-slate-500 hover:bg-slate-100 hover:text-brand"
-                                                    title={t('wavex_tpl_view')}
-                                                >
-                                                    <HiOutlineEye className="h-4 w-4" />
-                                                </Link>
-                                                <Link
-                                                    to={`/wavex/templates/${row.id}/edit`}
-                                                    className="rounded-lg p-2 text-slate-500 hover:bg-slate-100 hover:text-brand"
-                                                    title={t('wavex_template_edit')}
-                                                >
-                                                    <HiOutlinePencilSquare className="h-4 w-4" />
-                                                </Link>
-                                                <button
-                                                    type="button"
-                                                    onClick={() => void deleteTemplate(row.id)}
-                                                    disabled={busy}
-                                                    className="rounded-lg p-2 text-slate-500 hover:bg-red-50 hover:text-red-600 disabled:opacity-50"
-                                                    title={t('wavex_template_delete')}
-                                                >
-                                                    <HiOutlineTrash className="h-4 w-4" />
-                                                </button>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
-                )}
+            <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} className="ws-dt-card">
+                <IndexTable
+                    table={table}
+                    rows={rows}
+                    loading={loading}
+                    error={loadErr}
+                    onRetry={() => void reload()}
+                    meta={result ? { total: result.total ?? rows.length, last_page: result.last_page ?? 1 } : undefined}
+                    label={t('wavex_templates_title')}
+                    rowHref={(row) => `/wavex/templates/${row.id}`}
+                    bulkActions={[{ key: 'delete', label: t('wavex_cg_delete_selected'), icon: HiOutlineTrash, tone: 'danger', disabled: () => busy, onAction: (selected) => void bulkDelete(selected.map((row) => row.id)) }]}
+                    emptyState={{ icon: HiOutlineDocumentDuplicate, title: t('empty'), action: createLink }}
+                />
             </motion.div>
         </div>
     );

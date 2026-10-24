@@ -1,11 +1,12 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, Navigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { MdInbox, MdCheckBox, MdCheckBoxOutlineBlank } from 'react-icons/md';
 import api from '../../../api/client';
 import useStoreContext from '../../../hooks/useStoreContext';
 import MerchantSettingsSave from '../../../components/store/MerchantSettingsSave';
-import { HiOutlinePlus, HiOutlineClipboardDocument, HiOutlineEye, HiOutlineEyeSlash } from '../../../components/workspace/WorkspaceIcons';
+import { IndexTable, useIndexTable } from '../../../components/data-table';
+import { HiOutlinePlus, HiOutlineClipboardDocument, HiOutlineEye, HiOutlineEyeSlash, HiOutlinePencilSquare, HiOutlineTrash } from '../../../components/workspace/WorkspaceIcons';
 import './merchant-webhooks.css';
 import './merchant-public-api.css';
 
@@ -17,6 +18,10 @@ const permissions = [
     ['categories:update', 'تعديل اقسام', 'Update categories'], ['categories:delete', 'حذف اقسام', 'Delete categories'], ['shipping_areas', 'مناطق الشحن', 'Shipping areas'],
 ];
 const empty = { description: '', permissions: [], enabled: true, version: 1 };
+// The list endpoint pages by 20 and only understands `page`.
+const LIST_DEFAULTS = { perPage: 20, perPageOptions: [20] };
+const NO_FILTERS = [];
+const NO_VIEWS = [];
 function useCopy() { const { i18n } = useTranslation(); const ar = i18n.language.startsWith('ar'); return { ar, text: (a, e) => ar ? a : e }; }
 function errorText(failure, text) {
     if (failure.response?.status === 409) return text('تغير المفتاح أثناء التعديل. أعد تحميل البيانات قبل المحاولة مجددًا.', 'The key changed. Reload before trying again.');
@@ -30,29 +35,47 @@ export default function StorePublicApiPage() {
 }
 function KeyList({ context }) {
     const { ar, text } = useCopy();
-    const [page, setPage] = useState(1); const [retry, setRetry] = useState(0); const [data, setData] = useState(null);
-    const [error, setError] = useState(''); const [deleting, setDeleting] = useState(null); const [busy, setBusy] = useState(false); const dialog = useRef(null);
+    const [retry, setRetry] = useState(0); const [data, setData] = useState(null); const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(''); const [actionError, setActionError] = useState(''); const [deleting, setDeleting] = useState(null); const [busy, setBusy] = useState(false); const dialog = useRef(null);
+    const keyLabel = row => row.description || text('بدون وصف', 'No description');
+    const columns = useMemo(() => [
+        { key: 'description', header: text('الوصف', 'Description'), primary: true, hideable: false, render: row => <div><Link className="ws-dt-title" to={`${context.uiBase}/settings/public-api/${row.id}`}>{keyLabel(row)}</Link><small className="ws-dt-sub ws-api-prefix" dir="ltr">{row.token_prefix}…</small></div> },
+        { key: 'permissions', header: text('الصلاحيات', 'Permissions'), render: row => <div className="ws-api-permission-list">{row.permissions.map(value => <span key={value} className="ws-api-permission-tag">{permissions.find(permission => permission[0] === value)?.[ar ? 1 : 2] || value}</span>)}</div> },
+        { key: 'status', header: text('الحالة', 'Status'), render: row => <span className={`ws-dt-badge ${row.enabled ? 'is-success' : ''}`}>{row.enabled ? text('مفعل', 'Enabled') : text('غير مفعل', 'Disabled')}</span> },
+        { key: 'last_used', header: text('آخر استخدام', 'Last used'), render: row => <span className="ws-dt-num">{row.last_used_at ? new Date(row.last_used_at).toLocaleString(ar ? 'ar-EG' : 'en-GB') : '—'}</span> },
+        { key: 'actions', header: text('إجراءات', 'Actions'), hideable: false, align: 'end', render: row => <div className="ws-dt-row-actions">
+            <Link className="ws-dt-icon" to={`${context.uiBase}/settings/public-api/${row.id}`} aria-label={`${text('تعديل', 'Edit')} ${keyLabel(row)}`} title={text('تعديل', 'Edit')}><HiOutlinePencilSquare aria-hidden /></Link>
+            <button type="button" className="ws-dt-icon ws-webhook-delete" aria-label={`${text('حذف', 'Delete')} ${keyLabel(row)}`} title={text('حذف', 'Delete')} onClick={() => { setDeleting(row); dialog.current.showModal(); }}><HiOutlineTrash aria-hidden /></button>
+        </div> },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    ], [ar, context.uiBase]);
+    const table = useIndexTable({ scope: `store:${context.store?.id ?? context.apiBase}:public-api-keys`, filters: NO_FILTERS, columns, views: NO_VIEWS, defaults: LIST_DEFAULTS, savedViews: false });
+    const page = table.state.page;
     useEffect(() => {
         const controller = new AbortController();
+        setLoading(true);
         api.get(`${context.apiBase}/public-api`, { params: { page }, signal: controller.signal }).then(response => { setData(response.data); setError(''); })
-            .catch(failure => { if (!controller.signal.aborted) setError(errorText(failure, (a, e) => ar ? a : e)); });
+            .catch(failure => { if (!controller.signal.aborted) setError(errorText(failure, (a, e) => ar ? a : e)); })
+            .finally(() => { if (!controller.signal.aborted) setLoading(false); });
         return () => controller.abort();
     }, [context.apiBase, page, retry, ar]);
     const remove = async () => {
-        setBusy(true);
-        try { await api.delete(`${context.apiBase}/public-api/${deleting.id}`, { data: { version: deleting.version } }); dialog.current.close(); setDeleting(null); setPage(1); setRetry(value => value + 1); }
-        catch (failure) { dialog.current.close(); setDeleting(null); setError(errorText(failure, text)); }
+        setBusy(true); setActionError('');
+        try { await api.delete(`${context.apiBase}/public-api/${deleting.id}`, { data: { version: deleting.version } }); dialog.current.close(); setDeleting(null); table.setPage(1); setRetry(value => value + 1); }
+        catch (failure) { dialog.current.close(); setDeleting(null); setActionError(errorText(failure, text)); }
         finally { setBusy(false); }
     };
+    const create = <Link className="ws-webhook-create" to={`${context.uiBase}/settings/public-api/create`}><HiOutlinePlus aria-hidden />{text('إنشاء', 'Create')}</Link>;
     return <section className="ws-settings-card ws-webhooks-card ws-public-api-card" dir={ar ? 'rtl' : 'ltr'}>
         <div className="ws-api-list-heading"><div><h2>Public API</h2><p>{text('ال Public API يمكنك من التحكم برمجيا في المتجر الخاص بك واضافة ميزات خاصة بك', 'Use Public API to manage your store programmatically and build your own features.')}</p></div>
-            {data?.data?.length ? <Link className="ws-webhook-create" to={`${context.uiBase}/settings/public-api/create`}><HiOutlinePlus aria-hidden />{text('إنشاء', 'Create')}</Link> : null}</div>
+            {data?.data?.length ? create : null}</div>
         <div className="ws-api-doc-alert">{text('لمعرفة كيفية استخدام ال Public API اذهب الي', 'Learn how to use Public API:')} <Link to={`${context.uiBase}/settings/public-api/docs`}>{text('وثائق Public API', 'Public API documentation')}</Link></div>
-        {error ? <div className="ws-webhook-error" role="alert">{error}<button type="button" onClick={() => setRetry(value => value + 1)}>{text('إعادة المحاولة', 'Retry')}</button></div> : null}
-        {!data && !error ? <p role="status">{text('جارٍ التحميل…', 'Loading…')}</p> : null}
-        {data?.data?.length === 0 ? <div className="ws-webhook-empty ws-api-empty"><MdInbox aria-hidden /><h3>{text('لا يوجد Public API حتي الان', 'No Public API yet')}</h3><p>{text('هل ترغب فى اضافة واحد؟', 'Would you like to add one?')}</p><Link className="ws-webhook-create" to={`${context.uiBase}/settings/public-api/create`}><HiOutlinePlus aria-hidden />{text('إنشاء', 'Create')}</Link></div> : null}
-        {data?.data?.length ? <><div className="ws-webhook-table-wrap"><table><thead><tr><th>{text('الوصف', 'Description')}</th><th>{text('الصلاحيات', 'Permissions')}</th><th>{text('الحالة', 'Status')}</th><th>{text('آخر استخدام', 'Last used')}</th><th>{text('إجراءات', 'Actions')}</th></tr></thead><tbody>{data.data.map(row => <tr key={row.id}><td><Link to={`${context.uiBase}/settings/public-api/${row.id}`}>{row.description || text('بدون وصف', 'No description')}</Link><small className="ws-api-prefix" dir="ltr">{row.token_prefix}…</small></td><td>{row.permissions.map(value => <span key={value} className="ws-api-permission-tag">{permissions.find(permission => permission[0] === value)?.[ar ? 1 : 2] || value}</span>)}</td><td>{row.enabled ? text('مفعل', 'Enabled') : text('غير مفعل', 'Disabled')}</td><td>{row.last_used_at ? new Date(row.last_used_at).toLocaleString(ar ? 'ar-EG' : 'en-GB') : '—'}</td><td><Link to={`${context.uiBase}/settings/public-api/${row.id}`}>{text('تعديل', 'Edit')}</Link><button type="button" onClick={() => { setDeleting(row); dialog.current.showModal(); }}>{text('حذف', 'Delete')}</button></td></tr>)}</tbody></table></div>
-            <div className="ws-webhook-pagination"><button type="button" disabled={page <= 1} onClick={() => setPage(page - 1)}>{text('السابق', 'Previous')}</button><span>{page} / {data.meta.last_page}</span><button type="button" disabled={page >= data.meta.last_page} onClick={() => setPage(page + 1)}>{text('التالي', 'Next')}</button></div></> : null}
+        {actionError ? <div className="ws-webhook-error ws-api-action-error" role="alert">{actionError}<button type="button" onClick={() => { setActionError(''); setRetry(value => value + 1); }}>{text('إعادة المحاولة', 'Retry')}</button></div> : null}
+        <div className="ws-dt-card ws-webhook-list">
+            <IndexTable table={table} rows={data?.data ?? []} loading={loading} error={error} onRetry={() => setRetry(value => value + 1)} meta={data?.meta}
+                label="Public API"
+                emptyState={{ icon: MdInbox, title: text('لا يوجد Public API حتي الان', 'No Public API yet'), description: text('هل ترغب فى اضافة واحد؟', 'Would you like to add one?'), action: create }} />
+        </div>
         <dialog ref={dialog} className="ws-webhook-dialog" aria-labelledby="api-delete-title" onCancel={event => { if (busy) event.preventDefault(); }}><h3 id="api-delete-title">{text('حذف مفتاح Public API؟', 'Delete Public API key?')}</h3><p>{text('ستتوقف الطلبات الجديدة باستخدام هذا المفتاح.', 'New requests using this key will stop working.')}</p><div><button type="button" disabled={busy} onClick={() => { dialog.current.close(); setDeleting(null); }}>{text('إلغاء', 'Cancel')}</button><button type="button" disabled={busy} onClick={remove}>{text('حذف', 'Delete')}</button></div></dialog>
     </section>;
 }

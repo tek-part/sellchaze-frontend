@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, Navigate, useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Listbox, ListboxButton, ListboxOption, ListboxOptions } from '@headlessui/react';
@@ -6,7 +6,8 @@ import { MdInbox, MdArrowDropDown } from 'react-icons/md';
 import api from '../../../api/client';
 import useStoreContext from '../../../hooks/useStoreContext';
 import MerchantSettingsSave from '../../../components/store/MerchantSettingsSave';
-import { HiOutlinePlus, HiOutlineClipboardDocument, HiOutlineEye, HiOutlineEyeSlash } from '../../../components/workspace/WorkspaceIcons';
+import { IndexTable, useIndexTable } from '../../../components/data-table';
+import { HiOutlinePlus, HiOutlineClipboardDocument, HiOutlineEye, HiOutlineEyeSlash, HiOutlinePencilSquare, HiOutlineTrash } from '../../../components/workspace/WorkspaceIcons';
 import './merchant-webhooks.css';
 
 const events = [{ value: 'orders', label: 'Orders' }, { value: 'order-status-update', label: 'Order Status Update' }];
@@ -21,9 +22,18 @@ function useCopy() {
     const { i18n } = useTranslation(); const ar = i18n.language.startsWith('ar');
     return { ar, text: (a, e) => ar ? a : e };
 }
+const statusTones = { sent: 'is-success', failed: 'is-critical', expired: 'is-critical', blocked: 'is-warning', retry: 'is-warning', queued: 'is-info', processing: 'is-info' };
+// The list endpoint pages by 20 and only understands `page`.
+const LIST_DEFAULTS = { perPage: 20, perPageOptions: [20] };
+const NO_FILTERS = [];
+const NO_VIEWS = [];
 function DeliveryStatus({ value, text }) {
     const label = statusLabels[value] ?? [value, value];
     return <span className="ws-webhook-status" data-status={value}>{text(...label)}</span>;
+}
+function DeliveryBadge({ value, text }) {
+    const label = statusLabels[value] ?? [value, value];
+    return <span className={`ws-dt-badge ${statusTones[value] ?? ''}`} data-status={value}>{text(...label)}</span>;
 }
 
 export default function StoreWebhooksPage() {
@@ -34,30 +44,50 @@ export default function StoreWebhooksPage() {
 function WebhookList({ context }) {
     const { apiBase, uiBase } = context;
     const { ar, text } = useCopy();
-    const [page, setPage] = useState(1); const [retry, setRetry] = useState(0);
-    const [data, setData] = useState(null); const [error, setError] = useState('');
+    const [retry, setRetry] = useState(0);
+    const [data, setData] = useState(null); const [error, setError] = useState(''); const [loading, setLoading] = useState(true);
+    const [actionError, setActionError] = useState('');
     const [deleting, setDeleting] = useState(null); const [busy, setBusy] = useState(false);
     const deletion = useRef(null);
+    const columns = useMemo(() => [
+        { key: 'url', header: 'url', primary: true, hideable: false, render: row => <Link className="ws-dt-title ws-webhook-url" to={`${uiBase}/settings/webhooks/${row.id}`} title={row.url}><bdi>{row.url}</bdi></Link> },
+        { key: 'description', header: 'description', render: row => row.description || <span className="ws-dt-sub">—</span> },
+        { key: 'type', header: 'type', render: row => events.find(event => event.value === row.type)?.label ?? row.type },
+        { key: 'status', header: text('الحالة', 'Status'), render: row => <span className={`ws-dt-badge ${row.enabled ? 'is-success' : ''}`}>{row.enabled ? text('مفعل', 'Enabled') : text('غير مفعل', 'Disabled')}</span> },
+        { key: 'delivery', header: text('آخر إرسال', 'Last delivery'), render: row => row.last_delivery ? <DeliveryBadge value={row.last_delivery.status} text={text} /> : <span className="ws-dt-sub">—</span> },
+        { key: 'actions', header: text('الإجراءات', 'Actions'), hideable: false, align: 'end', render: row => <div className="ws-dt-row-actions">
+            <Link className="ws-dt-icon" to={`${uiBase}/settings/webhooks/${row.id}`} aria-label={`${text('تعديل', 'Edit')} ${row.url}`} title={text('تعديل', 'Edit')}><HiOutlinePencilSquare aria-hidden /></Link>
+            <button type="button" className="ws-dt-icon ws-webhook-delete" aria-label={`${text('حذف', 'Delete')} ${row.url}`} title={text('حذف', 'Delete')} onClick={() => { setDeleting(row); deletion.current?.showModal(); }}><HiOutlineTrash aria-hidden /></button>
+        </div> },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    ], [ar, uiBase]);
+    const table = useIndexTable({ scope: `store:${context.store?.id ?? apiBase}:webhooks`, filters: NO_FILTERS, columns, views: NO_VIEWS, defaults: LIST_DEFAULTS, savedViews: false });
+    const page = table.state.page;
     useEffect(() => {
         const controller = new AbortController();
+        setLoading(true);
         api.get(`${apiBase}/webhooks`, { params: { page }, signal: controller.signal }).then(response => { setData(response.data); setError(''); })
-            .catch(failure => { if (!controller.signal.aborted) setError(failureText(failure, (a, e) => ar ? a : e)); });
+            .catch(failure => { if (!controller.signal.aborted) setError(failureText(failure, (a, e) => ar ? a : e)); })
+            .finally(() => { if (!controller.signal.aborted) setLoading(false); });
         return () => controller.abort();
     }, [apiBase, page, retry, ar]);
     const remove = async () => {
-        setBusy(true);
+        setBusy(true); setActionError('');
         try {
             await api.delete(`${apiBase}/webhooks/${deleting.id}`, { data: { version: deleting.version } });
-            deletion.current?.close(); setDeleting(null); setData(null); setPage(1); setRetry(value => value + 1);
-        } catch (failure) { setError(failureText(failure, text)); deletion.current?.close(); }
+            deletion.current?.close(); setDeleting(null); table.setPage(1); setRetry(value => value + 1);
+        } catch (failure) { setActionError(failureText(failure, text)); deletion.current?.close(); }
         finally { setBusy(false); }
     };
+    const create = <Link className="ws-webhook-create" to={`${uiBase}/settings/webhooks/create`}><HiOutlinePlus aria-hidden />{text('إنشاء', 'Create')}</Link>;
     return <section className="ws-settings-card ws-webhooks-card" dir={ar ? 'rtl' : 'ltr'}>
-        <header className="ws-webhook-list-heading"><div><h2>Webhooks</h2><p>{text('يمكنك من هنا اضافة Webhooks لمتجرك', 'Add Webhooks for your store here')}</p></div>{data?.data?.length ? <Link className="ws-webhook-create" to={`${uiBase}/settings/webhooks/create`}><HiOutlinePlus aria-hidden />{text('إنشاء', 'Create')}</Link> : null}</header>
-        {error ? <div className="ws-webhook-error" role="alert">{error}<button type="button" onClick={() => { setData(null); setRetry(value => value + 1); }}>{text('إعادة تحميل', 'Reload')}</button></div> : null}
-        {!data && !error ? <p role="status">{text('جارٍ التحميل…', 'Loading…')}</p> : null}
-        {data?.data?.length === 0 ? <div className="ws-webhook-empty"><MdInbox aria-hidden /><h3>{text('لا يوجد Webhooks حتي الان', 'No Webhooks yet')}</h3><p>{text('هل ترغب فى اضافة واحد؟', 'Would you like to add one?')}</p><Link className="ws-webhook-create" to={`${uiBase}/settings/webhooks/create`}><HiOutlinePlus aria-hidden />{text('إنشاء', 'Create')}</Link></div> : null}
-        {data?.data?.length > 0 ? <><div className="ws-webhook-table-wrap"><table><thead><tr><th>url</th><th>description</th><th>type</th><th>{text('الحالة', 'Status')}</th><th>{text('آخر إرسال', 'Last delivery')}</th><th>{text('الإجراءات', 'Actions')}</th></tr></thead><tbody>{data.data.map(row => <tr key={row.id}><td><bdi>{row.url}</bdi></td><td>{row.description || '—'}</td><td>{events.find(event => event.value === row.type)?.label ?? row.type}</td><td>{row.enabled ? text('مفعل', 'Enabled') : text('غير مفعل', 'Disabled')}</td><td>{row.last_delivery ? <DeliveryStatus value={row.last_delivery.status} text={text} /> : '—'}</td><td><div className="ws-webhook-actions"><Link to={`${uiBase}/settings/webhooks/${row.id}`}>{text('تعديل', 'Edit')}</Link><button type="button" onClick={() => { setDeleting(row); deletion.current?.showModal(); }}>{text('حذف', 'Delete')}</button></div></td></tr>)}</tbody></table></div><nav className="ws-webhook-pagination" aria-label={text('صفحات Webhooks', 'Webhook pages')}><button type="button" disabled={page <= 1} onClick={() => { setData(null); setPage(page - 1); }}>{text('السابق', 'Previous')}</button><span>{page} / {data.meta.last_page}</span><button type="button" disabled={page >= data.meta.last_page} onClick={() => { setData(null); setPage(page + 1); }}>{text('التالي', 'Next')}</button></nav></> : null}
+        <header className="ws-webhook-list-heading"><div><h2>Webhooks</h2><p>{text('يمكنك من هنا اضافة Webhooks لمتجرك', 'Add Webhooks for your store here')}</p></div>{data?.data?.length ? create : null}</header>
+        {actionError ? <div className="ws-webhook-error" role="alert">{actionError}<button type="button" onClick={() => { setActionError(''); setRetry(value => value + 1); }}>{text('إعادة تحميل', 'Reload')}</button></div> : null}
+        <div className="ws-dt-card ws-webhook-list">
+            <IndexTable table={table} rows={data?.data ?? []} loading={loading} error={error} onRetry={() => setRetry(value => value + 1)} meta={data?.meta}
+                label="Webhooks"
+                emptyState={{ icon: MdInbox, title: text('لا يوجد Webhooks حتي الان', 'No Webhooks yet'), description: text('هل ترغب فى اضافة واحد؟', 'Would you like to add one?'), action: create }} />
+        </div>
         <dialog ref={deletion} className="ws-webhook-delete-dialog" aria-label={text('حذف Webhook', 'Delete Webhook')} onCancel={() => setDeleting(null)}><h3>{text('حذف Webhook', 'Delete Webhook')}</h3><p>{text('سيُوقف هذا الربط وإرسال أحداث جديدة إليه. الإرسال الذي بدأ بالفعل قد يكتمل.', 'This disables the webhook and future deliveries. A delivery already in progress may finish.')}</p><div><button type="button" disabled={busy} onClick={() => { deletion.current?.close(); setDeleting(null); }}>{text('إلغاء', 'Cancel')}</button><button type="button" disabled={busy || !deleting} onClick={remove}>{text('حذف', 'Delete')}</button></div></dialog>
     </section>;
 }
