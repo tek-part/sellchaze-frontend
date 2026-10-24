@@ -188,6 +188,23 @@ export const THEME_CATALOG: ThemeCatalog = [
     changelog: [{ version: '1.0.0', date: '2026-09-05', notes: ['Initial release — electronics / gadgets theme on the shared section library.'] }],
     load: THEME_LOADERS.techno,
   },
+  {
+    id: 'stride',
+    name: 'Stride',
+    version: '1.0.0',
+    archetype: 'Sports & Sneakers',
+    description: 'Sneakers, sportswear and fitness gear: drop countdowns, a size-chart finder, shop-by-sport tiles and a snap-scrolling new-drops rail.',
+    author: 'Sellchaze',
+    tags: ['sports', 'sneakers', 'sportswear', 'fitness', 'gym', 'streetwear', 'dark', 'volt', 'bold', 'arabic'],
+    accent: '#0B0B0C',
+    accentAlt: '#D4FF1E',
+    previewImage: '/media/theme-previews/stride.jpg',
+    minEngineVersion: '1.0.0',
+    capabilities: ['rtl', 'dark-mode', 'search-overlay', 'cart-drawer', 'wishlist', 'quick-add', 'newsletter', 'countdown', 'reviews'],
+    license: { type: 'free', sku: 'theme-stride' },
+    changelog: [{ version: '1.0.0', date: '2026-10-24', notes: ['Initial release — sports & sneakers theme on the shared section library.'] }],
+    load: THEME_LOADERS.stride,
+  },
 ];
 
 /** All catalog entries. */

@@ -1,0 +1,51 @@
+/*
+ * Stride — SHARED-PAGE SKIN. Cart, checkout, account, auth, search, wishlist, blog, policies, 404
+ * and the product-page shell render the default `.sf-*` library; Stride re-skins it in its own
+ * language (heavy uppercase display type, square corners, accent fills). Every rule is scoped to a
+ * page that contains `.st-root`, so nothing leaks if another theme is loaded in the same session
+ * (the editor previews several). Tokens only.
+ */
+body:has(.st-root) .sf-container { max-width: var(--container); padding-inline: var(--gutter); }
+body:has(.st-root) :is(.sf-page-head__title, .sf-section-head__title, .sf-heading, .sf-pdp__title) { font-family: var(--heading); font-weight: 700; font-style: var(--st-display-style, italic); text-transform: uppercase; letter-spacing: -0.02em; line-height: 1.02; }
+html[dir='rtl'] body:has(.st-root) :is(.sf-page-head__title, .sf-section-head__title, .sf-heading, .sf-pdp__title) { font-style: normal; text-transform: none; letter-spacing: 0; line-height: 1.25; }
+body:has(.st-root[data-case='normal']) :is(.sf-page-head__title, .sf-section-head__title, .sf-heading, .sf-pdp__title) { text-transform: none; }
+body:has(.st-root[data-slant='off']) :is(.sf-page-head__title, .sf-section-head__title, .sf-heading, .sf-pdp__title) { font-style: normal; }
+body:has(.st-root) .sf-pdp__title { font-size: var(--fs-3xl); }
+body:has(.st-root) .sf-eyebrow { color: var(--accent-ink); letter-spacing: var(--tracking-eyebrow); font-weight: 800; }
+
+/* Buttons: square, heavy, uppercase. Primary = theme primary; the PDP add-to-cart uses the accent. */
+body:has(.st-root) .sf-btn { min-height: 48px; padding-inline: var(--sp-6); border-width: 2px; border-radius: var(--radius); font-weight: 800; font-size: var(--fs-sm); letter-spacing: var(--tracking-caps); text-transform: uppercase; }
+html[dir='rtl'] body:has(.st-root) .sf-btn { letter-spacing: 0; text-transform: none; font-size: var(--fs-base); }
+body:has(.st-root) .sf-btn--lg { min-height: 56px; }
+body:has(.st-root) .sf-btn--primary { background: var(--primary); color: var(--on-primary); border-color: var(--primary); }
+body:has(.st-root) .sf-btn--primary:hover:not(:disabled) { filter: none; transform: translateY(-1px); }
+body:has(.st-root) .sf-btn--primary .sf-btn__label::after { display: none; }
+body:has(.st-root) .sf-btn--secondary { background: transparent; color: var(--text); border-color: var(--text); }
+body:has(.st-root) .sf-btn--secondary:hover:not(:disabled) { background: var(--text); color: var(--bg); }
+body:has(.st-root) .sf-btn--ghost { color: var(--text); }
+body:has(.st-root) :is(.sf-pdp__add, .sf-pdp__buy-now).sf-btn--primary { background: var(--st-accent-fill); border-color: var(--st-accent-fill); color: var(--st-on-accent); }
+body:has(.st-root) .sf-icon-btn { border-radius: var(--radius-sm); }
+body:has(.st-root) .sf-icon-btn:hover:not(:disabled) { background: var(--surface-2); }
+body:has(.st-root) .sf-link { color: var(--text); text-decoration-color: var(--st-accent-fill); text-decoration-thickness: 2px; text-underline-offset: 4px; }
+
+/* Fields */
+body:has(.st-root) :is(.sf-control, .sf-input, .sf-textarea, .sf-select) { border-radius: var(--radius); border-width: 2px; border-color: var(--border-strong); background: var(--surface); color: var(--text); }
+body:has(.st-root) :is(.sf-control, .sf-input, .sf-textarea, .sf-select):focus { border-color: var(--text); box-shadow: var(--shadow-focus); }
+body:has(.st-root) .sf-field__label { font-weight: 800; font-size: var(--fs-xs); letter-spacing: var(--tracking-caps); text-transform: uppercase; color: var(--text); }
+html[dir='rtl'] body:has(.st-root) .sf-field__label { letter-spacing: 0; text-transform: none; font-size: var(--fs-sm); }
+
+/* Surfaces */
+body:has(.st-root) :is(.sf-product-card, .sf-card, .sf-cat-card, .sf-review-card, .sf-blog-card, .sf-editorial-card, .sf-cart-page__line, .sf-order-card, .sf-address-card) { border-radius: var(--radius); background: var(--surface); }
+body:has(.st-root) .sf-badge { border-radius: var(--radius-sm); background: var(--st-accent-fill); color: var(--st-on-accent); font-weight: 800; }
+body:has(.st-root) :is(.sf-price--sale .sf-price__now, .sf-price--sale) { color: var(--sale); font-weight: 800; }
+body:has(.st-root) .sf-pdp__price { font-family: var(--heading); font-weight: 700; }
+body:has(.st-root) .sf-pdp__vendor { font-weight: 800; letter-spacing: var(--tracking-caps); text-transform: uppercase; color: var(--accent-ink); }
+body:has(.st-root) .sf-pdp__stock--low { color: var(--sale); font-weight: 800; }
+body:has(.st-root) .sf-tabs__tab[aria-selected='true'] { color: var(--text); border-color: var(--st-accent-fill); }
+body:has(.st-root) .sf-overlay__panel { border-radius: var(--radius); }
+body:has(.st-root) :is(.sf-overlay--drawer-end, .sf-overlay--drawer-start) .sf-overlay__panel { border-radius: 0; }
+body:has(.st-root) .sf-overlay__title { font-family: var(--heading); font-weight: 700; }
+body:has(.st-root) :is(.sf-empty, .sf-error, .sf-state) { border-radius: var(--radius); }
+body:has(.st-root) .sf-pagination__page[aria-current='page'] { background: var(--text); color: var(--bg); border-radius: var(--radius); }
+body:has(.st-root) .sf-stepper__step--active { color: var(--accent-ink); }
+body:has(.st-root) .sf-lang__btn[aria-pressed='true'] { background: var(--text); color: var(--bg); }

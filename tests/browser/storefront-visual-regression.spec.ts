@@ -1,6 +1,6 @@
 import { expect, test } from 'playwright/test';
 
-const themes = ['naseem', 'bazaar', 'sahra', 'fresh', 'techno'] as const;
+const themes = ['naseem', 'bazaar', 'sahra', 'fresh', 'techno', 'stride'] as const;
 
 for (const locale of ['en', 'ar'] as const) {
   for (const theme of themes) {

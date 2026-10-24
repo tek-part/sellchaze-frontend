@@ -113,6 +113,15 @@ export function sampleProductDetail(slug: string, themeId?: string, locale?: str
   if (themeId === 'elite-wallets') {
     return { ...base, images: base.image ? [base.image] : [], inStock: true, sku: `PREVIEW-${base.id}`, descriptionHtml: locale === 'ar' ? '<p>بيانات معاينة فقط. يضيف المتجر صور الإكسسوارات ووصفها وخياراتها الفعلية.</p>' : '<p>Preview content only. Each store supplies its actual accessory photographs, descriptions and options.</p>' };
   }
+  if (themeId === 'stride') {
+    const ar = locale === 'ar';
+    const sizes = base.sizes?.length ? base.sizes.slice(0, 3) : [];
+    const sizeKey = ar ? 'المقاس' : 'Size';
+    const stock = [6, 2, 0];
+    return { ...base, images: [base.image, base.hoverImage].filter((image): image is NonNullable<typeof image> => Boolean(image)), inStock: true, sku: `STRIDE-${base.id}`,
+      descriptionHtml: ar ? '<p>بيانات معاينة فقط. يضيف كل متجر صور منتجاته ووصفها وجدول المقاسات الفعلي.</p>' : '<p>Preview content only. Each store supplies its own product photographs, descriptions and size chart.</p>',
+      variants: sizes.map((size, i) => ({ id: `stride-${i}`, label: size, options: { [sizeKey]: size }, price: base.price, available: (stock[i] ?? 0) > 0, availableStock: stock[i] ?? 0 })) };
+  }
   if (themeId === 'hype-perfumes') {
     return { ...base, images: [base.image, base.hoverImage].filter((image): image is NonNullable<typeof image> => Boolean(image)), inStock: true, sku: `PREVIEW-${base.id}`, descriptionHtml: locale === 'ar' ? '<p>بيانات معاينة فقط. يضيف المتجر صور منتجاته ووصفها وخياراتها الفعلية.</p>' : '<p>Preview content only. Each store supplies its actual fragrance photographs, descriptions and options.</p>' };
   }
