@@ -10,7 +10,6 @@ import { HiOutlinePlus, HiOutlineEye, HiOutlinePencilSquare, HiOutlineTrash, HiO
 
 const errorText = (e) => Object.values(e.response?.data?.errors || {}).flat().join(' ') || e.response?.data?.message || e.message;
 const DEFAULTS = { sort: null, perPage: 25 };
-const NO_FILTERS = []; // the endpoint only supports search and sorting
 
 function CategoryImage({ url }) {
     const [failed, setFailed] = useState(false);
@@ -32,7 +31,7 @@ export default function StoreCategoriesPage() {
             render: (row) => <div className="ws-dt-cell-media"><CategoryImage key={row.image_url || 'empty'} url={row.image_url} /><div><Link className="ws-dt-title" to={`${uiBase}/categories/${row.id}/edit`}>{row.name}</Link>{row.slug ? <span className="ws-dt-sub" dir="ltr">/{row.slug}</span> : null}</div></div> },
         { key: 'visibility', header: text('الظهور', 'Visibility'), csv: (row) => (row.is_hidden ? 'hidden' : 'visible'),
             render: (row) => <span className={`ws-dt-badge ${row.is_hidden ? '' : 'is-success'}`}>{row.is_hidden ? text('مخفي', 'Hidden') : text('ظاهر', 'Visible')}</span> },
-        { key: 'products', header: text('المنتجات', 'Products'), align: 'end', csv: (row) => row.products_count ?? '', render: (row) => <span className="ws-dt-num">{row.products_count ?? '—'}</span> },
+        { key: 'products', header: text('المنتجات', 'Products'), align: 'end', sortKey: 'products_count', csv: (row) => row.products_count ?? '', render: (row) => <span className="ws-dt-num">{row.products_count ?? '—'}</span> },
         { key: 'children', header: text('أقسام فرعية', 'Subcategories'), align: 'end', csv: (row) => row.children_count || 0, render: (row) => <span className="ws-dt-num">{row.children_count || 0}</span> },
         { key: 'header', header: text('إظهار في الهيدر', 'Show in header'), sortKey: 'show_in_header', csv: (row) => (row.show_in_header ? 'yes' : 'no'),
             render: (row) => <span className={`ws-dt-badge ${row.show_in_header ? 'is-info' : ''}`}>{row.show_in_header ? text('نعم', 'Yes') : text('لا', 'No')}</span> },
@@ -45,7 +44,21 @@ export default function StoreCategoriesPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     ], [ar, uiBase, publicUrl, canEdit]);
 
-    const table = useIndexTable({ scope: `store:${store?.id ?? apiBase}:categories`, filters: NO_FILTERS, columns, defaults: DEFAULTS });
+    const filters = useMemo(() => [
+        { key: 'visibility', label: text('الظهور', 'Visibility'), type: 'select', options: [{ value: 'visible', label: text('ظاهر', 'Visible') }, { value: 'hidden', label: text('مخفي', 'Hidden') }] },
+        { key: 'in_header', label: text('إظهار في الهيدر', 'Show in header'), type: 'select', options: [{ value: 'yes', label: text('نعم', 'Yes') }, { value: 'no', label: text('لا', 'No') }] },
+        { key: 'level', label: text('المستوى', 'Level'), type: 'select', options: [{ value: 'top', label: text('أقسام رئيسية', 'Top level') }, { value: 'sub', label: text('أقسام فرعية', 'Subcategories') }] },
+        { key: 'products', label: text('المنتجات', 'Products'), type: 'select', options: [{ value: 'with', label: text('بها منتجات', 'With products') }, { value: 'without', label: text('فارغة', 'Empty') }] },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    ], [ar]);
+    const views = useMemo(() => [
+        { id: 'all', label: text('الكل', 'All'), state: { filters: {} } },
+        { id: 'visible', label: text('ظاهر', 'Visible'), state: { filters: { visibility: 'visible' } } },
+        { id: 'hidden', label: text('مخفي', 'Hidden'), state: { filters: { visibility: 'hidden' } } },
+        { id: 'empty', label: text('بدون منتجات', 'Empty'), state: { filters: { products: 'without' } } },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    ], [ar]);
+    const table = useIndexTable({ scope: `store:${store?.id ?? apiBase}:categories`, filters, columns, views, defaults: DEFAULTS });
     const paramsKey = JSON.stringify(table.apiParams);
     useEffect(() => {
         let active = true; setLoading(true); setError('');

@@ -139,6 +139,7 @@ export default function StorePagesPage() {
     const templateLabel = (template) => (template === 'landing' ? t('store_pages_template_landing', 'Landing page') : template === 'page' ? t('store_pages_template_page', 'Standard page') : template);
     const filters = useMemo(() => [
         { key: 'status', label: t('col_status', 'Status'), type: 'select', options: PAGE_STATUSES.map((status) => ({ value: status, label: statusLabel(status) })) },
+        { key: 'locale', label: t('store_pages_col_locale', 'Language'), type: 'select', options: [{ value: 'ar', label: 'العربية' }, { value: 'en', label: 'English' }] },
         { key: 'template', label: t('store_pages_field_template', 'Template'), type: 'multi', options: ['page', 'landing'].map((template) => ({ value: template, label: templateLabel(template) })) },
     ], [ar, t]); // eslint-disable-line react-hooks/exhaustive-deps
     const views = useMemo(() => [
@@ -165,14 +166,14 @@ export default function StorePagesPage() {
 
     const date = (value) => (value ? new Date(value).toLocaleDateString(ar ? 'ar-EG' : 'en-GB') : '—');
     const columns = useMemo(() => [
-        { key: 'page', header: t('col_page', 'Page'), hideable: false, primary: true, csv: (page) => page.title,
+        { key: 'page', header: t('col_page', 'Page'), hideable: false, primary: true, sortKey: 'title', csv: (page) => page.title,
             render: (page) => <Link className="ws-dt-title" to={`${uiBase}/pages/${page.id}/builder`}>{page.title}</Link> },
         { key: 'path', header: t('col_path', 'Path'), csv: (page) => `/${page.slug}`, render: (page) => <span className="font-mono text-xs" dir="ltr">/{page.slug}</span> },
         { key: 'locale', header: t('store_pages_col_locale', 'Language'), csv: (page) => page.locale ?? '', render: (page) => <span className="uppercase">{page.locale || '—'}</span> },
         { key: 'template', header: t('store_pages_field_template', 'Template'), defaultHidden: true, csv: (page) => page.template ?? '', render: (page) => templateLabel(page.template) || '—' },
         { key: 'status', header: t('col_status', 'Status'), csv: (page) => page.status,
             render: (page) => <span className={`ws-dt-badge ${STATUS_TONE[page.status] ?? ''}`}>{statusLabel(page.status)}</span> },
-        { key: 'published', header: text('تاريخ النشر', 'Published'), defaultHidden: true, csv: (page) => page.published_at ?? page.publish_at ?? '', render: (page) => <span className="ws-dt-num">{date(page.published_at ?? page.publish_at)}</span> },
+        { key: 'published', header: text('تاريخ النشر', 'Published'), defaultHidden: true, sortKey: 'published_at', csv: (page) => page.published_at ?? page.publish_at ?? '', render: (page) => <span className="ws-dt-num">{date(page.published_at ?? page.publish_at)}</span> },
         { key: 'actions', header: <span className="sr-only">{t('col_actions', 'Actions')}</span>, hideable: false, align: 'end',
             render: (page) => <div className="ws-dt-row-actions">
                 <Link to={`${uiBase}/pages/${page.id}/builder`} className="ws-dt-button">{t('store_pages_open_builder', 'Open builder')}</Link>
@@ -278,7 +279,7 @@ export default function StorePagesPage() {
                     </div>
                 ) : null}
                 <div className="ws-dt-card">
-                    <IndexFilters table={table} searchable={false} exportDisabled={!customPages.length}
+                    <IndexFilters table={table} searchPlaceholder={text('ابحث بالعنوان أو الرابط', 'Search title or path')} exportDisabled={!customPages.length}
                         onExport={() => downloadCsv(`pages-${new Date().toISOString().slice(0, 10)}.csv`, table.visibleColumns, customPages)} />
                     <IndexTable table={table} rows={customPages} loading={loadingCustom} error={customErr} onRetry={() => setReload((value) => value + 1)} meta={result?.meta}
                         label={t('store_pages_custom_title', 'Custom pages')} rowHref={(page) => `${uiBase}/pages/${page.id}/builder`}

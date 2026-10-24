@@ -64,16 +64,29 @@ export default function AdminUsersPage() {
     const rolesText = (u) => (Array.isArray(u.roles) && u.roles.length > 0 ? u.roles.join(', ') : '—');
     const statusText = (u) => (pendingTab ? t('admin_users_badge_pending') : u.is_active !== false ? t('status_active') : t('status_inactive'));
 
+    const [roleNames, setRoleNames] = useState([]);
+    useEffect(() => {
+        let active = true;
+        api.get('/admin/roles').then(({ data }) => { if (active) setRoleNames((data.roles ?? []).map((role) => String(role.name ?? '')).filter((name) => name && name !== 'Merchant')); }).catch(() => {});
+        return () => { active = false; };
+    }, []);
     const filters = useMemo(() => [
+        ...(pendingTab ? [] : [
+            { key: 'status', label: t('col_status'), type: 'select', options: [{ value: 'active', label: t('status_active') }, { value: 'inactive', label: t('status_inactive') }] },
+            ...(roleNames.length ? [{ key: 'role', label: t('roles'), type: 'select', options: roleNames.map((name) => ({ value: name, label: name })) }] : []),
+        ]),
         { key: 'created', param: 'date', label: t('col_created'), type: 'date-range' },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    ], [i18n.language]);
+    ], [i18n.language, pendingTab, roleNames]);
+    const views = useMemo(() => [
+        { id: 'all', label: t('filter_all'), state: { filters: {} } },
+        ...(pendingTab ? [] : [{ id: 'inactive', label: t('status_inactive'), state: { filters: { status: 'inactive' } } }]),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    const views = useMemo(() => [{ id: 'all', label: t('filter_all'), state: { filters: {} } }], [i18n.language]);
+    ], [i18n.language, pendingTab]);
     const columns = useMemo(() => [
-        { key: 'name', header: t('col_name'), hideable: false, primary: true, csv: (u) => u.name,
+        { key: 'name', header: t('col_name'), hideable: false, primary: true, sortKey: 'name', csv: (u) => u.name,
             render: (u) => <Link className="ws-dt-title" to={`/admin/users/${u.id}`}>{u.name}</Link> },
-        { key: 'email', header: t('email'), csv: (u) => u.email, render: (u) => <span dir="ltr">{u.email}</span> },
+        { key: 'email', header: t('email'), sortKey: 'email', csv: (u) => u.email, render: (u) => <span dir="ltr">{u.email}</span> },
         { key: 'roles', header: pendingTab ? t('admin_users_col_requested_role') : t('roles'), csv: (u) => (pendingTab ? u.registration_role || '' : Array.isArray(u.roles) ? u.roles.join(', ') : ''),
             render: (u) => (pendingTab ? u.registration_role || '—' : <span className="inline-flex flex-wrap items-center gap-1.5">
                 {u.pending_approval ? <span className="ws-dt-badge is-warning">{t('admin_users_badge_pending')}</span> : null}
@@ -81,7 +94,7 @@ export default function AdminUsersPage() {
             </span>) },
         { key: 'status', header: t('col_status'), csv: statusText,
             render: (u) => <span className={`ws-dt-badge ${pendingTab ? 'is-warning' : u.is_active !== false ? 'is-success' : ''}`}>{statusText(u)}</span> },
-        { key: 'created', header: t('col_created'), defaultHidden: true, csv: (u) => u.created_at ?? '',
+        { key: 'created', header: t('col_created'), defaultHidden: true, sortKey: 'created_at', csv: (u) => u.created_at ?? '',
             render: (u) => <span className="ws-dt-num">{u.created_at ? new Date(u.created_at).toLocaleDateString() : '—'}</span> },
         { key: 'actions', header: <span className="sr-only">{t('col_actions')}</span>, hideable: false, align: 'end',
             render: (u) => {

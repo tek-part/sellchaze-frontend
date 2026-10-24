@@ -10,8 +10,7 @@ const button = 'rounded-lg border border-slate-200 px-3 py-2 text-sm font-semibo
 const field = 'w-full rounded-lg border border-slate-200 px-3 py-2 text-sm';
 const errorText = (e) => Object.values(e.response?.data?.errors || {}).flat().join(' ') || e.response?.data?.message || e.message;
 // The inventory endpoint pages 20 products at a time and only supports a name search.
-const DEFAULTS = { sort: null, perPage: 20, perPageOptions: [20] };
-const NO_FILTERS = [];
+const DEFAULTS = { sort: null, perPage: 20, perPageOptions: [20, 50, 100] };
 const available = (stock) => Math.max(0, stock.stock_quantity - stock.reserved_quantity);
 
 export default function StoreInventoryPage() {
@@ -34,11 +33,11 @@ export default function StoreInventoryPage() {
     const openEdit = (product, stock) => { setSaved(false); setError(''); setEdit({ productId: product.id, variantId: product.variants.length ? stock.id : null, name: `${product.name}${product.variants.length ? ` — ${stock.name}` : ''}`, tracking: stock.track_inventory, quantity: stock.stock_quantity, original: stock, note: '' }); };
 
     const columns = useMemo(() => [
-        { key: 'item', header: text('المنتج / الخيار', 'Product / option'), hideable: false, primary: true,
+        { key: 'item', header: text('المنتج / الخيار', 'Product / option'), hideable: false, primary: true, sortKey: 'name',
             csv: (row) => (row.variant ? `${row.product.name} — ${row.stock.name}` : row.product.name),
             render: ({ product, stock, variant }) => <div><Link className="ws-dt-title" to={`${uiBase}/products/${product.id}/edit`}>{product.name}</Link>{variant ? <span className="ws-dt-sub">{stock.name}</span> : null}{stock.sku ? <span className="ws-dt-sub" dir="ltr">{stock.sku}</span> : null}</div> },
         { key: 'sku', header: 'SKU', defaultHidden: true, csv: (row) => row.stock.sku ?? '', render: (row) => <span dir="ltr">{row.stock.sku || '—'}</span> },
-        { key: 'on_hand', header: text('الفعلية', 'On hand'), align: 'end', csv: (row) => row.stock.stock_quantity, render: (row) => <span className="ws-dt-num">{row.stock.stock_quantity}</span> },
+        { key: 'on_hand', header: text('الفعلية', 'On hand'), align: 'end', sortKey: 'stock_quantity', csv: (row) => row.stock.stock_quantity, render: (row) => <span className="ws-dt-num">{row.stock.stock_quantity}</span> },
         { key: 'reserved', header: text('المحجوزة', 'Reserved'), align: 'end', csv: (row) => row.stock.reserved_quantity, render: (row) => <span className="ws-dt-num">{row.stock.reserved_quantity}</span> },
         { key: 'available', header: text('المتاحة', 'Available'), align: 'end', csv: (row) => (row.stock.track_inventory ? available(row.stock) : 'untracked'),
             render: ({ stock }) => {
@@ -54,7 +53,17 @@ export default function StoreInventoryPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     ], [ar, uiBase, canEdit, apiBase]);
 
-    const table = useIndexTable({ scope: `store:${store?.id ?? apiBase}:inventory`, filters: NO_FILTERS, columns, defaults: DEFAULTS });
+    const filters = useMemo(() => [
+        { key: 'stock', label: text('المخزون', 'Inventory'), type: 'select', options: [{ value: 'in_stock', label: text('متوفر', 'In stock') }, { value: 'low', label: text('مخزون منخفض', 'Low stock') }, { value: 'out_of_stock', label: text('نفد المخزون', 'Out of stock') }, { value: 'untracked', label: text('غير متتبع', 'Not tracked') }] },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    ], [ar]);
+    const views = useMemo(() => [
+        { id: 'all', label: text('الكل', 'All'), state: { filters: {} } },
+        { id: 'low', label: text('مخزون منخفض', 'Low stock'), state: { filters: { stock: 'low' } } },
+        { id: 'out', label: text('نفد المخزون', 'Out of stock'), state: { filters: { stock: 'out_of_stock' } } },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    ], [ar]);
+    const table = useIndexTable({ scope: `store:${store?.id ?? apiBase}:inventory`, filters, columns, views, defaults: DEFAULTS });
     const paramsKey = JSON.stringify(table.apiParams);
     useEffect(() => {
         let active = true; setLoading(true); setLoadError('');

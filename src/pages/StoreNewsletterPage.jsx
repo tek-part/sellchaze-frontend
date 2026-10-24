@@ -24,7 +24,11 @@ function Subscribers({ apiBase }) {
     const date = (value) => (value ? new Date(value.replace(' ', 'T') + (/Z|[+-]\d\d:\d\d$/.test(value) ? '' : 'Z')).toLocaleString(ar ? 'ar-EG' : 'en-GB') : '—');
 
     const channels = useMemo(() => [{ value: 'email', label: text('البريد الإلكتروني', 'Email') }, { value: 'phone', label: text('الهاتف', 'Phone') }], [ar]); // eslint-disable-line react-hooks/exhaustive-deps
-    const filters = useMemo(() => [{ key: 'channel', label: text('طريقة الاشتراك', 'Subscription channel'), type: 'select', options: channels }], [ar, channels]); // eslint-disable-line react-hooks/exhaustive-deps
+    const filters = useMemo(() => [
+        { key: 'channel', label: text('طريقة الاشتراك', 'Subscription channel'), type: 'select', options: channels },
+        { key: 'status', label: text('الحالة', 'Status'), type: 'select', options: [{ value: 'active', label: text('نشط', 'Active') }, { value: 'inactive', label: text('ألغى الاشتراك', 'Unsubscribed') }] },
+        { key: 'created', label: text('تاريخ الاشتراك', 'Subscribed at'), type: 'date-range' },
+    ], [ar, channels]); // eslint-disable-line react-hooks/exhaustive-deps
     const views = useMemo(() => [
         { id: 'all', label: text('الكل', 'All'), state: { filters: {} } },
         { id: 'email', label: text('البريد الإلكتروني', 'Email'), state: { filters: { channel: 'email' } } },
@@ -34,12 +38,12 @@ function Subscribers({ apiBase }) {
         { key: 'subscriber', header: text('المشترك', 'Subscriber'), hideable: false, primary: true, csv: (row) => row.name || row.email || row.phone || '',
             render: (row) => <div><span className="ws-dt-title" dir={row.name ? undefined : 'ltr'}>{row.name || row.email || row.phone || '—'}</span>{row.name && (row.email || row.phone) ? <span className="ws-dt-sub" dir="ltr">{row.email || row.phone}</span> : null}</div> },
         { key: 'name', header: text('الاسم', 'Name'), defaultHidden: true, csv: (row) => row.name ?? '', render: (row) => row.name || '—' },
-        { key: 'phone', header: text('الهاتف', 'Phone'), csv: (row) => row.phone ?? '', render: (row) => <span dir="ltr">{row.phone || '—'}</span> },
-        { key: 'email', header: text('البريد الإلكتروني', 'Email'), csv: (row) => row.email ?? '', render: (row) => row.email || '—' },
+        { key: 'phone', header: text('الهاتف', 'Phone'), sortKey: 'phone', csv: (row) => row.phone ?? '', render: (row) => <span dir="ltr">{row.phone || '—'}</span> },
+        { key: 'email', header: text('البريد الإلكتروني', 'Email'), sortKey: 'email', csv: (row) => row.email ?? '', render: (row) => row.email || '—' },
         { key: 'channel', header: text('طريقة الاشتراك', 'Channel'), csv: (row) => row.channel, render: (row) => channels.find((item) => item.value === row.channel)?.label ?? row.channel },
         { key: 'status', header: text('الحالة', 'Status'), csv: (row) => (Number(row.is_active) ? 'active' : 'inactive'),
             render: (row) => <span className={`ws-dt-badge ${Number(row.is_active) ? 'is-success' : ''}`}>{Number(row.is_active) ? text('نشط', 'Active') : text('غير نشط', 'Inactive')}</span> },
-        { key: 'created', header: text('تاريخ الاشتراك', 'Subscribed at'), csv: (row) => row.created_at ?? '', render: (row) => <span className="ws-dt-num">{date(row.created_at)}</span> },
+        { key: 'created', header: text('تاريخ الاشتراك', 'Subscribed at'), sortKey: 'created_at', csv: (row) => row.created_at ?? '', render: (row) => <span className="ws-dt-num">{date(row.created_at)}</span> },
     ], [ar, channels]); // eslint-disable-line react-hooks/exhaustive-deps
 
     const table = useIndexTable({ scope: `store:${store?.id ?? apiBase}:newsletter`, filters, columns, views, defaults: DEFAULTS });

@@ -16,8 +16,7 @@ export default function StoreAbTestsPage() {
     return <AbTests key={context.apiBase} context={context} />;
 }
 // The A/B tests endpoint pages 20 tests at a time (newest first) without search, filters, sorting or a total.
-const DEFAULTS = { sort: null, perPage: 20, perPageOptions: [20] };
-const NO_FILTERS = [];
+const DEFAULTS = { sort: null, perPage: 20, perPageOptions: [20, 50, 100] };
 function AbTests({ context: { apiBase, uiBase, access, store } }) {
     const { i18n } = useTranslation(); const ar = i18n.language.startsWith('ar'); const text = (a, e) => ar ? a : e;
     const [result, setResult] = useState(null); const [origin, setOrigin] = useState('');
@@ -34,7 +33,7 @@ function AbTests({ context: { apiBase, uiBase, access, store } }) {
         finally { if (mounted.current && request === operation.current) setBusy(false); }
     };
     const columns = useMemo(() => [
-        { key: 'name', header: text('الاسم', 'Name'), hideable: false, primary: true, csv: (row) => row.name, render: (row) => <span className="ws-dt-title">{row.name}</span> },
+        { key: 'name', header: text('الاسم', 'Name'), hideable: false, primary: true, sortKey: 'name', csv: (row) => row.name, render: (row) => <span className="ws-dt-title">{row.name}</span> },
         { key: 'status', header: text('الحالة', 'Status'), csv: (row) => (row.active ? 'active' : 'inactive'),
             render: (row) => <span className={`ws-dt-badge ${row.active ? 'is-success' : ''}`}>{row.active ? text('نشط', 'Active') : text('غير نشط', 'Inactive')}</span> },
         { key: 'link', header: text('الرابط', 'Link'), csv: (row) => `${origin}/ab/${row.slug}`, render: (row) => <a dir="ltr" href={`${origin}/ab/${row.slug}`} target="_blank" rel="noreferrer">/ab/{row.slug}</a> },
@@ -42,14 +41,26 @@ function AbTests({ context: { apiBase, uiBase, access, store } }) {
             render: (row) => <div className="ws-dt-row-actions"><button type="button" className="ws-dt-button" disabled={busy} onClick={() => open(row, false)}>{text('النتائج', 'Results')}</button><button type="button" className="ws-dt-button" disabled={busy} onClick={() => open(row, true)}>{text('تعديل', 'Edit')}</button><button type="button" className="ws-dt-button" disabled={busy} onClick={() => setDeleting(row)}>{text('حذف', 'Delete')}</button></div> },
     // eslint-disable-next-line react-hooks/exhaustive-deps
     ], [ar, origin, busy, apiBase]);
-    const table = useIndexTable({ scope: `store:${store?.id ?? apiBase}:ab-tests`, filters: NO_FILTERS, columns, defaults: DEFAULTS, savedViews: false });
+    const filters = useMemo(() => [
+        { key: 'status', label: text('الحالة', 'Status'), type: 'select', options: [{ value: 'active', label: text('نشط', 'Active') }, { value: 'paused', label: text('غير نشط', 'Inactive') }] },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    ], [ar]);
+    const views = useMemo(() => [
+        { id: 'all', label: text('الكل', 'All'), state: { filters: {} } },
+        { id: 'active', label: text('نشط', 'Active'), state: { filters: { status: 'active' } } },
+        { id: 'paused', label: text('غير نشط', 'Inactive'), state: { filters: { status: 'paused' } } },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    ], [ar]);
+    const table = useIndexTable({ scope: `store:${store?.id ?? apiBase}:ab-tests`, filters, columns, views, defaults: DEFAULTS });
     const page = table.state.page;
+    const paramsKey = JSON.stringify(table.apiParams);
     useEffect(() => {
         if (!access.canStoreProducts) return;
         let active = true; setLoading(true); setLoadError('');
-        api.get(`${apiBase}/ab-tests`, { params: { page } }).then(({ data }) => { if (active) { setResult(data); setOrigin(data.storefront_url.replace(/\/$/, '')); } }).catch((e) => { if (active) setLoadError(failureText(e)); }).finally(() => { if (active) setLoading(false); });
+        api.get(`${apiBase}/ab-tests`, { params: table.apiParams }).then(({ data }) => { if (active) { setResult(data); setOrigin(data.storefront_url.replace(/\/$/, '')); } }).catch((e) => { if (active) setLoadError(failureText(e)); }).finally(() => { if (active) setLoading(false); });
         return () => { active = false; };
-    }, [apiBase, access.canStoreProducts, page, reload]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [apiBase, access.canStoreProducts, paramsKey, reload]);
     if (!access.canStoreProducts) return <Navigate to={`${uiBase}/overview`} replace />;
     const rows = result?.data ?? [];
     const startOver = () => { if (page > 1) table.setPage(1); setReload((n) => n + 1); };
@@ -58,7 +69,7 @@ function AbTests({ context: { apiBase, uiBase, access, store } }) {
         {error && !detail && !deleting ? <div role="alert" className="ws-catalog-error">{error}</div> : null}
         {notice ? <p role="status">{notice}</p> : null}
         <div className="ws-dt-card">
-            <IndexFilters table={table} searchable={false} showViews={false} exportDisabled={!rows.length}
+            <IndexFilters table={table} searchPlaceholder={text('ابحث باسم الاختبار', 'Search tests')} exportDisabled={!rows.length}
                 onExport={() => downloadCsv(`ab-tests-${new Date().toISOString().slice(0, 10)}.csv`, table.visibleColumns, rows)} />
             <IndexTable table={table} rows={rows} loading={loading} error={loadError} onRetry={() => setReload((n) => n + 1)} meta={result?.meta}
                 label={text('اختبارات A/B', 'A/B Tests')} emptyState={{ title: text('لا يوجد A/b tests حتي الان', 'No A/b tests yet'), description: text('أنشئ اختبارًا لتوزيع زوار رابط واحد على عدة منتجات ومقارنة طلباتها.', 'Create a test to split the visitors of one link across products and compare their orders.') }} />
