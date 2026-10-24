@@ -316,7 +316,7 @@
 .mai-room__media { position: absolute; inset: 0; z-index: -1; }
 .mai-room__img { inline-size: 100%; block-size: 100%; object-fit: cover; transition: transform var(--transition-slow) var(--ease); }
 .mai-room__link:hover .mai-room__img { transform: scale(1.04); }
-.mai-room.has-image .mai-room__link { color: var(--mai-on-image); }
+.mai-room.has-image .mai-room__link { color: var(--mai-on-image); background: color-mix(in srgb, var(--text) 86%, var(--surface)); } /* dark backing keeps the light title readable even if the photo fails to load */
 .mai-room.has-image .mai-room__media::after { content: ''; position: absolute; inset: 0; background: linear-gradient(to top, var(--mai-image-scrim), transparent 66%); }
 .mai-room.is-art .mai-room__media { display: grid; place-items: start center; padding-block-start: 9%; color: var(--accent-ink); background: color-mix(in srgb, var(--accent) 36%, var(--surface)); }
 .mai-room--bedroom.is-art .mai-room__media { background: color-mix(in srgb, var(--info) 14%, var(--surface)); color: color-mix(in srgb, var(--info) 70%, var(--text)); }

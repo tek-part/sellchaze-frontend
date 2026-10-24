@@ -115,7 +115,7 @@ export function GlProductCard(props: GlProductCardProps): ReactElement {
           <p className="gl-card__meta">
             {size ? <span className="gl-card__size"><span className="lib-sr-only">{glText(locale, 'size')}: </span>{size}</span> : null}
             {ratings ? (
-              <span className="gl-card__rating" aria-label={glText(locale, 'ratingLabel', { r: formatRating(product.rating!, locale) })}>
+              <span className="gl-card__rating" role="img" aria-label={glText(locale, 'ratingLabel', { r: formatRating(product.rating!, locale) })}>
                 <span aria-hidden className="gl-card__star">★</span>
                 <span aria-hidden>{formatRating(product.rating!, locale)}</span>
                 {product.reviewCount ? <span aria-hidden className="gl-card__count">({formatCount(product.reviewCount, locale)})</span> : null}
