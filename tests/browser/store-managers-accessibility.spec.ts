@@ -99,13 +99,21 @@ for (const locale of ['ar', 'en'] as const) for (const width of [320, 390, 900])
     const start = await page.evaluate(() => window.scrollY);
     await page.mouse.wheel(0, 500);
     await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThanOrEqual(start + 499);
-    const anchor = page.locator('.ws-login-table tbody tr').first();
+    // Session rows are cards on phones and rewrap at a new width, so measure the element the browser
+    // keeps in place (scroll anchoring: the first fully visible row, or the first fully visible cell
+    // of a row cut by the top edge) instead of a row that is scrolled out of view.
+    const anchor = await page.evaluateHandle(() => {
+      const rows = [...document.querySelectorAll('.ws-login-table tbody tr')];
+      const row = rows.find(item => item.getBoundingClientRect().bottom > 0) ?? rows[0]!;
+      return row.getBoundingClientRect().top >= 0 ? row : [...row.children].find(cell => cell.getBoundingClientRect().top >= 0) ?? row;
+    });
     const before = await anchor.evaluate(element => element.getBoundingClientRect().top);
     await page.setViewportSize({ width: 390, height: 844 });
     await selectedSettingsVisible(page);
     // Browser scroll anchoring may change scrollY when text wraps at the new width.
     // The content stays at the same visible position; revealing the menu must not reset it.
-    await expect.poll(() => anchor.evaluate((element, top) => Math.abs(element.getBoundingClientRect().top - top), before)).toBeLessThanOrEqual(1);
+    // Rewrapped cards move by fractional pixels while scroll offsets snap to whole ones, hence 2px.
+    await expect.poll(() => anchor.evaluate((element, top) => Math.abs(element.getBoundingClientRect().top - top), before)).toBeLessThanOrEqual(2);
     expect(await page.evaluate(() => window.scrollY)).toBeGreaterThan(200);
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)).toBe(true);
     expect(api.mutations).toEqual([]);
@@ -207,7 +215,7 @@ for (const locale of ['ar', 'en'] as const) for (const width of [1920, 390, 320]
     await products.focus(); await page.keyboard.press('Enter');
     await expect(orders).toHaveAttribute('aria-expanded', 'true');
     await expect(products).toHaveAttribute('aria-expanded', 'true');
-    await expect(sidebar.locator('nav>div').first()).toHaveCSS('height', '711px');
+    await expect(sidebar.locator('nav>div').first()).toHaveCSS('height', '742px');
     const geometry = await sidebar.evaluate(element => {
       const scroll = element.querySelector('.ws-sidebar-scroll')!;
       const groups = Array.from(element.querySelectorAll('nav>div'));
@@ -224,7 +232,7 @@ for (const locale of ['ar', 'en'] as const) for (const width of [1920, 390, 320]
     });
     expect(geometry.firstMenuInset).toBe(48);
     expect(geometry.community).toBe(true);
-    expect(geometry.groups.map(group => group.height)).toEqual([711, 204]);
+    expect(geometry.groups.map(group => group.height)).toEqual([742, 204]);
     for (const group of geometry.groups) expect(group).toMatchObject({ paddingBottom: '4px', labelHeight: 28, labelInset: 12, labelPadding: '0px 8px', letterSpacing: '0.66px', textTransform: 'uppercase' });
     const newsletter = sidebar.locator('a[href="/store/newsletter"]');
     await expect(newsletter.locator('.ws-nav-badge')).toHaveCount(0);
@@ -356,7 +364,7 @@ for (const width of [1440, 320]) {
 }
 
 for (const locale of ['ar', 'en'] as const) for (const width of [320, 390, 1440]) {
-  test(`Session fields remain readable and keyboard-scrollable in ${locale} at ${width}px`, async ({ page }) => {
+  test(`Session fields remain readable and keyboard-operable in ${locale} at ${width}px`, async ({ page }) => {
     const api = await workspace(page, locale, false, width === 320 ? 'dark' : 'light', true);
     await page.setViewportSize({ width, height: 844 });
     await page.goto('/store/settings/login-sessions');
@@ -368,36 +376,53 @@ for (const locale of ['ar', 'en'] as const) for (const width of [320, 390, 1440]
       const row = table.querySelectorAll('tbody tr')[1]!;
       const ip = row.children[1] as HTMLElement;
       const range = document.createRange(); range.selectNodeContents(ip);
+      const cell = ip.getBoundingClientRect(); const content = range.getBoundingClientRect();
+      const bounds = element.getBoundingClientRect(); const card = row.getBoundingClientRect();
       return {
         table: table.getBoundingClientRect().width, region: element.clientWidth, overflow: element.scrollWidth > element.clientWidth,
         headings: [...table.querySelectorAll('thead th')].map(cell => cell.getBoundingClientRect().height),
-        ip: { content: range.getBoundingClientRect().width, available: ip.clientWidth - parseFloat(getComputedStyle(ip).paddingLeft) - parseFloat(getComputedStyle(ip).paddingRight), height: range.getBoundingClientRect().height },
-        email: row.children[3]!.getBoundingClientRect().width, row: row.getBoundingClientRect().height,
+        ip: { content: content.width, available: ip.clientWidth - parseFloat(getComputedStyle(ip).paddingLeft) - parseFloat(getComputedStyle(ip).paddingRight), height: content.height, inside: content.left >= cell.left - 1 && content.right <= cell.right + 1 },
+        email: row.children[3]!.getBoundingClientRect().width, row: card.height,
+        rowInside: card.left >= bounds.left - 1 && card.right <= bounds.right + 1,
       };
     });
-    expect(geometry.table).toBeGreaterThanOrEqual(1000);
-    expect(geometry.overflow).toBe(true);
-    expect(geometry.headings.every(height => height < 60)).toBe(true);
-    expect(geometry.ip.content).toBeLessThanOrEqual(geometry.ip.available + 1);
-    expect(geometry.ip.height).toBeLessThan(30);
-    expect(geometry.email).toBeGreaterThanOrEqual(240);
-    expect(geometry.row).toBeLessThan(160);
+    if (width >= 768) {
+      // Desktop keeps the wide session table and scrolls it inside the focusable region.
+      expect(geometry.table).toBeGreaterThanOrEqual(1000);
+      expect(geometry.overflow).toBe(true);
+      expect(geometry.headings.every(height => height < 60)).toBe(true);
+      expect(geometry.ip.content).toBeLessThanOrEqual(geometry.ip.available + 1);
+      expect(geometry.ip.height).toBeLessThan(30);
+      expect(geometry.email).toBeGreaterThanOrEqual(240);
+      expect(geometry.row).toBeLessThan(160);
+    } else {
+      // Phones show each session as a card (shared index table): nothing scrolls sideways and
+      // long IPs and emails wrap inside their card instead of overflowing it.
+      expect(geometry.overflow).toBe(false);
+      expect(geometry.ip.inside).toBe(true);
+      expect(geometry.rowInside).toBe(true);
+      expect(geometry.row).toBeLessThan(520);
+    }
     await expect(page.getByRole('region', { name: locale === 'ar' ? 'جدول جلسات الدخول' : 'Login sessions table', exact: true })).toBeVisible();
     await expect(table).toHaveAccessibleName(locale === 'ar' ? 'الأجهزة المسجّلة في حسابك' : 'Devices signed in to your account');
     await region.focus(); await expect(region).toBeFocused();
-    await page.keyboard.press(locale === 'ar' ? 'ArrowLeft' : 'ArrowRight');
-    await expect.poll(() => region.evaluate(element => Math.abs(element.scrollLeft))).toBeGreaterThan(1);
+    if (width >= 768) {
+      await page.keyboard.press(locale === 'ar' ? 'ArrowLeft' : 'ArrowRight');
+      await expect.poll(() => region.evaluate(element => Math.abs(element.scrollLeft))).toBeGreaterThan(1);
+    }
     const current = table.getByRole('checkbox', { name: locale === 'ar' ? 'الجلسة الحالية' : 'Current session', exact: true });
     await expect(current).toBeDisabled();
-    const all = table.getByRole('checkbox', { name: locale === 'ar' ? 'تحديد الجلسات الأخرى' : 'Select other sessions', exact: true });
+    // The select-all checkbox lives in the table header on desktop and in the card toolbar on phones.
+    const all = page.getByRole('checkbox', { name: locale === 'ar' ? 'تحديد الجلسات الأخرى' : 'Select other sessions', exact: true });
     await all.check();
     await expect(table.locator('tbody input:checked')).toHaveCount(2);
     await expect(current).not.toBeChecked();
     await page.setViewportSize({ width: width === 1440 ? 390 : 1440, height: 844 });
     await expect(table.locator('tbody input:checked')).toHaveCount(2);
+    await expect(all).toBeChecked();
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)).toBe(true);
-    const results = await new AxeBuilder({ page }).include('.ws-login-table').withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']).analyze();
-    expect(results.violations.filter(v => ['serious', 'critical'].includes(v.impact ?? ''))).toEqual([]);
+    const results = await new AxeBuilder({ page }).include('.ws-login-card').withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']).analyze();
+    expect(results.violations.filter(v => ['serious', 'critical'].includes(v.impact ?? '')), results.violations.map(v => `${v.id}: ${v.help}`).join('\n')).toEqual([]);
     expect(api.mutations).toEqual([]);
   });
 }

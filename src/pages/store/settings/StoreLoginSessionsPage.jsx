@@ -1,11 +1,16 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import api from '../../../api/client';
 import useStoreContext from '../../../hooks/useStoreContext';
 import MerchantSettingsHeading from '../../../components/store/MerchantSettingsHeading';
+import { IndexTable, useIndexTable } from '../../../components/data-table';
+import { HiOutlineArrowDownTray, HiOutlineComputerDesktop, HiOutlineTrash } from '../../../components/workspace/WorkspaceIcons';
 import { loginSessionsCsv } from '../../../lib/loginSessionsCsv';
 import './merchant-device-settings.css';
+
+const NO_FILTERS = [];
+const NO_VIEWS = [];
 
 export default function StoreLoginSessionsPage() {
     const context = useStoreContext();
@@ -20,6 +25,7 @@ function Sessions({ context }) {
     const [selected, setSelected] = useState([]);
     const [loading, setLoading] = useState(true);
     const [busy, setBusy] = useState(false);
+    const [loadError, setLoadError] = useState('');
     const [error, setError] = useState('');
     const [reload, setReload] = useState(0);
     const [saved, setSaved] = useState(false);
@@ -28,12 +34,30 @@ function Sessions({ context }) {
     useEffect(() => {
         if (!allowed) return;
         let active = true;
-        setLoading(true); setError('');
+        setLoading(true); setLoadError(''); setError('');
         api.get('/auth/sessions').then(({ data }) => { if (active) { setRows(data.data); setSelected([]); } })
-            .catch((failure) => { if (active) setError(failure.response?.data?.message || failure.message); })
+            .catch((failure) => { if (active) setLoadError(failure.response?.data?.message || failure.message); })
             .finally(() => { if (active) setLoading(false); });
         return () => { active = false; };
     }, [allowed, reload]);
+
+    // The current device can never be revoked here, so it is never selectable.
+    const selectable = rows.filter((row) => !row.current).map((row) => row.id);
+    const allSelected = Boolean(selectable.length && selectable.every((id) => selected.includes(id)));
+    const selectAll = (checked) => setSelected(checked ? selectable : []);
+    const selectAllLabel = text('تحديد الجلسات الأخرى', 'Select other sessions');
+    const columns = useMemo(() => [
+        { key: 'select', hideable: false, width: 48,
+            header: <input type="checkbox" className="ws-login-check" aria-label={selectAllLabel} disabled={busy || !selectable.length} checked={allSelected} onChange={(event) => selectAll(event.target.checked)} />,
+            render: (row) => <input type="checkbox" className="ws-login-check" disabled={busy || row.current} checked={selected.includes(row.id)} aria-label={row.current ? text('الجلسة الحالية', 'Current session') : `${text('تحديد الجلسة', 'Select session')} ${row.device_name || row.created_at}`} onChange={(event) => setSelected((current) => event.target.checked ? [...current, row.id] : current.filter((id) => id !== row.id))} /> },
+        { key: 'ip', header: 'IP', render: (row) => <span className="ws-login-ip" dir="ltr">{row.ip_address || '—'}</span> },
+        { key: 'device', header: 'Device Info', render: (row) => <span className="ws-login-device"><span>{row.device_name || row.user_agent || '—'}</span>{row.current ? <span className="ws-dt-badge is-info">{text('الجهاز الحالي', 'Current device')}</span> : null}</span> },
+        { key: 'email', header: 'Email', render: (row) => <span className="ws-login-email" dir="ltr">{row.email || '—'}</span> },
+        { key: 'created', header: text('تاريخ الانشاء', 'Created at'), render: (row) => <span className="ws-dt-num">{row.created_at ? new Date(row.created_at).toLocaleString(ar ? 'ar-EG' : 'en-US') : '—'}</span> },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    ], [ar, busy, rows, selected]);
+    const table = useIndexTable({ scope: `store:${context.store?.id ?? context.apiBase}:login-sessions`, filters: NO_FILTERS, columns, views: NO_VIEWS, savedViews: false });
+
     if (!allowed) return <Navigate to={`${context.uiBase}/overview`} replace />;
     const exportRows = () => {
         const url = URL.createObjectURL(new Blob([loginSessionsCsv(rows.filter((row) => !selected.length || selected.includes(row.id)))], { type: 'text/csv;charset=utf-8' }));
@@ -54,17 +78,26 @@ function Sessions({ context }) {
         } catch (failure) { setError(failure.response?.data?.message || failure.message); dialog.current?.close(); }
         finally { working.current = false; setBusy(false); }
     };
-    const selectable = rows.filter((row) => !row.current).map((row) => row.id);
     return <div dir={ar ? 'rtl' : 'ltr'}>
-        {error ? <div className="ws-settings-feedback" role="alert">{error}<button onClick={() => setReload((value) => value + 1)}>{text('إعادة تحميل', 'Reload')}</button></div> : null}
+        {error ? <div className="ws-settings-feedback" role="alert">{error}<button type="button" onClick={() => setReload((value) => value + 1)}>{text('إعادة تحميل', 'Reload')}</button></div> : null}
         {saved ? <p className="ws-settings-feedback" role="status">{text('تم إلغاء الجلسات المحددة.', 'Selected sessions revoked.')}</p> : null}
         <section className="ws-settings-card"><MerchantSettingsHeading title={text('جلسات الدخول', 'Login sessions')} />
-            <div className="ws-login-actions"><button disabled={loading || busy || !rows.length} onClick={exportRows}>{text('تصدير', 'Export')}</button><button disabled={busy || !selected.length} onClick={() => setSelected([])}>{text('الغاء التحديد', 'Clear selection')}</button><button disabled={busy || !selected.length} onClick={() => dialog.current?.showModal()}>{text('حذف', 'Delete')}</button></div>
-            {loading ? <p role="status">{text('جارٍ التحميل…', 'Loading…')}</p> : <div className="ws-login-table" role="region" aria-label={text('جدول جلسات الدخول', 'Login sessions table')} tabIndex={0}><table><caption className="sr-only">{text('الأجهزة المسجّلة في حسابك', 'Devices signed in to your account')}</caption><thead><tr>
-                <th><input type="checkbox" aria-label={text('تحديد الجلسات الأخرى', 'Select other sessions')} disabled={busy || !selectable.length} checked={Boolean(selectable.length && selectable.every((id) => selected.includes(id)))} onChange={(event) => setSelected(event.target.checked ? selectable : [])} /></th>
-                <th>IP</th><th>Device Info</th><th>Email</th><th>{text('تاريخ الانشاء', 'Created at')}</th>
-            </tr></thead><tbody>{rows.map((row) => <tr key={row.id}><td><input type="checkbox" disabled={busy || row.current} checked={selected.includes(row.id)} aria-label={row.current ? text('الجلسة الحالية', 'Current session') : `${text('تحديد الجلسة', 'Select session')} ${row.device_name || row.created_at}`} onChange={(event) => setSelected((current) => event.target.checked ? [...current, row.id] : current.filter((id) => id !== row.id))} /></td><td dir="ltr">{row.ip_address || '—'}</td><td>{row.device_name || row.user_agent || '—'}{row.current ? <span> · {text('الجهاز الحالي', 'Current device')}</span> : null}</td><td dir="ltr">{row.email || '—'}</td><td>{row.created_at ? new Date(row.created_at).toLocaleString(ar ? 'ar-EG' : 'en-US') : '—'}</td></tr>)}</tbody></table>{!rows.length ? <p>{text('لا توجد جلسات.', 'No sessions.')}</p> : null}</div>}
+            <div className="ws-dt-card ws-login-card">
+                <div className="ws-login-actions">
+                    <label className="ws-login-select-all"><input type="checkbox" className="ws-login-check" disabled={loading || busy || !selectable.length} checked={allSelected} onChange={(event) => selectAll(event.target.checked)} />{selectAllLabel}</label>
+                    {selected.length ? <span className="ws-login-count" role="status">{text(`${selected.length} محدد`, `${selected.length} selected`)}</span> : null}
+                    <span className="ws-dt-spacer" />
+                    <button type="button" className="ws-dt-button" disabled={loading || busy || !rows.length} onClick={exportRows}><HiOutlineArrowDownTray aria-hidden />{text('تصدير', 'Export')}</button>
+                    <button type="button" className="ws-dt-button" disabled={busy || !selected.length} onClick={() => setSelected([])}>{text('الغاء التحديد', 'Clear selection')}</button>
+                    <button type="button" className="ws-dt-button ws-login-delete" disabled={busy || !selected.length} onClick={() => dialog.current?.showModal()}><HiOutlineTrash aria-hidden />{text('حذف', 'Delete')}</button>
+                </div>
+                <div className="ws-login-table" role="region" aria-label={text('جدول جلسات الدخول', 'Login sessions table')} tabIndex={0}>
+                    <IndexTable table={table} rows={rows} loading={loading} error={loadError} onRetry={() => setReload((value) => value + 1)}
+                        label={text('الأجهزة المسجّلة في حسابك', 'Devices signed in to your account')}
+                        emptyState={{ icon: HiOutlineComputerDesktop, title: text('لا توجد جلسات.', 'No sessions.') }} />
+                </div>
+            </div>
         </section>
-        <dialog ref={dialog} className="ws-login-confirm" aria-label={text('إلغاء جلسات الدخول', 'Revoke login sessions')}><p>{text('سيتم تسجيل خروج الأجهزة المحددة وإيقاف إشعارات الطلبات المرتبطة بها.', 'Selected devices will be signed out and their order notifications stopped.')}</p><button disabled={busy} onClick={revoke}>{busy ? text('جارٍ الحذف…', 'Deleting…') : text('حذف', 'Delete')}</button><button disabled={busy} onClick={() => dialog.current?.close()}>{text('إلغاء', 'Cancel')}</button></dialog>
+        <dialog ref={dialog} className="ws-login-confirm" aria-label={text('إلغاء جلسات الدخول', 'Revoke login sessions')}><p>{text('سيتم تسجيل خروج الأجهزة المحددة وإيقاف إشعارات الطلبات المرتبطة بها.', 'Selected devices will be signed out and their order notifications stopped.')}</p><button type="button" disabled={busy} onClick={revoke}>{busy ? text('جارٍ الحذف…', 'Deleting…') : text('حذف', 'Delete')}</button><button type="button" disabled={busy} onClick={() => dialog.current?.close()}>{text('إلغاء', 'Cancel')}</button></dialog>
     </div>;
 }

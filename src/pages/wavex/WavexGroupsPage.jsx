@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, Navigate, useOutletContext } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
@@ -10,7 +10,13 @@ import {
     HiOutlinePencilSquare,
     HiOutlineTrash,
 } from '../../components/workspace/WorkspaceIcons';
+import { IndexTable, useIndexTable } from '../../components/data-table';
 import api from '../../api/client';
+
+// The groups endpoint accepts page and per_page (up to 200); it has no search or sort parameters.
+const DEFAULTS = { perPage: 50, perPageOptions: [50, 100, 200] };
+const NO_FILTERS = [];
+const NO_VIEWS = [];
 
 function getPaginatedRows(data) {
     const d = data?.data ?? data;
@@ -24,45 +30,55 @@ export default function WavexGroupsPage() {
     const { permissions } = useOutletContext();
     const can = (p) => permissions.includes(p);
 
-    const [groups, setGroups] = useState([]);
+    const [result, setResult] = useState(null);
     const [loading, setLoading] = useState(false);
+    const [loadErr, setLoadErr] = useState('');
     const [err, setErr] = useState('');
-    const [selected, setSelected] = useState([]);
     const [busy, setBusy] = useState(false);
+    const latest = useRef(0);
+    // Row actions call the latest handler (it depends on the current page).
+    const removeOne = useRef(null);
+
+    const columns = useMemo(() => [
+        { key: 'name', header: t('wavex_cg_name'), primary: true, hideable: false,
+            render: (g) => <Link className="ws-dt-title" to={`/wavex/groups/${g.id}`}>{g.name}</Link> },
+        { key: 'description', header: t('wavex_cg_description'), render: (g) => g.description || <span className="ws-dt-sub">{'—'}</span> },
+        { key: 'members', header: t('wavex_cg_members_count'), align: 'end', render: (g) => <span className="ws-dt-num">{g.members_count ?? 0}</span> },
+        { key: 'actions', header: t('wavex_cg_actions'), hideable: false, align: 'end',
+            render: (g) => <div className="ws-dt-row-actions">
+                <Link className="ws-dt-icon" to={`/wavex/groups/${g.id}`} title={t('wavex_cg_view')} aria-label={`${t('wavex_cg_view')} ${g.name}`}><HiOutlineEye aria-hidden /></Link>
+                <Link className="ws-dt-icon" to={`/wavex/groups/${g.id}/edit`} title={t('wavex_cg_edit')} aria-label={`${t('wavex_cg_edit')} ${g.name}`}><HiOutlinePencilSquare aria-hidden /></Link>
+                <button type="button" className="ws-dt-icon" onClick={() => void removeOne.current?.(g.id)} disabled={busy} title={t('wavex_cg_delete')} aria-label={`${t('wavex_cg_delete')} ${g.name}`}><HiOutlineTrash aria-hidden /></button>
+            </div> },
+    ], [t, busy]);
+    const table = useIndexTable({ scope: 'wavex:groups', filters: NO_FILTERS, columns, views: NO_VIEWS, defaults: DEFAULTS, savedViews: false });
+    const { page, perPage } = table.state;
 
     const loadGroups = useCallback(async () => {
-        setErr('');
+        const request = ++latest.current;
+        setLoadErr('');
         setLoading(true);
         try {
-            const { data } = await api.get('/wavex/contact-groups', { params: { per_page: 200 } });
-            setGroups(getPaginatedRows(data));
-            setSelected([]);
+            const { data } = await api.get('/wavex/contact-groups', { params: { page, per_page: perPage } });
+            if (request === latest.current) setResult(data);
         } catch (e) {
-            setErr(e.response?.data?.message || e.message);
-            setGroups([]);
+            if (request === latest.current) { setLoadErr(e.response?.data?.message || e.message); setResult(null); }
         } finally {
-            setLoading(false);
+            if (request === latest.current) setLoading(false);
         }
-    }, []);
+    }, [page, perPage]);
 
     useEffect(() => {
         if (!permissions.includes('wavex-access')) return;
         void loadGroups();
     }, [loadGroups, permissions]);
 
-    const toggleSelect = (id) => {
-        setSelected((prev) =>
-            prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
-        );
+    const reload = async () => {
+        table.clearSelection();
+        await loadGroups();
     };
 
-    const toggleAll = () => {
-        if (selected.length === groups.length) {
-            setSelected([]);
-        } else {
-            setSelected(groups.map((g) => g.id));
-        }
-    };
+    useEffect(() => { removeOne.current = deleteGroup; });
 
     async function deleteGroup(id) {
         if (!confirm(t('wavex_cg_confirm_delete'))) return;
@@ -70,7 +86,7 @@ export default function WavexGroupsPage() {
         setErr('');
         try {
             await api.delete(`/wavex/contact-groups/${id}`);
-            await loadGroups();
+            await reload();
         } catch (e) {
             setErr(e.response?.data?.message || e.message);
         } finally {
@@ -78,14 +94,14 @@ export default function WavexGroupsPage() {
         }
     }
 
-    async function bulkDelete() {
-        if (selected.length === 0) return;
-        if (!confirm(t('wavex_cg_confirm_bulk_delete', { count: selected.length }))) return;
+    async function bulkDelete(ids) {
+        if (ids.length === 0) return;
+        if (!confirm(t('wavex_cg_confirm_bulk_delete', { count: ids.length }))) return;
         setBusy(true);
         setErr('');
         try {
-            await api.post('/wavex/contact-groups/bulk-destroy', { ids: selected });
-            await loadGroups();
+            await api.post('/wavex/contact-groups/bulk-destroy', { ids });
+            await reload();
         } catch (e) {
             setErr(e.response?.data?.message || e.message);
         } finally {
@@ -94,6 +110,18 @@ export default function WavexGroupsPage() {
     }
 
     if (!can('wavex-access')) return <Navigate to="/dashboard" replace />;
+
+    const groups = getPaginatedRows(result);
+    const paginator = result?.data && !Array.isArray(result.data) ? result.data : result;
+    const createLink = (
+        <Link
+            to="/wavex/groups/new"
+            className="inline-flex items-center gap-1 rounded-lg bg-brand px-4 py-2 text-sm font-semibold text-white hover:bg-brand-dark"
+        >
+            <HiOutlinePlus className="h-4 w-4" />
+            {t('wavex_cg_new_group')}
+        </Link>
+    );
 
     return (
         <div className="mx-auto max-w-5xl space-y-6">
@@ -108,143 +136,33 @@ export default function WavexGroupsPage() {
                 <div className="flex items-center gap-2">
                     <button
                         type="button"
-                        onClick={() => void loadGroups()}
+                        onClick={() => void reload()}
                         className="inline-flex items-center gap-1 rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50"
                     >
                         <HiOutlineArrowPath className={loading ? 'h-4 w-4 animate-spin' : 'h-4 w-4'} />
                         {t('wavex_groups_reload')}
                     </button>
-                    <Link
-                        to="/wavex/groups/new"
-                        className="inline-flex items-center gap-1 rounded-lg bg-brand px-4 py-2 text-sm font-semibold text-white hover:bg-brand-dark"
-                    >
-                        <HiOutlinePlus className="h-4 w-4" />
-                        {t('wavex_cg_new_group')}
-                    </Link>
+                    {createLink}
                 </div>
             </div>
 
             {err && (
-                <p className="rounded-lg border border-red-100 bg-red-50 px-3 py-2 text-sm text-red-700">{err}</p>
+                <p role="alert" className="rounded-lg border border-red-100 bg-red-50 px-3 py-2 text-sm text-red-700">{err}</p>
             )}
 
-            {selected.length > 0 && (
-                <motion.div
-                    initial={{ opacity: 0, y: -6 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="flex items-center gap-3 rounded-xl border border-red-100 bg-red-50 px-4 py-3"
-                >
-                    <span className="text-sm font-medium text-red-800">
-                        {t('wavex_cg_selected_count', { count: selected.length })}
-                    </span>
-                    <button
-                        type="button"
-                        onClick={bulkDelete}
-                        disabled={busy}
-                        className="inline-flex items-center gap-1 rounded-lg bg-red-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-red-700 disabled:opacity-50"
-                    >
-                        <HiOutlineTrash className="h-4 w-4" />
-                        {t('wavex_cg_delete_selected')}
-                    </button>
-                    <button
-                        type="button"
-                        onClick={() => setSelected([])}
-                        className="text-xs font-medium text-red-700 hover:underline"
-                    >
-                        {t('wavex_cg_deselect_all')}
-                    </button>
-                </motion.div>
-            )}
-
-            <motion.div
-                initial={{ opacity: 0, y: 6 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="rounded-2xl border border-slate-200/80 bg-white shadow-card"
-            >
-                {loading && groups.length === 0 ? (
-                    <p className="p-6 text-sm text-slate-500">{t('loading')}</p>
-                ) : groups.length === 0 ? (
-                    <div className="p-10 text-center">
-                        <HiOutlineUserGroup className="mx-auto h-12 w-12 text-slate-300" />
-                        <p className="mt-2 text-sm text-slate-500">{t('wavex_cg_empty')}</p>
-                        <Link
-                            to="/wavex/groups/new"
-                            className="mt-4 inline-flex items-center gap-1 rounded-lg bg-brand px-4 py-2 text-sm font-semibold text-white hover:bg-brand-dark"
-                        >
-                            <HiOutlinePlus className="h-4 w-4" />
-                            {t('wavex_cg_new_group')}
-                        </Link>
-                    </div>
-                ) : (
-                    <div className="overflow-x-auto">
-                        <table className="w-full text-left text-sm">
-                            <thead className="border-b border-slate-100 bg-slate-50/80 text-xs text-slate-600">
-                                <tr>
-                                    <th className="w-10 px-4 py-3">
-                                        <input
-                                            type="checkbox"
-                                            checked={selected.length === groups.length && groups.length > 0}
-                                            onChange={toggleAll}
-                                            className="rounded-sm border-slate-300"
-                                        />
-                                    </th>
-                                    <th className="px-4 py-3">{t('wavex_cg_name')}</th>
-                                    <th className="px-4 py-3">{t('wavex_cg_description')}</th>
-                                    <th className="px-4 py-3 text-center">{t('wavex_cg_members_count')}</th>
-                                    <th className="w-48 px-4 py-3 text-center">{t('wavex_cg_actions')}</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-slate-100">
-                                {groups.map((g) => (
-                                    <tr key={g.id} className={selected.includes(g.id) ? 'bg-brand/5' : 'hover:bg-slate-50'}>
-                                        <td className="px-4 py-3">
-                                            <input
-                                                type="checkbox"
-                                                checked={selected.includes(g.id)}
-                                                onChange={() => toggleSelect(g.id)}
-                                                className="rounded-sm border-slate-300"
-                                            />
-                                        </td>
-                                        <td className="px-4 py-3 font-medium text-slate-900">{g.name}</td>
-                                        <td className="px-4 py-3 text-slate-500">{g.description || '\u2014'}</td>
-                                        <td className="px-4 py-3 text-center">
-                                            <span className="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-medium text-slate-700">
-                                                {g.members_count ?? 0}
-                                            </span>
-                                        </td>
-                                        <td className="px-4 py-3">
-                                            <div className="flex items-center justify-center gap-1">
-                                                <Link
-                                                    to={`/wavex/groups/${g.id}`}
-                                                    className="rounded-lg p-2 text-slate-500 hover:bg-slate-100 hover:text-brand"
-                                                    title={t('wavex_cg_view')}
-                                                >
-                                                    <HiOutlineEye className="h-4 w-4" />
-                                                </Link>
-                                                <Link
-                                                    to={`/wavex/groups/${g.id}/edit`}
-                                                    className="rounded-lg p-2 text-slate-500 hover:bg-slate-100 hover:text-brand"
-                                                    title={t('wavex_cg_edit')}
-                                                >
-                                                    <HiOutlinePencilSquare className="h-4 w-4" />
-                                                </Link>
-                                                <button
-                                                    type="button"
-                                                    onClick={() => void deleteGroup(g.id)}
-                                                    disabled={busy}
-                                                    className="rounded-lg p-2 text-slate-500 hover:bg-red-50 hover:text-red-600 disabled:opacity-50"
-                                                    title={t('wavex_cg_delete')}
-                                                >
-                                                    <HiOutlineTrash className="h-4 w-4" />
-                                                </button>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
-                )}
+            <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} className="ws-dt-card">
+                <IndexTable
+                    table={table}
+                    rows={groups}
+                    loading={loading || (!result && !loadErr)}
+                    error={loadErr}
+                    onRetry={() => void reload()}
+                    meta={paginator ? { total: paginator.total ?? groups.length, last_page: paginator.last_page ?? 1 } : undefined}
+                    label={t('wavex_groups_title')}
+                    rowHref={(g) => `/wavex/groups/${g.id}`}
+                    bulkActions={[{ key: 'delete', label: t('wavex_cg_delete_selected'), icon: HiOutlineTrash, tone: 'danger', disabled: () => busy, onAction: (selected) => void bulkDelete(selected.map((g) => g.id)) }]}
+                    emptyState={{ icon: HiOutlineUserGroup, title: t('wavex_cg_empty'), action: createLink }}
+                />
             </motion.div>
         </div>
     );

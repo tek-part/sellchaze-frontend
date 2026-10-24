@@ -1,13 +1,19 @@
 import PaymentMethodLogo from '../../shared/payments/PaymentMethodLogo';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Navigate, useOutletContext, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import api from '../../api/client';
+import { IndexTable, useIndexTable } from '../../components/data-table';
+import { HiOutlineBanknotes } from '../../components/workspace/WorkspaceIcons';
 import '../store/merchant-catalog.css';
 import './platform-wallet.css';
 
 const money = (milli, digits = 3) => new Intl.NumberFormat('en', { minimumFractionDigits: digits, maximumFractionDigits: digits }).format(milli / 1000);
 const commissionMoney = (milli) => new Intl.NumberFormat('en', { maximumFractionDigits: 3 }).format(milli / 1000);
+// The entries endpoint accepts page, per_page (25/50/100), sort (type/amount/created_at) and direction.
+const TRANSACTION_DEFAULTS = { sort: { by: 'created_at', direction: 'desc' }, perPage: 25, perPageOptions: [25, 50, 100] };
+const NO_FILTERS = [];
+const NO_VIEWS = [];
 
 export default function PlatformWalletPage({ mode = 'wallet' }) {
     const { me } = useOutletContext();
@@ -15,16 +21,16 @@ export default function PlatformWalletPage({ mode = 'wallet' }) {
     const { i18n } = useTranslation(); const ar = i18n.language.startsWith('ar'); const text = (a, e) => ar ? a : e;
     const owner = me?.roles?.includes('Merchant');
     const [data, setData] = useState(null); const [error, setError] = useState(''); const [retry, setRetry] = useState(0);
-    const [page, setPage] = useState(1); const [perPage, setPerPage] = useState(25); const [sort, setSort] = useState('created_at'); const [direction, setDirection] = useState('desc');
     const [copied, setCopied] = useState(false); const [creating, setCreating] = useState(false);
     const [payment, setPayment] = useState(null); const [fundingBusy, setFundingBusy] = useState(false); const [fundingError, setFundingError] = useState('');
     useEffect(() => {
-        if (!owner) return undefined;
+        // Transactions load through their own index table (see WalletTransactions).
+        if (!owner || mode === 'transactions') return undefined;
         const controller = new AbortController(); let current = true; setData(null); setError('');
-        const path = mode === 'referral' ? '/me/platform-referral' : mode === 'transactions' ? '/me/platform-wallet/entries' : '/me/platform-wallet';
-        api.get(path, { params: mode === 'transactions' ? { page, per_page: perPage, sort, direction } : {}, signal: controller.signal }).then(({ data: result }) => { if (current) { setData(result); if (mode === 'wallet' && result.pending_payment) setPayment(result.pending_payment); } }).catch((failure) => { if (current && !controller.signal.aborted) setError(failure.response?.data?.message || failure.message); });
+        const path = mode === 'referral' ? '/me/platform-referral' : '/me/platform-wallet';
+        api.get(path, { signal: controller.signal }).then(({ data: result }) => { if (current) { setData(result); if (mode === 'wallet' && result.pending_payment) setPayment(result.pending_payment); } }).catch((failure) => { if (current && !controller.signal.aborted) setError(failure.response?.data?.message || failure.message); });
         return () => { current = false; controller.abort(); };
-    }, [owner, mode, page, perPage, sort, direction, retry]);
+    }, [owner, mode, retry]);
     const returnPayment = searchParams.get('wallet_payment');
     useEffect(() => {
         if (!owner || mode !== 'wallet' || !returnPayment || !/^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/i.test(returnPayment)) return undefined;
@@ -35,8 +41,6 @@ export default function PlatformWalletPage({ mode = 'wallet' }) {
     if (!owner) return <Navigate to="/dashboard" replace />;
     const title = mode === 'referral' ? text('اربح معنا بالتسويق بالعمولة', 'Earn with our referral program') : mode === 'transactions' ? text('المعاملات', 'Transactions') : text('المحفظة', 'Wallet');
     const subtitle = mode === 'referral' ? text('شارك رابط المنصة وتابع العمولات النقدية الناتجة عن شحن الرصيد.', 'Share the platform link and track cash commissions from confirmed funding.') : mode === 'transactions' ? text('ستجد اخر المعاملات التي قمت بها مثل الشحن او الخصومات', 'View your latest funding, fees and refunds') : text('هذه الصفحة مختصة باظهار رصيدك والمبلغ المستحق الدفع وشحن الرصيد', 'View your wallet balance, amount due and funding information');
-    const labels = { topup: text('شحن رصيد المحفظة', 'Wallet funding'), refund: text('استرداد شحن الرصيد', 'Funding refund'), order_fee: text('رسوم طلب', 'Order fee'), subscription: text('اشتراك المتجر', 'Merchant subscription') };
-    const toggleSort = (field) => { setDirection(sort === field && direction === 'asc' ? 'desc' : 'asc'); setSort(field); setPage(1); };
     const pendingPayment = payment && ['creating', 'uncertain', 'pending'].includes(payment.status);
     const startFunding = async (amount) => {
         setFundingBusy(true); setFundingError('');
@@ -53,7 +57,7 @@ export default function PlatformWalletPage({ mode = 'wallet' }) {
         finally { setFundingBusy(false); }
     };
     return <div className={`ws-platform-wallet is-${mode}`} dir={ar ? 'rtl' : 'ltr'}><header className="ws-catalog-header"><div><h1>{title}</h1><p>{subtitle}</p></div></header>
-        {error ? <div role="alert" className="ws-catalog-error"><p>{error}</p><button onClick={() => setRetry((old) => old + 1)}>{text('إعادة المحاولة', 'Try again')}</button></div> : !data ? <p role="status">{text('جارٍ التحميل…', 'Loading…')}</p> : mode === 'wallet' ? <>
+        {mode === 'transactions' ? <WalletTransactions ar={ar} text={text} /> : error ? <div role="alert" className="ws-catalog-error"><p>{error}</p><button onClick={() => setRetry((old) => old + 1)}>{text('إعادة المحاولة', 'Try again')}</button></div> : !data ? <p role="status">{text('جارٍ التحميل…', 'Loading…')}</p> : mode === 'wallet' ? <>
             <div className="ws-platform-wallet-balance"><div><p>{text('رصيدك الحالي', 'Current balance')}</p><strong dir="ltr">{money(data.balance_milli)} $</strong></div><div><p>{text('المبلغ المستحق الدفع', 'Amount due')}</p><strong dir="ltr">{money(data.amount_due_milli, 2)} $</strong></div></div>
             <p className="ws-platform-wallet-explanation">{data.fees_enabled ? text(`يُخصم ${money(data.fee_milli, 2)} دولار من رصيدك لكل طلب جديد.`, `${money(data.fee_milli, 2)} USD is deducted for each new order.`) : text('خصم رسوم الطلبات غير مفعّل حاليًا.', 'Order fees are currently disabled.')}</p>
             {data.fees_enabled ? <p className="ws-platform-wallet-notice">{text(`عند مديونية ${data.debt_order_limit} طلبات تُحجب بيانات الطلبات الجديدة حتى تسوية المديونية. تبقى الطلبات القديمة متاحة ويستمر استقبال طلبات العملاء.`, `At a debt of ${data.debt_order_limit} order fees, new order details are hidden until the debt is settled. Existing orders remain available and customers can still order.`)}</p> : null}
@@ -66,9 +70,36 @@ export default function PlatformWalletPage({ mode = 'wallet' }) {
             <p className="ws-platform-referral-explanation">{data.commissions_enabled ? text(`عمولتك ${data.commission_basis_points / 100}% من شحن الرصيد المؤكد للمستخدمين الذين سجلوا من خلال رابطك، وتُحسب نقدًا ولا تُضاف إلى رصيد المحفظة.`, `Your cash commission is ${data.commission_basis_points / 100}% of confirmed funding by referred members and is separate from wallet credit.`) : text('احتساب العمولات غير مفعّل حاليًا. يمكنك إنشاء رابطك ومتابعة إحالاتك.', 'Commission accrual is currently disabled. You can create your link and track referrals.')}</p>
             <p>{text('عدد المتاجر المُحالة', 'Referred stores')}: {data.referred_stores}</p><p className="ws-platform-wallet-notice">{text(`يتطلب سحب العمولة إنشاء ${data.minimum_referred_stores} متاجر من خلال الإحالات.`, `Commission withdrawal requires ${data.minimum_referred_stores} referred stores.`)}</p>
             <h2>{text('الرابط الخاص بك', 'Your referral link')}</h2>{data.link ? <button className="ws-platform-referral-link" dir="ltr" onClick={async () => { try { await navigator.clipboard.writeText(data.link); setCopied(true); } catch { setError(text('تعذر النسخ. حدد الرابط وانسخه يدويًا.', 'Copy failed. Select and copy the link manually.')); } }}>{data.link}</button> : <button className="ws-platform-create" disabled={creating} onClick={async () => { setCreating(true); try { const result = await api.post('/me/platform-referral'); setData(result.data); } catch (failure) { setError(failure.response?.data?.message || failure.message); } finally { setCreating(false); } }}>{text('إنشاء رابط الإحالة', 'Create referral link')}</button>}{copied ? <p role="status">{text('تم نسخ الرابط', 'Link copied')}</p> : null}
-        </> : <>
-            <div className="ws-platform-transactions"><table><thead><tr><th aria-sort={sort === 'type' ? direction === 'asc' ? 'ascending' : 'descending' : 'none'}><button onClick={() => toggleSort('type')}>{text('تفاصيل المعاملة', 'Transaction details')}</button></th><th aria-sort={sort === 'amount' ? direction === 'asc' ? 'ascending' : 'descending' : 'none'}><button onClick={() => toggleSort('amount')}>{text('القيمة', 'Amount')}</button></th><th>{text('حالة العملية', 'Status')}</th><th aria-sort={sort === 'created_at' ? direction === 'asc' ? 'ascending' : 'descending' : 'none'}><button onClick={() => toggleSort('created_at')}>{text('تاريخ الإنشاء', 'Created at')}</button></th></tr></thead><tbody>{data.data.length ? data.data.map((row) => <tr key={row.id}><td>{row.row_kind === 'balance' ? text('رصيدك بعد المعاملة', 'Balance after transaction') + ': ' + money(row.balance_after_milli) + ' $' : labels[row.type] || row.type}</td><td dir="ltr">{row.amount_milli === null ? '' : money(row.amount_milli) + ' $'}</td><td>{row.row_kind === 'balance' ? text('تفاصيل الرصيد', 'Balance details') : text('مسجلة', 'Recorded')}</td><td>{new Intl.DateTimeFormat(ar ? 'ar-EG' : 'en', { dateStyle: 'short' }).format(new Date(row.created_at))}</td></tr>) : <tr><td colSpan="4">{text('لا توجد معاملات', 'No transactions')}</td></tr>}</tbody></table></div>
-            <div className="ws-platform-pagination"><label>{text('الصفوف لكل صفحة:', 'Rows per page:')}<select value={perPage} onChange={(event) => { setPerPage(Number(event.target.value)); setPage(1); }}>{[25, 50, 100].map((value) => <option key={value}>{value}</option>)}</select></label><span>{data.meta.total ? `${(page - 1) * perPage + 1}-${Math.min(page * perPage, data.meta.total)}` : '0-0'} {text('من', 'of')} {data.meta.total}</span><button disabled={page <= 1} onClick={() => setPage((old) => old - 1)}>{text('السابق', 'Previous')}</button><button disabled={page >= data.meta.last_page} onClick={() => setPage((old) => old + 1)}>{text('التالى', 'Next')}</button></div>
-        </>}
+        </> : null}
+    </div>;
+}
+
+function WalletTransactions({ ar, text }) {
+    const [result, setResult] = useState(null); const [error, setError] = useState(''); const [loading, setLoading] = useState(true); const [retry, setRetry] = useState(0);
+    const columns = useMemo(() => {
+        const labels = { topup: text('شحن رصيد المحفظة', 'Wallet funding'), refund: text('استرداد شحن الرصيد', 'Funding refund'), order_fee: text('رسوم طلب', 'Order fee'), subscription: text('اشتراك المتجر', 'Merchant subscription') };
+        return [
+            { key: 'details', header: text('تفاصيل المعاملة', 'Transaction details'), sortKey: 'type', primary: true, hideable: false,
+                render: (row) => row.row_kind === 'balance' ? <span className="ws-dt-sub">{text('رصيدك بعد المعاملة', 'Balance after transaction')}: <bdi dir="ltr">{money(row.balance_after_milli)} $</bdi></span> : <span className="ws-platform-transaction-type">{labels[row.type] || row.type}</span> },
+            { key: 'amount', header: text('القيمة', 'Amount'), sortKey: 'amount', align: 'end', render: (row) => <span className="ws-dt-num" dir="ltr">{row.amount_milli === null ? '' : `${money(row.amount_milli)} $`}</span> },
+            { key: 'status', header: text('حالة العملية', 'Status'), render: (row) => row.row_kind === 'balance' ? <span className="ws-dt-badge">{text('تفاصيل الرصيد', 'Balance details')}</span> : <span className="ws-dt-badge is-success">{text('مسجلة', 'Recorded')}</span> },
+            { key: 'created', header: text('تاريخ الإنشاء', 'Created at'), sortKey: 'created_at', render: (row) => <span className="ws-dt-num">{new Intl.DateTimeFormat(ar ? 'ar-EG' : 'en', { dateStyle: 'short' }).format(new Date(row.created_at))}</span> },
+        ];
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [ar]);
+    const table = useIndexTable({ scope: 'account:wallet-transactions', filters: NO_FILTERS, columns, views: NO_VIEWS, defaults: TRANSACTION_DEFAULTS, savedViews: false });
+    const { page, perPage, sort } = table.state;
+    const sortBy = sort?.by ?? 'created_at'; const direction = sort?.direction ?? 'desc';
+    useEffect(() => {
+        const controller = new AbortController(); let current = true; setLoading(true); setError('');
+        api.get('/me/platform-wallet/entries', { params: { page, per_page: perPage, sort: sortBy, direction }, signal: controller.signal })
+            .then(({ data }) => { if (current) setResult(data); })
+            .catch((failure) => { if (current && !controller.signal.aborted) setError(failure.response?.data?.message || failure.message); })
+            .finally(() => { if (current) setLoading(false); });
+        return () => { current = false; controller.abort(); };
+    }, [page, perPage, sortBy, direction, retry]);
+    return <div className="ws-dt-card ws-platform-transactions">
+        <IndexTable table={table} rows={result?.data ?? []} loading={loading} error={error} onRetry={() => setRetry((old) => old + 1)} meta={result?.meta}
+            label={text('المعاملات', 'Transactions')} emptyState={{ icon: HiOutlineBanknotes, title: text('لا توجد معاملات', 'No transactions') }} />
     </div>;
 }

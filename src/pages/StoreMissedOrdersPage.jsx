@@ -1,9 +1,13 @@
-import { useEffect, useId, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { useOutletContext } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import api from '../api/client';
 import useStoreScope from '../hooks/useStoreScope';
-import { useDebounced } from '../hooks/useDebounced';
 import { fetchAllPages } from '../utils/fetchAllPages';
+import { IndexFilters, IndexTable, downloadCsv, useIndexTable } from '../components/data-table';
+import { HiOutlineArrowDownTray, HiOutlineArrowUturnLeft, HiOutlineCheckCircle, HiOutlineShoppingCart } from '../components/workspace/WorkspaceIcons';
+
+const DEFAULTS = { sort: null, perPage: 25 };
 
 export default function StoreMissedOrdersPage() {
     const { apiBase } = useStoreScope();
@@ -11,63 +15,88 @@ export default function StoreMissedOrdersPage() {
 }
 
 function MissedOrders({ apiBase }) {
-    const tabsId = useId(); const tabButtons = useRef([]);
     const { i18n } = useTranslation(); const ar = i18n.language.startsWith('ar'); const text = (a, e) => ar ? a : e;
-    const [status, setStatus] = useState(''); const [query, setQuery] = useState(''); const search = useDebounced(query, 300);
-    const [source, setSource] = useState(''); const [from, setFrom] = useState(''); const [to, setTo] = useState(''); const [filters, setFilters] = useState(false);
-    const [page, setPage] = useState(1); const [result, setResult] = useState(null); const [loading, setLoading] = useState(true); const [error, setError] = useState(''); const [reload, setReload] = useState(0);
-    const [selected, setSelected] = useState(new Map()); const [busy, setBusy] = useState(false);
+    const { store } = useOutletContext() ?? {};
+    const [result, setResult] = useState(null); const [loading, setLoading] = useState(true); const [error, setError] = useState(''); const [reload, setReload] = useState(0);
+    const [busy, setBusy] = useState(false); const [actionError, setActionError] = useState('');
     // The 45 s auto-refresh runs in the background: it keeps the current rows on screen instead of
     // flashing the loading state, which made the page look like it kept reloading.
     const backgroundRefresh = useRef(false);
     const path = `${apiBase}/missed-orders`;
-    const params = { ...(status ? { status } : {}), ...(search ? { search } : {}), ...(source ? { source } : {}), ...(from ? { date_from: from } : {}), ...(to ? { date_to: to } : {}) };
+    const statusLabel = (status) => (status === 'completed' ? text('مكتمل', 'Completed') : text('تحت المراجعة', 'Under review'));
+    const counts = result?.counts;
+
+    const filters = useMemo(() => [
+        { key: 'status', label: text('الحالة', 'Status'), type: 'select', options: [{ value: 'under_review', label: statusLabel('under_review') }, { value: 'completed', label: statusLabel('completed') }] },
+        { key: 'source', label: text('المصدر', 'Source'), type: 'select', options: [{ value: 'storefront', label: text('المتجر', 'Storefront') }, { value: 'funnel', label: 'Funnels' }] },
+        { key: 'date', label: text('تاريخ المحاولة', 'Checkout date'), type: 'date-range' },
+    ], [ar]); // eslint-disable-line react-hooks/exhaustive-deps
+    const total = (counts?.under_review || 0) + (counts?.completed || 0);
+    const withCount = (label, value) => (counts ? `${label} (${value})` : label);
+    const views = useMemo(() => [
+        { id: 'all', label: withCount(text('جميع الطلبات', 'All orders'), total), state: { filters: {} } },
+        { id: 'completed', label: withCount(statusLabel('completed'), counts?.completed || 0), state: { filters: { status: 'completed' } } },
+        { id: 'under_review', label: withCount(statusLabel('under_review'), counts?.under_review || 0), state: { filters: { status: 'under_review' } } },
+    ], [ar, counts?.completed, counts?.under_review]); // eslint-disable-line react-hooks/exhaustive-deps
+
+    const money = (row) => new Intl.NumberFormat(ar ? 'ar-EG' : 'en-GB', { style: 'currency', currency: row.currency }).format(Number(row.subtotal));
+    const columns = useMemo(() => [
+        { key: 'customer', header: text('العميل', 'Customer'), hideable: false, primary: true, csv: (row) => row.customer_name ?? '',
+            render: (row) => <div><strong className="ws-dt-title">{row.customer_name || '—'}</strong>{row.customer_phone ? <span className="ws-dt-sub" dir="ltr"><a href={`tel:${(row.phone_dial || row.customer_phone).replace(/[^+\d]/g, '')}`}>{row.customer_phone}</a></span> : null}{row.customer_email ? <span className="ws-dt-sub">{row.customer_email}</span> : null}{row.shipping_address || row.notes || row.coupon_code || row.shipping_selection?.region_name || row.shipping_selection?.option_name ? <details><summary>{text('تفاصيل التواصل', 'Contact details')}</summary><p>{Object.values(row.shipping_address || {}).filter(Boolean).join(' · ')}</p>{row.shipping_selection?.region_name ? <p>{row.shipping_selection.region_name}</p> : null}{row.shipping_selection?.option_name ? <p>{row.shipping_selection.option_name}</p> : null}{row.coupon_code ? <p>{text('الكوبون', 'Coupon')}: {row.coupon_code}</p> : null}{row.notes ? <p>{row.notes}</p> : null}</details> : null}</div> },
+        { key: 'phone', header: text('الهاتف', 'Phone'), defaultHidden: true, csv: (row) => row.customer_phone ?? '', render: (row) => <span dir="ltr">{row.customer_phone || '—'}</span> },
+        { key: 'email', header: text('البريد الإلكتروني', 'Email'), defaultHidden: true, csv: (row) => row.customer_email ?? '', render: (row) => row.customer_email || '—' },
+        { key: 'products', header: text('المنتجات', 'Products'), csv: (row) => row.items.map((item) => `${item.name} × ${item.quantity}`).join('; '),
+            render: (row) => <div>{row.items.map((item, index) => <div key={`${item.product_id}:${item.variant_id}:${index}`}>{item.name} × {item.quantity}</div>)}</div> },
+        { key: 'source', header: text('المصدر', 'Source'), csv: (row) => row.source, render: (row) => (row.source === 'funnel' ? 'Funnels' : text('المتجر', 'Storefront')) },
+        { key: 'subtotal', header: text('قيمة المنتجات', 'Product subtotal'), align: 'end', csv: (row) => row.subtotal,
+            render: (row) => <span className="ws-dt-num" title={text('قبل الخصم والتوصيل', 'Before discounts and delivery')}>{money(row)}</span> },
+        { key: 'activity', header: text('آخر نشاط', 'Last activity'), csv: (row) => row.last_activity_at ?? '', render: (row) => <span className="ws-dt-num">{new Date(row.last_activity_at).toLocaleString(ar ? 'ar-EG' : 'en-GB')}</span> },
+        { key: 'status', header: text('الحالة', 'Status'), csv: (row) => row.status,
+            render: (row) => <span className={`ws-dt-badge ${row.status === 'completed' ? 'is-success' : 'is-warning'}`}>{statusLabel(row.status)}</span> },
+        { key: 'actions', header: <span className="sr-only">{text('إجراءات', 'Actions')}</span>, hideable: false, align: 'end',
+            render: (row) => <div className="ws-dt-row-actions"><button type="button" className="ws-dt-button" disabled={busy} onClick={() => updateStatus(row.status === 'completed' ? 'under_review' : 'completed', [row])}>{row.status === 'completed' ? text('إعادة للمراجعة', 'Return to review') : text('تحديد كمكتمل', 'Mark completed')}</button></div> },
+    ], [ar, busy]); // eslint-disable-line react-hooks/exhaustive-deps
+
+    const table = useIndexTable({ scope: `store:${store?.id ?? apiBase}:missed-orders`, filters, columns, views, defaults: DEFAULTS });
+    const paramsKey = JSON.stringify(table.apiParams);
     useEffect(() => {
         let active = true; const quiet = backgroundRefresh.current; backgroundRefresh.current = false;
         if (!quiet) { setLoading(true); setError(''); }
-        api.get(path, { params: { status, search, source, date_from: from, date_to: to, page, per_page: 25 } }).then(({ data }) => { if (active) setResult(data); }).catch((e) => { if (active && !quiet) setError(e.response?.data?.message || e.message); }).finally(() => { if (active && !quiet) setLoading(false); });
+        api.get(path, { params: table.apiParams }).then(({ data }) => { if (active) setResult(data); }).catch((e) => { if (active && !quiet) setError(e.response?.data?.message || e.message); }).finally(() => { if (active && !quiet) setLoading(false); });
         return () => { active = false; };
-    }, [path, status, search, source, from, to, page, reload]);
+    }, [path, paramsKey, reload]); // eslint-disable-line react-hooks/exhaustive-deps
     useEffect(() => { const timer = window.setInterval(() => { if (document.visibilityState !== 'hidden' && !busy) { backgroundRefresh.current = true; setReload((value) => value + 1); } }, 45000); return () => window.clearInterval(timer); }, [busy]);
-    const pending = loading || query !== search; const rows = result?.data || [];
-    const count = (result?.counts?.under_review || 0) + (result?.counts?.completed || 0);
-    const tabs = [['', text('جميع الطلبات', 'All orders'), count], ['completed', text('مكتمل', 'Completed'), result?.counts?.completed || 0], ['under_review', text('تحت المراجعة', 'Under review'), result?.counts?.under_review || 0]];
-    const resetPage = (setter, value) => { setter(value); setPage(1); setSelected(new Map()); };
-    const moveTab = (event, index) => {
-        let next;
-        if (event.key === 'Home') next = 0;
-        else if (event.key === 'End') next = tabs.length - 1;
-        else if (event.key === 'ArrowRight') next = (index + (ar ? -1 : 1) + tabs.length) % tabs.length;
-        else if (event.key === 'ArrowLeft') next = (index + (ar ? 1 : -1) + tabs.length) % tabs.length;
-        if (next === undefined) return;
-        event.preventDefault(); resetPage(setStatus, tabs[next][0]); tabButtons.current[next]?.focus();
-    };
-    const toggle = (row, checked) => setSelected((current) => { const next = new Map(current); if (checked) next.set(row.id, row); else next.delete(row.id); return next; });
+    const pending = loading || table.searching; const rows = result?.data || [];
+    const selectedRows = [...table.selected.values()];
+
     async function updateStatus(nextStatus, selections) {
-        if (busy || !selections.length) return; setBusy(true); setError('');
-        try { await api.post(`${path}/bulk-status`, { status: nextStatus, leads: selections.map((row) => ({ id: row.id, version: row.edit_version })) }); setSelected(new Map()); setReload((value) => value + 1); }
-        catch (e) { setError(e.response?.data?.message || e.message); } finally { setBusy(false); }
+        if (busy || !selections.length) return; setBusy(true); setActionError('');
+        try { await api.post(`${path}/bulk-status`, { status: nextStatus, leads: selections.map((row) => ({ id: row.id, version: row.edit_version })) }); table.clearSelection(); setReload((value) => value + 1); }
+        catch (e) { setActionError(e.response?.data?.message || e.message); } finally { setBusy(false); }
     }
     async function exportRows() {
-        if (busy || pending) return; setBusy(true); setError('');
+        if (busy || pending) return; setBusy(true); setActionError('');
         try {
-            if (!selected.size && result?.meta?.total > 10000) throw new Error(text('ضيّق الفلاتر لتصدير 10,000 محاولة أو أقل.', 'Narrow filters to export 10,000 checkouts or fewer.'));
-            const data = selected.size ? [...selected.values()] : await fetchAllPages(path, { ...params, per_page: 100 });
+            if (!selectedRows.length && result?.meta?.total > 10000) throw new Error(text('ضيّق الفلاتر لتصدير 10,000 محاولة أو أقل.', 'Narrow filters to export 10,000 checkouts or fewer.'));
+            const { page: _page, per_page: _perPage, ...filterParams } = table.apiParams;
+            const data = selectedRows.length ? selectedRows : await fetchAllPages(path, filterParams);
             const href = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type: 'application/json;charset=utf-8' })); const link = document.createElement('a'); link.href = href; link.download = 'missed-orders.json'; link.click(); URL.revokeObjectURL(href);
-        } catch (e) { setError(e.message); } finally { setBusy(false); }
+        } catch (e) { setActionError(e.message); } finally { setBusy(false); }
     }
-    return <div className="ws-missed">
-        <header className="ws-missed-heading"><h1>{text('الطلبات المفقودة', 'Missed orders')}</h1><p>{text('الطلبات المفقودة هي الطلبات التي لم يتم إرسالها لمتجرك بسبب عدم إكمال العميل للطلب.', 'Missed orders are checkouts the customer did not complete.')}</p></header>
-        {error ? <p role="alert" className="mt-5 rounded-lg bg-red-50 p-3 text-red-700">{error}<button className="ms-3 underline" onClick={() => setReload((value) => value + 1)}>{text('إعادة التحميل', 'Reload')}</button></p> : null}
-        {pending && !result ? <p role="status" className="py-20 text-center">{text('جارٍ التحميل…', 'Loading…')}</p> : !count && !error ? <div className="ws-missed-empty"><h2>{text('لا توجد طلبات مفقودة حتى الآن', 'No missed orders yet')}</h2></div> : <>
-            <div className="ws-missed-toolbar"><div className="ws-missed-tabs" role="tablist" aria-label={text('حالة المراجعة', 'Review status')}>{tabs.map(([value, label, total], index) => <button key={value} ref={(element) => { tabButtons.current[index] = element; }} id={`${tabsId}-tab-${index}`} aria-controls={`${tabsId}-panel`} tabIndex={status === value ? 0 : -1} role="tab" type="button" aria-selected={status === value} onKeyDown={(event) => moveTab(event, index)} onClick={() => resetPage(setStatus, value)}>{label}<span>{total}</span></button>)}</div><div className="ws-catalog-actions"><button className="ws-catalog-button" disabled={busy || pending || (!selected.size && !result?.meta?.total)} onClick={exportRows}>{text('تصدير', 'Export')}</button><button className="ws-catalog-button" aria-expanded={filters} onClick={() => setFilters((value) => !value)}>{text('إضافة فلتر', 'Add filter')}</button></div></div>
-            <div id={`${tabsId}-panel`} role="tabpanel" aria-labelledby={`${tabsId}-tab-${tabs.findIndex(([value]) => value === status)}`} aria-busy={pending} tabIndex={0}>
-            {filters ? <section className="ws-missed-filters" aria-label={text('الفلاتر', 'Filters')}><label>{text('بحث', 'Search')}<input className="ws-catalog-filter" value={query} placeholder={text('الاسم أو الهاتف أو البريد الإلكتروني', 'Name, phone or email')} onChange={(event) => resetPage(setQuery, event.target.value)} /></label><label>{text('المصدر', 'Source')}<select className="ws-catalog-filter" value={source} onChange={(event) => resetPage(setSource, event.target.value)}><option value="">{text('الكل', 'All')}</option><option value="storefront">{text('المتجر', 'Storefront')}</option><option value="funnel">Funnels</option></select></label><label>{text('من تاريخ', 'From date')}<input className="ws-catalog-filter" type="date" value={from} onChange={(event) => resetPage(setFrom, event.target.value)} /></label><label>{text('إلى تاريخ', 'To date')}<input className="ws-catalog-filter" type="date" value={to} min={from || undefined} onChange={(event) => resetPage(setTo, event.target.value)} /></label><button className="ws-catalog-button" onClick={() => { setQuery(''); setSource(''); setFrom(''); setTo(''); setPage(1); setSelected(new Map()); }}>{text('مسح الفلاتر', 'Clear filters')}</button></section> : null}
-            {selected.size ? <div className="ws-missed-selection"><span>{selected.size} {text('محدد', 'selected')}</span><button className="ws-catalog-button" disabled={busy || selected.size > 100} onClick={() => updateStatus('completed', [...selected.values()])}>{text('تحديد كمكتمل', 'Mark completed')}</button><button className="ws-catalog-button" disabled={busy || selected.size > 100} onClick={() => updateStatus('under_review', [...selected.values()])}>{text('إعادة للمراجعة', 'Return to review')}</button></div> : null}
-            <section className="ws-catalog-card"><div className="ws-catalog-table"><table><thead><tr><th><input type="checkbox" disabled={pending || !rows.length} checked={rows.length > 0 && rows.every((row) => selected.has(row.id))} aria-label={text('اختيار الصفحة', 'Select page')} onChange={(event) => rows.forEach((row) => toggle(row, event.target.checked))} /></th><th>{text('العميل', 'Customer')}</th><th>{text('المنتجات', 'Products')}</th><th>{text('قيمة المنتجات', 'Product subtotal')}</th><th>{text('آخر نشاط', 'Last activity')}</th><th>{text('الحالة', 'Status')}</th><th>{text('إجراءات', 'Actions')}</th></tr></thead><tbody>{pending ? <tr><td colSpan={7} role="status">{text('جارٍ التحميل…', 'Loading…')}</td></tr> : rows.length ? rows.map((row) => <tr key={row.id}><td><input type="checkbox" aria-label={`${text('اختيار', 'Select')} ${row.customer_name || row.id}`} checked={selected.has(row.id)} onChange={(event) => toggle(row, event.target.checked)} /></td><td><strong>{row.customer_name || '—'}</strong>{row.customer_phone ? <div dir="ltr"><a href={`tel:${(row.phone_dial || row.customer_phone).replace(/[^+\d]/g, '')}`}>{row.customer_phone}</a></div> : null}{row.customer_email ? <div>{row.customer_email}</div> : null}{row.shipping_address || row.notes || row.coupon_code || row.shipping_selection?.region_name || row.shipping_selection?.option_name ? <details><summary>{text('تفاصيل التواصل', 'Contact details')}</summary><p>{Object.values(row.shipping_address || {}).filter(Boolean).join(' · ')}</p>{row.shipping_selection?.region_name ? <p>{row.shipping_selection.region_name}</p> : null}{row.shipping_selection?.option_name ? <p>{row.shipping_selection.option_name}</p> : null}{row.coupon_code ? <p>{text('الكوبون', 'Coupon')}: {row.coupon_code}</p> : null}{row.notes ? <p>{row.notes}</p> : null}</details> : null}</td><td>{row.items.map((item, index) => <div key={`${item.product_id}:${item.variant_id}:${index}`}>{item.name} × {item.quantity}</div>)}<small>{row.source === 'funnel' ? 'Funnels' : text('المتجر', 'Storefront')}</small></td><td>{new Intl.NumberFormat(ar ? 'ar-EG' : 'en-GB', { style: 'currency', currency: row.currency }).format(Number(row.subtotal))}<small className="block">{text('قبل الخصم والتوصيل', 'Before discounts and delivery')}</small></td><td>{new Date(row.last_activity_at).toLocaleString(ar ? 'ar-EG' : 'en-GB')}</td><td><span className={`ws-missed-status ws-missed-status--${row.status}`}>{row.status === 'completed' ? text('مكتمل', 'Completed') : text('تحت المراجعة', 'Under review')}</span></td><td><button className="ws-catalog-button" disabled={busy} onClick={() => updateStatus(row.status === 'completed' ? 'under_review' : 'completed', [row])}>{row.status === 'completed' ? text('إعادة للمراجعة', 'Return to review') : text('تحديد كمكتمل', 'Mark completed')}</button></td></tr>) : <tr><td colSpan={7}>{text('لا توجد نتائج لهذه الفلاتر.', 'No results for these filters.')}</td></tr>}</tbody></table></div>
-                <footer className="ws-catalog-pagination"><span>{result?.meta?.total || 0} · {page}/{result?.meta?.last_page || 1}</span><button disabled={pending || page <= 1} onClick={() => setPage(page - 1)}>{text('السابق', 'Previous')}</button><button disabled={pending || page >= (result?.meta?.last_page || 1)} onClick={() => setPage(page + 1)}>{text('التالي', 'Next')}</button></footer>
-            </section>
-            </div>
-        </>}
-    </div>;
+    const bulkActions = [
+        { key: 'completed', label: text('تحديد كمكتمل', 'Mark completed'), icon: HiOutlineCheckCircle, disabled: () => busy, onAction: (list) => void updateStatus('completed', list) },
+        { key: 'review', label: text('إعادة للمراجعة', 'Return to review'), icon: HiOutlineArrowUturnLeft, disabled: () => busy, onAction: (list) => void updateStatus('under_review', list) },
+    ];
+
+    return <section className="ws-catalog-page ws-missed">
+        <header className="ws-catalog-heading"><div><h1>{text('الطلبات المفقودة', 'Missed orders')}</h1><p>{text('الطلبات المفقودة هي الطلبات التي لم يتم إرسالها لمتجرك بسبب عدم إكمال العميل للطلب.', 'Missed orders are checkouts the customer did not complete.')}</p></div><div className="ws-catalog-actions"><button type="button" className="ws-dt-button" disabled={busy || pending || (!selectedRows.length && !result?.meta?.total)} onClick={exportRows}><HiOutlineArrowDownTray aria-hidden />{selectedRows.length ? text('تصدير المحدد JSON', 'Export selected (JSON)') : text('تصدير JSON', 'Export JSON')}</button></div></header>
+        {actionError ? <p role="alert" className="rounded-lg bg-red-50 p-3 text-red-700">{actionError}</p> : null}
+        <div className="ws-dt-card">
+            <IndexFilters table={table} searchPlaceholder={text('الاسم أو الهاتف أو البريد الإلكتروني', 'Name, phone or email')} exportDisabled={!rows.length}
+                onExport={() => downloadCsv(`missed-orders-${new Date().toISOString().slice(0, 10)}.csv`, table.visibleColumns, selectedRows.length ? selectedRows : rows)} />
+            <IndexTable table={table} rows={rows} loading={loading} error={error} onRetry={() => setReload((value) => value + 1)} meta={result?.meta}
+                label={text('الطلبات المفقودة', 'Missed orders')} bulkActions={bulkActions} maxSelection={100}
+                emptyState={{ icon: HiOutlineShoppingCart, title: text('لا توجد طلبات مفقودة حتى الآن', 'No missed orders yet'), description: text('تظهر هنا محاولات الشراء التي لم يكملها العملاء لتتواصل معهم.', 'Checkouts that customers did not complete appear here so you can follow up.') }} />
+        </div>
+    </section>;
 }

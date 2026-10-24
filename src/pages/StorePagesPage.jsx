@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { HiOutlineArrowPath, HiOutlinePlus, HiOutlineSquares2X2, HiOutlineTrash } from '../components/workspace/WorkspaceIcons';
@@ -10,19 +10,13 @@ import { notify } from '../components/ui/notify';
 import SearchableSelect from '../components/ui/SearchableSelect';
 import useStoreContext from '../hooks/useStoreContext';
 import SimplePagesPanel from '../components/store/SimplePagesPanel';
+import { IndexFilters, IndexTable, downloadCsv, useIndexTable } from '../components/data-table';
 
 const badgeCls = 'inline-block rounded-full border px-2 py-0.5 text-xs font-medium';
 const thCls = 'px-4 py-3.5 text-start';
 const tdCls = 'px-4 py-3 align-middle';
 const rowCls = 'border-t border-slate-100 hover:bg-slate-50/60';
 const btnPrimary = 'rounded-lg bg-brand px-3 py-1.5 text-xs font-semibold text-white hover:bg-brand-dark';
-const btnGhost = 'rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50';
-
-const PAGE_STATUS = {
-    published: 'border-emerald-100 bg-emerald-50 text-emerald-700',
-    scheduled: 'border-sky-100 bg-sky-50 text-sky-700',
-    draft: 'border-slate-200 bg-slate-100 text-slate-500',
-};
 
 function slugify(value) {
     return String(value || '')
@@ -115,14 +109,21 @@ function NewPageForm({ apiBase, uiBase, locales, onClose, onCreated }) {
     );
 }
 
+// The custom pages endpoint filters by status and template only (no search or sorting; newest first).
+const DEFAULTS = { sort: null, perPage: 25 };
+const PAGE_STATUSES = ['published', 'draft', 'scheduled'];
+const STATUS_TONE = { published: 'is-success', scheduled: 'is-info', draft: '' };
+
 export default function StorePagesPage() {
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
+    const ar = i18n.language?.startsWith('ar'); const text = (a, e) => (ar ? a : e);
     const navigate = useNavigate();
-    const { apiBase, uiBase, locales } = useStoreContext();
+    const { apiBase, uiBase, locales, store } = useStoreContext();
 
     const [contentPages, setContentPages] = useState([]);
-    const [customPages, setCustomPages] = useState([]);
+    const [result, setResult] = useState(null);
     const [loadingCustom, setLoadingCustom] = useState(true);
+    const [reload, setReload] = useState(0);
     const [creating, setCreating] = useState(false);
     const [err, setErr] = useState('');
     const [customErr, setCustomErr] = useState('');
@@ -132,21 +133,18 @@ export default function StorePagesPage() {
             .then(({ data }) => setContentPages(data.data ?? []))
             .catch((e) => setErr(e.response?.data?.message || e.message));
     }, [apiBase]);
+    useEffect(() => { load(); }, [load]);
 
-    const loadCustom = useCallback(async () => {
-        setLoadingCustom(true);
-        try {
-            const { data } = await api.get(`${apiBase}/pages`, { params: { per_page: 50 } });
-            setCustomPages(Array.isArray(data?.data) ? data.data : []);
-            setCustomErr('');
-        } catch (e) {
-            setCustomErr(e.response?.data?.message || e.message);
-        } finally {
-            setLoadingCustom(false);
-        }
-    }, [apiBase]);
-
-    useEffect(() => { load(); void loadCustom(); }, [load, loadCustom]);
+    const statusLabel = (status) => t(`store_pages_status_${status}`, status);
+    const templateLabel = (template) => (template === 'landing' ? t('store_pages_template_landing', 'Landing page') : template === 'page' ? t('store_pages_template_page', 'Standard page') : template);
+    const filters = useMemo(() => [
+        { key: 'status', label: t('col_status', 'Status'), type: 'select', options: PAGE_STATUSES.map((status) => ({ value: status, label: statusLabel(status) })) },
+        { key: 'template', label: t('store_pages_field_template', 'Template'), type: 'multi', options: ['page', 'landing'].map((template) => ({ value: template, label: templateLabel(template) })) },
+    ], [ar, t]); // eslint-disable-line react-hooks/exhaustive-deps
+    const views = useMemo(() => [
+        { id: 'all', label: text('الكل', 'All'), state: { filters: {} } },
+        ...PAGE_STATUSES.map((status) => ({ id: status, label: statusLabel(status), state: { filters: { status } } })),
+    ], [ar, t]); // eslint-disable-line react-hooks/exhaustive-deps
 
     const deletePage = async (page) => {
         const ok = await confirmDialog({
@@ -158,12 +156,42 @@ export default function StorePagesPage() {
         if (!ok) return;
         try {
             await api.delete(`${apiBase}/pages/${page.id}`);
-            setCustomPages((rows) => rows.filter((row) => row.id !== page.id));
+            setResult((current) => (current ? { ...current, data: current.data.filter((row) => row.id !== page.id) } : current));
             notify.success(t('store_pages_deleted', 'Page deleted'));
         } catch (e) {
             notify.error(t('store_pages_delete_failed', 'Could not delete the page'), e.response?.data?.message || e.message);
         }
     };
+
+    const date = (value) => (value ? new Date(value).toLocaleDateString(ar ? 'ar-EG' : 'en-GB') : '—');
+    const columns = useMemo(() => [
+        { key: 'page', header: t('col_page', 'Page'), hideable: false, primary: true, csv: (page) => page.title,
+            render: (page) => <Link className="ws-dt-title" to={`${uiBase}/pages/${page.id}/builder`}>{page.title}</Link> },
+        { key: 'path', header: t('col_path', 'Path'), csv: (page) => `/${page.slug}`, render: (page) => <span className="font-mono text-xs" dir="ltr">/{page.slug}</span> },
+        { key: 'locale', header: t('store_pages_col_locale', 'Language'), csv: (page) => page.locale ?? '', render: (page) => <span className="uppercase">{page.locale || '—'}</span> },
+        { key: 'template', header: t('store_pages_field_template', 'Template'), defaultHidden: true, csv: (page) => page.template ?? '', render: (page) => templateLabel(page.template) || '—' },
+        { key: 'status', header: t('col_status', 'Status'), csv: (page) => page.status,
+            render: (page) => <span className={`ws-dt-badge ${STATUS_TONE[page.status] ?? ''}`}>{statusLabel(page.status)}</span> },
+        { key: 'published', header: text('تاريخ النشر', 'Published'), defaultHidden: true, csv: (page) => page.published_at ?? page.publish_at ?? '', render: (page) => <span className="ws-dt-num">{date(page.published_at ?? page.publish_at)}</span> },
+        { key: 'actions', header: <span className="sr-only">{t('col_actions', 'Actions')}</span>, hideable: false, align: 'end',
+            render: (page) => <div className="ws-dt-row-actions">
+                <Link to={`${uiBase}/pages/${page.id}/builder`} className="ws-dt-button">{t('store_pages_open_builder', 'Open builder')}</Link>
+                <button type="button" onClick={() => deletePage(page)} className="ws-dt-icon" aria-label={`${t('action_delete', 'Delete')} ${page.title}`} title={t('action_delete', 'Delete')}><HiOutlineTrash aria-hidden /></button>
+            </div> },
+    ], [ar, t, uiBase, apiBase]); // eslint-disable-line react-hooks/exhaustive-deps
+
+    const table = useIndexTable({ scope: `store:${store?.id ?? apiBase}:pages`, filters, columns, views, defaults: DEFAULTS });
+    const paramsKey = JSON.stringify(table.apiParams);
+    useEffect(() => {
+        let active = true; setLoadingCustom(true); setCustomErr('');
+        api.get(`${apiBase}/pages`, { params: table.apiParams })
+            .then(({ data }) => { if (active) setResult({ ...data, data: Array.isArray(data?.data) ? data.data : [] }); })
+            .catch((e) => { if (active) setCustomErr(e.response?.data?.message || e.message); })
+            .finally(() => { if (active) setLoadingCustom(false); });
+        return () => { active = false; };
+    }, [apiBase, paramsKey, reload]); // eslint-disable-line react-hooks/exhaustive-deps
+    useEffect(() => { setCreating(false); setResult(null); }, [apiBase]);
+    const customPages = result?.data ?? [];
 
     return (
         <div className="mx-auto max-w-5xl space-y-5">
@@ -223,8 +251,8 @@ export default function StorePagesPage() {
             </div>
 
             {/* Custom pages — free-form pages built with the page builder. */}
-            <div className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-card">
-                <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 px-4 py-3">
+            <section className="space-y-3">
+                <div className="flex flex-wrap items-center justify-between gap-3">
                     <div>
                         <h2 className="text-sm font-semibold text-slate-900">{t('store_pages_custom_title', 'Custom pages')}</h2>
                         <p className="text-xs text-slate-500">{t('store_pages_custom_hint', 'Landing pages and extra content built from theme sections.')}</p>
@@ -239,66 +267,25 @@ export default function StorePagesPage() {
                     </button>
                 </div>
                 {creating ? (
-                    <NewPageForm
-                        apiBase={apiBase}
-                        uiBase={uiBase}
-                        locales={locales}
-                        onClose={() => setCreating(false)}
-                        onCreated={(page) => { if (page) setCustomPages((rows) => [page, ...rows]); setCreating(false); }}
-                    />
+                    <div className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-card">
+                        <NewPageForm
+                            apiBase={apiBase}
+                            uiBase={uiBase}
+                            locales={locales}
+                            onClose={() => setCreating(false)}
+                            onCreated={() => { setCreating(false); setReload((value) => value + 1); }}
+                        />
+                    </div>
                 ) : null}
-                {customErr ? (
-                    <p className="m-4 rounded-lg border border-red-100 bg-red-50 px-3 py-2 text-sm text-red-700">
-                        {customErr}
-                        <button type="button" onClick={() => void loadCustom()} className="ms-3 font-semibold underline">{t('action_retry', 'Retry')}</button>
-                    </p>
-                ) : null}
-                <div className="overflow-x-auto">
-                    <table className="min-w-full text-start text-sm">
-                        <thead className="bg-surface-muted/90 text-xs font-semibold uppercase tracking-wide text-slate-600">
-                            <tr>
-                                <th className={thCls}>{t('col_page', 'Page')}</th>
-                                <th className={thCls}>{t('col_path', 'Path')}</th>
-                                <th className={thCls}>{t('store_pages_col_locale', 'Language')}</th>
-                                <th className={thCls}>{t('col_status', 'Status')}</th>
-                                <th className={`${thCls} text-end`}>{t('col_actions', 'Actions')}</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {loadingCustom ? (
-                                <tr><td colSpan={5} className="px-4 py-10 text-center text-sm text-slate-400">{t('loading', 'Loading…')}</td></tr>
-                            ) : customPages.length === 0 ? (
-                                <tr>
-                                    <td colSpan={5} className="px-4 py-12 text-center text-sm text-slate-500">
-                                        {t('store_pages_custom_empty', 'No custom pages yet. Create one to open the page builder.')}
-                                    </td>
-                                </tr>
-                            ) : customPages.map((page) => (
-                                <tr key={page.id} className={rowCls}>
-                                    <td className={`${tdCls} font-medium text-slate-800`}>{page.title}</td>
-                                    <td className={`${tdCls} font-mono text-xs text-slate-500`} dir="ltr">/{page.slug}</td>
-                                    <td className={`${tdCls} uppercase text-slate-500`}>{page.locale || '—'}</td>
-                                    <td className={tdCls}>
-                                        <span className={`${badgeCls} ${PAGE_STATUS[page.status] || PAGE_STATUS.draft}`}>
-                                            {t(`store_pages_status_${page.status}`, page.status)}
-                                        </span>
-                                    </td>
-                                    <td className={`${tdCls} text-end`}>
-                                        <div className="inline-flex items-center gap-1.5">
-                                            <Link to={`${uiBase}/pages/${page.id}/builder`} className={btnPrimary}>
-                                                {t('store_pages_open_builder', 'Open builder')}
-                                            </Link>
-                                            <button type="button" onClick={() => deletePage(page)} className={`${btnGhost} text-red-600 hover:bg-red-50`} aria-label={t('action_delete', 'Delete')}>
-                                                <HiOutlineTrash className="h-4 w-4" aria-hidden />
-                                            </button>
-                                        </div>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
+                <div className="ws-dt-card">
+                    <IndexFilters table={table} searchable={false} exportDisabled={!customPages.length}
+                        onExport={() => downloadCsv(`pages-${new Date().toISOString().slice(0, 10)}.csv`, table.visibleColumns, customPages)} />
+                    <IndexTable table={table} rows={customPages} loading={loadingCustom} error={customErr} onRetry={() => setReload((value) => value + 1)} meta={result?.meta}
+                        label={t('store_pages_custom_title', 'Custom pages')} rowHref={(page) => `${uiBase}/pages/${page.id}/builder`}
+                        emptyState={{ icon: HiOutlineSquares2X2, title: t('store_pages_custom_empty', 'No custom pages yet. Create one to open the page builder.'),
+                            action: <button type="button" className="ws-dt-button ws-dt-button-primary" onClick={() => setCreating(true)}>{t('store_pages_new', 'New page')}</button> }} />
                 </div>
-            </div>
+            </section>
         </div>
     );
 }

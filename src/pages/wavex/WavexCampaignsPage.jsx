@@ -1,7 +1,7 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, Navigate, useOutletContext } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import {
     HiOutlineArrowPath,
     HiOutlineCheckCircle,
@@ -16,24 +16,16 @@ import {
     HiOutlineTrash,
     HiOutlineXCircle,
 } from '../../components/workspace/WorkspaceIcons';
+import { IndexTable, useIndexTable } from '../../components/data-table';
 import api from '../../api/client';
 import { getPaginatedRows } from '../../utils/apiPagination';
 
 /* ────────── helpers ────────── */
-function listStatusClass(status) {
-    switch (status) {
-        case 'running':
-            return 'bg-emerald-500/15 text-emerald-800 ring-1 ring-emerald-500/30';
-        case 'paused':
-            return 'bg-amber-500/15 text-amber-900 ring-1 ring-amber-500/35';
-        case 'completed':
-            return 'bg-sky-500/15 text-sky-800 ring-1 ring-sky-500/30';
-        case 'cancelled':
-            return 'bg-red-500/15 text-red-800 ring-1 ring-red-500/30';
-        default:
-            return 'bg-slate-500/10 text-slate-700 ring-1 ring-slate-500/20';
-    }
-}
+const STATUS_TONES = { running: 'is-success', paused: 'is-warning', completed: 'is-info', cancelled: 'is-critical' };
+// The campaigns endpoint pages by 20 and has no search, filter or sort parameters.
+const LIST_DEFAULTS = { perPage: 20, perPageOptions: [20] };
+const NO_FILTERS = [];
+const NO_VIEWS = [];
 
 /* ═══════════════════════════════════════════════════════════════
    Queue Status Dashboard Component
@@ -288,41 +280,71 @@ export default function WavexCampaignsPage() {
     const outlet = useOutletContext();
     const permissions = Array.isArray(outlet?.permissions) ? outlet.permissions : [];
 
-    const [rows, setRows] = useState([]);
+    const [result, setResult] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [loadErr, setLoadErr] = useState('');
     const [err, setErr] = useState('');
-    const [selected, setSelected] = useState([]);
     const [busy, setBusy] = useState(false);
+    const latest = useRef(0);
+    // Row actions call the latest handler (it depends on the current page).
+    const removeOne = useRef(null);
 
     const canAccessWavex = permissions.includes('wavex-access');
 
+    const columns = useMemo(() => [
+        { key: 'name', header: t('wavex_campaign_name'), primary: true, hideable: false,
+            render: (row) => {
+                const pct = row.total_recipients > 0 ? Math.round(((row.sent_count || 0) / row.total_recipients) * 100) : 0;
+                return <div>
+                    <Link to={`/wavex/campaigns/${row.id}`} className="ws-dt-title">{row.name}</Link>
+                    <div className="mt-1 flex items-center gap-2">
+                        <div className="h-1.5 w-24 overflow-hidden rounded-full bg-slate-200" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={pct} aria-label={t('wavex_campaign_sent')}>
+                            <div className="h-full rounded-full bg-linear-to-r from-brand to-emerald-500" style={{ width: `${pct}%` }} />
+                        </div>
+                        <span className="text-[10px] font-medium text-slate-500">{pct}%</span>
+                    </div>
+                </div>;
+            } },
+        { key: 'status', header: t('wavex_campaign_status'), render: (row) => <span className={`ws-dt-badge capitalize ${STATUS_TONES[row.status] ?? ''}`}>{row.status}</span> },
+        { key: 'total', header: t('wavex_campaign_total'), align: 'end', render: (row) => <span className="ws-dt-num">{row.total_recipients ?? 0}</span> },
+        { key: 'sent', header: t('wavex_campaign_sent'), align: 'end', render: (row) => <span className="ws-dt-num text-emerald-700">{row.sent_count ?? 0}</span> },
+        { key: 'failed', header: t('wavex_campaign_failed'), align: 'end', render: (row) => <span className="ws-dt-num text-red-600">{row.failed_count ?? 0}</span> },
+        { key: 'pending', header: t('wavex_campaign_pending'), align: 'end',
+            render: (row) => <span className="ws-dt-num text-amber-600">{(row.total_recipients || 0) - (row.sent_count || 0) - (row.failed_count || 0) - (row.queued_count || 0)}</span> },
+        { key: 'actions', header: t('wavex_cg_actions'), hideable: false, align: 'end',
+            render: (row) => <div className="ws-dt-row-actions">
+                <Link className="ws-dt-icon" to={`/wavex/campaigns/${row.id}`} title={t('wavex_campaign_open')} aria-label={`${t('wavex_campaign_open')} ${row.name}`}><HiOutlineEye aria-hidden /></Link>
+                <button type="button" className="ws-dt-icon" onClick={() => void removeOne.current?.(row.id)} disabled={busy || row.status === 'running'} title={t('wavex_cg_delete')} aria-label={`${t('wavex_cg_delete')} ${row.name}`}><HiOutlineTrash aria-hidden /></button>
+            </div> },
+    ], [t, busy]);
+    const table = useIndexTable({ scope: 'wavex:campaigns', filters: NO_FILTERS, columns, views: NO_VIEWS, defaults: LIST_DEFAULTS, savedViews: false });
+    const page = table.state.page;
+
     const load = useCallback(async () => {
-        setErr('');
+        const request = ++latest.current;
+        setLoadErr('');
         setLoading(true);
         try {
-            const { data } = await api.get('/wavex/campaigns');
-            setRows(getPaginatedRows(data));
-            setSelected([]);
+            const { data } = await api.get('/wavex/campaigns', { params: { page } });
+            if (request === latest.current) setResult(data);
         } catch (e) {
-            setErr(e.response?.data?.message || e.message);
-            setRows([]);
+            if (request === latest.current) { setLoadErr(e.response?.data?.message || e.message); setResult(null); }
         } finally {
-            setLoading(false);
+            if (request === latest.current) setLoading(false);
         }
-    }, []);
+    }, [page]);
 
     useEffect(() => {
         if (!canAccessWavex) return;
         void load();
     }, [load, canAccessWavex]);
 
-    const toggleSelect = (id) => {
-        setSelected((prev) => prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]);
+    const reload = async () => {
+        table.clearSelection();
+        await load();
     };
 
-    const toggleAll = () => {
-        setSelected(selected.length === rows.length ? [] : rows.map((r) => r.id));
-    };
+    useEffect(() => { removeOne.current = deleteCampaign; });
 
     async function deleteCampaign(id) {
         if (!confirm(t('wavex_campaign_confirm_delete'))) return;
@@ -330,7 +352,7 @@ export default function WavexCampaignsPage() {
         setErr('');
         try {
             await api.delete(`/wavex/campaigns/${id}`);
-            await load();
+            await reload();
         } catch (e) {
             setErr(e.response?.data?.message || e.message);
         } finally {
@@ -338,14 +360,14 @@ export default function WavexCampaignsPage() {
         }
     }
 
-    async function bulkDelete() {
-        if (selected.length === 0) return;
-        if (!confirm(t('wavex_campaign_confirm_bulk_delete', { count: selected.length }))) return;
+    async function bulkDelete(ids) {
+        if (ids.length === 0) return;
+        if (!confirm(t('wavex_campaign_confirm_bulk_delete', { count: ids.length }))) return;
         setBusy(true);
         setErr('');
         try {
-            await api.post('/wavex/campaigns/bulk-destroy', { ids: selected });
-            await load();
+            await api.post('/wavex/campaigns/bulk-destroy', { ids });
+            await reload();
         } catch (e) {
             setErr(e.response?.data?.message || e.message);
         } finally {
@@ -354,6 +376,17 @@ export default function WavexCampaignsPage() {
     }
 
     if (!canAccessWavex) return <Navigate to="/dashboard" replace />;
+
+    const rows = getPaginatedRows(result);
+    const createLink = (
+        <Link
+            to="/wavex/campaigns/new"
+            className="inline-flex items-center gap-1 rounded-lg bg-brand px-4 py-2 text-sm font-semibold text-white hover:bg-brand-dark"
+        >
+            <HiOutlinePlus className="h-4 w-4" />
+            {t('wavex_campaigns_new_cta')}
+        </Link>
+    );
 
     return (
         <div className="w-full max-w-none space-y-6">
@@ -368,19 +401,13 @@ export default function WavexCampaignsPage() {
                 <div className="flex items-center gap-2">
                     <button
                         type="button"
-                        onClick={() => void load()}
+                        onClick={() => void reload()}
                         className="inline-flex items-center gap-1 rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50"
                     >
                         <HiOutlineArrowPath className={loading ? 'h-4 w-4 animate-spin' : 'h-4 w-4'} />
                         {t('wavex_groups_reload')}
                     </button>
-                    <Link
-                        to="/wavex/campaigns/new"
-                        className="inline-flex items-center gap-1 rounded-lg bg-brand px-4 py-2 text-sm font-semibold text-white hover:bg-brand-dark"
-                    >
-                        <HiOutlinePlus className="h-4 w-4" />
-                        {t('wavex_campaigns_new_cta')}
-                    </Link>
+                    {createLink}
                 </div>
             </div>
 
@@ -388,151 +415,22 @@ export default function WavexCampaignsPage() {
             <QueueStatusDashboard t={t} />
 
             {err && (
-                <p className="rounded-lg border border-red-100 bg-red-50 px-3 py-2 text-sm text-red-700">{err}</p>
+                <p role="alert" className="rounded-lg border border-red-100 bg-red-50 px-3 py-2 text-sm text-red-700">{err}</p>
             )}
 
-            <AnimatePresence>
-                {selected.length > 0 && (
-                    <motion.div
-                        initial={{ opacity: 0, y: -6 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -6 }}
-                        className="flex items-center gap-3 rounded-xl border border-red-100 bg-red-50 px-4 py-3"
-                    >
-                        <span className="text-sm font-medium text-red-800">
-                            {t('wavex_cg_selected_count', { count: selected.length })}
-                        </span>
-                        <button
-                            type="button"
-                            onClick={bulkDelete}
-                            disabled={busy}
-                            className="inline-flex items-center gap-1 rounded-lg bg-red-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-red-700 disabled:opacity-50"
-                        >
-                            <HiOutlineTrash className="h-4 w-4" />
-                            {t('wavex_cg_delete_selected')}
-                        </button>
-                        <button
-                            type="button"
-                            onClick={() => setSelected([])}
-                            className="text-xs font-medium text-red-700 hover:underline"
-                        >
-                            {t('wavex_cg_deselect_all')}
-                        </button>
-                    </motion.div>
-                )}
-            </AnimatePresence>
-
-            <motion.div
-                initial={{ opacity: 0, y: 6 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="rounded-2xl border border-slate-200/80 bg-white shadow-card"
-            >
-                {loading ? (
-                    <p className="p-8 text-center text-sm text-slate-500">{t('table_loading')}</p>
-                ) : rows.length === 0 ? (
-                    <div className="p-10 text-center">
-                        <HiOutlineMegaphone className="mx-auto h-12 w-12 text-slate-300" />
-                        <p className="mt-2 text-sm text-slate-500">{t('empty')}</p>
-                        <Link
-                            to="/wavex/campaigns/new"
-                            className="mt-4 inline-flex items-center gap-1 rounded-lg bg-brand px-4 py-2 text-sm font-semibold text-white hover:bg-brand-dark"
-                        >
-                            <HiOutlinePlus className="h-4 w-4" />
-                            {t('wavex_campaigns_new_cta')}
-                        </Link>
-                    </div>
-                ) : (
-                    <div className="overflow-x-auto">
-                        <table className="w-full text-left text-sm">
-                            <thead className="border-b border-slate-100 bg-slate-50/80 text-xs text-slate-600">
-                                <tr>
-                                    <th className="w-10 px-4 py-3">
-                                        <input
-                                            type="checkbox"
-                                            checked={selected.length === rows.length && rows.length > 0}
-                                            onChange={toggleAll}
-                                            className="rounded-sm border-slate-300"
-                                        />
-                                    </th>
-                                    <th className="px-4 py-3">{t('wavex_campaign_name')}</th>
-                                    <th className="px-4 py-3">{t('wavex_campaign_status')}</th>
-                                    <th className="px-4 py-3 text-center">{t('wavex_campaign_total')}</th>
-                                    <th className="px-4 py-3 text-center">{t('wavex_campaign_sent')}</th>
-                                    <th className="px-4 py-3 text-center">{t('wavex_campaign_failed')}</th>
-                                    <th className="px-4 py-3 text-center">{t('wavex_campaign_pending')}</th>
-                                    <th className="w-36 px-4 py-3 text-center">{t('wavex_cg_actions')}</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-slate-100">
-                                {rows.map((row) => {
-                                    const pct = row.total_recipients > 0
-                                        ? Math.round(((row.sent_count || 0) / row.total_recipients) * 100)
-                                        : 0;
-                                    return (
-                                        <tr key={row.id} className={selected.includes(row.id) ? 'bg-brand/5' : 'hover:bg-slate-50'}>
-                                            <td className="px-4 py-3">
-                                                <input
-                                                    type="checkbox"
-                                                    checked={selected.includes(row.id)}
-                                                    onChange={() => toggleSelect(row.id)}
-                                                    className="rounded-sm border-slate-300"
-                                                />
-                                            </td>
-                                            <td className="px-4 py-3">
-                                                <Link to={`/wavex/campaigns/${row.id}`} className="font-semibold text-slate-900 hover:text-brand">
-                                                    {row.name}
-                                                </Link>
-                                                <div className="mt-1 flex items-center gap-2">
-                                                    <div className="h-1.5 w-24 overflow-hidden rounded-full bg-slate-200">
-                                                        <div
-                                                            className="h-full rounded-full bg-linear-to-r from-brand to-emerald-500"
-                                                            style={{ width: `${pct}%` }}
-                                                        />
-                                                    </div>
-                                                    <span className="text-[10px] font-medium text-slate-500">{pct}%</span>
-                                                </div>
-                                            </td>
-                                            <td className="px-4 py-3">
-                                                <span className={[
-                                                    'inline-flex rounded-full px-2.5 py-0.5 text-xs font-bold uppercase tracking-wide',
-                                                    listStatusClass(row.status),
-                                                ].join(' ')}>
-                                                    {row.status}
-                                                </span>
-                                            </td>
-                                            <td className="px-4 py-3 text-center tabular-nums">{row.total_recipients ?? 0}</td>
-                                            <td className="px-4 py-3 text-center tabular-nums text-emerald-700">{row.sent_count ?? 0}</td>
-                                            <td className="px-4 py-3 text-center tabular-nums text-red-600">{row.failed_count ?? 0}</td>
-                                            <td className="px-4 py-3 text-center tabular-nums text-amber-600">
-                                                {(row.total_recipients || 0) - (row.sent_count || 0) - (row.failed_count || 0) - (row.queued_count || 0)}
-                                            </td>
-                                            <td className="px-4 py-3">
-                                                <div className="flex items-center justify-center gap-1">
-                                                    <Link
-                                                        to={`/wavex/campaigns/${row.id}`}
-                                                        className="rounded-lg p-2 text-slate-500 hover:bg-slate-100 hover:text-brand"
-                                                        title={t('wavex_campaign_open')}
-                                                    >
-                                                        <HiOutlineEye className="h-4 w-4" />
-                                                    </Link>
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => void deleteCampaign(row.id)}
-                                                        disabled={busy || row.status === 'running'}
-                                                        className="rounded-lg p-2 text-slate-500 hover:bg-red-50 hover:text-red-600 disabled:opacity-30"
-                                                        title={t('wavex_cg_delete')}
-                                                    >
-                                                        <HiOutlineTrash className="h-4 w-4" />
-                                                    </button>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    );
-                                })}
-                            </tbody>
-                        </table>
-                    </div>
-                )}
+            <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} className="ws-dt-card">
+                <IndexTable
+                    table={table}
+                    rows={rows}
+                    loading={loading}
+                    error={loadErr}
+                    onRetry={() => void reload()}
+                    meta={result ? { total: result.total ?? rows.length, last_page: result.last_page ?? 1 } : undefined}
+                    label={t('wavex_campaigns_title')}
+                    rowHref={(row) => `/wavex/campaigns/${row.id}`}
+                    bulkActions={[{ key: 'delete', label: t('wavex_cg_delete_selected'), icon: HiOutlineTrash, tone: 'danger', disabled: () => busy, onAction: (selected) => void bulkDelete(selected.map((row) => row.id)) }]}
+                    emptyState={{ icon: HiOutlineMegaphone, title: t('empty'), action: createLink }}
+                />
             </motion.div>
         </div>
     );

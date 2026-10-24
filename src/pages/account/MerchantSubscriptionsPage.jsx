@@ -1,12 +1,15 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, Navigate, useOutletContext } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { MdCheckCircleOutline } from 'react-icons/md';
 import { BiArrowBack } from 'react-icons/bi';
 import api from '../../api/client';
+import { IndexTable, useIndexTable } from '../../components/data-table';
 import './merchant-subscriptions.css';
 
 const money = value => (value / 1000).toLocaleString('en-US', { maximumFractionDigits: 2 });
+const NO_FILTERS = [];
+const NO_VIEWS = [];
 function failureMessage(failure, text) {
     if (failure.response?.status === 402) return text('رصيد المحفظة غير كافٍ للاشتراك.', 'Your wallet balance is insufficient.');
     if (failure.response?.status === 409) return text('تغيرت الباقة أو إعداداتها. حدّث البيانات قبل المحاولة مجددًا.', 'The offer or settings changed. Refresh before trying again.');
@@ -19,6 +22,17 @@ export default function MerchantSubscriptionsPage() {
     const [data, setData] = useState(null); const [retry, setRetry] = useState(0); const [error, setError] = useState(''); const [busy, setBusy] = useState(false);
     const [choice, setChoice] = useState(null); const [autoRenew, setAutoRenew] = useState(false); const dialog = useRef(null);
     const request = useRef(null);
+    const historyColumns = useMemo(() => {
+        const date = value => new Date(value).toLocaleDateString(ar ? 'ar-EG' : 'en-US');
+        return [
+            { key: 'plan', header: text('الباقة', 'Plan'), primary: true, hideable: false, render: row => <strong className="merchant-subscription-plan">{row.cycle === 'yearly' ? text('سنوية', 'Annual') : text('شهرية', 'Monthly')}</strong> },
+            { key: 'amount', header: text('المبلغ', 'Amount'), align: 'end', render: row => <span className="ws-dt-num" dir="ltr">${money(row.price_milli)}</span> },
+            { key: 'start', header: text('البداية', 'Start'), render: row => <span className="ws-dt-num">{date(row.starts_at)}</span> },
+            { key: 'end', header: text('النهاية', 'End'), render: row => <span className="ws-dt-num">{date(row.ends_at)}</span> },
+        ];
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [ar]);
+    const history = useIndexTable({ scope: 'account:subscription-history', filters: NO_FILTERS, columns: historyColumns, views: NO_VIEWS, savedViews: false });
     useEffect(() => {
         if (!owner) return;
         const controller = new AbortController();
@@ -59,7 +73,9 @@ export default function MerchantSubscriptionsPage() {
         </div> : null}
         {error ? <div className="merchant-subscription-notice" role="alert">{error}<button type="button" onClick={() => setRetry(value => value + 1)}>{text('إعادة تحميل', 'Reload')}</button></div> : null}
         {data?.active ? <section className="merchant-subscription-current"><h2>{text('باقتك الحالية', 'Your current plan')}</h2><p>{text(data.active.cycle === 'yearly' ? 'الخطة السنوية' : 'الخطة الشهرية', data.active.cycle === 'yearly' ? 'Annual plan' : 'Monthly plan')} · ${money(data.active.price_milli)}</p><p>{text('تنتهي في', 'Expires on')} {new Date(data.active.ends_at).toLocaleDateString(ar ? 'ar-EG' : 'en-US')}</p><label><input type="checkbox" role="switch" checked={data.preferences.auto_renew} disabled={busy} onChange={event => preference(event.target.checked)} />{text('التجديد التلقائي', 'Auto-renewal')}</label><p>{text('يمكنك إيقاف التجديد مع الاحتفاظ بالباقة حتى نهاية مدتها.', 'Turn off renewal and keep your plan until its expiry date.')}</p></section> : null}
-        {data?.history?.length ? <details className="merchant-subscription-history"><summary>{text('سجل الاشتراكات', 'Subscription history')}</summary><div className="merchant-subscription-history-scroll"><table><thead><tr><th>{text('الباقة', 'Plan')}</th><th>{text('المبلغ', 'Amount')}</th><th>{text('البداية', 'Start')}</th><th>{text('النهاية', 'End')}</th></tr></thead><tbody>{data.history.map(row => <tr key={row.id}><td>{row.cycle === 'yearly' ? text('سنوية', 'Annual') : text('شهرية', 'Monthly')}</td><td>${money(row.price_milli)}</td><td>{new Date(row.starts_at).toLocaleDateString(ar ? 'ar-EG' : 'en-US')}</td><td>{new Date(row.ends_at).toLocaleDateString(ar ? 'ar-EG' : 'en-US')}</td></tr>)}</tbody></table></div></details> : null}
+        {data?.history?.length ? <details className="merchant-subscription-history"><summary>{text('سجل الاشتراكات', 'Subscription history')}</summary><div className="ws-dt-card merchant-subscription-history-table">
+            <IndexTable table={history} rows={data.history} label={text('سجل الاشتراكات', 'Subscription history')} />
+        </div></details> : null}
         <dialog ref={dialog} className="merchant-subscription-dialog" aria-labelledby="subscription-confirm-title" onCancel={event => { if (busy) event.preventDefault(); }}><h2 id="subscription-confirm-title">{text('تأكيد الاشتراك', 'Confirm subscription')}</h2>{choice ? <><p>{text(choice.cycle === 'yearly' ? 'الخطة السنوية' : 'الخطة الشهرية', choice.cycle === 'yearly' ? 'Annual plan' : 'Monthly plan')} · ${money(choice.price_milli)}</p><p>{text('سيتم خصم المبلغ من رصيد محفظتك.', 'The amount will be deducted from your wallet.')}</p><label><input type="checkbox" checked={autoRenew} disabled={busy} onChange={event => setAutoRenew(event.target.checked)} />{text('تفعيل التجديد التلقائي', 'Enable auto-renewal')}</label>{autoRenew ? <p>{text('يسمح التجديد التلقائي بتسجيل مديونية إذا لم يكن الرصيد كافيًا عند التجديد.', 'Auto-renewal records an amount due if your balance is insufficient when the plan renews.')}</p> : null}{!data?.available ? <p role="status">{text('الاشتراكات المدفوعة غير متاحة حاليًا.', 'Paid subscriptions are currently unavailable.')}</p> : data.balance_milli < choice.price_milli ? <p>{text('رصيد المحفظة غير كافٍ.', 'Your wallet balance is insufficient.')} <Link to="/top-up" onClick={() => dialog.current.close()}>{text('شحن المحفظة', 'Fund wallet')}</Link></p> : null}</> : null}<div><button type="button" disabled={busy} onClick={() => dialog.current.close()}>{text('إلغاء', 'Cancel')}</button><button type="button" disabled={busy || !data?.available || data.balance_milli < (choice?.price_milli || 0)} onClick={purchase}>{text(busy ? 'جارٍ التفعيل…' : 'تأكيد الاشتراك', busy ? 'Activating…' : 'Confirm subscription')}</button></div>{error ? <p role="alert">{error}</p> : null}</dialog>
     </section>;
 }

@@ -130,6 +130,7 @@ const StoreProductEditorPage = lazy(() => import('./pages/StoreProductEditorPage
 const StoreCategoriesPage = lazy(() => import('./pages/StoreCategoriesPage'));
 const StoreNewsletterPage = lazy(() => import('./pages/StoreNewsletterPage'));
 const StoreMissedOrdersPage = lazy(() => import('./pages/StoreMissedOrdersPage'));
+const StoreCustomersPage = lazy(() => import('./pages/StoreCustomersPage'));
 const StoreCategoryEditorPage = lazy(() => import('./pages/StoreCategoryEditorPage'));
 const StoreCouponFormPage = lazy(() => import('./pages/StoreCouponFormPage'));
 const StoreOrdersPage = lazy(() => import('./pages/StoreOrdersPage'));
@@ -236,6 +237,7 @@ const STORE_ROUTES = [
     { path: 'blocked-phones', element: <StoreBlockedPhonesPage otp /> },
     { path: 'newsletter', element: <StoreNewsletterPage /> },
     { path: 'missed-orders', element: <StoreMissedOrdersPage /> },
+    { path: 'customers', element: <StoreCustomersPage /> },
     { path: 'pixels-settings', element: <StoreTrackingPage /> },
     { path: 'pixel-conversion', element: <StoreTrackingPage mode="conversions" /> },
     { path: 'ga', element: <StoreTrackingPage mode="google" /> },
