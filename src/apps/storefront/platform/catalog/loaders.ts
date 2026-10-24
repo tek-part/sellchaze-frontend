@@ -19,4 +19,5 @@ export const THEME_LOADERS = {
   maison: () => import('../../themes/maison').then(module => module.maisonTheme),
   glow: () => import('../../themes/glow').then(module => module.glowTheme),
   karat: () => import('../../themes/karat').then(module => module.karatTheme),
+  stride: () => import('../../themes/stride').then(module => module.strideTheme),
 } satisfies Readonly<Record<string, ThemeLoader>>;

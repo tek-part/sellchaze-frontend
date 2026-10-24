@@ -19,6 +19,7 @@ import { LUXURY_AR } from './luxury.ar';
 import { ROUGE_AR } from './rouge.ar';
 import { HEARTH_AR } from './hearth.ar';
 import { VOLTAGE_AR } from './voltage.ar';
+import { STRIDE_CATALOG } from './stride';
 import { SPHINX_CATALOG, SPHINX_AR } from './sphinx';
 import { KIDS_CATALOG, KIDS_AR } from './kids';
 import { PETS_CATALOG, PETS_AR } from './pets';
@@ -49,6 +50,7 @@ const BY_THEME: Readonly<Record<string, DemoCatalog>> = {
   maison: HEARTH_CATALOG,
   glow: ROUGE_CATALOG,
   karat: LUXURY_CATALOG,
+  stride: STRIDE_CATALOG,
 };
 
 /**
@@ -73,6 +75,7 @@ const AR_OVERLAY: Readonly<Record<string, CatalogOverlay>> = {
   maison: HEARTH_AR,
   glow: ROUGE_AR,
   karat: LUXURY_AR,
+  stride: VOLTAGE_AR,
 };
 
 /**

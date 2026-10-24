@@ -390,7 +390,7 @@ describe('catalog + registry bridge', () => {
     expect(THEME_CATALOG).toHaveLength(15);
     const ids = THEME_CATALOG.map((e) => e.id);
     expect(new Set(ids).size).toBe(ids.length);
-    expect(ids).toEqual(['elite-wallets', 'hype-fashion', 'hype-perfumes', 'nature-pets', 'blast-pets', 'elite-furniture', 'nature-kids', 'pure-furniture', 'sphinx-v3', 'naseem', 'bazaar', 'sahra', 'fresh', 'techno', 'maison', 'glow', 'karat']);
+    expect(ids).toEqual(['elite-wallets', 'hype-fashion', 'hype-perfumes', 'nature-pets', 'blast-pets', 'elite-furniture', 'nature-kids', 'pure-furniture', 'sphinx-v3', 'naseem', 'bazaar', 'sahra', 'fresh', 'techno', 'maison', 'glow', 'karat', 'stride']);
   });
   it('registers every catalogued theme into a fresh registry', () => {
     const registry = new ThemeRegistry();
