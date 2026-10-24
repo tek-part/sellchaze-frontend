@@ -6,3 +6,6 @@
 .elt-product .sf-qty{border-radius:0}.elt-product .sf-pdp__buybox{position:sticky;top:100px;align-self:start}.elt-product .sf-pdp__price .sf-price__current{color:var(--sale)}@media(max-width:767px){.elt-product .sf-pdp__buybox{position:static}}
 @media(min-width:768px){.elt-root .sf-section.elt-product{padding:64px 0}.elt-product .sf-container{padding:0;max-width:1296px}.elt-product .sf-pdp{gap:40px}.elt-product .sf-pdp__buybox{padding:0 18px 10px}}
 .elt-root :where(h2,h3,h4){font-family:var(--font)}.elt-root .lib-split .lib-title{font-family:var(--heading);font-size:42.4px}@media(max-width:767px){.elt-root .lib-split .lib-title{font-size:32px}}
+
+/* One image: no thumbnail rail. */
+.elt-product .sf-gallery--single{grid-template-columns:minmax(0,1fr)}

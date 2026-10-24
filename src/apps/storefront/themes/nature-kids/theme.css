@@ -246,3 +246,6 @@
 .nkd-shelf--banner .nkd-shelf-content:not(:has(.nkd-shelf-banner)){grid-template-columns:minmax(0,1fr)}
 .nkd-card-colors{display:flex;justify-content:center;gap:6px;margin-block:8px}.nkd-card-colors>span{width:14px;height:14px;border-radius:50%;border:1px solid #0002}
 .nkd-product>.sf-section{padding-top:12px}.nkd-product .sf-gallery__main{aspect-ratio:1}@media(max-width:767px){.nkd-product .sf-gallery{display:grid;grid-template-columns:1fr;gap:16px}.nkd-product .sf-gallery__main{grid-column:1;grid-row:1}.nkd-product .sf-gallery__thumbs{grid-column:1;grid-row:2;margin-top:0}.nkd-product-carousel .lib-carousel__track{gap:16px}}
+
+/* One image: no thumbnail rail. */
+.nkd-product .sf-gallery--single{grid-template-columns:minmax(0,1fr)}
