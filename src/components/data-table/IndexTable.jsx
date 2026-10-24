@@ -77,7 +77,7 @@ export default function IndexTable({
                                 onMouseDown={(event) => { if (event.shiftKey) event.preventDefault(); }}
                                 onClick={(event) => { event.stopPropagation(); if (event.shiftKey) window.getSelection?.()?.removeAllRanges(); table.toggleRow(row, rows, rowKey, event.currentTarget.checked, event.shiftKey); }} onChange={() => {}}
                                 aria-label={text('تحديد الصف', 'Select row')} /></label></td> : null}
-                            {columns.map((column) => <td key={column.key} data-label={column.primary ? undefined : column.header} className={[column.align ? `is-${column.align}` : '', column.primary ? 'is-primary' : ''].join(' ').trim() || undefined}>{column.render(row)}</td>)}
+                            {columns.map((column) => <td key={column.key} data-label={column.primary || typeof column.header !== 'string' ? undefined : column.header} className={[column.align ? `is-${column.align}` : '', column.primary ? 'is-primary' : ''].join(' ').trim() || undefined}>{column.render(row)}</td>)}
                         </tr>;
                     })}
                     {!loading && !rows.length ? <tr className="ws-dt-empty-row"><td colSpan={span}><div className="ws-dt-empty">
