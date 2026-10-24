@@ -16,4 +16,8 @@ export const THEME_LOADERS = {
   sahra: () => import('../../themes/sahra').then(module => module.sahraTheme),
   fresh: () => import('../../themes/fresh').then(module => module.freshTheme),
   techno: () => import('../../themes/techno').then(module => module.technoTheme),
+  maison: () => import('../../themes/maison').then(module => module.maisonTheme),
+  glow: () => import('../../themes/glow').then(module => module.glowTheme),
+  karat: () => import('../../themes/karat').then(module => module.karatTheme),
+  stride: () => import('../../themes/stride').then(module => module.strideTheme),
 } satisfies Readonly<Record<string, ThemeLoader>>;

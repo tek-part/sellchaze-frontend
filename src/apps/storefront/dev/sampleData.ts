@@ -113,8 +113,24 @@ export function sampleProductDetail(slug: string, themeId?: string, locale?: str
   if (themeId === 'elite-wallets') {
     return { ...base, images: base.image ? [base.image] : [], inStock: true, sku: `PREVIEW-${base.id}`, descriptionHtml: locale === 'ar' ? '<p>بيانات معاينة فقط. يضيف المتجر صور الإكسسوارات ووصفها وخياراتها الفعلية.</p>' : '<p>Preview content only. Each store supplies its actual accessory photographs, descriptions and options.</p>' };
   }
+  if (themeId === 'stride') {
+    const ar = locale === 'ar';
+    const sizes = base.sizes?.length ? base.sizes.slice(0, 3) : [];
+    const sizeKey = ar ? 'المقاس' : 'Size';
+    const stock = [6, 2, 0];
+    return { ...base, images: [base.image, base.hoverImage].filter((image): image is NonNullable<typeof image> => Boolean(image)), inStock: true, sku: `STRIDE-${base.id}`,
+      descriptionHtml: ar ? '<p>بيانات معاينة فقط. يضيف كل متجر صور منتجاته ووصفها وجدول المقاسات الفعلي.</p>' : '<p>Preview content only. Each store supplies its own product photographs, descriptions and size chart.</p>',
+      variants: sizes.map((size, i) => ({ id: `stride-${i}`, label: size, options: { [sizeKey]: size }, price: base.price, available: (stock[i] ?? 0) > 0, availableStock: stock[i] ?? 0 })) };
+  }
   if (themeId === 'hype-perfumes') {
     return { ...base, images: [base.image, base.hoverImage].filter((image): image is NonNullable<typeof image> => Boolean(image)), inStock: true, sku: `PREVIEW-${base.id}`, descriptionHtml: locale === 'ar' ? '<p>بيانات معاينة فقط. يضيف المتجر صور منتجاته ووصفها وخياراتها الفعلية.</p>' : '<p>Preview content only. Each store supplies its actual fragrance photographs, descriptions and options.</p>' };
+  }
+  if (themeId === 'glow') {
+    const ar = locale === 'ar';
+    const volumes = (base.sizes ?? []).filter((size) => /^\d+\s*ml$/i.test(size));
+    return { ...base, images: [base.image, base.hoverImage].filter((image): image is NonNullable<typeof image> => Boolean(image)), inStock: true, sku: `GLOW-${base.id}`,
+      descriptionHtml: ar ? '<p>بيانات معاينة فقط. يضيف المتجر وصف منتجاته ومكوّناتها وطريقة استخدامها الفعلية.</p>' : '<p>Preview content only. Each store supplies its own product descriptions, full ingredient lists and directions.</p>',
+      variants: volumes.map((size, i) => ({ id: `glow-${size.toLowerCase().replace(/\s+/g, '')}`, label: ar ? size.replace(/ml$/i, ' مل') : size.replace(/ml$/i, ' ml'), options: { [ar ? 'الحجم' : 'Size']: ar ? size.replace(/ml$/i, ' مل') : size.replace(/ml$/i, ' ml') }, price: Math.round(base.price * (1 + i * 0.6)), available: true, availableStock: 6 })) };
   }
   if (themeId === 'blast-pets' || themeId === 'nature-pets') {
     const ar = locale === 'ar'; const source = base.image?.src;
@@ -140,6 +156,18 @@ export function sampleProductDetail(slug: string, themeId?: string, locale?: str
         { id: 'black', label: ar ? 'أسود' : 'Black', options: { [ar ? 'الخامة' : 'Finish']: ar ? 'أسود' : 'Black' }, available: false, price: base.price },
       ],
     };
+  }
+  if (themeId === 'maison') {
+    const ar = locale === 'ar';
+    const images = [base.image, base.hoverImage].filter((image): image is NonNullable<typeof image> => Boolean(image)).map((image) => ({ src: image.src, alt: base.title }));
+    const finish = ar ? 'اللون' : 'Colour';
+    return { ...base, images, sku: `MAISON-${base.id}`, inStock: true,
+      descriptionHtml: ar ? '<p>قطعة للبيت بخامات طبيعية وتفاصيل هادئة تناسب الاستخدام اليومي. هذه بيانات معاينة؛ يضيف كل متجر صور منتجاته ومقاساتها وخاماتها الفعلية.</p>' : '<p>A piece for the home in natural materials, with quiet details made for everyday use. This is preview content; each store supplies its own photographs, dimensions and materials.</p>',
+      variants: [
+        { id: 'clay', label: ar ? 'طيني' : 'Clay', options: { [finish]: ar ? 'طيني' : 'Clay' }, available: true, price: base.price, availableStock: 6 },
+        { id: 'sand', label: ar ? 'رملي' : 'Sand', options: { [finish]: ar ? 'رملي' : 'Sand' }, available: true, price: base.price, availableStock: 2 },
+        { id: 'olive', label: ar ? 'زيتوني' : 'Olive', options: { [finish]: ar ? 'زيتوني' : 'Olive' }, available: false, price: base.price },
+      ] };
   }
   return {
     ...base,

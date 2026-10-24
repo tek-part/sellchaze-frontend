@@ -1,0 +1,156 @@
+/**
+ * Maison — base design tokens and palette presets. Warm linen page, cream surfaces, terracotta
+ * primary with a sand accent (or the olive-grove preset), soft generous radii, an editorial serif
+ * display (Cormorant Garamond) over a humanist sans body (Plus Jakarta Sans), with IBM Plex Sans
+ * Arabic carrying every Arabic glyph. Motion is slow and calm.
+ */
+import type { ColorTokens, DesignTokens } from '../../theme-engine/types';
+
+export const ARABIC_STACK = "'IBM Plex Sans Arabic','Noto Sans Arabic','Segoe UI',Tahoma,system-ui,sans-serif";
+
+export type MaisonPalette = 'terracotta' | 'olive';
+
+/** Light + dark colour sets for each palette preset. */
+export const MAISON_PALETTES: Readonly<Record<MaisonPalette, { light: ColorTokens; dark: ColorTokens }>> = {
+  terracotta: {
+    light: {
+      primary: '#B0533A',
+      onPrimary: '#FFFFFF',
+      accent: '#D8BFA3',
+      accentInk: '#8C5B33',
+      bg: '#F7F2EB',
+      surface: '#FFFCF8',
+      surface2: '#F0E7DB',
+      text: '#2A211C',
+      muted: '#6B5D53',
+      border: '#E6DACB',
+      borderStrong: '#CFBFAC',
+      sale: '#A23A2A',
+      success: '#4F6B3A',
+      danger: '#A23A2A',
+      warning: '#B7791F',
+      info: '#3F6274',
+      scrim: 'rgba(42,33,28,.55)',
+      scrimSoft: 'rgba(42,33,28,.28)',
+    },
+    dark: {
+      primary: '#E08A6B',
+      onPrimary: '#1A1714',
+      accent: '#C9A57F',
+      accentInk: '#E3C4A0',
+      bg: '#1A1714',
+      surface: '#221E1A',
+      surface2: '#2B2621',
+      text: '#F2EAE0',
+      muted: '#B8AA9B',
+      border: '#3A332C',
+      borderStrong: '#4C433A',
+      sale: '#F08A75',
+      success: '#9DBB7E',
+      danger: '#F08A75',
+      warning: '#E7B35A',
+      info: '#8FB4C7',
+      scrim: 'rgba(0,0,0,.66)',
+      scrimSoft: 'rgba(0,0,0,.4)',
+    },
+  },
+  olive: {
+    light: {
+      primary: '#5B6B3C',
+      onPrimary: '#FFFFFF',
+      accent: '#CFC6A4',
+      accentInk: '#5E5A2E',
+      bg: '#F4F2EA',
+      surface: '#FDFCF7',
+      surface2: '#EAE6D7',
+      text: '#23251C',
+      muted: '#5F6253',
+      border: '#DEDACA',
+      borderStrong: '#C4BFA9',
+      sale: '#A4472B',
+      success: '#4F6B3A',
+      danger: '#A4472B',
+      warning: '#B7791F',
+      info: '#3F6274',
+      scrim: 'rgba(35,37,28,.55)',
+      scrimSoft: 'rgba(35,37,28,.28)',
+    },
+    dark: {
+      primary: '#AFC084',
+      onPrimary: '#191B14',
+      accent: '#BDB48F',
+      accentInk: '#D9D1AE',
+      bg: '#191B14',
+      surface: '#21241B',
+      surface2: '#2A2D22',
+      text: '#EEEDE2',
+      muted: '#B2B4A2',
+      border: '#363A2C',
+      borderStrong: '#474C3A',
+      sale: '#EE9273',
+      success: '#AFC084',
+      danger: '#EE9273',
+      warning: '#E7B35A',
+      info: '#8FB4C7',
+      scrim: 'rgba(0,0,0,.66)',
+      scrimSoft: 'rgba(0,0,0,.4)',
+    },
+  },
+};
+
+export const maisonBaseTokens = {
+  color: MAISON_PALETTES.terracotta,
+  typography: {
+    fontSans: `'Plus Jakarta Sans',${ARABIC_STACK}`,
+    fontSerif: `'Cormorant Garamond','IBM Plex Sans Arabic',Georgia,'Times New Roman',serif`,
+    fontMono: "'IBM Plex Mono',ui-monospace,SFMono-Regular,monospace",
+    fontArabic: ARABIC_STACK,
+    fontSize: {
+      '4xl': 'clamp(44px, 6.4vw, 88px)',
+      '3xl': 'clamp(34px, 4.6vw, 60px)',
+      '2xl': 'clamp(28px, 3.4vw, 42px)',
+      xl: 'clamp(21px, 2.2vw, 28px)',
+      lg: '19px',
+      md: '17px',
+      base: '15px',
+      sm: '13px',
+      xs: '12px',
+    },
+    lineHeight: '1.65',
+    lineHeightTight: '1.08',
+    trackingEyebrow: '.16em',
+    trackingCaps: '.08em',
+  },
+  spacing: {
+    scale: {
+      sp0: '0', sp1: '4px', sp2: '8px', sp3: '12px', sp4: '16px', sp5: '20px', sp6: '24px',
+      sp7: '32px', sp8: '40px', sp9: '48px', sp10: '64px', sp11: '88px', sp12: '120px',
+    },
+    sectionY: 'clamp(48px, 7vw, 104px)',
+    gutter: 'clamp(16px, 4vw, 48px)',
+    gridGap: 'clamp(14px, 2vw, 28px)',
+    stack: '24px',
+    container: '1320px',
+    containerNarrow: '760px',
+    tap: '44px',
+  },
+  radius: { sm: '10px', base: '16px', lg: '24px', pill: '999px' },
+  shadow: {
+    sm: '0 1px 2px rgba(42,33,28,.06)',
+    base: '0 10px 30px -12px rgba(42,33,28,.18)',
+    lg: '0 30px 60px -24px rgba(42,33,28,.28)',
+    focus: '0 0 0 3px rgba(176,83,58,.35)',
+    inset: 'inset 0 -1px 0 var(--border)',
+  },
+  motion: {
+    ease: 'cubic-bezier(.22, .61, .36, 1)',
+    easeInOut: 'cubic-bezier(.65, 0, .35, 1)',
+    easeEmphasis: 'cubic-bezier(.16, 1, .3, 1)',
+    transition: '260ms',
+    transitionSlow: '640ms',
+    transitionFast: '160ms',
+  },
+  size: { iconSm: '18px', iconMd: '22px', iconLg: '28px' },
+  zIndex: { base: 0, sticky: 100, header: 200, dropdown: 300, overlay: 400, drawer: 500, modal: 600, toast: 700 },
+  breakpoints: { sm: 480, md: 768, lg: 1024, xl: 1280, '2xl': 1536 },
+} satisfies DesignTokens;
