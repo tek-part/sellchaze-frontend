@@ -34,6 +34,8 @@ export default function StoreReviewsPage() {
     const statusLabel = (status) => t(`review_status_${status}`, status);
     const filters = useMemo(() => [
         { key: 'status', label: t('col_status', 'Status'), type: 'select', options: STATUSES.map((status) => ({ value: status, label: statusLabel(status) })) },
+        { key: 'rating', label: t('review_rating', 'Rating'), type: 'multi', options: [5, 4, 3, 2, 1].map((stars) => ({ value: String(stars), label: '★'.repeat(stars) })) },
+        { key: 'created', label: text('التاريخ', 'Date'), type: 'date-range' },
     // eslint-disable-next-line react-hooks/exhaustive-deps
     ], [ar, t]);
     const views = useMemo(() => [
@@ -57,6 +59,22 @@ export default function StoreReviewsPage() {
         }
     };
 
+    const [bulkBusy, setBulkBusy] = useState(false);
+    const moderateMany = async (list, next, clear) => {
+        const origin = scope.current;
+        setBulkBusy(true);
+        try {
+            const { data } = await api.post(`${apiBase}/reviews/bulk-status`, { ids: list.map((review) => review.id), status: next });
+            if (scope.current !== origin) return;
+            toast.success(text(`تم تحديث ${data.meta.updated} تقييم`, `${data.meta.updated} reviews updated`));
+            clear(); setReload((value) => value + 1);
+        } catch (e) {
+            toast.error(e.response?.data?.message || e.message);
+        } finally {
+            setBulkBusy(false);
+        }
+    };
+
     const actionBtn = 'rounded-lg border px-2 py-1 text-xs font-medium disabled:opacity-40';
     const date = (value) => (value ? new Date(value).toLocaleDateString(ar ? 'ar-EG' : 'en-GB') : '—');
     const columns = useMemo(() => [
@@ -66,11 +84,11 @@ export default function StoreReviewsPage() {
                 {row.title ? <p className="font-medium text-slate-800">{row.title}</p> : null}
                 <p className="ws-dt-sub whitespace-normal">{row.body}</p>
             </div> },
-        { key: 'rating', header: t('review_rating', 'Rating'), align: 'end', defaultHidden: true, csv: (row) => row.rating, render: (row) => <span className="ws-dt-num">{row.rating} / 5</span> },
+        { key: 'rating', header: t('review_rating', 'Rating'), align: 'end', defaultHidden: true, sortKey: 'rating', csv: (row) => row.rating, render: (row) => <span className="ws-dt-num">{row.rating} / 5</span> },
         { key: 'product', header: t('review_product', 'Product'), csv: (row) => row.product?.name ?? '', render: (row) => row.product?.name || '—' },
         { key: 'customer', header: t('review_customer', 'Customer'), csv: (row) => row.author ?? '', render: (row) => row.author || '—' },
         { key: 'status', header: t('col_status', 'Status'), csv: (row) => row.status, render: (row) => <span className={`ws-dt-badge ${STATUS_TONE[row.status] ?? ''}`}>{statusLabel(row.status)}</span> },
-        { key: 'created', header: text('التاريخ', 'Date'), csv: (row) => row.created_at ?? '', render: (row) => <span className="ws-dt-num">{date(row.created_at)}</span> },
+        { key: 'created', header: text('التاريخ', 'Date'), sortKey: 'created_at', csv: (row) => row.created_at ?? '', render: (row) => <span className="ws-dt-num">{date(row.created_at)}</span> },
         { key: 'actions', header: <span className="sr-only">{t('col_actions', 'Actions')}</span>, hideable: false, align: 'end',
             render: (row) => <div className="ws-dt-row-actions flex-wrap gap-1.5">
                 {row.status !== 'approved' && (
@@ -88,8 +106,7 @@ export default function StoreReviewsPage() {
     ], [ar, t, busyId, apiBase]);
 
     const table = useIndexTable({ scope: `store:${store?.id ?? apiBase}:reviews`, filters, columns, views, defaults: DEFAULTS });
-    const { search: _search, ...apiParams } = table.apiParams;
-    const params = { ...apiParams, ...(productId ? { product_id: productId } : {}) };
+    const params = { ...table.apiParams, ...(productId ? { product_id: productId } : {}) };
     const paramsKey = JSON.stringify(params);
     useEffect(() => {
         let active = true; setLoading(true); setErr('');
@@ -145,10 +162,11 @@ export default function StoreReviewsPage() {
             ) : null}
 
             <div className="ws-dt-card">
-                <IndexFilters table={table} searchable={false} exportDisabled={!rows.length}
+                <IndexFilters table={table} searchPlaceholder={text('ابحث في التقييمات أو اسم المنتج', 'Search reviews or product name')} exportDisabled={!rows.length}
                     onExport={() => downloadCsv(`reviews-${new Date().toISOString().slice(0, 10)}.csv`, table.visibleColumns, rows)} />
                 <IndexTable table={table} rows={rows} loading={loading} error={err} onRetry={() => setReload((value) => value + 1)} meta={result?.meta}
-                    label={t('reviews_title', 'Reviews')}
+                    label={t('reviews_title', 'Reviews')} maxSelection={100}
+                    bulkActions={['approved', 'hidden', 'rejected'].map((status) => ({ key: status, label: statusLabel(status), disabled: () => bulkBusy, onAction: (list, clear) => void moderateMany(list, status, clear) }))}
                     emptyState={{ icon: HiOutlineStar, title: text('لا توجد تقييمات بعد', 'No reviews yet'), description: text('تظهر هنا تقييمات العملاء لمنتجاتك لمراجعتها ونشرها.', 'Customer reviews of your products appear here for moderation.') }} />
             </div>
 

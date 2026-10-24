@@ -10,7 +10,6 @@ import { HiOutlinePlus, HiOutlinePencilSquare, HiOutlineTrash, HiOutlineTicket }
 
 // The coupons endpoint supports a code search and pagination only (newest first).
 const DEFAULTS = { sort: null, perPage: 25 };
-const NO_FILTERS = [];
 
 export default function StoreCouponsPage() {
     const { id, apiBase, uiBase } = useStoreScope();
@@ -31,19 +30,19 @@ export default function StoreCouponsPage() {
     const expired = (row) => Boolean(row.expires_at) && new Date(row.expires_at) < new Date();
 
     const columns = useMemo(() => [
-        { key: 'code', header: t('coupon_code', 'Code'), hideable: false, primary: true, csv: (row) => row.code,
+        { key: 'code', header: t('coupon_code', 'Code'), hideable: false, primary: true, sortKey: 'code', csv: (row) => row.code,
             render: (row) => <Link className="ws-dt-title font-mono" dir="ltr" to={`${uiBase}/coupons/${row.id}/edit`}>{row.code}</Link> },
         { key: 'type', header: t('coupon_type', 'Type'), csv: (row) => row.type, render: (row) => t(`coupon_type_${row.type}`, row.type) },
-        { key: 'value', header: t('coupon_value', 'Value'), align: 'end', csv: (row) => fmtValue(row), render: (row) => <span className="ws-dt-num">{fmtValue(row)}</span> },
+        { key: 'value', header: t('coupon_value', 'Value'), align: 'end', sortKey: 'value', csv: (row) => fmtValue(row), render: (row) => <span className="ws-dt-num">{fmtValue(row)}</span> },
         { key: 'status', header: t('col_status', 'Status'), csv: (row) => (row.is_active ? 'active' : 'inactive'),
             render: (row) => <span className={`ws-dt-badge ${row.is_active ? (expired(row) ? 'is-warning' : 'is-success') : ''}`}>{row.is_active ? (expired(row) ? text('منتهي', 'Expired') : t('status_active', 'Active')) : t('status_inactive', 'Inactive')}</span> },
-        { key: 'used', header: t('coupon_used', 'Used'), align: 'end', csv: (row) => row.used_count ?? 0,
+        { key: 'used', header: t('coupon_used', 'Used'), align: 'end', sortKey: 'usages_count', csv: (row) => row.used_count ?? 0,
             render: (row) => <span className="ws-dt-num">{row.used_count ?? 0}{row.max_uses ? ` / ${row.max_uses}` : ''}</span> },
         { key: 'minimum', header: text('الحد الأدنى للطلب', 'Minimum order'), align: 'end', defaultHidden: true, csv: (row) => row.minimum_order_amount ?? '',
             render: (row) => <span className="ws-dt-num">{row.minimum_order_amount ? Number(row.minimum_order_amount).toFixed(2) : '—'}</span> },
         { key: 'starts', header: text('يبدأ', 'Starts'), defaultHidden: true, csv: (row) => row.starts_at ?? '', render: (row) => <span className="ws-dt-num">{fmtDate(row.starts_at)}</span> },
-        { key: 'expires', header: t('coupon_expires', 'Expires'), csv: (row) => row.expires_at ?? '', render: (row) => <span className="ws-dt-num">{fmtDate(row.expires_at)}</span> },
-        { key: 'created', header: text('تاريخ الإنشاء', 'Created'), defaultHidden: true, csv: (row) => row.created_at ?? '', render: (row) => <span className="ws-dt-num">{fmtDate(row.created_at)}</span> },
+        { key: 'expires', header: t('coupon_expires', 'Expires'), sortKey: 'expires_at', csv: (row) => row.expires_at ?? '', render: (row) => <span className="ws-dt-num">{fmtDate(row.expires_at)}</span> },
+        { key: 'created', header: text('تاريخ الإنشاء', 'Created'), defaultHidden: true, sortKey: 'created_at', csv: (row) => row.created_at ?? '', render: (row) => <span className="ws-dt-num">{fmtDate(row.created_at)}</span> },
         { key: 'actions', header: <span className="sr-only">{t('col_actions', 'Actions')}</span>, hideable: false, align: 'end',
             render: (row) => <div className="ws-dt-row-actions">
                 <Link className="ws-dt-icon" to={`${uiBase}/coupons/${row.id}/edit`} aria-label={`${t('action_edit', 'Edit')} ${row.code}`} title={t('action_edit', 'Edit')}><HiOutlinePencilSquare aria-hidden /></Link>
@@ -52,7 +51,22 @@ export default function StoreCouponsPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     ], [ar, t, uiBase, deleting]);
 
-    const table = useIndexTable({ scope: `store:${store?.id ?? apiBase}:coupons`, filters: NO_FILTERS, columns, defaults: DEFAULTS });
+    const filters = useMemo(() => [
+        { key: 'status', label: t('col_status', 'Status'), type: 'select', options: [
+            { value: 'active', label: text('فعال الآن', 'Active now') }, { value: 'scheduled', label: text('مجدول', 'Scheduled') },
+            { value: 'expired', label: text('منتهي', 'Expired') }, { value: 'disabled', label: text('معطل', 'Disabled') }] },
+        { key: 'type', label: t('coupon_type', 'Type'), type: 'select', options: [
+            { value: 'percentage', label: t('coupon_type_percentage', 'percentage') }, { value: 'fixed', label: t('coupon_type_fixed', 'fixed') }] },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    ], [ar, t]);
+    const views = useMemo(() => [
+        { id: 'all', label: text('الكل', 'All'), state: { filters: {} } },
+        { id: 'active', label: text('فعال الآن', 'Active now'), state: { filters: { status: 'active' } } },
+        { id: 'scheduled', label: text('مجدول', 'Scheduled'), state: { filters: { status: 'scheduled' } } },
+        { id: 'expired', label: text('منتهي', 'Expired'), state: { filters: { status: 'expired' } } },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    ], [ar]);
+    const table = useIndexTable({ scope: `store:${store?.id ?? apiBase}:coupons`, filters, columns, views, defaults: DEFAULTS });
     const paramsKey = JSON.stringify(table.apiParams);
     useEffect(() => {
         let active = true; setLoading(true); setErr('');
