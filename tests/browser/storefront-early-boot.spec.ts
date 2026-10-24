@@ -28,6 +28,8 @@ test('the inline boot script starts the first-view reads once and preloads theme
   expect(preloaded.some(href => /\/assets\/glow-[\w-]+\.js$/.test(href))).toBe(true);
   expect(preloaded.some(href => /\/assets\/HomePage-[\w-]+\.js$/.test(href))).toBe(true);
   await expect(page.locator('html')).toHaveAttribute('data-storefront-ready', 'true');
+  // A classic script waits for every stylesheet above it: the boot script must come before them.
+  expect(shell.indexOf('window.__sfEarly')).toBeLessThan(shell.indexOf('rel="stylesheet"'));
 });
 
 test('a product page reads its product once, from the early read', async ({ page }) => {
