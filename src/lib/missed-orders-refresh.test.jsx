@@ -17,22 +17,23 @@ const response = { data: { data: [lead], counts: { under_review: 1, completed: 0
 beforeEach(() => {
     vi.useFakeTimers(); vi.clearAllMocks(); globalThis.IS_REACT_ACT_ENVIRONMENT = true;
     host = document.createElement('div'); document.body.append(host); root = createRoot(host);
-    api.get.mockResolvedValue(response);
+    api.get.mockImplementation((path) => Promise.resolve(path === '/table-views' ? { data: { data: [] } } : response));
 });
+const listCalls = () => api.get.mock.calls.filter(([path]) => path === '/my-store/missed-orders').length;
 afterEach(async () => { await act(async () => root.unmount()); host.remove(); vi.useRealTimers(); });
 
 describe('missed orders auto-refresh', () => {
     it('refreshes every 45 s in the background without showing the loading state', async () => {
         await act(async () => root.render(<MemoryRouter><StoreMissedOrdersPage /></MemoryRouter>));
         await act(async () => { await vi.advanceTimersByTimeAsync(400); });
-        const panel = () => host.querySelector('[role="tabpanel"]');
+        const panel = () => host.querySelector('.ws-dt-scroll');
         expect(panel().getAttribute('aria-busy')).toBe('false');
-        expect(api.get).toHaveBeenCalledTimes(1);
+        expect(listCalls()).toBe(1);
 
         let resolveRefresh;
         api.get.mockImplementationOnce(() => new Promise((resolve) => { resolveRefresh = resolve; }));
         await act(async () => { await vi.advanceTimersByTimeAsync(45000); });
-        expect(api.get).toHaveBeenCalledTimes(2);
+        expect(listCalls()).toBe(2);
         // While the background request is in flight the table stays as it was.
         expect(panel().getAttribute('aria-busy')).toBe('false');
         expect(host.querySelector('[role="status"]')).toBeNull();

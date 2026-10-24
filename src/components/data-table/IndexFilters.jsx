@@ -51,24 +51,28 @@ function ViewTabs({ table }) {
             setNaming(null); setName('');
         } catch (e) { setError(errorText(e)); } finally { setBusy(false); }
     };
+    const saved = table.activeView && !table.activeView.builtIn ? table.activeView : null;
     const run = async (action) => { setBusy(true); setError(''); try { await action(); } catch (e) { setError(errorText(e)); } finally { setBusy(false); } };
 
     return <div className="ws-dt-views">
-        <div className="ws-dt-tabs" role="tablist" aria-label={text('طرق العرض', 'Views')}>
-            {table.views.map((view) => {
-                const active = view.id === table.activeView?.id;
-                return <div key={view.id} className={`ws-dt-tab ${active ? 'is-active' : ''}`}>
-                    <button type="button" role="tab" aria-selected={active} onClick={() => table.selectView(view)}>{view.label || allLabel}{active && table.viewChanged ? <span className="ws-dt-dot" aria-label={text('تغييرات غير محفوظة', 'Unsaved changes')} /> : null}</button>
-                    {active && !view.builtIn ? <Popover className="ws-dt-popover">
-                        <PopoverButton className="ws-dt-icon" aria-label={text('خيارات طريقة العرض', 'View options')}><HiOutlineEllipsisHorizontal aria-hidden /></PopoverButton>
-                        <PopoverPanel anchor="bottom start" className="ws-dt-menu">{({ close }) => <>
-                            <button type="button" disabled={busy || !table.viewChanged} onClick={() => run(() => table.updateView(view)).then(close)}>{text('حفظ التغييرات على طريقة العرض', 'Save changes to view')}</button>
-                            <button type="button" disabled={busy} onClick={() => { setNaming(view); setName(view.label); close(); }}>{text('إعادة التسمية', 'Rename')}</button>
-                            <button type="button" className="is-danger" disabled={busy} onClick={() => run(() => table.deleteView(view)).then(close)}>{text('حذف طريقة العرض', 'Delete view')}</button>
-                        </>}</PopoverPanel>
-                    </Popover> : null}
-                </div>;
-            })}
+        {/* Only tabs live in the tablist (ARIA); the active saved view's menu and "save as" sit beside it. */}
+        <div className="ws-dt-tabs">
+            <div className="ws-dt-tablist" role="tablist" aria-label={text('طرق العرض', 'Views')}>
+                {table.views.map((view) => {
+                    const active = view.id === table.activeView?.id;
+                    return <div key={view.id} className={`ws-dt-tab ${active ? 'is-active' : ''}`}>
+                        <button type="button" role="tab" aria-selected={active} onClick={() => table.selectView(view)}>{view.label || allLabel}{active && table.viewChanged ? <span className="ws-dt-dot" aria-label={text('تغييرات غير محفوظة', 'Unsaved changes')} /> : null}</button>
+                    </div>;
+                })}
+            </div>
+            {saved ? <Popover className="ws-dt-popover">
+                <PopoverButton className="ws-dt-icon" aria-label={`${text('خيارات طريقة العرض', 'View options')}: ${saved.label}`}><HiOutlineEllipsisHorizontal aria-hidden /></PopoverButton>
+                <PopoverPanel anchor="bottom start" className="ws-dt-menu">{({ close }) => <>
+                    <button type="button" disabled={busy || !table.viewChanged} onClick={() => run(() => table.updateView(saved)).then(close)}>{text('حفظ التغييرات على طريقة العرض', 'Save changes to view')}</button>
+                    <button type="button" disabled={busy} onClick={() => { setNaming(saved); setName(saved.label); close(); }}>{text('إعادة التسمية', 'Rename')}</button>
+                    <button type="button" className="is-danger" disabled={busy} onClick={() => run(() => table.deleteView(saved)).then(close)}>{text('حذف طريقة العرض', 'Delete view')}</button>
+                </>}</PopoverPanel>
+            </Popover> : null}
             {table.savedViewsEnabled ? <button type="button" className="ws-dt-icon" aria-label={text('حفظ كطريقة عرض جديدة', 'Save as new view')} title={text('حفظ كطريقة عرض جديدة', 'Save as new view')} onClick={() => { setNaming('new'); setName(''); setError(''); }}><HiOutlinePlus aria-hidden /></button> : null}
         </div>
         {naming ? <form className="ws-dt-name" onSubmit={submit}>
@@ -126,8 +130,9 @@ function ColumnsMenu({ table }) {
 /**
  * Shopify-style toolbar for an index table: views as tabs, search, filter chips with an
  * "Add filter" menu, sort, columns/density and CSV export. Pair with `useIndexTable` and `IndexTable`.
+ * Pass `searchable={false}` when the endpoint has no free-text search.
  */
-export default function IndexFilters({ table, searchPlaceholder, onExport, exportDisabled, actions, showViews = true }) {
+export default function IndexFilters({ table, searchPlaceholder, onExport, exportDisabled, actions, showViews = true, searchable = true }) {
     const [text] = useText();
     const sortable = table.columns.filter((column) => column.sortKey);
     const applied = table.filterDefs.filter((def) => !isEmptyValue(table.state.filters[def.key]));
@@ -137,11 +142,11 @@ export default function IndexFilters({ table, searchPlaceholder, onExport, expor
     return <div className="ws-dt-toolbar">
         {showViews ? <ViewTabs table={table} /> : null}
         <div className="ws-dt-controls">
-            <label className="ws-dt-search">
+            {searchable ? <label className="ws-dt-search">
                 <HiOutlineMagnifyingGlass aria-hidden />
                 <input type="search" aria-label={searchPlaceholder || text('بحث', 'Search')} placeholder={searchPlaceholder || text('بحث', 'Search')} value={table.searchInput} onChange={(event) => table.setSearch(event.target.value)} />
                 {table.searchInput ? <button type="button" className="ws-dt-icon" aria-label={text('مسح البحث', 'Clear search')} onClick={() => table.setSearch('')}><HiOutlineXMark aria-hidden /></button> : null}
-            </label>
+            </label> : null}
             {table.filterDefs.length ? <Popover className="ws-dt-popover">
                 <PopoverButton className="ws-dt-button" aria-label={text('إضافة فلتر', 'Add filter')}><HiOutlineFunnel aria-hidden /><span className="ws-dt-hide-sm">{text('فلتر', 'Filter')}</span><HiOutlineChevronDown aria-hidden /></PopoverButton>
                 <PopoverPanel anchor="bottom start" className="ws-dt-menu ws-dt-filter-menu">{({ close }) => <FilterPicker defs={available.length ? available : table.filterDefs} table={table} close={close} />}</PopoverPanel>
