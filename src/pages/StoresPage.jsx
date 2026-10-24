@@ -1,73 +1,132 @@
-import { useCallback, useEffect, useState } from 'react';
-import { Navigate, useNavigate, useOutletContext } from 'react-router-dom';
+import { useEffect, useMemo, useState } from 'react';
+import { Link, Navigate, useNavigate, useOutletContext } from 'react-router-dom';
+import { Popover, PopoverButton, PopoverPanel } from '@headlessui/react';
 import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
 import api from '../api/client';
-import { useDebounced } from '../hooks/useDebounced';
-import ListToolbar from '../components/table/ListToolbar';
-import PaginationBar from '../components/table/PaginationBar';
-import TableLoadingOverlay from '../components/table/TableLoadingOverlay';
 import ConfirmDialog from '../components/ConfirmDialog';
-import TableIconActions from '../components/table/TableIconActions';
-import SearchableSelect from '../components/ui/SearchableSelect';
 import PageHeader from '../components/PageHeader';
-import { HiOutlinePlus } from '../components/workspace/WorkspaceIcons';
+import { IndexFilters, IndexTable, downloadCsv, useIndexTable } from '../components/data-table';
+import { fetchAllPages } from '../utils/fetchAllPages';
+import {
+    HiOutlineBuildingStorefront, HiOutlineEllipsisHorizontal, HiOutlineEye, HiOutlinePencilSquare, HiOutlinePlus, HiOutlineTrash,
+} from '../components/workspace/WorkspaceIcons';
 
-const STATUS_STYLES = {
-    active: 'bg-emerald-50 text-emerald-700 border-emerald-100',
-    draft: 'bg-slate-100 text-slate-600 border-slate-200',
-    suspended: 'bg-red-50 text-red-700 border-red-100',
-};
+const STATUS_TONES = { active: 'is-success', draft: '', suspended: 'is-critical' };
+const DEFAULTS = { sort: null, perPage: 25 };
+const errorText = (e) => e.response?.data?.message || e.message;
+
+function StoreLogo({ url }) {
+    const [failed, setFailed] = useState(false);
+    return <span className="ws-dt-thumb">{url && !failed ? <img src={url} alt="" loading="lazy" onError={() => setFailed(true)} /> : <HiOutlineBuildingStorefront aria-hidden />}</span>;
+}
 
 export default function StoresPage() {
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
     const navigate = useNavigate();
     const { permissions } = useOutletContext();
     const can = (p) => permissions.includes(p);
+    const canList = can('stores-list');
+    const canEdit = can('stores-edit');
+    const canDelete = can('stores-delete');
 
-    const [rows, setRows] = useState([]);
-    const [meta, setMeta] = useState(null);
+    const [result, setResult] = useState(null);
     const [err, setErr] = useState('');
-    const [loading, setLoading] = useState(false);
-    const [page, setPage] = useState(1);
-    const [perPage, setPerPage] = useState(15);
-    const [searchInput, setSearchInput] = useState('');
-    const debouncedSearch = useDebounced(searchInput, 400);
-    const [statusFilter, setStatusFilter] = useState('');
+    const [loading, setLoading] = useState(true);
+    const [reload, setReload] = useState(0);
+    const [exporting, setExporting] = useState(false);
     const [confirmOne, setConfirmOne] = useState(null);
     const [deleting, setDeleting] = useState(false);
-    const [listNonce] = useState(0);
 
-    const loadParams = useCallback(
-        () => ({
-            page,
-            per_page: perPage,
-            ...(debouncedSearch.trim() ? { search: debouncedSearch.trim() } : {}),
-            ...(statusFilter ? { status: statusFilter } : {}),
-        }),
-        [page, perPage, debouncedSearch, statusFilter],
-    );
+    const statusLabel = (s) => t(`store_status_${s}`, s);
+    const sections = [
+        ['products', t('products_title', 'Products')],
+        ['themes', t('store_themes_title', 'Themes')],
+        ['pages', t('pages_title', 'Pages')],
+        ['coupons', t('coupons_title', 'Coupons')],
+        ['orders', t('orders_title', 'Orders')],
+        ['analytics', t('analytics_title', 'Analytics')],
+        ['reviews', t('reviews_title', 'Reviews')],
+    ];
 
-    useEffect(() => setPage(1), [debouncedSearch, statusFilter, perPage]);
+    const statusOptions = ['active', 'draft', 'suspended'].map((value) => ({ value, label: statusLabel(value) }));
+    const filters = useMemo(() => [
+        { key: 'status', label: t('store_status'), type: 'select', options: statusOptions },
+        { key: 'created', param: 'date', label: t('col_created'), type: 'date-range' },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    ], [i18n.language]);
+    const views = useMemo(() => [
+        { id: 'all', label: t('filter_all'), state: { filters: {} } },
+        ...statusOptions.map((option) => ({ id: option.value, label: option.label, state: { filters: { status: option.value } } })),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    ], [i18n.language]);
+    const columns = useMemo(() => [
+        { key: 'id', header: '#', csv: (row) => row.id, render: (row) => <span className="ws-dt-num">{row.id}</span> },
+        { key: 'name', header: t('col_name'), hideable: false, primary: true, csv: (row) => row.name,
+            render: (row) => <div className="ws-dt-cell-media"><StoreLogo key={row.logo_url || 'empty'} url={row.logo_url} /><div className="min-w-0">
+                {canEdit ? <Link className="ws-dt-title" to={`/stores/${row.id}/overview`}>{row.name}</Link> : <span className="ws-dt-title">{row.name}</span>}
+                <span className="ws-dt-sub" dir="ltr">/{row.slug}</span>
+            </div></div> },
+        { key: 'slug', header: 'Slug', defaultHidden: true, csv: (row) => row.slug, render: (row) => <span dir="ltr">{row.slug}</span> },
+        { key: 'owner_type', header: t('store_owner_type'), defaultHidden: true, csv: (row) => row.owner_type ?? '', render: (row) => row.owner_type ?? '—' },
+        { key: 'status', header: t('store_status'), csv: (row) => statusLabel(row.status),
+            render: (row) => <span className={`ws-dt-badge ${STATUS_TONES[row.status] ?? ''}`}>{statusLabel(row.status)}</span> },
+        { key: 'currency', header: t('store_currency'), csv: (row) => row.currency ?? '', render: (row) => <span dir="ltr">{row.currency || '—'}</span> },
+        { key: 'created', header: t('col_created'), csv: (row) => row.created_at ?? '',
+            render: (row) => <span className="ws-dt-num">{row.created_at ? new Date(row.created_at).toLocaleDateString() : '—'}</span> },
+        { key: 'actions', header: <span className="sr-only">{t('col_actions')}</span>, hideable: false, align: 'end',
+            render: (row) => <div className="ws-dt-row-actions">
+                {canEdit ? <Link className="ws-dt-icon" to={`/stores/${row.id}/overview`} title={t('aria_view')} aria-label={t('aria_view')}><HiOutlineEye aria-hidden /></Link> : null}
+                {canEdit ? <Link className="ws-dt-icon" to={`/stores/${row.id}/edit`} title={t('aria_edit')} aria-label={t('aria_edit')}><HiOutlinePencilSquare aria-hidden /></Link> : null}
+                {canEdit ? <Popover className="ws-dt-popover">
+                    <PopoverButton className="ws-dt-icon" title={t('admin_dt_store_sections')} aria-label={`${t('admin_dt_store_sections')}: ${row.name}`}><HiOutlineEllipsisHorizontal aria-hidden /></PopoverButton>
+                    <PopoverPanel anchor="bottom end" className="ws-dt-menu">
+                        <strong>{t('admin_dt_store_sections')}</strong>
+                        {sections.map(([path, label]) => <Link key={path} to={`/stores/${row.id}/${path}`} className="block rounded-md px-2 py-1.5 hover:bg-[var(--ws-panel-soft)]">{label}</Link>)}
+                    </PopoverPanel>
+                </Popover> : null}
+                {canDelete ? <button type="button" className="ws-dt-icon" disabled={deleting} onClick={() => setConfirmOne(row.id)} title={t('aria_delete')} aria-label={t('aria_delete')}><HiOutlineTrash aria-hidden /></button> : null}
+            </div> },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    ], [i18n.language, canEdit, canDelete, deleting]);
 
+    const table = useIndexTable({ scope: 'admin:stores', filters, columns, views, defaults: DEFAULTS });
+    const paramsKey = JSON.stringify(table.apiParams);
     useEffect(() => {
-        if (!permissions.includes('stores-list')) return;
+        if (!canList) return undefined;
+        let active = true;
         setLoading(true);
         setErr('');
-        api.get('/stores', { params: loadParams() })
-            .then(({ data }) => {
-                setRows(data.data ?? []);
-                setMeta(data.meta ?? null);
-            })
-            .catch((e) => setErr(e.response?.data?.message || e.message))
-            .finally(() => setLoading(false));
-    }, [permissions, loadParams, listNonce]);
+        api.get('/stores', { params: table.apiParams })
+            .then(({ data }) => { if (active) setResult(data); })
+            .catch((e) => { if (active) setErr(errorText(e)); })
+            .finally(() => { if (active) setLoading(false); });
+        return () => { active = false; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [canList, paramsKey, reload]);
 
-    if (!can('stores-list')) {
+    if (!canList) {
         return <Navigate to="/dashboard" replace />;
     }
 
-    const statusLabel = (s) => t(`store_status_${s}`, s);
+    const rows = result?.data ?? [];
+    const selectedRows = [...table.selected.values()];
+
+    const handleExport = async () => {
+        if (selectedRows.length) {
+            downloadCsv(`stores-${new Date().toISOString().slice(0, 10)}.csv`, table.visibleColumns, selectedRows);
+            return;
+        }
+        setExporting(true);
+        try {
+            const { page: _page, per_page: _perPage, ...base } = table.apiParams;
+            downloadCsv(`stores-all-${new Date().toISOString().slice(0, 10)}.csv`, table.visibleColumns, await fetchAllPages('/stores', base));
+        } catch (e) {
+            toast.error(errorText(e));
+        } finally {
+            setExporting(false);
+        }
+    };
 
     const runDeleteOne = async () => {
         if (!confirmOne) return;
@@ -76,9 +135,10 @@ export default function StoresPage() {
             await api.delete(`/stores/${confirmOne}`);
             toast.success(t('action_delete'));
             setConfirmOne(null);
-            setRows((r) => r.filter((x) => x.id !== confirmOne));
+            table.clearSelection();
+            setReload((value) => value + 1);
         } catch (e) {
-            toast.error(e.response?.data?.message || e.message);
+            toast.error(errorText(e));
         } finally {
             setDeleting(false);
         }
@@ -100,178 +160,11 @@ export default function StoresPage() {
                     </button>
                 ) : null}
             />
-            {err && (
-                <p className="rounded-lg border border-red-100 bg-red-50 px-3 py-2 text-sm text-red-700">{err}</p>
-            )}
-            <div className="overflow-hidden rounded-2xl border border-slate-200/80 shadow-card">
-                <ListToolbar
-                    searchValue={searchInput}
-                    onSearchChange={setSearchInput}
-                    perPage={perPage}
-                    onPerPageChange={(n) => {
-                        setPerPage(n);
-                        setPage(1);
-                    }}
-                    advanced={
-                        <div className="grid gap-3 sm:grid-cols-2">
-                            <div>
-                                <label className="mb-1 block text-[11px] font-semibold uppercase text-slate-500">
-                                    {t('store_status')}
-                                </label>
-                                <SearchableSelect
-                                    value={statusFilter}
-                                    onChange={(e) => setStatusFilter(e.target.value)}
-                                    className="w-full"
-                                >
-                                    <option value="">—</option>
-                                    <option value="draft">{t('store_status_draft')}</option>
-                                    <option value="active">{t('store_status_active')}</option>
-                                    <option value="suspended">{t('store_status_suspended')}</option>
-                                </SearchableSelect>
-                            </div>
-                        </div>
-                    }
-                />
-                <div className="relative min-h-48 overflow-auto bg-white">
-                    <TableLoadingOverlay show={loading} />
-                    <table className="min-w-full text-start text-sm">
-                        <thead className="bg-surface-muted/90 text-xs font-semibold uppercase tracking-wide text-slate-600">
-                            <tr>
-                                <th className="px-4 py-3.5">#</th>
-                                <th className="px-4 py-3.5">{t('col_name')}</th>
-                                <th className="px-4 py-3.5">{t('store_owner_type')}</th>
-                                <th className="px-4 py-3.5">{t('store_status')}</th>
-                                <th className="px-4 py-3.5">{t('store_currency')}</th>
-                                <th className="px-4 py-3.5">{t('col_created')}</th>
-                                <th className="px-4 py-3.5">{t('col_actions')}</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {rows.length === 0 && !loading ? (
-                                <tr>
-                                    <td colSpan={7} className="px-4 py-14 text-center text-sm text-slate-500">
-                                        {t('empty')}
-                                    </td>
-                                </tr>
-                            ) : null}
-                            {rows.map((row) => (
-                                <tr
-                                    key={row.id}
-                                    className="border-t border-slate-100 transition-colors hover:bg-slate-50/60"
-                                >
-                                    <td className="px-4 py-3 font-medium text-slate-900">{row.id}</td>
-                                    <td className="max-w-[18rem] px-4 py-3">
-                                        <div className="flex items-center gap-2">
-                                            {row.logo_url ? (
-                                                <img
-                                                    src={row.logo_url}
-                                                    alt=""
-                                                    className="h-8 w-8 rounded-lg object-cover"
-                                                />
-                                            ) : null}
-                                            <div className="min-w-0">
-                                                <p className="truncate font-medium text-slate-900">{row.name}</p>
-                                                <p className="truncate text-xs text-slate-400">/{row.slug}</p>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td className="px-4 py-3 text-slate-700">{row.owner_type}</td>
-                                    <td className="px-4 py-3">
-                                        <span
-                                            className={`inline-flex rounded-full border px-2 py-0.5 text-xs font-medium ${
-                                                STATUS_STYLES[row.status] || STATUS_STYLES.draft
-                                            }`}
-                                        >
-                                            {statusLabel(row.status)}
-                                        </span>
-                                    </td>
-                                    <td className="px-4 py-3 text-slate-700">{row.currency}</td>
-                                    <td className="px-4 py-3 text-slate-600">
-                                        {row.created_at ? new Date(row.created_at).toLocaleDateString() : '—'}
-                                    </td>
-                                    <td className="px-4 py-3">
-                                        <div className="flex items-center gap-3">
-                                            {can('stores-edit') && (
-                                                <button
-                                                    type="button"
-                                                    onClick={() => navigate(`/stores/${row.id}/products`)}
-                                                    className="text-xs font-medium text-brand hover:underline"
-                                                >
-                                                    {t('products_title', 'Products')}
-                                                </button>
-                                            )}
-                                            {can('stores-edit') && (
-                                                <button
-                                                    type="button"
-                                                    onClick={() => navigate(`/stores/${row.id}/themes`)}
-                                                    className="text-xs font-medium text-brand hover:underline"
-                                                >
-                                                    {t('store_themes_title', 'Themes')}
-                                                </button>
-                                            )}
-                                            {can('stores-edit') && (
-                                                <button
-                                                    type="button"
-                                                    onClick={() => navigate(`/stores/${row.id}/pages`)}
-                                                    className="text-xs font-medium text-brand hover:underline"
-                                                >
-                                                    {t('pages_title', 'Pages')}
-                                                </button>
-                                            )}
-                                            {can('stores-edit') && (
-                                                <button
-                                                    type="button"
-                                                    onClick={() => navigate(`/stores/${row.id}/coupons`)}
-                                                    className="text-xs font-medium text-brand hover:underline"
-                                                >
-                                                    {t('coupons_title', 'Coupons')}
-                                                </button>
-                                            )}
-                                            {can('stores-edit') && (
-                                                <button
-                                                    type="button"
-                                                    onClick={() => navigate(`/stores/${row.id}/orders`)}
-                                                    className="text-xs font-medium text-brand hover:underline"
-                                                >
-                                                    {t('orders_title', 'Orders')}
-                                                </button>
-                                            )}
-                                            {can('stores-edit') && (
-                                                <button
-                                                    type="button"
-                                                    onClick={() => navigate(`/stores/${row.id}/analytics`)}
-                                                    className="text-xs font-medium text-brand hover:underline"
-                                                >
-                                                    {t('analytics_title', 'Analytics')}
-                                                </button>
-                                            )}
-                                            {can('stores-edit') && (
-                                                <button
-                                                    type="button"
-                                                    onClick={() => navigate(`/stores/${row.id}/reviews`)}
-                                                    className="text-xs font-medium text-brand hover:underline"
-                                                >
-                                                    {t('reviews_title', 'Reviews')}
-                                                </button>
-                                            )}
-                                            <TableIconActions
-                                                viewTo={
-                                                    can('stores-edit') ? `/stores/${row.id}/overview` : undefined
-                                                }
-                                                editTo={can('stores-edit') ? `/stores/${row.id}/edit` : undefined}
-                                                onDelete={
-                                                    can('stores-delete') ? () => setConfirmOne(row.id) : undefined
-                                                }
-                                                deleteDisabled={deleting}
-                                            />
-                                        </div>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
-                <PaginationBar meta={meta} loading={loading} onPageChange={setPage} />
+            <div className="ws-dt-card">
+                <IndexFilters table={table} searchPlaceholder={t('admin_dt_search_stores')} onExport={() => void handleExport()} exportDisabled={loading || exporting || !rows.length} />
+                <IndexTable table={table} rows={rows} loading={loading} error={err} onRetry={() => setReload((value) => value + 1)} meta={result?.meta}
+                    label={t('stores_title')} rowHref={canEdit ? (row) => `/stores/${row.id}/overview` : undefined}
+                    emptyState={{ icon: HiOutlineBuildingStorefront, title: t('empty'), description: t('stores_subtitle') }} />
             </div>
             <p className="text-sm text-slate-600">{t('stores_manage_hint')}</p>
 

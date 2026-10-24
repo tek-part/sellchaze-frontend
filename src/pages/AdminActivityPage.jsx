@@ -1,127 +1,128 @@
-import { Fragment, useCallback, useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Navigate, useOutletContext } from 'react-router-dom';
+import { Dialog, DialogBackdrop, DialogPanel, DialogTitle } from '@headlessui/react';
 import { useTranslation } from 'react-i18next';
-import { HiOutlineChevronDown } from '../components/workspace/WorkspaceIcons';
 import toast from 'react-hot-toast';
 import api from '../api/client';
-import SearchableSelect from '../components/ui/SearchableSelect';
-import { useDebounced } from '../hooks/useDebounced';
-import ListToolbar from '../components/table/ListToolbar';
-import PaginationBar from '../components/table/PaginationBar';
-import TableLoadingOverlay from '../components/table/TableLoadingOverlay';
 import ConfirmDialog from '../components/ConfirmDialog';
+import { IndexFilters, IndexTable, downloadCsv, useIndexTable } from '../components/data-table';
+import { HiOutlineClipboardDocumentList, HiOutlineInformationCircle, HiOutlineTrash } from '../components/workspace/WorkspaceIcons';
 
 function unwrapLog(payload) {
     if (!payload) return null;
     return payload.data ?? payload;
 }
 
+const fmtProps = (p) => {
+    if (p == null) return '—';
+    try {
+        return JSON.stringify(p, null, 2);
+    } catch {
+        return String(p);
+    }
+};
+const option = (value) => ({ value, label: value });
+const EVENT_TYPES = ['user_action', 'system_event', 'background_job', 'integration', 'error'].map(option);
+const CHANNELS = ['http', 'queue', 'scheduler', 'webhook', 'command'].map(option);
+const LEVELS = ['info', 'warning', 'error'].map(option);
+const LEVEL_TONES = { error: 'is-critical', warning: 'is-warning', info: 'is-success' };
+// The endpoint is always ordered by time; it only accepts the direction (`sort_dir`).
+const DEFAULTS = { sort: { by: 'created_at', direction: 'desc' }, perPage: 25 };
+const errorText = (e) => e.response?.data?.message || e.message;
+
 export default function AdminActivityPage() {
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
     const { isAdmin } = useOutletContext();
-    const [rows, setRows] = useState([]);
-    const [meta, setMeta] = useState(null);
+    const [result, setResult] = useState(null);
     const [err, setErr] = useState('');
-    const [loading, setLoading] = useState(false);
-    const [page, setPage] = useState(1);
-    const [perPage, setPerPage] = useState(20);
-    const [searchInput, setSearchInput] = useState('');
-    const debouncedSearch = useDebounced(searchInput, 400);
-    const [dateFrom, setDateFrom] = useState('');
-    const [dateTo, setDateTo] = useState('');
-    const [actionFilter, setActionFilter] = useState('');
-    const [eventType, setEventType] = useState('');
-    const [channel, setChannel] = useState('');
-    const [level, setLevel] = useState('');
-    const [moduleFilter, setModuleFilter] = useState('');
-    const [statusCode, setStatusCode] = useState('');
-    const [expandedId, setExpandedId] = useState(null);
-    const [selected, setSelected] = useState(() => new Set());
+    const [loading, setLoading] = useState(true);
+    const [reload, setReload] = useState(0);
+    const [details, setDetails] = useState(null);
     const [deleting, setDeleting] = useState(false);
-    const [confirmBulk, setConfirmBulk] = useState(false);
+    const [confirmBulk, setConfirmBulk] = useState(null);
 
-    const loadParams = useCallback(() => {
-        return {
-            page,
-            per_page: perPage,
-            ...(debouncedSearch.trim() ? { search: debouncedSearch.trim() } : {}),
-            ...(dateFrom ? { date_from: dateFrom } : {}),
-            ...(dateTo ? { date_to: dateTo } : {}),
-            ...(actionFilter.trim() ? { action: actionFilter.trim() } : {}),
-            ...(eventType ? { event_type: eventType } : {}),
-            ...(channel ? { channel } : {}),
-            ...(level ? { level } : {}),
-            ...(moduleFilter.trim() ? { module: moduleFilter.trim() } : {}),
-            ...(statusCode.trim() ? { status_code: statusCode.trim() } : {}),
-        };
-    }, [page, perPage, debouncedSearch, dateFrom, dateTo, actionFilter, eventType, channel, level, moduleFilter, statusCode]);
+    const filters = useMemo(() => [
+        { key: 'level', label: t('activity_filter_level'), type: 'select', options: LEVELS },
+        { key: 'event_type', label: t('activity_filter_event_type'), type: 'select', options: EVENT_TYPES },
+        { key: 'channel', label: t('activity_filter_channel'), type: 'select', options: CHANNELS },
+        { key: 'action', label: t('filter_action'), type: 'text' },
+        { key: 'module', label: t('activity_filter_module'), type: 'text' },
+        { key: 'status_code', label: t('activity_filter_status_code'), type: 'text' },
+        { key: 'created', param: 'date', label: t('activity_col_time'), type: 'date-range' },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    ], [i18n.language]);
+    const views = useMemo(() => [
+        { id: 'all', label: t('filter_all'), state: { filters: {} } },
+        { id: 'errors', label: t('admin_dt_view_errors'), state: { filters: { level: 'error' } } },
+        { id: 'warnings', label: t('admin_dt_view_warnings'), state: { filters: { level: 'warning' } } },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    ], [i18n.language]);
+    const columns = useMemo(() => [
+        { key: 'time', header: t('activity_col_time'), sortKey: 'created_at', csv: (log) => log.created_at ?? '',
+            render: (log) => <span className="ws-dt-num">{log.created_at ? new Date(log.created_at).toLocaleString() : '—'}</span> },
+        { key: 'action', header: t('activity_col_action'), hideable: false, primary: true, csv: (log) => log.action,
+            render: (log) => <span className="font-mono text-xs font-semibold" dir="ltr">{log.action}</span> },
+        { key: 'event_type', header: t('activity_filter_event_type'), csv: (log) => log.event_type ?? '',
+            render: (log) => <span className="ws-dt-badge is-info">{log.event_type || '—'}</span> },
+        { key: 'channel', header: t('activity_filter_channel'), csv: (log) => log.channel ?? '', render: (log) => log.channel || '—' },
+        { key: 'level', header: t('activity_filter_level'), csv: (log) => log.level || 'info',
+            render: (log) => <span className={`ws-dt-badge ${LEVEL_TONES[log.level || 'info'] ?? ''}`}>{log.level || 'info'}</span> },
+        { key: 'actor', header: t('activity_col_actor'), csv: (log) => (log.actor ? `${log.actor.name} (${log.actor.email})` : ''),
+            render: (log) => (log.actor ? <div><span>{log.actor.name}</span><span className="ws-dt-sub" dir="ltr">{log.actor.email}</span></div> : '—') },
+        { key: 'subject', header: t('activity_col_subject'), csv: (log) => (log.subject_type ? `${log.subject_type} #${log.subject_id}` : ''),
+            render: (log) => <span className="inline-block max-w-xs truncate font-mono text-xs" dir="ltr" title={fmtProps(log.properties)}>{log.subject_type ? `${log.subject_type} #${log.subject_id}` : '—'}</span> },
+        { key: 'ip', header: t('activity_col_ip'), csv: (log) => log.ip_address ?? '', render: (log) => <span className="ws-dt-num" dir="ltr">{log.ip_address || '—'}</span> },
+        { key: 'details', header: <span className="sr-only">{t('activity_col_details')}</span>, hideable: false, align: 'end',
+            render: (log) => <div className="ws-dt-row-actions"><button type="button" className="ws-dt-icon" onClick={() => setDetails(log)} title={t('activity_col_details')} aria-label={`${t('activity_col_details')}: ${log.action}`}><HiOutlineInformationCircle aria-hidden /></button></div> },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    ], [i18n.language]);
 
-    useEffect(() => setPage(1), [debouncedSearch, dateFrom, dateTo, perPage, actionFilter, eventType, channel, level, moduleFilter, statusCode]);
-
+    const table = useIndexTable({ scope: 'admin:activity', filters, columns, views, defaults: DEFAULTS });
+    const listParams = useMemo(() => {
+        const { sort_by: _sortBy, sort_direction: direction, ...rest } = table.apiParams;
+        return { ...rest, ...(direction ? { sort_dir: direction } : {}) };
+    }, [table.apiParams]);
+    const paramsKey = JSON.stringify(listParams);
     useEffect(() => {
-        if (!isAdmin) return;
+        if (!isAdmin) return undefined;
+        let active = true;
         setLoading(true);
         setErr('');
-        api.get('/admin/activity-logs', { params: loadParams() })
-            .then(({ data }) => {
-                const list = data.data ?? [];
-                setRows(list.map(unwrapLog).filter(Boolean));
-                setMeta(data.meta ?? null);
-            })
-            .catch((e) => setErr(e.response?.data?.message || e.message))
-            .finally(() => setLoading(false));
-    }, [isAdmin, loadParams]);
-    useEffect(() => {
-        setSelected(new Set());
-    }, [rows]);
+        api.get('/admin/activity-logs', { params: listParams })
+            .then(({ data }) => { if (active) setResult({ data: (data.data ?? []).map(unwrapLog).filter(Boolean), meta: data.meta ?? null }); })
+            .catch((e) => { if (active) setErr(errorText(e)); })
+            .finally(() => { if (active) setLoading(false); });
+        return () => { active = false; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [isAdmin, paramsKey, reload]);
 
     if (!isAdmin) {
         return <Navigate to="/dashboard" replace />;
     }
 
-    const fmtProps = (p) => {
-        if (p == null) return '—';
-        try {
-            return JSON.stringify(p, null, 2);
-        } catch {
-            return String(p);
-        }
-    };
+    const rows = result?.data ?? [];
+    const selectedRows = [...table.selected.values()];
 
-    const levelBadgeClass = (value) =>
-        value === 'error'
-            ? 'bg-red-100 text-red-700'
-            : value === 'warning'
-              ? 'bg-amber-100 text-amber-700'
-              : 'bg-emerald-100 text-emerald-700';
-    const toggleRow = (id) => {
-        setSelected((prev) => {
-            const next = new Set(prev);
-            if (next.has(id)) next.delete(id);
-            else next.add(id);
-            return next;
-        });
-    };
-    const toggleAll = () => {
-        if (selected.size === rows.length) setSelected(new Set());
-        else setSelected(new Set(rows.map((r) => r.id)));
-    };
     const runBulkDelete = async () => {
-        const ids = [...selected];
+        const ids = confirmBulk ?? [];
         if (ids.length === 0) return;
         setDeleting(true);
         try {
             const { data } = await api.post('/admin/activity-logs/bulk-destroy', { ids });
             toast.success(`${t('action_delete')} (${data?.deleted ?? ids.length})`);
-            setConfirmBulk(false);
-            setSelected(new Set());
-            setRows((prev) => prev.filter((r) => !ids.includes(r.id)));
+            setConfirmBulk(null);
+            table.clearSelection();
+            setReload((value) => value + 1);
         } catch (e) {
-            toast.error(e.response?.data?.message || e.message);
+            toast.error(errorText(e));
         } finally {
             setDeleting(false);
         }
     };
+
+    const bulkActions = [
+        { key: 'delete', label: t('action_delete'), icon: HiOutlineTrash, tone: 'danger', disabled: () => deleting, onAction: (list) => setConfirmBulk(list.map((log) => log.id)) },
+    ];
 
     return (
         <div className="space-y-5">
@@ -129,242 +130,18 @@ export default function AdminActivityPage() {
                 <h1 className="text-2xl font-semibold tracking-tight text-slate-900">{t('nav_activity_log')}</h1>
                 <p className="mt-1 text-sm text-slate-500">{t('activity_log_subtitle')}</p>
             </div>
-            {err && (
-                <p className="rounded-lg border border-red-100 bg-red-50 px-3 py-2 text-sm text-red-700">{err}</p>
-            )}
-            <div className="overflow-hidden rounded-2xl border border-slate-200/80 shadow-card">
-                <ListToolbar
-                    searchValue={searchInput}
-                    onSearchChange={setSearchInput}
-                    perPage={perPage}
-                    onPerPageChange={(n) => {
-                        setPerPage(n);
-                        setPage(1);
-                    }}
-                    onExportCurrent={() => {}}
-                    onExportAll={() => {}}
-                    exportDisabled
-                    selectedCount={selected.size}
-                    onBulkDelete={() => {
-                        if (selected.size > 0) setConfirmBulk(true);
-                    }}
-                    bulkDeleteDisabled={deleting}
-                    advanced={
-                        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-                            <div>
-                                <label className="mb-1 block text-[11px] font-semibold uppercase text-slate-500">
-                                    {t('filter_action')}
-                                </label>
-                                <input
-                                    type="text"
-                                    value={actionFilter}
-                                    onChange={(e) => setActionFilter(e.target.value)}
-                                    placeholder="staff_user.updated"
-                                    className="w-full rounded-lg border border-slate-200 px-2 py-1.5 text-sm"
-                                />
-                            </div>
-                            <div>
-                                <label className="mb-1 block text-[11px] font-semibold uppercase text-slate-500">
-                                    {t('activity_filter_event_type')}
-                                </label>
-                                <SearchableSelect
-                                    value={eventType}
-                                    onChange={(e) => setEventType(e.target.value)}
-                                    className="w-full"
-                                >
-                                    <option value="">{t('filter_all')}</option>
-                                    <option value="user_action">user_action</option>
-                                    <option value="system_event">system_event</option>
-                                    <option value="background_job">background_job</option>
-                                    <option value="integration">integration</option>
-                                    <option value="error">error</option>
-                                </SearchableSelect>
-                            </div>
-                            <div>
-                                <label className="mb-1 block text-[11px] font-semibold uppercase text-slate-500">
-                                    {t('activity_filter_channel')}
-                                </label>
-                                <SearchableSelect
-                                    value={channel}
-                                    onChange={(e) => setChannel(e.target.value)}
-                                    className="w-full"
-                                >
-                                    <option value="">{t('filter_all')}</option>
-                                    <option value="http">http</option>
-                                    <option value="queue">queue</option>
-                                    <option value="scheduler">scheduler</option>
-                                    <option value="webhook">webhook</option>
-                                    <option value="command">command</option>
-                                </SearchableSelect>
-                            </div>
-                            <div>
-                                <label className="mb-1 block text-[11px] font-semibold uppercase text-slate-500">
-                                    {t('activity_filter_level')}
-                                </label>
-                                <SearchableSelect
-                                    value={level}
-                                    onChange={(e) => setLevel(e.target.value)}
-                                    className="w-full"
-                                >
-                                    <option value="">{t('filter_all')}</option>
-                                    <option value="info">info</option>
-                                    <option value="warning">warning</option>
-                                    <option value="error">error</option>
-                                </SearchableSelect>
-                            </div>
-                            <div>
-                                <label className="mb-1 block text-[11px] font-semibold uppercase text-slate-500">
-                                    {t('activity_filter_module')}
-                                </label>
-                                <input
-                                    type="text"
-                                    value={moduleFilter}
-                                    onChange={(e) => setModuleFilter(e.target.value)}
-                                    placeholder="api, queue, command..."
-                                    className="w-full rounded-lg border border-slate-200 px-2 py-1.5 text-sm"
-                                />
-                            </div>
-                            <div>
-                                <label className="mb-1 block text-[11px] font-semibold uppercase text-slate-500">
-                                    {t('activity_filter_status_code')}
-                                </label>
-                                <input
-                                    type="number"
-                                    value={statusCode}
-                                    onChange={(e) => setStatusCode(e.target.value)}
-                                    placeholder="200, 422, 500"
-                                    className="w-full rounded-lg border border-slate-200 px-2 py-1.5 text-sm"
-                                />
-                            </div>
-                            <div>
-                                <label className="mb-1 block text-[11px] font-semibold uppercase text-slate-500">
-                                    {t('filter_date_from')}
-                                </label>
-                                <input
-                                    type="date"
-                                    value={dateFrom}
-                                    onChange={(e) => setDateFrom(e.target.value)}
-                                    className="w-full rounded-lg border border-slate-200 px-2 py-1.5 text-sm"
-                                />
-                            </div>
-                            <div className="xl:col-span-1">
-                                <label className="mb-1 block text-[11px] font-semibold uppercase text-slate-500">
-                                    {t('filter_date_to')}
-                                </label>
-                                <input
-                                    type="date"
-                                    value={dateTo}
-                                    onChange={(e) => setDateTo(e.target.value)}
-                                    className="w-full rounded-lg border border-slate-200 px-2 py-1.5 text-sm"
-                                />
-                            </div>
-                        </div>
-                    }
-                />
-                <div className="relative min-h-48 overflow-auto bg-white">
-                    <TableLoadingOverlay show={loading} />
-                    <table className="min-w-full text-start text-sm">
-                        <thead className="bg-surface-muted/90 text-xs font-semibold uppercase tracking-wide text-slate-600">
-                            <tr>
-                                <th className="px-3 py-3.5">
-                                    <input
-                                        type="checkbox"
-                                        checked={rows.length > 0 && selected.size === rows.length}
-                                        onChange={toggleAll}
-                                        aria-label="select all"
-                                    />
-                                </th>
-                                <th className="px-4 py-3.5">{t('activity_col_time')}</th>
-                                <th className="px-4 py-3.5">{t('activity_col_action')}</th>
-                                <th className="px-4 py-3.5">{t('activity_filter_event_type')}</th>
-                                <th className="px-4 py-3.5">{t('activity_filter_channel')}</th>
-                                <th className="px-4 py-3.5">{t('activity_filter_level')}</th>
-                                <th className="px-4 py-3.5">{t('activity_col_actor')}</th>
-                                <th className="px-4 py-3.5">{t('activity_col_subject')}</th>
-                                <th className="px-4 py-3.5">{t('activity_col_ip')}</th>
-                                <th className="px-4 py-3.5">{t('activity_col_details')}</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {rows.length === 0 && !loading ? (
-                                <tr>
-                                    <td colSpan={10} className="px-4 py-14 text-center text-sm text-slate-500">
-                                        {t('empty')}
-                                    </td>
-                                </tr>
-                            ) : null}
-                            {rows.map((log) => (
-                                <Fragment key={log.id}>
-                                    <tr
-                                        className="border-t border-slate-100 transition-colors hover:bg-slate-50/60"
-                                    >
-                                        <td className="px-3 py-3">
-                                            <input
-                                                type="checkbox"
-                                                checked={selected.has(log.id)}
-                                                onChange={() => toggleRow(log.id)}
-                                                aria-label={`select ${log.id}`}
-                                            />
-                                        </td>
-                                        <td className="whitespace-nowrap px-4 py-3 text-slate-700">
-                                            {log.created_at ? new Date(log.created_at).toLocaleString() : '—'}
-                                        </td>
-                                        <td className="px-4 py-3 font-mono text-xs text-slate-900">{log.action}</td>
-                                        <td className="px-4 py-3">
-                                            <span className="inline-flex rounded-full bg-indigo-100 px-2 py-0.5 text-[11px] font-semibold text-indigo-700">
-                                                {log.event_type || '—'}
-                                            </span>
-                                        </td>
-                                        <td className="px-4 py-3 text-xs text-slate-700">{log.channel || '—'}</td>
-                                        <td className="px-4 py-3">
-                                            <span className={`inline-flex rounded-full px-2 py-0.5 text-[11px] font-semibold ${levelBadgeClass(log.level)}`}>
-                                                {log.level || 'info'}
-                                            </span>
-                                        </td>
-                                        <td className="px-4 py-3 text-slate-700">
-                                            {log.actor ? `${log.actor.name} (${log.actor.email})` : '—'}
-                                        </td>
-                                        <td className="max-w-xs truncate px-4 py-3 font-mono text-xs text-slate-600" title={fmtProps(log.properties)}>
-                                            {log.subject_type ? `${log.subject_type} #${log.subject_id}` : '—'}
-                                        </td>
-                                        <td className="whitespace-nowrap px-4 py-3 text-slate-500">{log.ip_address || '—'}</td>
-                                        <td className="px-4 py-3">
-                                            <button
-                                                type="button"
-                                                onClick={() => setExpandedId((prev) => (prev === log.id ? null : log.id))}
-                                                className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50"
-                                            >
-                                                {t('activity_col_details')}
-                                                <HiOutlineChevronDown className={`h-3.5 w-3.5 transition ${expandedId === log.id ? 'rotate-180' : ''}`} />
-                                            </button>
-                                        </td>
-                                    </tr>
-                                    {expandedId === log.id ? (
-                                        <tr className="border-t border-slate-100 bg-slate-50/60">
-                                            <td colSpan={10} className="px-4 py-3">
-                                                <div className="grid gap-3 md:grid-cols-2">
-                                                    <div>
-                                                        <p className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-slate-500">properties</p>
-                                                        <pre className="max-h-48 overflow-auto rounded-lg bg-white p-2 text-xs text-slate-700 ring-1 ring-slate-200">{fmtProps(log.properties)}</pre>
-                                                    </div>
-                                                    <div>
-                                                        <p className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-slate-500">context</p>
-                                                        <pre className="max-h-48 overflow-auto rounded-lg bg-white p-2 text-xs text-slate-700 ring-1 ring-slate-200">{fmtProps(log.context)}</pre>
-                                                    </div>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    ) : null}
-                                </Fragment>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
-                <PaginationBar meta={meta} loading={loading} onPageChange={setPage} />
+            <div className="ws-dt-card">
+                {/* Logs can run into the millions: export covers the selection or the current page only. */}
+                <IndexFilters table={table} searchPlaceholder={t('admin_dt_search_activity')} exportDisabled={loading || !rows.length}
+                    onExport={() => downloadCsv(`activity-${new Date().toISOString().slice(0, 10)}.csv`, table.visibleColumns, selectedRows.length ? selectedRows : rows)} />
+                <IndexTable table={table} rows={rows} loading={loading} error={err} onRetry={() => setReload((value) => value + 1)} meta={result?.meta}
+                    label={t('nav_activity_log')} bulkActions={bulkActions}
+                    emptyState={{ icon: HiOutlineClipboardDocumentList, title: t('empty'), description: t('activity_log_subtitle') }} />
             </div>
+
             <ConfirmDialog
-                open={confirmBulk}
-                onClose={() => !deleting && setConfirmBulk(false)}
+                open={Boolean(confirmBulk)}
+                onClose={() => !deleting && setConfirmBulk(null)}
                 title={t('confirm_bulk_delete_title')}
                 body={t('confirm_bulk_delete_body')}
                 confirmLabel={t('action_delete')}
@@ -373,6 +150,33 @@ export default function AdminActivityPage() {
                 loading={deleting}
                 onConfirm={runBulkDelete}
             />
+
+            <Dialog open={Boolean(details)} onClose={() => setDetails(null)} className="relative z-100">
+                <DialogBackdrop className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs" />
+                <div className="fixed inset-0 flex items-center justify-center p-4">
+                    <DialogPanel className="flex max-h-[min(90dvh,40rem)] w-full max-w-3xl flex-col rounded-2xl bg-white shadow-xl ring-1 ring-slate-200/80">
+                        <div className="shrink-0 border-b border-slate-100 px-5 py-4">
+                            <DialogTitle className="text-lg font-bold text-slate-900">{t('activity_col_details')}</DialogTitle>
+                            {details ? <p className="mt-1 font-mono text-xs text-slate-500" dir="ltr">{details.action}{details.created_at ? ` · ${new Date(details.created_at).toLocaleString()}` : ''}</p> : null}
+                        </div>
+                        <div className="grid min-h-0 flex-1 gap-3 overflow-y-auto px-5 py-4 md:grid-cols-2">
+                            <div>
+                                <p className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-slate-500">properties</p>
+                                <pre className="max-h-96 overflow-auto rounded-lg bg-slate-50 p-2 text-xs text-slate-700 ring-1 ring-slate-200" dir="ltr">{fmtProps(details?.properties)}</pre>
+                            </div>
+                            <div>
+                                <p className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-slate-500">context</p>
+                                <pre className="max-h-96 overflow-auto rounded-lg bg-slate-50 p-2 text-xs text-slate-700 ring-1 ring-slate-200" dir="ltr">{fmtProps(details?.context)}</pre>
+                            </div>
+                        </div>
+                        <div className="shrink-0 border-t border-slate-100 px-5 py-3">
+                            <button type="button" onClick={() => setDetails(null)} className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50">
+                                {t('close', 'Close')}
+                            </button>
+                        </div>
+                    </DialogPanel>
+                </div>
+            </Dialog>
         </div>
     );
 }
