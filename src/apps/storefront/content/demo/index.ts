@@ -48,6 +48,7 @@ const BY_THEME: Readonly<Record<string, DemoCatalog>> = {
   techno: VOLTAGE_CATALOG,
   maison: HEARTH_CATALOG,
   glow: ROUGE_CATALOG,
+  karat: LUXURY_CATALOG,
 };
 
 /**
@@ -71,6 +72,7 @@ const AR_OVERLAY: Readonly<Record<string, CatalogOverlay>> = {
   techno: VOLTAGE_AR,
   maison: HEARTH_AR,
   glow: ROUGE_AR,
+  karat: LUXURY_AR,
 };
 
 /**

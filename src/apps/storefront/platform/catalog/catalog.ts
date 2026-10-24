@@ -222,6 +222,23 @@ export const THEME_CATALOG: ThemeCatalog = [
     changelog: [{ version: '1.0.0', date: '2026-10-24', notes: ['Initial release — beauty / skincare theme on the shared section library with six signature sections.'] }],
     load: THEME_LOADERS.glow,
   },
+  {
+    id: 'karat',
+    name: 'Karat',
+    version: '1.0.0',
+    archetype: 'Fine Jewellery',
+    description: 'Quiet-luxury jewellery: metal & stone showcase, gift finder, certification, gold-rate notice and a WhatsApp concierge.',
+    author: 'Sellchaze',
+    tags: ['jewelry', 'jewellery', 'gold', 'diamonds', 'watches', 'luxury', 'emerald', 'ivory', 'editorial', 'arabic', 'rtl'],
+    accent: '#0B1A15',
+    accentAlt: '#C7A76A',
+    previewImage: '/media/theme-previews/karat.jpg',
+    minEngineVersion: '1.0.0',
+    capabilities: ['rtl', 'search-overlay', 'cart-drawer', 'wishlist', 'quick-add', 'newsletter'],
+    license: { type: 'free', sku: 'theme-karat' },
+    changelog: [{ version: '1.0.0', date: '2026-10-24', notes: ['Initial release — fine-jewellery theme with six signature sections on the shared section library.'] }],
+    load: THEME_LOADERS.karat,
+  },
 ];
 
 /** All catalog entries. */
