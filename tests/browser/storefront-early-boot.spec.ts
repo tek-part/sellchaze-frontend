@@ -30,6 +30,27 @@ test('the inline boot script starts the first-view reads once and preloads theme
   await expect(page.locator('html')).toHaveAttribute('data-storefront-ready', 'true');
 });
 
+test('a product page reads its product once, from the early read', async ({ page }) => {
+  const productReads: string[] = [];
+  const shell = readFileSync(fileURLToPath(new URL('../../dist/storefront.html', import.meta.url)), 'utf8');
+  await page.route(url => url.pathname === '/products/silk-scarf', route => route.fulfill({ contentType: 'text/html', body: shell }));
+  await page.route('**/api/v1/**', async route => {
+    const url = new URL(route.request().url());
+    if (url.pathname === '/api/v1/storefront/products/silk-scarf') productReads.push(`${url.pathname}${url.search}`);
+    if (url.pathname.replace(/\/$/, '') === '/api/v1/storefront') {
+      await route.fulfill({ json: { store: { id: 7654321, name: 'Early boot fixture', slug: 'early-boot', currency: 'USD', supported_currencies: ['USD'], default_locale: 'en', supported_locales: ['en', 'ar'], tracking_enabled: false }, theme: { key: 'karat', version: '1.0.0', settings: {} }, navigation: { header: [], footer: [] } } });
+      return;
+    }
+    await route.fulfill({ status: 404, json: { message: 'Not found' } });
+  });
+
+  await page.goto('/products/silk-scarf?lang=en', { waitUntil: 'networkidle' });
+
+  expect(productReads).toEqual(['/api/v1/storefront/products/silk-scarf?lang=en']);
+  const preloaded = await page.locator('link[rel="modulepreload"]').evaluateAll(links => links.map(link => (link as HTMLLinkElement).href));
+  expect(preloaded.some(href => /\/assets\/ProductPage-[\w-]+\.js$/.test(href))).toBe(true);
+});
+
 test('previews keep their own bootstrap request', async ({ page }) => {
   const bootstrapUrls: string[] = [];
   await page.route('**/api/v1/**', async route => {
