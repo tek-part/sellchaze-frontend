@@ -35,7 +35,7 @@ export function buildWorkspaceStoreNav(t, access, permissions = []) {
             absolute(item('ab-tests')),
         ]),
         group('design', t('workspace_store_design', 'Store design'), DesignIcon,
-            ['themes', 'customize', 'pages', 'checkout-fields', 'thanks-edit', 'ui-blocks', 'upload-assets'].map((key) => absolute(item(key)))),
+            ['themes', 'customize', 'pages', 'articles', 'checkout-fields', 'thanks-edit', 'ui-blocks', 'upload-assets'].map((key) => absolute(item(key)))),
         { key: 'funnels', ...absolute(item('funnels')), label: 'Funnels', Icon: FunnelsIcon, single: true },
         group('tracking', t('workspace_tracking_tools', 'Tracking tools'), TrackingIcon,
             ['pixels-settings', 'pixel-conversion', 'ga'].map((key) => absolute(item(key)))),

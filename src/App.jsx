@@ -72,6 +72,8 @@ const EditorLayout = lazy(() => import('./components/editor/EditorLayout'));
 const ProductLandingEditorPage = lazy(() => import('./pages/ProductLandingEditorPage'));
 const StorePagesPage = lazy(() => import('./pages/StorePagesPage'));
 const StoreSimplePageEditor = lazy(() => import('./pages/StoreSimplePageEditor'));
+const StoreArticlesPage = lazy(() => import('./pages/StoreArticlesPage'));
+const StoreArticleEditorPage = lazy(() => import('./pages/StoreArticleEditorPage'));
 const StoreCheckoutFieldsPage = lazy(() => import('./pages/store/settings/StoreCheckoutFieldsPage'));
 const StoreDigitalDeliveryPage = lazy(() => import('./pages/store/settings/StoreDigitalDeliveryPage'));
 const StoreNotificationsPage = lazy(() => import('./pages/store/settings/StoreNotificationsPage'));
@@ -231,6 +233,9 @@ const STORE_ROUTES = [
     { path: 'pages', element: <StorePagesPage /> },
     { path: 'simple-pages/create', element: <StoreSimplePageEditor /> },
     { path: 'simple-pages/:pageId', element: <StoreSimplePageEditor /> },
+    { path: 'articles', element: <StoreArticlesPage /> },
+    { path: 'articles/new', element: <StoreArticleEditorPage /> },
+    { path: 'articles/:articleId', element: <StoreArticleEditorPage /> },
     { path: 'checkout-fields', element: <StoreCheckoutFieldsPage /> },
     { path: 'thanks-edit', element: <StoreThankYouPage /> },
     { path: 'ui-blocks', element: <StoreUiBlocksPage /> },

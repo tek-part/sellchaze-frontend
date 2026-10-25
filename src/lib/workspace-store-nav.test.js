@@ -13,6 +13,7 @@ describe('Store workspace navigation', () => {
         expect(groups[1].items.map((item) => item.to)).toContain('/store/categories');
         expect(groups[1].items.map((item) => item.to).slice(-3)).toEqual(['/store/product-feed', '/store/apps/catalog', '/store/ab-tests']);
         expect(merchantWorkspaceRouteAllowed('/store/ab-tests')).toBe(true);
+        expect(groups[2].items.map((item) => item.to)).toEqual(['/store/themes', '/store/customize', '/store/pages', '/store/articles', '/store/checkout-fields', '/store/thanks-edit', '/store/ui-blocks', '/store/upload-assets']);
         expect(groups[3].to).toBe('/store/funnels');
         expect(groups.slice(3, 6).map((group) => group.key)).toEqual(['funnels', 'tracking', 'marketing']);
         expect(groups[4].items.map((item) => item.to)).toEqual(['/store/pixels-settings', '/store/pixel-conversion', '/store/ga']);
@@ -46,6 +47,15 @@ describe('Store workspace navigation', () => {
         expect(workspaceStoreItemActive(apps, '/store/apps/cross-selling')).toBe(false);
         expect(workspaceStoreItemActive(apps, '/store/apps/pixels')).toBe(true);
         expect(workspaceStoreItemActive(apps, '/store/apps')).toBe(true);
+    });
+    it('shows blog posts only to people who can manage pages, highlighting it on the editor routes', () => {
+        const pages = ['store.pages.manage'];
+        const editor = buildWorkspaceStoreNav(t, storeAccess(['Employee'], pages), pages).find((group) => group.key === 'design').items.find((item) => item.key === 'articles');
+        expect(editor.to).toBe('/store/articles');
+        expect(workspaceStoreItemActive(editor, '/store/articles/new')).toBe(true);
+        expect(workspaceStoreItemActive(editor, '/store/articles/7')).toBe(true);
+        const products = ['store.products.manage'];
+        expect(buildWorkspaceStoreNav(t, storeAccess(['Employee'], products), products).flatMap((group) => group.items ?? [group]).some((item) => item.key === 'articles')).toBe(false);
     });
     it('does not expose app configuration links to an employee who can only manage products', () => {
         const permissions = ['store.products.manage'];

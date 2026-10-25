@@ -6,7 +6,7 @@ const roots = [
     '/store/orders', '/store/customers', '/store/missed-orders', '/store/newsletter', '/store/ab-tests',
     '/store/pixels-settings', '/store/pixel-conversion', '/store/ga', '/store/inventory',
     '/store/product-feed', '/store/google-merchant', '/store/utm-builder', '/store/create-referral-link', '/store/retargeting', '/store/marketing-services',
-    '/store/themes', '/store/customize', '/store/pages', '/store/settings', '/store/checkout-fields',
+    '/store/themes', '/store/customize', '/store/pages', '/store/articles', '/store/settings', '/store/checkout-fields',
     '/store/thanks-edit', '/store/ui-blocks', '/store/upload-assets', '/store/blocked-phone-numbers', '/store/blocked-phones',
 ];
 
