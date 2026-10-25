@@ -12,6 +12,7 @@ import { usePhoneVerification, type PhoneVerificationConfiguration } from './use
 import { CheckoutPhoneVerification } from './CheckoutPhoneVerification';
 import { useBotProtection, type BotConfiguration } from './useBotProtection';
 import { CheckoutBotProtection } from './CheckoutBotProtection';
+import './checkout/checkout.css';
 
 export function useCheckoutFields(paymentMethod: string, productIds: ReadonlyArray<number>) {
   const { locale } = useLocale();
@@ -55,16 +56,18 @@ export function CheckoutFieldsForm({ model }: { model: ReturnType<typeof useChec
     {fields.some((field) => field.enabled && ['phone', 'email'].includes(field.key)) ? <p className="sf-field__hint">{lang === 'ar' ? 'يستخدم المتجر بيانات التواصل لمساعدتك إذا لم يكتمل الطلب.' : 'The store may use your contact details to help you complete an unfinished order.'}</p> : null}
     <CheckoutPhoneVerification model={model.phoneVerification} locale={locale} />
     <CheckoutBotProtection model={model.botProtection} locale={locale} />
-    {model.shipping?.enabled && model.shipping.options.length ? <fieldset style={{ display: 'grid', gap: '.75rem', border: 0, padding: 0, margin: 0 }}>
-      <legend style={{ marginBottom: '.5rem', fontWeight: 600 }}>{lang === 'ar' ? 'خيار الشحن *' : 'Shipping option *'}</legend>
-      {model.shipping.options.map((option) => <label key={option.id} className="sf-account__panel" style={{ display: 'flex', alignItems: 'center', gap: '.75rem', padding: '1rem', cursor: 'pointer' }}>
-        <input type="radio" name="shipping_option" required value={option.id} checked={model.shippingSelection.shipping_option_id === option.id}
-          onChange={() => model.setChosenShipping((current) => ({ ...current, shipping_option_id: option.id }))} />
-        {option.icon_url ? <img src={option.icon_url} alt="" width={40} height={40} style={{ objectFit: 'contain' }} /> : null}
-        <span style={{ flex: 1 }}><strong>{option.name[lang]}</strong>{option.description[lang] ? <small style={{ display: 'block' }}>{option.description[lang]}</small> : null}</span>
-        <span>{formatMoney(Number(option.rate), model.shipping?.currency ?? '', locale)}</span>
-      </label>)}
-      {model.shipping.free_over !== null ? <small>{lang === 'ar' ? 'الشحن مجاني عندما تصل قيمة المنتجات بعد الخصم إلى ' : 'Free shipping when products after discounts reach '}{formatMoney(Number(model.shipping.free_over), model.shipping.currency, locale)}</small> : null}
+    {model.shipping?.enabled && model.shipping.options.length ? <fieldset className="sf-co-shipping" style={{ display: 'grid', gap: '.75rem', border: 0, padding: 0, margin: 0, minWidth: 0 }}>
+      <legend style={{ marginBottom: '.5rem', fontWeight: 600 }}>{lang === 'ar' ? 'طريقة الشحن *' : 'Shipping method *'}</legend>
+      <div className="sf-co-choices">{model.shipping.options.map((option) => {
+        const selected = model.shippingSelection.shipping_option_id === option.id;
+        return <label key={option.id} className={`sf-co-choice ${selected ? 'is-selected' : ''}`}>
+          <input type="radio" name="shipping_option" required value={option.id} checked={selected}
+            onChange={() => model.setChosenShipping((current) => ({ ...current, shipping_option_id: option.id }))} />
+          <span className="sf-co-choice__label"><strong>{option.name[lang]}</strong>{option.description[lang] ? <small>{option.description[lang]}</small> : null}</span>
+          <span className="sf-co-choice__aside">{option.icon_url ? <img src={option.icon_url} alt="" width={40} height={24} /> : null}{Number(option.rate) > 0 ? formatMoney(Number(option.rate), model.shipping?.currency ?? '', locale) : (lang === 'ar' ? 'مجاني' : 'Free')}</span>
+        </label>;
+      })}</div>
+      {model.shipping.free_over !== null ? <small className="sf-co-free">{lang === 'ar' ? 'الشحن مجاني عندما تصل قيمة المنتجات بعد الخصم إلى ' : 'Free shipping when products after discounts reach '}{formatMoney(Number(model.shipping.free_over), model.shipping.currency, locale)}</small> : null}
     </fieldset> : null}
     {ready && model.shippingStale ? <div role="alert"><p>{lang === 'ar' ? 'تغيّرت منطقة أو طريقة التوصيل التي اخترتها. أعد الاختيار لحساب الإجمالي الحالي.' : 'Your selected delivery region or method changed. Choose again to calculate the current total.'}</p><Button type="button" variant="secondary" onClick={model.resetShipping}>{lang === 'ar' ? 'إعادة اختيار التوصيل' : 'Choose delivery again'}</Button></div> : ready && !model.shippingReady ? <p role="status">{lang === 'ar' ? 'اختر تفاصيل التوصيل لحساب الإجمالي.' : 'Choose delivery details to calculate your total.'}</p> : null}
   </>;

@@ -36,6 +36,7 @@ import { appendFooterPages, appendHeaderPages } from './shared-ui/automatic-page
 type PreviewData = typeof import('./dev/sampleData');
 const CustomizeBridge = lazy(() => import('./customize/CustomizeBridge').then((module) => ({ default: module.CustomizeBridge })));
 const DesignAssetsHead = lazy(() => import('./design-assets/DesignAssetsHead').then((module) => ({ default: module.DesignAssetsHead })));
+const CheckoutShell = lazy(() => import('./pages/checkout/CheckoutShell').then((module) => ({ default: module.CheckoutShell })));
 
 /**
  * Copyright year for rendered chrome. A literal, not `new Date()`: engine invariant I4 requires
@@ -164,6 +165,8 @@ export function StorefrontApp(): ReactElement {
   const route = useLocation().pathname;
   const standaloneFunnel = /^\/funnels\/[^/]+\/?$/.test(route);
   const templatePreview = /^\/funnel-templates\/[^/]+\/?$/.test(route);
+  // Checkout renders in a distraction-free frame (logo, secure badge, back to cart) for every theme.
+  const checkoutRoute = /^\/checkout\/?$/.test(route);
   const manifest = useThemeManifest();
   const { t } = useTranslation();
   // Applies direction + <html lang> from the active language. Called here so every theme gets it
@@ -288,7 +291,7 @@ export function StorefrontApp(): ReactElement {
       >
         Skip to content
       </a>
-      {templatePreview ? <main id="sf-main"><AppErrorBoundary><AppRoutes /></AppErrorBoundary></main> : standaloneFunnel ? <ToastProvider><CartProvider><main id="sf-main"><AppErrorBoundary><AppRoutes /></AppErrorBoundary></main></CartProvider></ToastProvider> : Layout ? (
+      {templatePreview ? <main id="sf-main"><AppErrorBoundary><AppRoutes /></AppErrorBoundary></main> : standaloneFunnel ? <ToastProvider><CartProvider><main id="sf-main"><AppErrorBoundary><AppRoutes /></AppErrorBoundary></main></CartProvider></ToastProvider> : checkoutRoute && !isCustomizeMode() ? <ToastProvider><CartProvider><Suspense fallback={null}><CheckoutShell><AppErrorBoundary><AppRoutes /></AppErrorBoundary></CheckoutShell></Suspense></CartProvider></ToastProvider> : Layout ? (
         <Layout context={context}>
           <AppErrorBoundary>
             <AppRoutes />
