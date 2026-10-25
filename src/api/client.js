@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { resolveApiBase } from './base-url';
+import { clearSessionSnapshots } from '../lib/sessionSnapshots';
 
 /**
  * API base URL. Prefer same-origin `/api/v1` in dev so the Vite proxy (see vite.config.js)
@@ -199,6 +200,8 @@ api.interceptors.response.use(
 );
 
 export function setTokens({ access_token, refresh_token }) {
+    // Login, registration and impersonation switch identity; silent refresh writes tokens directly.
+    clearSessionSnapshots();
     if (access_token) {
         writeToken(ACCESS_TOKEN_KEY, access_token);
     }
@@ -208,6 +211,7 @@ export function setTokens({ access_token, refresh_token }) {
 }
 
 export function clearTokens() {
+    clearSessionSnapshots();
     removeToken(ACCESS_TOKEN_KEY);
     removeToken(REFRESH_TOKEN_KEY);
     removeToken('sellchase_impersonation_backup_access_token');

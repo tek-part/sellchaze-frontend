@@ -59,7 +59,10 @@ const VerificationRequestPage = lazy(() => import('./pages/VerificationRequestPa
 const AdminVerificationsPage = lazy(() => import('./pages/AdminVerificationsPage'));
 const StoresPage = lazy(() => import('./pages/StoresPage'));
 const StoreFormPage = lazy(() => import('./pages/StoreFormPage'));
-const StoreLayout = lazy(() => import('./components/store/StoreLayout'));
+const loadStoreLayout = () => import('./components/store/StoreLayout');
+const StoreLayout = lazy(loadStoreLayout);
+// Most merchants land in the store admin: on a direct load, fetch its layout alongside the shell.
+if (typeof window !== 'undefined' && /^\/stores?\//.test(window.location.pathname)) void loadStoreLayout();
 const StoreOverviewPage = lazy(() => import('./pages/StoreOverviewPage'));
 const StoreThemesPage = lazy(() => import('./pages/StoreThemesPage'));
 const StoreCustomizePage = lazy(() => import('./pages/StoreCustomizePage'));
