@@ -43,7 +43,7 @@ export default function StoresPage() {
         ['products', t('products_title', 'Products')],
         ['themes', t('store_themes_title', 'Themes')],
         ['pages', t('pages_title', 'Pages')],
-        ['coupons', t('coupons_title', 'Coupons')],
+        ['coupons', t('coupons_title', 'Discounts')],
         ['orders', t('orders_title', 'Orders')],
         ['analytics', t('analytics_title', 'Analytics')],
         ['reviews', t('reviews_title', 'Reviews')],
