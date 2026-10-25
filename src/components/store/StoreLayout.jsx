@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { Fragment, Suspense, useCallback, useEffect, useMemo, useState } from 'react';
 import { Dialog, DialogBackdrop, DialogPanel } from '@headlessui/react';
 import { Link, Navigate, Outlet, useLocation, useOutletContext } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -10,6 +10,8 @@ import StoreSidebar from './StoreSidebar';
 import StoreStatusPill from './StoreStatusPill';
 import StoreSettingsNavigation from './StoreSettingsNavigation';
 import { buildStoreNav, findActiveGroup, relativeStorePath } from './storeNav';
+import BrandLoader from '../BrandLoader';
+import { readStoreSnapshot, writeStoreSnapshot } from '../../lib/sessionSnapshots';
 import './merchant-settings-frame.css';
 
 /**
@@ -36,8 +38,10 @@ export default function StoreLayout() {
     }, [isAdminScope, canAdminEdit, parent.permissions, parent.me?.roles]);
     const allowed = isAdminScope ? canAdminEdit : access.hasStoreAccess;
 
-    const [store, setStore] = useState(null);
-    const [loading, setLoading] = useState(true);
+    // An owner's store paints from the last-known copy while /my-store refreshes it.
+    const userId = parent.me?.id;
+    const [store, setStore] = useState(() => (owner ? readStoreSnapshot(userId) : null));
+    const [loading, setLoading] = useState(() => !store);
     const [error, setError] = useState('');
     const [drawerOpen, setDrawerOpen] = useState(false);
 
@@ -45,6 +49,7 @@ export default function StoreLayout() {
         try {
             const { data } = await api.get(apiBase);
             const next = data?.data ?? data ?? null;
+            if (owner) writeStoreSnapshot(userId, next);
             setStore(next);
             setError('');
             return next;
@@ -54,14 +59,15 @@ export default function StoreLayout() {
         } finally {
             setLoading(false);
         }
-    }, [apiBase]);
+    }, [apiBase, owner, userId]);
 
     useEffect(() => {
         if (!allowed) return;
-        setLoading(true);
-        setStore(null);
+        const snapshot = owner ? readStoreSnapshot(userId) : null;
+        setLoading(!snapshot);
+        setStore(snapshot);
         refreshStore().catch(() => { /* surfaced through `error` */ });
-    }, [allowed, refreshStore]);
+    }, [allowed, refreshStore, owner, userId]);
 
     // Close the drawer on every navigation so a tap never leaves it hanging.
     useEffect(() => { setDrawerOpen(false); }, [location.pathname]);
@@ -99,6 +105,9 @@ export default function StoreLayout() {
     }
 
     const sidebarProps = { store, groups, uiBase, isAdminScope, loading };
+    // This layout stays mounted across store pages; each page still remounts per path, and while a
+    // page's code loads the previous page stays on screen (router navigations are transitions).
+    const page = <Suspense fallback={<BrandLoader />}><Fragment key={location.pathname}><Outlet context={context} /></Fragment></Suspense>;
 
     return (
         <div className="min-w-0">
@@ -165,8 +174,8 @@ export default function StoreLayout() {
                     {referenceSettings ? <header className="ws-settings-page-heading"><h1>{t('settings', 'Settings')}</h1><p>{t('store_general_control', 'Manage your store')}</p></header> : null}
                     <div className={`ws-settings-layout${referenceSettings ? ' ws-settings-layout--reference' : ''}`}>
                         <StoreSettingsNavigation items={settingsItems} uiBase={uiBase} rel={rel} label={activeGroup.label} />
-                        <div className="ws-settings-content"><Outlet context={context} /></div>
-                    </div></> : <Outlet context={context} />
+                        <div className="ws-settings-content">{page}</div>
+                    </div></> : page
                 )}
             </div>
 

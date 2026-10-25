@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef, useState, Suspense } from 'react';
+import { Fragment, useEffect, useLayoutEffect, useRef, useState, Suspense } from 'react';
 import { Dialog, DialogBackdrop, DialogPanel, DialogTitle } from '@headlessui/react';
 import { motion, useReducedMotion } from 'framer-motion';
 import { Link, Navigate, Outlet, useLocation, useNavigate } from 'react-router-dom';
@@ -22,6 +22,7 @@ import { merchantWorkspaceRouteAllowed } from '../lib/merchantWorkspaceRoutes';
 import { WorkspaceIconProvider } from './workspace/WorkspaceIcons';
 import { marketingUrl } from '../config/marketing';
 import BrandLoader from './BrandLoader';
+import { readMeSnapshot, writeMeSnapshot } from '../lib/sessionSnapshots';
 
 function unwrapUser(payload) {
     if (!payload) {
@@ -46,7 +47,8 @@ export default function AppLayout() {
     const { t, i18n } = useTranslation();
     const navigate = useNavigate();
     const location = useLocation();
-    const [me, setMe] = useState(null);
+    // Paint from the last-known account at once; /auth/me below refreshes it in the background.
+    const [me, setMe] = useState(readMeSnapshot);
     // Public URL of the owner's storefront (custom domain > primary domain > tenant
     // subdomain). null = no store yet, so the header hides the "View store" button.
     const [storeUrl, setStoreUrl] = useState(null);
@@ -121,7 +123,10 @@ export default function AppLayout() {
             try {
                 const { data } = await api.get('/auth/me');
                 if (!cancelled) {
-                    setMe(unwrapUser(data.user));
+                    const fresh = unwrapUser(data.user);
+                    writeMeSnapshot(fresh);
+                    // Keep the painted snapshot when nothing changed, so pages do not re-render.
+                    setMe((current) => (current && JSON.stringify(current) === JSON.stringify(fresh) ? current : fresh));
                 }
             } catch {
                 if (!cancelled) {
@@ -183,6 +188,10 @@ export default function AppLayout() {
     if (!me) {
         return <BrandLoader fullScreen />;
     }
+
+    // Store admin pages share one StoreLayout: keep it mounted across their navigations (it loads
+    // the store once) and let it remount its own pages. Every other page remounts per path.
+    const pageKey = location.pathname.match(/^\/(?:store|stores\/[^/]+)(?=\/|$)/)?.[0] ?? location.pathname;
 
     const isAdmin = Array.isArray(me.roles) && me.roles.includes('Admin');
     const hasBusinessRole = Array.isArray(me.roles)
@@ -246,7 +255,7 @@ export default function AppLayout() {
                 <WorkspaceHeader merchantWorkspace={merchantWorkspace} me={me} permissions={permissions} storeUrl={storeUrl} chatUnread={chatUnread} appearance={appearance} onLanguage={toggleLanguage} onNavigation={openMobileNavigation} onToggleSidebar={() => setSidebarCollapsed((value) => !value)} sidebarToggleRef={sidebarToggleRef} collapsed={sidebarCollapsed} onSearch={() => setSearchOpen(true)} onLogout={() => setLogoutOpen(true)} />
                 </div>
                 <main id="workspace-content" tabIndex={-1} className="ws-main-scroll">
-                    <div key={location.pathname} className="ws-page"><Suspense fallback={<BrandLoader />}><Outlet context={{ me, isAdmin, permissions, unifiedStoreNavigation: !isAdminOnly }} /></Suspense></div>
+                    <div className="ws-page"><Suspense fallback={<BrandLoader />}><Fragment key={pageKey}><Outlet context={{ me, isAdmin, permissions, unifiedStoreNavigation: !isAdminOnly }} /></Fragment></Suspense></div>
                 </main>
             </div>
             <Dialog open={mobileNavOpen} onClose={() => setMobileNavOpen(false)} className="ws-dialog-layer">

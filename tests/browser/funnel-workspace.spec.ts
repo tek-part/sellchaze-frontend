@@ -22,6 +22,8 @@ async function fixture(page: Page, language = 'en', ai = false, permission = tru
     const headers = { 'Access-Control-Allow-Origin': request.headers()['origin'] || 'http://127.0.0.1:4183', 'Access-Control-Allow-Credentials': 'true', 'Access-Control-Allow-Headers': 'authorization,content-type,x-requested-with', 'Access-Control-Allow-Methods': 'GET,POST,PUT,PATCH,DELETE,OPTIONS' };
     if (request.method() === 'OPTIONS') return route.fulfill({ status: 204, headers });
     const respond = (json: unknown, status = 200) => route.fulfill({ json, status, headers });
+    // The builder that opens after creation asks for a signed preview link; that is not a write under test.
+    if (request.method() === 'POST' && /^\/my-store\/pages\/\d+\/preview$/.test(path)) return respond({ message: 'Preview unavailable in this fixture' }, 404);
     if (request.method() !== 'GET') {
       expect(['/my-store/funnels', '/my-store/funnels/generate', '/my-store/funnels/bulk-delete', '/my-store/funnels/31']).toContain(path);
       const data = request.postDataJSON() as Record<string, unknown>; writes.push({path, data});
