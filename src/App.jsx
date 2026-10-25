@@ -40,6 +40,7 @@ const ProfilePage = lazy(() => import('./pages/ProfilePage'));
 const SettingsPage = lazy(() => import('./pages/SettingsPage'));
 const EmailSettingsPage = lazy(() => import('./pages/EmailSettingsPage'));
 const GoogleSettingsPage = lazy(() => import('./pages/GoogleSettingsPage'));
+const CurrencySettingsPage = lazy(() => import('./pages/CurrencySettingsPage'));
 const EmployeesPage = lazy(() => import('./pages/EmployeesPage'));
 const ChatPage = lazy(() => import('./pages/ChatPage'));
 import MarketingRedirect from './components/MarketingRedirect';
@@ -370,6 +371,7 @@ export default function App() {
                 <Route path="/settings" element={<SettingsPage />} />
                 <Route path="/settings/email" element={<EmailSettingsPage />} />
                 <Route path="/settings/google" element={<GoogleSettingsPage />} />
+                <Route path="/settings/currencies" element={<CurrencySettingsPage />} />
                 {/* Store admin — one route table rendered twice under a shared StoreLayout
                     (sidebar + store context): owners at /store/* (no id; useStoreScope resolves
                     the store via /my-store) and admins at /stores/:id/*. Absolute paths keep

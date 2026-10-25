@@ -12,11 +12,16 @@ import { useStore } from '../state/store-context';
  * Switching locale re-picks without a refetch.
  */
 export function useStoreContent<T = Record<string, unknown>>(key: string, enabled = true): T | null {
+  return useStoreContentState<T>(key, enabled).content;
+}
+
+/** {@link useStoreContent} plus whether the request is still in flight (to tell "loading" from "missing"). */
+export function useStoreContentState<T = Record<string, unknown>>(key: string, enabled = true): { content: T | null; loading: boolean } {
   const { locale } = useLocale();
   const { store } = useStore();
-  const { data } = useAsync(
+  const { data, loading } = useAsync(
     () => (enabled ? getContent(key) : Promise.resolve({ data: null })),
     [key, enabled],
   );
-  return pickLocaleContent<T>(data?.data ?? null, locale, store.defaultLocale);
+  return { content: pickLocaleContent<T>(data?.data ?? null, locale, store.defaultLocale), loading };
 }

@@ -34,6 +34,7 @@ import {
     HiOutlinePresentationChartLine,
     HiOutlineQuestionMarkCircle,
     HiOutlineSparkles,
+    HiOutlineCurrencyDollar,
 } from './workspace/WorkspaceIcons';
 
 function usePathPrefix(prefix) {
@@ -203,7 +204,7 @@ function SidebarNavInner({ isAdmin = false, roles = [], permissions = [], onNavi
     const navClass = mega
         ? 'columns-1 gap-10 md:columns-2 lg:columns-3 [&>div]:mb-9 [&>div]:break-inside-avoid'
         : 'flex flex-col';
-    const chatUnread = useChatUnread();
+    const chatUnread = useChatUnread({ enabled: isAdmin });
     const location = useLocation();
     const adminUsersPendingView =
         location.pathname === '/admin/users' && new URLSearchParams(location.search).get('pending') === '1';
@@ -418,6 +419,10 @@ function SidebarNavInner({ isAdmin = false, roles = [], permissions = [], onNavi
                         <NavLink to="/settings/google" className={subNavLinkClass}>
                             <FaGoogle className="h-3.5 w-3.5 shrink-0 opacity-90" aria-hidden />
                             {t('settings_google')}
+                        </NavLink>
+                        <NavLink to="/settings/currencies" className={subNavLinkClass}>
+                            <HiOutlineCurrencyDollar className="h-4 w-4 shrink-0 opacity-90" aria-hidden />
+                            {t('settings_currencies')}
                         </NavLink>
                     </NavGroup>
                 </div>

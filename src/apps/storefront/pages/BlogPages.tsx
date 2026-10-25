@@ -23,12 +23,30 @@ import { Seo } from '../seo/Seo';
 import { articleSchema, breadcrumbSchema } from '../seo/schema';
 import { useStore } from '../state/store-context';
 import { useNewsletter } from '../shared-ui';
-import { useStoreContent } from '../content/useStoreContent';
+import { useStoreContent, useStoreContentState } from '../content/useStoreContent';
+import { previewOrDev } from '../preview';
+import { sanitizeHtml } from '../../../shared/utils/sanitizeHtml';
+
+interface StorePost {
+  title?: string;
+  slug?: string;
+  excerpt?: string;
+  image?: string;
+  date?: string;
+  body?: string;
+  seo_title?: string;
+  seo_description?: string;
+}
 
 interface BlogContent {
   heading?: string;
   intro?: string;
-  posts?: Array<{ title?: string; slug?: string; excerpt?: string; image?: string; date?: string; body?: string }>;
+  posts?: StorePost[];
+}
+
+/** The store's own published posts (merchant articles and legacy blog content), titled ones only. */
+function storePosts(content: BlogContent | null): StorePost[] {
+  return (Array.isArray(content?.posts) ? content.posts : []).filter((post) => (post.title || '').trim() && (post.slug || '').trim());
 }
 import {
   ARTICLES_BY_DATE,
@@ -79,6 +97,27 @@ function ArticleCard(props: { article: Article; featured?: boolean }): ReactElem
         </h3>
         <p className="sf-postcard__excerpt">{article.excerpt}</p>
         <ArticleMeta article={article} className="sf-postcard__meta" />
+      </div>
+    </article>
+  );
+}
+
+function StorePostCard(props: { post: StorePost }): ReactElement {
+  const { post } = props;
+  const href = `/blog/${encodeURIComponent(post.slug ?? '')}`;
+  return (
+    <article className="sf-postcard">
+      {post.image?.trim() ? (
+        <Link to={href} className="sf-postcard__media" tabIndex={-1} aria-hidden>
+          <StoreImage src={post.image} alt="" />
+        </Link>
+      ) : null}
+      <div className="sf-postcard__body">
+        <h3 className="sf-postcard__title">
+          <Link to={href}>{post.title}</Link>
+        </h3>
+        {post.excerpt?.trim() ? <p className="sf-postcard__excerpt">{post.excerpt}</p> : null}
+        {post.date?.trim() ? <p className="sf-postcard__meta"><time dateTime={post.date}>{post.date}</time></p> : null}
       </div>
     </article>
   );
@@ -171,7 +210,9 @@ export function BlogPage(): ReactElement {
   const bc = useStoreContent<BlogContent>('blog') ?? {};
   const blogHeading = bc.heading?.trim() || t('blog.title');
   const blogIntro = bc.intro?.trim() || t('blog.subtitle');
-  const customPosts = (Array.isArray(bc.posts) ? bc.posts : []).filter((p) => (p.title || '').trim());
+  const customPosts = storePosts(bc);
+  // The sample journal is only for theme previews; a live store shows its own posts or nothing.
+  const demo = previewOrDev();
 
   return (
     <Section>
@@ -187,21 +228,14 @@ export function BlogPage(): ReactElement {
           <p className="sf-page-head__sub">{blogIntro}</p>
         </header>
 
-        {customPosts.length ? (
-          <div className="sf-blog__grid">
-            {customPosts.map((p, i) => (
-              <article key={p.slug || i} className="sf-postcard">
-                {p.image?.trim() ? (
-                  <span className="sf-postcard__media"><StoreImage src={p.image} alt="" /></span>
-                ) : null}
-                <div className="sf-postcard__body">
-                  <h3 className="sf-postcard__title">{p.title}</h3>
-                  {p.excerpt?.trim() ? <p className="sf-postcard__excerpt">{p.excerpt}</p> : null}
-                  {p.date?.trim() ? <p className="sf-postcard__meta"><time>{p.date}</time></p> : null}
-                </div>
-              </article>
-            ))}
-          </div>
+        {customPosts.length || !demo ? (
+          customPosts.length ? (
+            <div className="sf-blog__grid">
+              {customPosts.map((post) => <StorePostCard key={post.slug} post={post} />)}
+            </div>
+          ) : (
+            <EmptyState title={t('blog.empty')} description={t('blog.emptyHint')} actions={<ButtonLink href="/">{t('blog.continueShopping')}</ButtonLink>} />
+          )
         ) : (<>
         {featured ? (
           <div className="sf-blog__featured">
@@ -361,11 +395,87 @@ function renderBlock(block: ArticleBlock, index: number): ReactElement {
   }
 }
 
+/** Paragraphs for a plain-text body; merchant rich text (HTML) goes through the shared sanitizer. */
+function PostBody(props: { body: string }): ReactElement {
+  const body = props.body.trim();
+  if (/<[a-z][\s\S]*>/i.test(body)) {
+    return <div className="sf-prose" dangerouslySetInnerHTML={{ __html: sanitizeHtml(body, { formatting: true }) }} />;
+  }
+  return (
+    <div className="sf-prose">
+      {body.split(/\n{2,}/).map((paragraph, index) => (
+        <p key={index} className="sf-prose__p">{paragraph}</p>
+      ))}
+    </div>
+  );
+}
+
+function StorePostDetail(props: { post: StorePost }): ReactElement {
+  const { t } = useTranslation();
+  const { store } = useStore();
+  const { post } = props;
+  const title = post.title ?? '';
+  const path = `/blog/${encodeURIComponent(post.slug ?? '')}`;
+  const url = `${site()}${path}`;
+  const description = post.seo_description?.trim() || post.excerpt?.trim() || '';
+
+  return (
+    <Section>
+      <Seo
+        title={post.seo_title?.trim() || title}
+        path={path}
+        description={description}
+        {...(post.image?.trim() ? { image: post.image } : {})}
+        type="article"
+        jsonLd={[
+          breadcrumbSchema([{ label: 'Home', url: '/' }, { label: 'Journal', url: '/blog' }, { label: title, url: path }], site()),
+          articleSchema({ title, description, url, ...(post.image?.trim() ? { image: post.image } : {}), published: post.date ?? '', authorName: store.name, siteName: store.name }),
+        ]}
+      />
+      <Container narrow>
+        <nav className="sf-crumbs" aria-label={t('misc.breadcrumb')}>
+          <ol>
+            <li><Link to="/">{t('nav.home')}</Link></li>
+            <li><Link to="/blog">{t('blog.journal')}</Link></li>
+            <li aria-current="page">{title}</li>
+          </ol>
+        </nav>
+        <article className="sf-article">
+          <header className="sf-article__head">
+            <h1 className="sf-article__title">{title}</h1>
+            {post.excerpt?.trim() ? <p className="sf-article__standfirst">{post.excerpt}</p> : null}
+            {post.date?.trim() ? <p className="sf-article__meta"><time dateTime={post.date}>{post.date}</time></p> : null}
+          </header>
+          {post.image?.trim() ? (
+            <figure className="sf-article__cover">
+              <StoreImage src={post.image} alt="" eager />
+            </figure>
+          ) : null}
+          {post.body?.trim() ? <PostBody body={post.body} /> : null}
+          <p className="sf-article__back"><ButtonLink href="/blog" variant="secondary">{t('blog.backToJournal')}</ButtonLink></p>
+        </article>
+      </Container>
+    </Section>
+  );
+}
+
 export function BlogDetailPage(): ReactElement {
   const { t } = useTranslation();
   const { slug = '' } = useParams();
   const { store } = useStore();
-  const article = getArticle(slug);
+  const { content, loading } = useStoreContentState<BlogContent>('blog');
+  const post = storePosts(content).find((item) => item.slug === slug);
+  // The sample journal only answers in theme previews; live stores serve their own posts.
+  const article = !post && previewOrDev() ? getArticle(slug) : undefined;
+
+  if (post) return <StorePostDetail post={post} />;
+  if (!article && loading) {
+    return (
+      <Section>
+        <Container narrow><div className="sf-article" aria-busy="true" /></Container>
+      </Section>
+    );
+  }
 
   if (!article) {
     return (
