@@ -11,6 +11,8 @@ describe('Store workspace navigation', () => {
         expect(groups[0].items.map((item) => item.to)).toEqual(['/store/orders', '/store/customers', '/store/missed-orders', '/store/blocked-phone-numbers', '/store/blocked-phones', '/store/newsletter']);
         expect(groups[1].items[0].to).toBe('/store/products');
         expect(groups[1].items.map((item) => item.to)).toContain('/store/categories');
+        expect(groups[1].items.map((item) => item.to).slice(1, 3)).toEqual(['/store/categories', '/store/collections']);
+        expect(groups[1].items.find((item) => item.key === 'collections').label).toBe('Collections');
         expect(groups[1].items.map((item) => item.to).slice(-3)).toEqual(['/store/product-feed', '/store/apps/catalog', '/store/ab-tests']);
         expect(merchantWorkspaceRouteAllowed('/store/ab-tests')).toBe(true);
         expect(groups[2].items.map((item) => item.to)).toEqual(['/store/themes', '/store/customize', '/store/pages', '/store/articles', '/store/checkout-fields', '/store/thanks-edit', '/store/ui-blocks', '/store/upload-assets']);

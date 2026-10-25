@@ -139,6 +139,8 @@ const StoreMissedOrdersPage = lazy(() => import('./pages/StoreMissedOrdersPage')
 const StoreCustomersPage = lazy(() => import('./pages/StoreCustomersPage'));
 const StoreCustomerDetailPage = lazy(() => import('./pages/StoreCustomerDetailPage'));
 const StoreCategoryEditorPage = lazy(() => import('./pages/StoreCategoryEditorPage'));
+const StoreCollectionsPage = lazy(() => import('./pages/StoreCollectionsPage'));
+const StoreCollectionEditorPage = lazy(() => import('./pages/StoreCollectionEditorPage'));
 const StoreCouponFormPage = lazy(() => import('./pages/StoreCouponFormPage'));
 const StoreOrdersPage = lazy(() => import('./pages/StoreOrdersPage'));
 const StoreOrdersPrintPage = lazy(() => import('./pages/StoreOrdersPrintPage'));
@@ -300,6 +302,9 @@ const STORE_ROUTES = [
     { path: 'categories', element: <StoreCategoriesPage /> },
     { path: 'categories/new', element: <StoreCategoryEditorPage /> },
     { path: 'categories/:categoryId/edit', element: <StoreCategoryEditorPage /> },
+    { path: 'collections', element: <StoreCollectionsPage /> },
+    { path: 'collections/new', element: <StoreCollectionEditorPage /> },
+    { path: 'collections/:collectionId', element: <StoreCollectionEditorPage /> },
 ];
 
 export default function App() {

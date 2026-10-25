@@ -29,6 +29,7 @@ export function buildWorkspaceStoreNav(t, access, permissions = []) {
         group('products', t('products', 'Products'), ProductsIcon, [
             absolute(item('products')),
             route('categories', '/store/categories', t('categories', 'Categories'), HiOutlineCube, access.canStoreCategories || can('categories-list')),
+            route('collections', '/store/collections', t('store_nav_collections', 'Collections'), HiOutlineCube, access.canStoreCategories || can('categories-list')),
             absolute(item('reviews')),
             absolute(item('product-feed')),
             app('catalog', 'Easy Catalog'),

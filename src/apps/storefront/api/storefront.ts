@@ -140,8 +140,16 @@ export function getCollections(): Promise<{ data: ReadonlyArray<ApiCollection> }
   return apiGet('/collections');
 }
 
-export function getCollection(slug: string): Promise<{ data: ApiCollection; products?: ApiPaginated<ApiProduct> }> {
-  return apiGet(`/collections/${encodeURIComponent(slug)}`);
+export function getCollection(
+  slug: string,
+  params: { perPage?: number; page?: number; sort?: string } = {},
+): Promise<{ data: ApiCollection; products?: ApiPaginated<ApiProduct> }> {
+  const qs = new URLSearchParams();
+  if (params.perPage) qs.set('per_page', String(params.perPage));
+  if (params.page) qs.set('page', String(params.page));
+  if (params.sort) qs.set('sort', params.sort);
+  const query = qs.toString();
+  return apiGet(`/collections/${encodeURIComponent(slug)}${query ? `?${query}` : ''}`);
 }
 
 export function getBrands(): Promise<{ data: ReadonlyArray<ApiBrand> }> {

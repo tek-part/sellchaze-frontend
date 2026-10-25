@@ -101,6 +101,8 @@ export interface ApiCollection {
   description?: string | null;
   image_url?: string | null;
   products_count?: number | null;
+  seo_title?: string | null;
+  seo_description?: string | null;
   products?: ReadonlyArray<ApiProduct> | null;
 }
 

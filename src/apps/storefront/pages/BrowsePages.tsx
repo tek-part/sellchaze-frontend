@@ -1,9 +1,9 @@
 /**
  * Browse pages — the directory destinations the Shop mega menu links to.
  *
- * `/categories` and `/collections` both read the existing categories endpoint; they differ in
- * presentation, not data (a category grid vs. an editorial collection list), which matches how the
- * catalogue is actually modelled. `/brands` has no endpoint at all — the product resource carries a
+ * `/categories` reads the categories endpoint. `/collections` lists the merchant's published
+ * collections (dashboard-managed, manual or automated) and falls back to the categories when the
+ * store has none, so stores without collections keep the page they had. `/brands` has no endpoint at all — the product resource carries a
  * brand name but the API exposes no brand index — so it derives the brand list from the products it
  * can see and says plainly where that list comes from. No endpoint is invented anywhere here.
  */
@@ -15,7 +15,7 @@ import { useLocale } from '../i18n/useLocale';
 import { Seo } from '../seo/Seo';
 import { useStore } from '../state/store-context';
 import { useAsync } from '../api/useAsync';
-import { getCategories, getProducts } from '../api/storefront';
+import { getCategories, getCollections, getProducts } from '../api/storefront';
 import { toCategoryCard, toProductCard } from '../api/mappers';
 import { breadcrumbSchema } from '../seo/schema';
 import { sampleCategories, sampleNewest } from '../dev/sampleData';
@@ -37,7 +37,7 @@ function crumbs(label: string, url: string, site: string): Record<string, unknow
 
 /* ------------------------------------------------------------------ categories & collections */
 
-function useCategoryContext(title: string, description: string): {
+function useCategoryContext(title: string, description: string, withCollections = false): {
   context: StorefrontContext;
   loading: boolean;
   error: Error | null;
@@ -49,12 +49,17 @@ function useCategoryContext(title: string, description: string): {
   const { locale } = useLocale();
   // Re-fetched per locale: category names come back translated by the API (`?lang=`).
   const categoriesQ = useAsync(() => getCategories(), [locale]);
+  // Merchant collections, when the page lists them; a failed read falls back to the categories.
+  const collectionsQ = useAsync(() => (withCollections ? getCollections().catch(() => null) : Promise.resolve(null)), [locale, withCollections]);
   const dev = previewOrDev();
 
   const categories = useMemo(() => {
+    const collections = collectionsQ.data?.data ?? [];
+    if (collections.length) return collections.map(toCategoryCard);
     if (categoriesQ.data) return categoriesQ.data.data.map(toCategoryCard);
     return dev ? sampleCategories(manifest.id, locale) : [];
-  }, [categoriesQ.data, dev, manifest.id, locale]);
+  }, [collectionsQ.data, categoriesQ.data, dev, manifest.id, locale]);
+  const loading = categoriesQ.loading || collectionsQ.loading;
 
   const context = useMemo<StorefrontContext>(
     () => ({
@@ -62,7 +67,7 @@ function useCategoryContext(title: string, description: string): {
       seo: { title },
       navigation: { header: [], footer: [] },
       data: {
-        loading: dev ? false : categoriesQ.loading,
+        loading: dev ? false : loading,
         ...(categoriesQ.error ? { error: categoriesQ.error } : {}),
         categories,
         pageHeader: {
@@ -75,10 +80,10 @@ function useCategoryContext(title: string, description: string): {
         },
       },
     }),
-    [categories, categoriesQ.loading, categoriesQ.error, dev, store.name, store.currency, title, description, t],
+    [categories, loading, categoriesQ.error, dev, store.name, store.currency, title, description, t],
   );
 
-  return { context, loading: categoriesQ.loading, error: categoriesQ.error, count: categories.length };
+  return { context, loading, error: categoriesQ.error, count: categories.length };
 }
 
 export function CategoriesPage(): ReactElement {
@@ -109,6 +114,7 @@ export function CollectionsPage(): ReactElement {
   const { context, loading, error, count } = useCategoryContext(
     t('nav.collections'),
     t('browse.collectionsDesc'),
+    true,
   );
   const template = useTemplate('category');
 
