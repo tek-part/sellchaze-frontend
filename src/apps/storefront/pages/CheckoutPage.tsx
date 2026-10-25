@@ -1,5 +1,6 @@
 import PaymentMethodLogo from '../../../shared/payments/PaymentMethodLogo';
 import { PaymentAdjustmentLine } from './PaymentAdjustmentLine';
+import { CheckoutDiscountLines } from './CheckoutDiscountLines';
 import { UiBlock } from '../ui-blocks/UiBlocks';
 import { useEffect, useMemo, useState, type FormEvent, type ReactElement } from 'react';
 import { Navigate, useSearchParams } from 'react-router-dom';
@@ -83,7 +84,7 @@ function OrderSummary({ quote, quoteQ, coupon, setCoupon, appliedCoupon, applyCo
       {quoteQ.error ? <div className="sf-co-alert" role="alert"><p>{quoteQ.error.message}</p><Button type="button" variant="secondary" onClick={reloadAll}>{ar ? 'إعادة الحساب' : 'Recalculate'}</Button></div> : null}
       {quote ? <>
         <div className="sf-co-row"><span>{ar ? 'المجموع الفرعي' : 'Subtotal'}</span><span>{money(quote.totals.subtotal)}</span></div>
-        {Number(quote.totals.discount_total) > 0 ? <div className="sf-co-row"><span>{t('checkout.discount')}</span><span>−{money(quote.totals.discount_total)}</span></div> : null}
+        <CheckoutDiscountLines quote={quote} fallbackLabel={t('checkout.discount')} className="sf-co-row" />
         {quote.requires_shipping ? <div className="sf-co-row"><span>{t('checkout.shipping')}</span><span>{Number(quote.totals.shipping_total) > 0 ? money(quote.totals.shipping_total) : (ar ? 'مجاني' : 'Free')}</span></div> : null}
         {Number(quote.totals.tax_total) > 0 ? <div className="sf-co-row"><span>{ar ? 'الضريبة' : 'Tax'}</span><span>{money(quote.totals.tax_total)}</span></div> : null}
         <PaymentAdjustmentLine amount={quote.totals.payment_adjustment_total} currency={quote.currency} />

@@ -39,6 +39,23 @@ describe('same-page checkout', () => {
     expect(fixture.quote).toHaveBeenLastCalledWith([{ ...item, variant_id: 6, quantity: 4 }], '', {}, 'cod');
     await submit(); expect(fixture.submit).toHaveBeenCalledExactlyOnceWith({ customer_name: 'Local buyer', coupon_code: '', lead_token: 'local-lead' });
   });
+  it('lists each applied discount by title and shows a free-shipping discount as free shipping', async () => {
+    fixture.quote.mockResolvedValue({ data: { currency: 'EGP', requires_shipping: true, items: [{ product_id: 4, name: 'Selection', quantity: 3, line_total: '300' }],
+      discounts: [{ id: 1, title: 'Autumn sale', code: null, method: 'automatic', type: 'percentage', amount: '30.00' }, { id: 2, title: 'Ship free over 50', code: null, method: 'automatic', type: 'free_shipping', amount: '0.00' }],
+      totals: { subtotal: '300', discount_total: '30.00', shipping_total: '0.00', tax_total: '0', grand_total: '270.00' } } });
+    await render([{ product_id: 4, quantity: 3 }]);
+    const rows = [...host.querySelectorAll('[data-discount-line]')].map((row) => row.textContent);
+    expect(rows).toHaveLength(2);
+    expect(rows[0]).toContain('Autumn sale'); expect(rows[0]).toContain('−'); expect(rows[0]).toContain('30.00');
+    expect(rows[1]).toBe('Ship free over 50Free shipping');
+    expect(host.textContent).toContain('ShippingFree');
+  });
+  it('keeps the single discount line from an older API without discounts', async () => {
+    fixture.quote.mockResolvedValue({ data: { currency: 'EGP', requires_shipping: false, items: [{ product_id: 4, name: 'Selection', quantity: 1, line_total: '80' }], totals: { subtotal: '80', discount_total: '8.00', shipping_total: '0', tax_total: '0', grand_total: '72.00' } } });
+    await render([{ product_id: 4, quantity: 1 }]);
+    const rows = [...host.querySelectorAll('[data-discount-line]')];
+    expect(rows).toHaveLength(1); expect(rows[0]!.textContent).toContain('Discount'); expect(rows[0]!.textContent).toContain('8.00');
+  });
   it('does not quote or submit an unavailable or incomplete selection', async () => {
     await render([{ product_id: 4, quantity: 1 }], false); await submit();
     expect(fixture.quote).not.toHaveBeenCalled(); expect(fixture.submit).not.toHaveBeenCalled();

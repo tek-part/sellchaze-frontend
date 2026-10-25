@@ -54,7 +54,7 @@ export function buildStoreNav(t, access = {}) {
                 { key: 'inventory', to: 'inventory', label: t('store_nav_inventory', 'Store inventory'), Icon: HiOutlineSquares2X2, show: access.canStoreInventory },
                 { key: 'products', to: 'products', label: t('products', 'Products'), Icon: HiOutlineCube, show: access.canStoreProducts },
                 { key: 'ab-tests', to: 'ab-tests', label: 'A/B Tests', Icon: HiOutlineChartBar, show: access.canStoreProducts },
-                { key: 'coupons', to: 'coupons', label: t('store_nav_coupons', 'Coupons'), Icon: HiOutlineTicket, show: access.canStoreCoupons },
+                { key: 'coupons', to: 'coupons', label: t('store_nav_coupons', 'Discounts'), Icon: HiOutlineTicket, show: access.canStoreCoupons },
                 { key: 'reviews', to: 'reviews', label: t('store_nav_reviews', 'Reviews'), Icon: HiOutlineStar, show: access.canStoreReviews },
                 { key: 'product-feed', to: 'product-feed', label: 'Product Feed', Icon: HiOutlineDocumentText, show: access.canStoreSettings },
                 { key: 'google-merchant', to: 'google-merchant', label: 'Google Merchant', Icon: HiOutlineGlobeAlt, show: access.canStoreSettings },

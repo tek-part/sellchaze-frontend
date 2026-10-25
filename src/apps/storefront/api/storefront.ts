@@ -196,8 +196,10 @@ export function submitProductReview(slug: string, review: { rating: number; titl
 /* ---- checkout ----
  * The storefront uses a client-side cart (offline-first) and submits its line items directly to
  * checkout; the server-cart endpoints (/cart/*) are intentionally not wrapped here. */
-export const applyCoupon = (code: string): Promise<{ data: unknown }> => apiSend('/checkout/coupon/apply', 'POST', { code });
-export const removeCoupon = (): Promise<{ data: unknown }> => apiSend('/checkout/coupon', 'DELETE');
+/** One discount the server applied to a quote or cart: automatic discounts carry no code. */
+export interface AppliedDiscount { id: number; title: string; code: string | null; method: 'code' | 'automatic'; type: 'fixed' | 'percentage' | 'free_shipping' | 'buy_x_get_y'; amount: string }
+export const applyCoupon = (code: string): Promise<{ data: unknown; discounts?: ReadonlyArray<AppliedDiscount> }> => apiSend('/checkout/coupon/apply', 'POST', { code });
+export const removeCoupon = (): Promise<{ data: unknown; discounts?: ReadonlyArray<AppliedDiscount> }> => apiSend('/checkout/coupon', 'DELETE');
 export interface StorefrontPaymentMethod { slug: string; name: string; test_mode: boolean; logo_url?: string | null; description?: string }
 export const getPaymentMethods = (productIds: ReadonlyArray<number> = []): Promise<{ data: ReadonlyArray<StorefrontPaymentMethod> }> => {
   const params = new URLSearchParams();
@@ -214,6 +216,8 @@ export interface CheckoutQuote {
   offer_free_shipping?: boolean;
   items: ReadonlyArray<{ product_id: number; variant_id: number | null; name: string; unit_price: string; quantity: number; line_total: string; quantity_offer?: import('./types').ApiQuantityOffer | null; personalization_key?: string; personalization?: ReadonlyArray<import('../types/personalization').PersonalizationEntry> }>;
   currency: string;
+  /** Applied discounts, one per line on the summary (absent on older APIs: show `discount_total` alone). */
+  discounts?: ReadonlyArray<AppliedDiscount>;
   totals: { subtotal: string; discount_total: string; shipping_total: string; tax_total: string; grand_total: string; payment_adjustment_total?: string };
 }
 export const quoteCheckout = (items: ReadonlyArray<CheckoutItem>, coupon_code: string, selection: import('../types/shipping').ShippingSelection = {}, payment_method?: string): Promise<{ data: CheckoutQuote }> =>

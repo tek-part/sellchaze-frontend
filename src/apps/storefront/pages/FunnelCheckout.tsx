@@ -1,5 +1,7 @@
 import PaymentMethodLogo from '../../../shared/payments/PaymentMethodLogo';
 import { PaymentAdjustmentLine } from './PaymentAdjustmentLine';
+import { CheckoutDiscountLines } from './CheckoutDiscountLines';
+import { quoteHasFreeShippingDiscount } from './checkout-discounts';
 import { UiBlock } from '../ui-blocks/UiBlocks';
 import { useMemo, useState, type FormEvent, type ReactElement } from 'react';
 import { Button, Container, ErrorState, Input, Section, Spinner } from '../foundation/components';
@@ -134,8 +136,8 @@ export function FunnelCheckout({ productSlug, renderLayout, compactHeader = fals
         {quote?.offer_free_shipping ? <p>{label('شحن مجاني مع عرض الكمية المختار.', 'Free shipping with the selected quantity offer.')}</p> : null}
         {quote ? <dl>
           <div><dt>{label('المنتجات', 'Products')}</dt><dd>{formatMoney(Number(quote.totals.subtotal), quote.currency, locale)}</dd></div>
-          {Number(quote.totals.discount_total) > 0 ? <div><dt>{label('الخصم', 'Discount')}</dt><dd>−{formatMoney(Number(quote.totals.discount_total), quote.currency, locale)}</dd></div> : null}
-          {quote.requires_shipping ? <div><dt>{label('الشحن', 'Shipping')}</dt><dd>{formatMoney(Number(quote.totals.shipping_total), quote.currency, locale)}</dd></div> : null}
+          <CheckoutDiscountLines quote={quote} fallbackLabel={label('الخصم', 'Discount')} definition />
+          {quote.requires_shipping ? <div><dt>{label('الشحن', 'Shipping')}</dt><dd>{Number(quote.totals.shipping_total) === 0 && quoteHasFreeShippingDiscount(quote) ? label('مجاني', 'Free') : formatMoney(Number(quote.totals.shipping_total), quote.currency, locale)}</dd></div> : null}
           {Number(quote.totals.tax_total) > 0 ? <div><dt>{label('الضريبة', 'Tax')}</dt><dd>{formatMoney(Number(quote.totals.tax_total), quote.currency, locale)}</dd></div> : null}
           <PaymentAdjustmentLine amount={quote.totals.payment_adjustment_total} currency={quote.currency} definition />
           <div className="sf-funnel-checkout__grand"><dt>{label('الإجمالي', 'Total')}</dt><dd>{formatMoney(Number(quote.totals.grand_total), quote.currency, locale)}</dd></div>
