@@ -10,7 +10,7 @@ import { useStore } from '../../state/store-context';
 import { useLocale } from '../../i18n/useLocale';
 import { ToastProvider } from '../../foundation/components/toast/ToastProvider';
 import { Drawer } from '../../foundation/components/Drawer';
-import { CurrencySwitcher } from '../../foundation/components/CurrencySwitcher';
+import { CurrencySwitcher, currencyDrawerPicked } from '../../foundation/components/CurrencySwitcher';
 import { ProductHeaderChrome } from '../../state/product-presentation';
 import { StorePaymentMarks } from '../../shared-ui/PaymentMarks';
 import { UiBlock } from '../../ui-blocks/UiBlocks';
@@ -23,7 +23,7 @@ function Bridge(props: LayoutRenderProps): ReactElement { return useInRouterCont
 function Chrome({ context, children, checkout = false, home = false }: LayoutRenderProps & { checkout?: boolean; home?: boolean }): ReactElement {
   const settings = useThemeSettings(); const tokens = useThemeTokens(); const { store } = useStore(); const { locale, setLocale } = useLocale(); const { totals } = useCart(); const wishlist = useWishlist(); const ar = locale === 'ar'; const text = (a: string, e: string): string => ar ? a : e; const data = context.data as NavigationData;
   const nav = data.managedHeaderNavigation ?? [{ label: text('تسوق الكل', 'Shop all'), url: '/shop' }, ...data.categoryNavigation ?? [], ...data.headerPageNavigation ?? []]; const categories = data.allCategoryNavigation ?? data.categoryNavigation ?? []; const footer = data.sphinxFooterNavigation ?? [];
-  const [menu, setMenu] = useState(false); const [cart, setCart] = useState(false);
+  const [menu, setMenu] = useState(currencyDrawerPicked); const [cart, setCart] = useState(false);
   const root = useRef<HTMLDivElement>(null); const reducedMotion = useReducedMotion();
   useEffect(() => { const link = document.createElement('link'); link.rel = 'stylesheet'; link.href = 'https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap'; document.head.appendChild(link); return () => link.remove(); }, []);
   const brand = <a href="/" className="ew-brand" aria-label={store.name}>{store.logoUrl ? <img {...densityImage(store.logoUrl, 240)} decoding="async" alt={store.name} /> : <span>{store.name}</span>}</a>;

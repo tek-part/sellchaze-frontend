@@ -30,6 +30,15 @@ export interface CurrencySwitcherProps {
  */
 let pendingFocus: { variant: 'header' | 'drawer'; at: number } | null = null;
 
+/**
+ * True right after a pick from a drawer switcher. Themes whose menu-open state lives inside the
+ * remounted subtree seed it from this (`useState(currencyDrawerPicked)`) so the drawer reopens
+ * where the shopper was, and the pill inside it gets focus back.
+ */
+export function currencyDrawerPicked(): boolean {
+  return pendingFocus?.variant === 'drawer' && Date.now() - pendingFocus.at <= 1500;
+}
+
 /** Localized currency names, falling back to the bare code where `Intl.DisplayNames` is missing. */
 export function currencyNames(locale: string, codes: ReadonlyArray<string>): Record<string, string> {
   let names: Intl.DisplayNames | null = null;

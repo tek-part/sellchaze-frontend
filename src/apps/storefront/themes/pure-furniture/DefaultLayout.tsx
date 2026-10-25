@@ -11,7 +11,7 @@ import { useStore } from '../../state/store-context';
 import { useLocale } from '../../i18n/useLocale';
 import { ToastProvider } from '../../foundation/components/toast/ToastProvider';
 import { Drawer } from '../../foundation/components/Drawer';
-import { CurrencySwitcher } from '../../foundation/components/CurrencySwitcher';
+import { CurrencySwitcher, currencyDrawerPicked } from '../../foundation/components/CurrencySwitcher';
 import { UiBlock } from '../../ui-blocks/UiBlocks';
 import { subscribeNewsletter } from '../../api/storefront';
 import { PureCart } from './CartDrawer';
@@ -29,7 +29,7 @@ function Bridge(props: LayoutRenderProps): ReactElement { return useInRouterCont
 function Chrome({ context, children, checkout = false }: LayoutRenderProps & { checkout?: boolean }): ReactElement {
   const settings = useThemeSettings(); const tokens = useThemeTokens(); const { store } = useStore(); const { locale, setLocale } = useLocale(); const { totals } = useCart(); const ar = locale === 'ar'; const text = (a: string, e: string): string => ar ? a : e; const data = context.data as NavigationData;
   const nav = data.managedHeaderNavigation ?? [...data.categoryNavigation ?? [], ...data.headerPageNavigation ?? []]; const footer = data.sphinxFooterNavigation ?? []; const categories = data.allCategoryNavigation ?? data.categoryNavigation ?? [];
-  const [menu, setMenu] = useState(false); const [cart, setCart] = useState(false);
+  const [menu, setMenu] = useState(currencyDrawerPicked); const [cart, setCart] = useState(false);
   useEffect(() => { const link = document.createElement('link'); link.rel = 'stylesheet'; link.href = 'https://fonts.googleapis.com/css2?family=Jost:wght@300;400;500;600;700&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap'; document.head.appendChild(link); return () => link.remove(); }, []);
   const brand = <a href="/" className="pur-brand" aria-label={store.name}>{store.logoUrl ? <img {...densityImage(store.logoUrl, 240)} decoding="async" alt={store.name} /> : <span>{store.name}</span>}</a>;
   const announcement = typeof settings['announcement'] === 'string' ? settings['announcement'] : text('مرحبًا بك في متجرنا', 'Welcome to our store');
