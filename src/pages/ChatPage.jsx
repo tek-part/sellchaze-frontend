@@ -97,7 +97,19 @@ export default function ChatPage() {
         if (!current) return undefined;
         const echo = getEcho();
         echoRef.current = echo;
-        if (!echo) return undefined;
+        if (!echo) {
+            // No real-time transport configured: refresh the open thread while the tab is visible.
+            const conversationId = current.id;
+            const timer = window.setInterval(async () => {
+                if (document.visibilityState !== 'visible') return;
+                try {
+                    const { data } = await api.get(`/chat/conversations/${conversationId}/messages`, { params: { per_page: 50 } });
+                    setMessages(data.data || []);
+                    loadConvs();
+                } catch { /* keep the current thread */ }
+            }, 10_000);
+            return () => window.clearInterval(timer);
+        }
         const channel = `chat.conversation.${current.id}`;
         subRef.current = channel;
         echo.private(channel).listen('.message.sent', (e) => {

@@ -1,49 +1,72 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import api from '../api/client';
 import { getEcho } from './echo';
 import { CHAT_ENABLED } from './features';
 
-/**
- * Live total of unread chat messages, for the badge on the chat button.
- * Refreshes on mount, on a real-time message notification (user channel),
- * and whenever the chat marks something read (window 'chat:unread-changed').
- */
-export function useChatUnread() {
-    const [unread, setUnread] = useState(0);
+/** Fallback refresh when real-time (Pusher) is not configured, and only while the tab is visible. */
+const POLL_MS = 60_000;
 
-    const refresh = useCallback(async () => {
-        try {
-            const { data } = await api.get('/chat/unread-count');
-            setUnread(data.unread || 0);
-        } catch { /* noop */ }
-    }, []);
+/**
+ * One shared unread counter for every chat badge (header, sidebar): a single request per refresh,
+ * however many components show the count.
+ */
+const store = { count: 0, listeners: new Set(), subscribers: 0, stop: null, userId: null };
+
+function publish(count) {
+    store.count = count;
+    store.listeners.forEach((listener) => listener(count));
+}
+
+async function refresh() {
+    try {
+        const { data } = await api.get('/chat/unread-count');
+        publish(data.unread || 0);
+    } catch { /* keep the last known count */ }
+}
+
+function start(userId) {
+    store.userId = userId ?? null;
+    void refresh();
+    const onChanged = () => { void refresh(); };
+    window.addEventListener('chat:unread-changed', onChanged);
+    const echo = getEcho();
+    let channel = null;
+    let timer = null;
+    if (echo && store.userId) {
+        channel = `App.Models.User.${store.userId}`;
+        echo.private(channel).notification(onChanged);
+    } else {
+        timer = window.setInterval(() => { if (document.visibilityState === 'visible') void refresh(); }, POLL_MS);
+    }
+    return () => {
+        window.removeEventListener('chat:unread-changed', onChanged);
+        if (timer) window.clearInterval(timer);
+        if (channel) { try { echo.leave(channel); } catch { /* noop */ } }
+    };
+}
+
+/**
+ * Live total of unread chat messages for the chat badge. Only subscribed components with `enabled`
+ * (the chat link is visible) trigger requests; pass the signed-in user's id so the real-time
+ * channel can be joined without another /auth/me request.
+ */
+export function useChatUnread({ userId = null, enabled = true } = {}) {
+    const [unread, setUnread] = useState(store.count);
+    const active = CHAT_ENABLED && enabled;
 
     useEffect(() => {
-        // Chat backend not implemented yet — don't poll (avoids console 404 spam).
-        if (!CHAT_ENABLED) return undefined;
-
-        let alive = true;
-        refresh();
-
-        const onEvt = () => { if (alive) refresh(); };
-        window.addEventListener('chat:unread-changed', onEvt);
-
-        (async () => {
-            try {
-                const { data } = await api.get('/auth/me');
-                const id = (data.data || data.user || data)?.id;
-                const echo = getEcho();
-                if (echo && id) {
-                    echo.private(`App.Models.User.${id}`).notification(() => { if (alive) refresh(); });
-                }
-            } catch { /* noop */ }
-        })();
-
+        if (!active) return undefined;
+        store.listeners.add(setUnread);
+        store.subscribers += 1;
+        if (store.subscribers === 1) store.stop = start(userId);
+        else if (userId && !store.userId) store.userId = userId;
+        setUnread(store.count);
         return () => {
-            alive = false;
-            window.removeEventListener('chat:unread-changed', onEvt);
+            store.listeners.delete(setUnread);
+            store.subscribers -= 1;
+            if (store.subscribers === 0 && store.stop) { store.stop(); store.stop = null; }
         };
-    }, [refresh]);
+    }, [active, userId]);
 
-    return unread;
+    return active ? unread : 0;
 }

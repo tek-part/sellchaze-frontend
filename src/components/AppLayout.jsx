@@ -43,12 +43,14 @@ function navigationViewport() {
 }
 
 export default function AppLayout() {
-    const chatUnread = useChatUnread();
     const { t, i18n } = useTranslation();
     const navigate = useNavigate();
     const location = useLocation();
     // Paint from the last-known account at once; /auth/me below refreshes it in the background.
     const [me, setMe] = useState(readMeSnapshot);
+    // The chat link only shows for platform operators (admin without a business role).
+    const meRoles = Array.isArray(me?.roles) ? me.roles : [];
+    const chatUnread = useChatUnread({ userId: me?.id ?? null, enabled: meRoles.includes('Admin') && !meRoles.some((role) => ['Merchant', 'Customer', 'Employee'].includes(role)) });
     // Public URL of the owner's storefront (custom domain > primary domain > tenant
     // subdomain). null = no store yet, so the header hides the "View store" button.
     const [storeUrl, setStoreUrl] = useState(null);
