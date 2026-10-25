@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState, type FormEvent, type ReactElement } from 
 import { Navigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Button, ButtonLink, Container, Input, Section, Spinner } from '../foundation/components';
+import './checkout/checkout.css';
 import { useCart } from '../state/cart';
 import { useStore } from '../state/store-context';
 import { getThankYouPage, quoteCheckout } from '../api/storefront';
@@ -34,6 +35,67 @@ export function CheckoutPage(): ReactElement {
   return id && /^[1-9]\d*$/.test(id) && Number.isSafeInteger(Number(id)) ? <ProductDirectCheckout productId={Number(id)} /> : <BasketCheckout />;
 }
 
+type Quote = Awaited<ReturnType<typeof quoteCheckout>>['data'];
+
+function LockIcon(): ReactElement {
+  return <svg viewBox="0 0 20 20" width="14" height="14" aria-hidden focusable="false"><path fill="currentColor" d="M10 2a4 4 0 0 0-4 4v2H5a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1V9a1 1 0 0 0-1-1h-1V6a4 4 0 0 0-4-4Zm-2 6V6a2 2 0 1 1 4 0v2H8Z" /></svg>;
+}
+
+/** Order summary column (and the mobile drop-down): lines with thumbnails, discount code, totals. */
+function OrderSummary({ quote, quoteQ, coupon, setCoupon, appliedCoupon, applyCoupon, removeCoupon, disabled, reloadAll }: {
+  quote: Quote | null; quoteQ: { loading: boolean; error: Error | null }; coupon: string; setCoupon: (value: string) => void; appliedCoupon: string;
+  applyCoupon: () => void; removeCoupon: () => void; disabled: boolean; reloadAll: () => void;
+}): ReactElement {
+  const { t } = useTranslation();
+  const { locale } = useLocale();
+  const ar = locale === 'ar';
+  const cart = useCart();
+  const { store } = useStore();
+  const images = useMemo(() => new Map(cart.lines.map((line) => [`${line.productId}:${line.variantId ?? ''}`, line])), [cart.lines]);
+  const money = (value: string | number): string => formatMoney(Number(value), quote?.currency || cart.totals.currency || store.currency, locale);
+  const lines = quote ? quote.items.map((line) => {
+    const local = images.get(`${line.product_id}:${line.variant_id ?? ''}`);
+    return { key: `${line.product_id}:${line.variant_id}:${line.personalization_key ?? ''}:${line.quantity_offer?.id ?? ''}`, name: line.name, quantity: line.quantity, image: local?.image, meta: local?.attributes, total: money(line.line_total), personalization: line.personalization };
+  }) : cart.lines.map((line) => ({ key: line.id, name: line.title, quantity: line.quantity, image: line.image, meta: line.attributes, total: money(line.price * line.quantity), personalization: line.personalizationEntries }));
+
+  return <>
+    <ul className="sf-co-lines" aria-label={ar ? 'منتجات الطلب' : 'Order items'}>
+      {lines.map((line) => <li key={line.key}>
+        <div className="sf-co-line">
+          <span className="sf-co-thumb">{line.image ? <img src={line.image} alt="" loading="lazy" /> : null}<span className="sf-co-thumb__qty" aria-label={ar ? `الكمية ${line.quantity}` : `Quantity ${line.quantity}`}>{line.quantity}</span></span>
+          <span><span className="sf-co-line__name">{line.name}</span>{line.meta ? <span className="sf-co-line__meta">{line.meta}</span> : null}</span>
+          <span className="sf-co-line__price">{line.total}</span>
+        </div>
+        <PersonalizationSummary entries={line.personalization} />
+      </li>)}
+    </ul>
+    {quote?.offer_free_shipping ? <p className="sf-co-free">{ar ? 'العرض يشمل شحن الطلب مجانًا.' : 'Your selected offer includes free shipping for this order.'}</p> : null}
+    <fieldset disabled={disabled} style={{ border: 0, padding: 0, margin: 0, minWidth: 0 }}>
+      <div className="sf-co-discount">
+        <Input label={t('checkout.couponCode')} value={coupon} maxLength={100} onChange={(event) => setCoupon(event.target.value)}
+          onKeyDown={(event) => { if (event.key === 'Enter') { event.preventDefault(); applyCoupon(); } }} />
+        <Button type="button" variant="secondary" disabled={quoteQ.loading || !coupon.trim()} onClick={applyCoupon}>{t('checkout.apply')}</Button>
+      </div>
+      {appliedCoupon ? <span className="sf-co-discount__applied">{appliedCoupon}<button type="button" onClick={removeCoupon} aria-label={ar ? 'إزالة الخصم' : 'Remove coupon'}>×</button></span> : null}
+    </fieldset>
+    <div className="sf-co-totals" aria-live="polite">
+      {quoteQ.loading ? <Spinner label={ar ? 'جارٍ حساب الإجمالي…' : 'Calculating total…'} /> : null}
+      {quoteQ.error ? <div className="sf-co-alert" role="alert"><p>{quoteQ.error.message}</p><Button type="button" variant="secondary" onClick={reloadAll}>{ar ? 'إعادة الحساب' : 'Recalculate'}</Button></div> : null}
+      {quote ? <>
+        <div className="sf-co-row"><span>{ar ? 'المجموع الفرعي' : 'Subtotal'}</span><span>{money(quote.totals.subtotal)}</span></div>
+        {Number(quote.totals.discount_total) > 0 ? <div className="sf-co-row"><span>{t('checkout.discount')}</span><span>−{money(quote.totals.discount_total)}</span></div> : null}
+        {quote.requires_shipping ? <div className="sf-co-row"><span>{t('checkout.shipping')}</span><span>{Number(quote.totals.shipping_total) > 0 ? money(quote.totals.shipping_total) : (ar ? 'مجاني' : 'Free')}</span></div> : null}
+        {Number(quote.totals.tax_total) > 0 ? <div className="sf-co-row"><span>{ar ? 'الضريبة' : 'Tax'}</span><span>{money(quote.totals.tax_total)}</span></div> : null}
+        <PaymentAdjustmentLine amount={quote.totals.payment_adjustment_total} currency={quote.currency} />
+        <div className="sf-co-total"><span>{t('checkout.total')}</span><span className="sf-co-total__value"><span className="sf-co-total__currency">{quote.currency}</span>{money(quote.totals.grand_total)}</span></div>
+      </> : !quoteQ.loading && !quoteQ.error ? <>
+        <div className="sf-co-row"><span>{ar ? 'المجموع الفرعي' : 'Subtotal'}</span><span>{money(cart.totals.subtotal)}</span></div>
+        <p className="sf-co-note">{ar ? 'يُحسب الشحن والإجمالي النهائي بعد إدخال عنوان التوصيل.' : 'Shipping and the final total are calculated once you enter your delivery details.'}</p>
+      </> : null}
+    </div>
+  </>;
+}
+
 function BasketCheckout(): ReactElement {
   const { t } = useTranslation();
   const { locale } = useLocale();
@@ -42,6 +104,7 @@ function BasketCheckout(): ReactElement {
   const { store } = useStore();
   const [coupon, setCoupon] = useState(() => chosenOfferCoupon(store));
   const [appliedCoupon, setAppliedCoupon] = useState(() => chosenOfferCoupon(store));
+  const [summaryOpen, setSummaryOpen] = useState(false);
   const checkout = useCheckoutPaymentFlow();
   const tpl = useTemplate('checkout');
   const items = useMemo(() => checkoutCartItems(cart.lines), [cart.lines]);
@@ -57,58 +120,63 @@ function BasketCheckout(): ReactElement {
     await checkout.submit({ ...contact.payload(), coupon_code: appliedCoupon, lead_token: lead.submitToken(), ...(quote?.payment_adjustment_token ? { payment_adjustment_token: quote.payment_adjustment_token } : {}) });
   };
   if (!cart.lines.length && !checkout.completed && !checkout.busy && !checkout.unresolved) return <Navigate to="/cart" replace />;
-  return <>
-    {tpl ? <ThemeRenderer page={tpl} context={flowContext(store)} /> : null}
-    <Section><Container>
-      <div className="sf-page-head" style={{ textAlign: 'start' }}><h1 className="sf-page-head__title">{t('checkout.title')}</h1></div>
-      <div className="sf-cart-page">
-        <div style={{ minWidth: 0 }}><UiBlock slot="before_checkout" />
-        <form className="sf-account__panel" onSubmit={(event) => void placeOrder(event)}>
-          <CheckoutRecovery flow={checkout} />
-          <fieldset disabled={checkout.busy || checkout.unresolved} style={{ display: 'grid', gap: '1rem', border: 0, padding: 0, margin: 0 }}>
-            <CheckoutFieldsForm model={contact} />
-            <fieldset className="sf-account__panel" style={{ padding: '1rem' }}>
-              <legend>{t('checkout.payment')}</legend>
-              {checkout.paymentMethods.map((method) => <label key={method.slug} className="sf-card-row" style={{ cursor: 'pointer' }}>
-                <input type="radio" name="payment_method" checked={checkout.paymentMethod === method.slug} onChange={() => checkout.setPaymentMethod(method.slug)} required />
-                <PaymentMethodLogo slug={method.slug} src={method.logo_url} /><span>{method.slug === 'cod' && method.name === 'Cash on delivery' ? (ar ? 'الدفع عند الاستلام' : 'Cash on delivery') : method.slug === 'bank_transfer' && method.name === 'Bank transfer' ? (ar ? 'تحويل بنكي' : 'Bank transfer') : method.name}{method.test_mode ? (ar ? ' (تجريبي)' : ' (Test)') : ''}{method.description ? <small style={{ display: 'block', whiteSpace: 'pre-wrap' }}>{method.description}</small> : null}</span>
-              </label>)}
-              {!checkout.paymentMethods.length ? <p className="sf-field__error">{ar ? 'لا توجد طريقة دفع متاحة حاليًا.' : 'No payment method is currently available.'}</p> : null}
-            </fieldset>
-          </fieldset>
-          {checkout.error && !checkout.unresolved ? <div role="alert"><p className="sf-field__error">{checkout.error}</p>{!checkout.paymentRetry ? <Button type="button" variant="secondary" onClick={() => { contact.query.reload(); quoteQ.reload(); }}>{ar ? 'تحديث خيارات التوصيل' : 'Refresh delivery options'}</Button> : null}</div> : null}
-          {!checkout.paymentRetry && !checkout.unresolved ? <CheckoutMinimum quote={quote} /> : null}
-          {quote?.order_minimum?.eligible === false && !checkout.paymentRetry && !checkout.unresolved ? <ButtonLink href="/cart" variant="secondary" block>{ar ? 'تعديل السلة' : 'Edit cart'}</ButtonLink> : null}
-          {!checkout.unresolved ? <Button type="submit" block loading={checkout.busy} disabled={!checkout.paymentMethod || !quote || !contact.shippingReady || (!checkout.paymentRetry && (!minimumOrderAllows(quote) || !contact.phoneVerification.ready || !contact.botProtection.ready))}>
-            {`${t('checkout.placeOrder')}${quote ? ` · ${formatMoney(Number(quote.totals.grand_total), quote.currency, locale)}` : ''}`}
-          </Button> : null}
-        </form>
-        <UiBlock slot="after_checkout" /></div>
-        <aside className="sf-cart-summary">
-          {quote ? quote.items.map((line) => <div key={`${line.product_id}:${line.variant_id}:${line.personalization_key ?? ''}:${line.quantity_offer?.id ?? ''}`}><div className="sf-cart-summary__row"><span>{line.name} × {line.quantity}</span><span>{formatMoney(Number(line.line_total), quote.currency, locale)}</span></div><PersonalizationSummary entries={line.personalization} /></div>) : cart.lines.map((line) => <div key={line.id}><div className="sf-cart-summary__row"><span>{line.title} × {line.quantity}</span></div><PersonalizationSummary entries={line.personalizationEntries} /></div>)}
-          {quote?.offer_free_shipping ? <p>{ar ? 'العرض يشمل شحن الطلب مجانًا.' : 'Your selected offer includes free shipping for this order.'}</p> : null}
-          <fieldset disabled={checkout.busy || checkout.unresolved} style={{ border: 0, padding: 0, margin: 0 }}>
-            <div className="sf-pdp__row"><Input label={t('checkout.couponCode')} value={coupon} maxLength={100} onChange={(event) => setCoupon(event.target.value)} />
-              <Button type="button" variant="secondary" disabled={quoteQ.loading} onClick={() => { setAppliedCoupon(coupon.trim()); quoteQ.reload(); }}>{t('checkout.apply')}</Button>
-            </div>
-            {appliedCoupon ? <Button type="button" variant="ghost" onClick={() => { clearOfferCoupon(store); setAppliedCoupon(''); setCoupon(''); }}>{ar ? 'إزالة الخصم' : 'Remove coupon'}</Button> : null}
-          </fieldset>
-          <div aria-live="polite">
-            {quoteQ.loading ? <Spinner label={ar ? 'جارٍ حساب الإجمالي…' : 'Calculating total…'} /> : null}
-            {quoteQ.error ? <div role="alert"><p>{quoteQ.error.message}</p><Button type="button" variant="secondary" onClick={() => { contact.query.reload(); quoteQ.reload(); }}>{ar ? 'إعادة الحساب' : 'Recalculate'}</Button></div> : null}
-            {quote ? <>
-              <div className="sf-cart-summary__row"><span>{ar ? 'المنتجات' : 'Products'}</span><span>{formatMoney(Number(quote.totals.subtotal), quote.currency, locale)}</span></div>
-              {Number(quote.totals.discount_total) > 0 ? <div className="sf-cart-summary__row"><span>{t('checkout.discount')}</span><span>−{formatMoney(Number(quote.totals.discount_total), quote.currency, locale)}</span></div> : null}
-              {quote.requires_shipping ? <div className="sf-cart-summary__row"><span>{t('checkout.shipping')}</span><span>{formatMoney(Number(quote.totals.shipping_total), quote.currency, locale)}</span></div> : null}
-              {Number(quote.totals.tax_total) > 0 ? <div className="sf-cart-summary__row"><span>{ar ? 'الضريبة' : 'Tax'}</span><span>{formatMoney(Number(quote.totals.tax_total), quote.currency, locale)}</span></div> : null}
-              <PaymentAdjustmentLine amount={quote.totals.payment_adjustment_total} currency={quote.currency} />
-              <div className="sf-cart-summary__total"><span>{t('checkout.total')}</span><span className="sf-cart-summary__total-value">{formatMoney(Number(quote.totals.grand_total), quote.currency, locale)}</span></div>
-            </> : null}
-          </div>
-        </aside>
-      </div>
-    </Container></Section>
-  </>;
+  const reloadAll = (): void => { contact.query.reload(); quoteQ.reload(); };
+  const summary = <OrderSummary quote={quote} quoteQ={quoteQ} coupon={coupon} setCoupon={setCoupon} appliedCoupon={appliedCoupon} disabled={checkout.busy || checkout.unresolved}
+    applyCoupon={() => { setAppliedCoupon(coupon.trim()); quoteQ.reload(); }} removeCoupon={() => { clearOfferCoupon(store); setAppliedCoupon(''); setCoupon(''); }} reloadAll={reloadAll} />;
+  const totalText = quote ? formatMoney(Number(quote.totals.grand_total), quote.currency, locale) : formatMoney(cart.totals.subtotal, cart.totals.currency || store.currency, locale);
+  const methodName = (method: (typeof checkout.paymentMethods)[number]): string => (method.slug === 'cod' && method.name === 'Cash on delivery' ? (ar ? 'الدفع عند الاستلام' : 'Cash on delivery') : method.slug === 'bank_transfer' && method.name === 'Bank transfer' ? (ar ? 'تحويل بنكي' : 'Bank transfer') : method.name) + (method.test_mode ? (ar ? ' (تجريبي)' : ' (Test)') : '');
+
+  return <div className="sf-co">
+    <div className="sf-co__main">
+      <section className="sf-co-mobile-summary" data-open={summaryOpen}>
+        <button type="button" className="sf-co-mobile-summary__toggle" aria-expanded={summaryOpen} aria-controls="sf-co-mobile-summary" onClick={() => setSummaryOpen((open) => !open)}>
+          <span>{summaryOpen ? (ar ? 'إخفاء ملخص الطلب' : 'Hide order summary') : (ar ? 'عرض ملخص الطلب' : 'Show order summary')} <span className="sf-co-mobile-summary__chev" aria-hidden>▾</span></span>
+          <strong>{totalText}</strong>
+        </button>
+        {summaryOpen ? <div id="sf-co-mobile-summary" className="sf-co-mobile-summary__body">{summary}</div> : null}
+      </section>
+      {tpl ? <ThemeRenderer page={tpl} context={flowContext(store)} /> : null}
+      <h1 className="sf-co-title">{t('checkout.title')}</h1>
+      <p className="sf-co-lead">{ar ? 'أكمل بياناتك لإتمام الطلب. لن يستغرق ذلك سوى دقيقة.' : 'Complete your details to place the order — it only takes a minute.'}</p>
+      <UiBlock slot="before_checkout" />
+      <form className="sf-co-form" onSubmit={(event) => void placeOrder(event)}>
+        <CheckoutRecovery flow={checkout} />
+        <fieldset disabled={checkout.busy || checkout.unresolved}>
+          <section className="sf-co-section" aria-labelledby="sf-co-delivery">
+            <h2 id="sf-co-delivery">{ar ? 'بيانات التواصل والتوصيل' : 'Contact & delivery'}</h2>
+            <div className="sf-co-fields"><CheckoutFieldsForm model={contact} /></div>
+          </section>
+          <section className="sf-co-section" aria-labelledby="sf-co-payment">
+            <h2 id="sf-co-payment">{t('checkout.payment')}</h2>
+            <p className="sf-co-section__note">{ar ? 'كل المعاملات آمنة ومشفّرة.' : 'All transactions are secure and encrypted.'}</p>
+            {checkout.paymentMethods.length ? <div className="sf-co-choices" role="radiogroup" aria-labelledby="sf-co-payment">
+              {checkout.paymentMethods.map((method) => {
+                const selected = checkout.paymentMethod === method.slug;
+                return <div key={method.slug} style={{ display: 'contents' }}>
+                  <label className={`sf-co-choice ${selected ? 'is-selected' : ''}`}>
+                    <input type="radio" name="payment_method" checked={selected} onChange={() => checkout.setPaymentMethod(method.slug)} required />
+                    <span className="sf-co-choice__label"><strong>{methodName(method)}</strong></span>
+                    <span className="sf-co-choice__aside"><PaymentMethodLogo slug={method.slug} src={method.logo_url} /></span>
+                  </label>
+                  {selected && method.description ? <div className="sf-co-choice__detail">{method.description}</div> : null}
+                </div>;
+              })}
+            </div> : <p className="sf-field__error">{ar ? 'لا توجد طريقة دفع متاحة حاليًا.' : 'No payment method is currently available.'}</p>}
+          </section>
+        </fieldset>
+        {checkout.error && !checkout.unresolved ? <div className="sf-co-alert" role="alert"><p>{checkout.error}</p>{!checkout.paymentRetry ? <Button type="button" variant="secondary" onClick={reloadAll}>{ar ? 'تحديث خيارات التوصيل' : 'Refresh delivery options'}</Button> : null}</div> : null}
+        {!checkout.paymentRetry && !checkout.unresolved ? <CheckoutMinimum quote={quote} /> : null}
+        {quote?.order_minimum?.eligible === false && !checkout.paymentRetry && !checkout.unresolved ? <ButtonLink href="/cart" variant="secondary" block>{ar ? 'تعديل السلة' : 'Edit cart'}</ButtonLink> : null}
+        {!checkout.unresolved ? <Button type="submit" block className="sf-co-pay" loading={checkout.busy} disabled={!checkout.paymentMethod || !quote || !contact.shippingReady || (!checkout.paymentRetry && (!minimumOrderAllows(quote) || !contact.phoneVerification.ready || !contact.botProtection.ready))}>
+          {`${t('checkout.placeOrder')}${quote ? ` · ${formatMoney(Number(quote.totals.grand_total), quote.currency, locale)}` : ''}`}
+        </Button> : null}
+        <p className="sf-co-trust"><LockIcon />{ar ? 'بياناتك محمية ولا تُشارك مع أي طرف.' : 'Your details are protected and never shared.'}</p>
+        <a className="sf-co-back" href="/cart">{ar ? '→' : '←'} {ar ? 'العودة إلى السلة' : 'Return to cart'}</a>
+      </form>
+      <UiBlock slot="after_checkout" />
+    </div>
+    <aside className="sf-co__summary" aria-label={ar ? 'ملخص الطلب' : 'Order summary'}><div className="sf-co__summary-inner">{summary}</div></aside>
+  </div>;
 }
 
 export function OrderSuccessPage(): ReactElement {
