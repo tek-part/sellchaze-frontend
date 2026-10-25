@@ -3,7 +3,7 @@
  * DTOs; callers map them with the store currency (see ./mappers). Cart/auth mutations included.
  * No endpoint is invented — every path matches routes/api.php `/storefront/*`.
  */
-import { apiFetch, apiGet, apiRootFetch, apiSend } from './client';
+import { apiFetch, apiGet, apiSend } from './client';
 import type {
   ApiBrand,
   ApiCategory,
@@ -241,10 +241,10 @@ export const getWishlist = (): Promise<{ data: ReadonlyArray<ApiProduct> }> => a
 export const addWishlist = (productId: number): Promise<unknown> => apiSend('/wishlist', 'POST', { product_id: productId });
 export const removeWishlist = (productId: number): Promise<unknown> => apiSend(`/wishlist/${productId}`, 'DELETE');
 
-/* ---- password reset (shared /auth routes, outside the storefront prefix) ---- */
-export const forgotPassword = (email: string): Promise<unknown> => apiRootFetch('/auth/forgot-password', { method: 'POST', body: JSON.stringify({ email }) });
+/* ---- password reset: store customers reset through their own store, never the platform broker ---- */
+export const forgotPassword = (email: string): Promise<unknown> => apiSend('/auth/forgot-password', 'POST', { email });
 export const resetPassword = (body: { token: string; email: string; password: string; password_confirmation: string }): Promise<unknown> =>
-  apiRootFetch('/auth/reset-password', { method: 'POST', body: JSON.stringify(body) });
+  apiSend('/auth/reset-password', 'POST', body);
 
 export interface ApiOrderItem {
   digital_delivery?: import('../types/digital').DigitalDelivery | null;
