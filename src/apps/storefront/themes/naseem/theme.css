@@ -40,6 +40,7 @@
 
 .nsm-actions { display: flex; align-items: center; gap: var(--sp-1); justify-self: end; }
 .nsm-actions__lang { margin-inline-end: var(--sp-2); }
+.nsm-actions__currency { margin-inline-end: var(--sp-2); color: var(--text); font-size: var(--fs-sm); }
 .nsm-icon-btn { position: relative; display: inline-grid; place-items: center; width: var(--tap); height: var(--tap); border: 0; border-radius: var(--radius-pill); background: transparent; color: var(--text); text-decoration: none; cursor: pointer; transition: background-color var(--transition-fast) var(--ease), color var(--transition-fast) var(--ease); }
 .nsm-icon-btn:hover { background: var(--surface-2); color: var(--primary); }
 .nsm-icon-btn:focus-visible { outline: none; box-shadow: var(--shadow-focus); }
@@ -151,7 +152,7 @@
 
 /* Mobile header: the language pill lives in the drawer; the brand truncates instead of overlapping. */
 @media (max-width: 1023.98px) {
-  .nsm-actions__lang { display: none; }
+  .nsm-actions__lang, .nsm-actions__currency { display: none; }
   .nsm-header__bar { grid-template-columns: auto minmax(0, 1fr) auto !important; gap: var(--sp-2); }
   .nsm-brand { min-width: 0; max-width: 100%; }
   .nsm-brand__name { display: block; overflow: hidden; text-overflow: ellipsis; font-size: var(--fs-md); }
@@ -160,5 +161,6 @@
 }
 
 .nsm-mobilenav__lang { margin-top: var(--sp-4); padding-top: var(--sp-4); border-top: 1px solid var(--border); display: flex; justify-content: center; }
+.nsm-mobilenav__currency { margin-top: var(--sp-3); color: var(--text); }
 
 @media (min-width: 1024px) { .nsm-header .nsm-menu-btn { display: none !important; } }

@@ -183,3 +183,6 @@
 
 
 .pur-announcement:hover>div,.pur-marquee:hover>div{animation-play-state:paused}
+
+/* Header currency pill (CurrencySwitcher): beside the language toggle on wider screens; phones use the menu drawer row. */
+@media (max-width: 767px) { .pur-currency { display: none; } }

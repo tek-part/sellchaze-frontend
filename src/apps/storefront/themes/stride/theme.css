@@ -119,12 +119,15 @@
 .st-icon-btn__count--bag { background: var(--st-accent-fill); color: var(--st-on-accent); }
 .st-lang { display: none; margin-inline: var(--sp-1); }
 @media (min-width: 768px) { .st-lang { display: inline-flex; } }
+.st-currency { display: none; margin-inline: var(--sp-1); color: var(--text); font-size: var(--fs-sm); font-weight: 700; }
+.st-currency.sf-currency .sf-currency__btn { font-weight: 800; letter-spacing: 0.06em; }
+@media (min-width: 1024px) { .st-currency { display: inline-flex; } }
 .st-root .sf-lang__btn { font-weight: 700; }
 .st-root .sf-lang__btn[aria-pressed='true'] { background: var(--text); color: var(--bg); }
 
 /* ------------------------------------------------------------ drawers */
 .st-drawer .sf-overlay__title { font-family: var(--heading); font-weight: 700; font-style: var(--st-display-style); text-transform: var(--st-display-transform); letter-spacing: var(--st-display-tracking); }
-.st-mnav { display: flex; flex-direction: column; gap: var(--sp-5); min-height: 100%; }
+.st-mnav { display: flex; flex-direction: column; gap: var(--sp-5); min-height: 0; }
 .st-mnav__search { display: flex; align-items: center; gap: var(--sp-3); width: 100%; min-height: 52px; padding-inline: var(--sp-4); border: 2px solid var(--text); border-radius: var(--radius); background: transparent; color: var(--muted); font-family: var(--font); font-size: var(--fs-sm); cursor: pointer; text-align: start; }
 .st-mnav__list, .st-mnav__sub { margin: 0; padding: 0; list-style: none; }
 .st-mnav__link { display: flex; align-items: center; gap: var(--sp-3); min-height: 56px; color: var(--text); text-decoration: none; border-block-end: 1px solid var(--border); cursor: pointer; list-style: none; }
@@ -139,6 +142,7 @@
 .st-mnav__foot { display: grid; grid-template-columns: 1fr 1fr; gap: var(--sp-2); margin-block-start: auto; }
 .st-mnav__foot-link { display: inline-flex; align-items: center; justify-content: center; gap: var(--sp-2); min-height: 48px; border: 1px solid var(--border-strong); border-radius: var(--radius); color: var(--text); font-size: var(--fs-sm); font-weight: 700; text-decoration: none; }
 .st-mnav__lang { grid-column: 1 / -1; justify-content: center; }
+.st-mnav__currency { grid-column: 1 / -1; color: var(--text); }
 
 .st-cart { display: flex; flex-direction: column; gap: var(--sp-5); }
 .st-cart__ship { display: flex; flex-direction: column; gap: var(--sp-2); padding: var(--sp-3) var(--sp-4); background: var(--surface-2); font-size: var(--fs-sm); font-weight: 600; border-radius: var(--radius); }

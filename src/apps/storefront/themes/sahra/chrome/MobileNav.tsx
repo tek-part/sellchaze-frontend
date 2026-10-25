@@ -5,6 +5,7 @@
 import type { ReactElement } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Drawer } from '../../../foundation/components/Drawer';
+import { CurrencySwitcher } from '../../../foundation/components/CurrencySwitcher';
 import type { NavItem } from '../../../types/navigation';
 import { IconChevronDown, IconHeart, IconSearch, IconUser } from './icons';
 
@@ -58,6 +59,7 @@ export function MobileNav(props: MobileNavProps): ReactElement {
           <a href="/account" className="sh-mobilenav__foot-link" onClick={onClose}><IconUser /> {t('header.account')}</a>
           <a href="/wishlist" className="sh-mobilenav__foot-link" onClick={onClose}><IconHeart /> {t('header.wishlist')}</a>
         </div>
+        <CurrencySwitcher variant="drawer" className="sh-mobilenav__currency" />
       </div>
     </Drawer>
   );

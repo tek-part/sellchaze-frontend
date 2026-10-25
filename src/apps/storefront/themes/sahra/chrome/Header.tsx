@@ -14,6 +14,7 @@ import type { NavItem } from '../../../types/navigation';
 import { useCart } from '../../../state/cart';
 import { useWishlist } from '../../../state/wishlist';
 import { LanguageSwitcher } from '../../../shared-ui';
+import { CurrencySwitcher } from '../../../foundation/components/CurrencySwitcher';
 import { useLocale } from '../../../i18n/useLocale';
 import { IconBag, IconChevronDown, IconHeart, IconMenu, IconSearch, IconUser } from './icons';
 
@@ -103,7 +104,12 @@ export function Header(props: HeaderProps): ReactElement {
     </button>
   );
 
-  const language = <LanguageSwitcher ns="sf" locale={locale} onChange={setLocale} label={t('header.changeLanguage')} className="sh-lang" />;
+  const language = (
+    <>
+      <LanguageSwitcher ns="sf" locale={locale} onChange={setLocale} label={t('header.changeLanguage')} className="sh-lang" />
+      <CurrencySwitcher className="sh-currency" />
+    </>
+  );
 
   const commerce = (
     <>

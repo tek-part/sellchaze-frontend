@@ -14,6 +14,7 @@ import type { NavItem } from '../../../types/navigation';
 import { useCart } from '../../../state/cart';
 import { useWishlist } from '../../../state/wishlist';
 import { LanguageSwitcher } from '../../../shared-ui';
+import { CurrencySwitcher } from '../../../foundation/components/CurrencySwitcher';
 import { useLocale } from '../../../i18n/useLocale';
 import { useLocaleCode } from '../../../sections-lib';
 import { maiText } from '../components/i18n';
@@ -123,6 +124,7 @@ export function Header(props: HeaderProps): ReactElement {
 
         <div className="mai-header__end">
           <LanguageSwitcher ns="sf" locale={locale} onChange={setLocale} label={t('header.changeLanguage')} className="mai-lang" />
+          <CurrencySwitcher className="mai-currency" />
           <button type="button" className={cn('mai-icon-btn', centered && 'mai-icon-btn--compact-only')} aria-label={t('header.search')} onClick={onSearchOpen}>
             <IconSearch />
           </button>

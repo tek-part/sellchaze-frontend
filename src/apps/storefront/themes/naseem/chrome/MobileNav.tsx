@@ -8,6 +8,7 @@ import { Drawer } from '../../../foundation/components/Drawer';
 import type { NavItem } from '../../../types/navigation';
 import { IconChevronDown, IconHeart, IconSearch, IconUser } from './icons';
 import { LanguageSwitcher } from '../../../shared-ui';
+import { CurrencySwitcher } from '../../../foundation/components/CurrencySwitcher';
 import { useLocale } from '../../../i18n/useLocale';
 
 export interface MobileNavProps {
@@ -64,6 +65,7 @@ export function MobileNav(props: MobileNavProps): ReactElement {
         <div className="nsm-mobilenav__lang">
           <LanguageSwitcher ns="sf" locale={locale} onChange={setLocale} label={t('header.changeLanguage')} />
         </div>
+        <CurrencySwitcher variant="drawer" className="nsm-mobilenav__currency" />
       </div>
     </Drawer>
   );

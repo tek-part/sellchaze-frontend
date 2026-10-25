@@ -11,6 +11,7 @@ import type { NavItem } from '../../../types/navigation';
 import { useCart } from '../../../state/cart';
 import { useWishlist } from '../../../state/wishlist';
 import { LanguageSwitcher } from '../../../shared-ui';
+import { CurrencySwitcher } from '../../../foundation/components/CurrencySwitcher';
 import { useLocale } from '../../../i18n/useLocale';
 import { IconBag, IconBolt, IconChevronDown, IconHeart, IconMenu, IconSearch, IconUser } from './icons';
 
@@ -116,6 +117,7 @@ export function Header(props: HeaderProps): ReactElement {
             {wishlist.count > 0 ? <span className="st-icon-btn__count" aria-hidden>{wishlist.count}</span> : null}
           </a>
           <LanguageSwitcher ns="sf" locale={locale} onChange={setLocale} label={t('header.changeLanguage')} className="st-lang" />
+          <CurrencySwitcher className="st-currency" />
           <button type="button" className="st-icon-btn st-icon-btn--bag" aria-label={t('header.cartWithCount', { count: totals.count })} onClick={onCartOpen}>
             <IconBag />
             {totals.count > 0 ? <span className="st-icon-btn__count st-icon-btn__count--bag" aria-hidden>{totals.count}</span> : null}

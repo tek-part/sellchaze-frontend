@@ -7,6 +7,7 @@ import { useEffect, useState, type ReactElement } from 'react';
 import { useTranslation } from 'react-i18next';
 import { prefersReducedMotion } from '../../../../../shared/env/media';
 import { LanguageSwitcher } from '../../../shared-ui';
+import { CurrencySwitcher } from '../../../foundation/components/CurrencySwitcher';
 import { useLocale } from '../../../i18n/useLocale';
 import { IconHeart, IconTruck, IconUser } from './icons';
 
@@ -39,6 +40,7 @@ export function AnnouncementBar(props: AnnouncementBarProps): ReactElement {
         ) : <span />}
         <div className="bz-topbar__links">
           <LanguageSwitcher ns="sf" locale={locale} onChange={setLocale} label={t('header.changeLanguage')} className="bz-topbar__lang" />
+          <CurrencySwitcher className="bz-topbar__currency" />
           <a href="/wishlist" className="bz-topbar__link"><IconHeart width={15} height={15} /> {t('header.wishlist')}</a>
           <a href="/account" className="bz-topbar__link"><IconUser width={15} height={15} /> {t('header.account')}</a>
         </div>

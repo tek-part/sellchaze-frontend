@@ -60,6 +60,14 @@
 
 .tk-actions { display: flex; align-items: center; gap: var(--sp-1); justify-self: end; }
 .tk-actions__lang { margin-inline-end: var(--sp-2); }
+/* Currency pill: beside the language pair on desktop (strip or actions); in the drawer below 1024px. */
+.tk-topbar__currency, .tk-actions__currency { display: none; color: var(--tk-on-navy); }
+.tk-topbar__currency.sf-currency .sf-currency__btn { min-block-size: 26px; font-size: 1em; }
+/* The open list must float over the sticky header row below the strip. */
+.tk-topbar:has(.sf-currency.is-open) { position: relative; z-index: calc(var(--z-header, 40) + 1); }
+.tk-actions__currency { margin-inline-end: var(--sp-2); font-size: var(--fs-sm); }
+@media (min-width: 1024px) { .tk-topbar__currency, .tk-actions__currency { display: inline-flex; } }
+.tk-mobilenav__currency { margin-block-start: var(--sp-3); color: var(--text); }
 .tk-icon-btn { position: relative; display: inline-grid; place-items: center; width: var(--tap); height: var(--tap); border: 0; border-radius: var(--radius-sm); background: transparent; color: var(--tk-on-navy); text-decoration: none; cursor: pointer; transition: background-color var(--transition-fast) var(--ease), color var(--transition-fast) var(--ease); }
 .tk-icon-btn:hover { background: var(--tk-navy-3); color: var(--accent); }
 .tk-icon-btn:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(6, 182, 212, 0.45); }

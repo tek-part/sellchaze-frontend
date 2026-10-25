@@ -7,7 +7,7 @@ export function previewStore(base: StoreInfo, themeId: string | null): StoreInfo
   if (themeId === 'karat') return { ...base, name: 'Sellchaze Fine Jewellery', logoUrl: undefined, phone: '+201000000000' };
   if (themeId === 'stride') return { ...base, name: 'Sellchaze Sport', logoUrl: undefined };
   const store = ['sphinx-v3', 'elite-furniture', 'pure-furniture', 'nature-kids', 'blast-pets', 'nature-pets', 'hype-perfumes'].includes(themeId ?? '')
-    ? { ...base, currency: 'EGP', baseCurrency: 'EGP', supportedCurrencies: ['EGP'], currencyMultipliers: { EGP: 1 } }
+    ? { ...base, currency: 'EGP', baseCurrency: 'EGP', supportedCurrencies: ['EGP', 'USD', 'SAR'], currencyMultipliers: { EGP: 1, USD: 0.0206, SAR: 0.0773 } }
     : base;
   if (themeId === 'hype-perfumes') return { ...store, name: 'Sellchaze Fragrances', logoUrl: undefined, email: 'hello@example.test', phone: '+201000000000', shipping: { enabled: true, currency: 'EGP', free_over: '5000.00' } };
   if (themeId !== 'nature-kids' && themeId !== 'blast-pets' && themeId !== 'nature-pets') return store;

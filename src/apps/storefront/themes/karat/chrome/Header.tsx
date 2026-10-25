@@ -13,6 +13,7 @@ import type { NavItem } from '../../../types/navigation';
 import { useCart } from '../../../state/cart';
 import { useWishlist } from '../../../state/wishlist';
 import { LanguageSwitcher } from '../../../shared-ui';
+import { CurrencySwitcher } from '../../../foundation/components/CurrencySwitcher';
 import { useLocale } from '../../../i18n/useLocale';
 import { useLocaleCode } from '../../../sections-lib';
 import { krText, whatsappHref } from '../components/i18n';
@@ -123,6 +124,7 @@ export function Header(props: HeaderProps): ReactElement {
         <Brand storeName={storeName} {...(logoUrl ? { logoUrl } : {})} className="kr-header__brand" />
         <div className="kr-header__end">
           <LanguageSwitcher ns="sf" locale={locale} onChange={setLocale} label={t('header.changeLanguage')} className="kr-header__lang" />
+          <CurrencySwitcher className="kr-header__currency" />
           <a href="/account" className="kr-icon-btn kr-icon-btn--desktop" aria-label={t('header.account')} title={t('header.account')}>
             <IconUser />
           </a>

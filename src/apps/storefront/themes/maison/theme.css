@@ -117,7 +117,9 @@
 .mai-icon-btn { position: relative; display: inline-grid; place-items: center; inline-size: var(--tap); block-size: var(--tap); border: 0; border-radius: var(--radius-pill); background: transparent; color: var(--text); text-decoration: none; cursor: pointer; transition: background-color var(--transition-fast) var(--ease), color var(--transition-fast) var(--ease); }
 .mai-icon-btn:hover { background: color-mix(in srgb, var(--text) 7%, transparent); }
 .mai-icon-btn__count { position: absolute; inset-block-start: 5px; inset-inline-end: 3px; display: inline-grid; place-items: center; min-inline-size: 18px; block-size: 18px; padding-inline: 4px; border-radius: var(--radius-pill); background: var(--primary); color: var(--on-primary); font-size: 10px; font-weight: 700; line-height: 1; }
-.mai-icon-btn--desktop, .mai-lang, .mai-search-pill { display: none; }
+.mai-icon-btn--desktop, .mai-lang, .mai-currency, .mai-search-pill { display: none; }
+.mai-currency { color: var(--text); font-size: var(--fs-xs); letter-spacing: 0.08em; }
+.mai-currency.sf-currency .sf-currency__btn { min-block-size: var(--tap); border-color: var(--border-strong); }
 
 .mai-search-pill { align-items: center; gap: var(--sp-3); min-block-size: var(--tap); min-inline-size: 0; max-inline-size: 300px; padding-inline: var(--sp-4) var(--sp-5); border: 1px solid var(--border); border-radius: var(--radius-pill); background: var(--surface); color: var(--muted); font-family: var(--font); font-size: var(--fs-sm); cursor: pointer; transition: border-color var(--transition-fast) var(--ease); }
 .mai-search-pill:hover { border-color: var(--border-strong); color: var(--text); }
@@ -152,6 +154,7 @@
   .mai-menu-btn, .mai-icon-btn--compact-only { display: none; }
   .mai-icon-btn--desktop { display: inline-grid; }
   .mai-lang { display: inline-flex; margin-inline-end: var(--sp-2); }
+  .mai-currency { display: inline-flex; margin-inline-end: var(--sp-2); }
   .mai-search-pill { display: inline-flex; }
   .mai-header__row { display: block; border-block-start: 1px solid var(--mai-hairline); }
   .mai-brand__name { max-inline-size: 32vw; }
@@ -175,6 +178,8 @@
 .mai-mnav__foot { display: flex; flex-direction: column; gap: var(--sp-1); margin-block-start: auto; padding-block-start: var(--sp-4); }
 .mai-mnav__foot-link { display: flex; align-items: center; gap: var(--sp-3); min-block-size: var(--tap); color: var(--text); font-size: var(--fs-sm); text-decoration: none; }
 .mai-mnav__lang .sf-lang__btn { min-block-size: var(--tap); min-inline-size: 48px; color: var(--muted); }
+.mai-mnav__currency { margin-block-start: var(--sp-2); color: var(--text); }
+.mai-mnav__currency.sf-currency .sf-currency__btn { border-color: var(--border-strong); }
 
 .mai-cart__empty { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--sp-3); text-align: center; }
 .mai-cart__empty-art { display: inline-grid; place-items: center; inline-size: 84px; block-size: 84px; margin-block-end: var(--sp-2); border-radius: 50%; background: color-mix(in srgb, var(--accent) 40%, var(--surface)); color: var(--accent-ink); }

@@ -5,6 +5,7 @@
 import type { ReactElement } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Drawer } from '../../../foundation/components/Drawer';
+import { CurrencySwitcher } from '../../../foundation/components/CurrencySwitcher';
 import type { NavItem } from '../../../types/navigation';
 import { useLocaleCode } from '../../../sections-lib';
 import { tkText } from '../components/i18n';
@@ -67,6 +68,7 @@ export function MobileNav(props: MobileNavProps): ReactElement {
             <a href={`tel:${supportPhone.replace(/[^\d+]/g, '')}`} className="tk-mobilenav__foot-link tk-mobilenav__foot-link--phone" dir="ltr"><IconPhone /> {supportPhone}</a>
           ) : null}
         </div>
+        <CurrencySwitcher variant="drawer" className="tk-mobilenav__currency" />
       </div>
     </Drawer>
   );

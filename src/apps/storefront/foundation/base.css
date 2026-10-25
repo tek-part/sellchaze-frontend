@@ -1373,6 +1373,74 @@
 /* Arabic is not uppercase-able and must not be tracked. */
 .sf-lang__btn[lang='ar'] { font-family: var(--font-arabic); text-transform: none; letter-spacing: normal; }
 
+/* ---------------------------------------------------------------- Currency switcher */
+/* The pill inherits colour and type from the header it sits in; themes tune size via their class.
+   The list is a token-driven surface so it reads on light and dark headers alike. Selectors are
+   scoped under `.sf-currency` (two classes) so generic theme rules such as
+   `.x-header-actions button`, `… span` or `… svg` cannot reshape the pill. */
+.sf-currency { position: relative; display: inline-flex; align-items: center; flex: none; color: inherit; font: inherit; }
+.sf-currency .sf-currency__btn {
+  position: relative; display: inline-flex; align-items: center; justify-content: center; gap: 0.4em;
+  inline-size: auto; block-size: auto; min-inline-size: 0; min-block-size: 2.25rem; margin: 0; padding-block: 0; padding-inline: 0.8em;
+  border: 1px solid color-mix(in srgb, currentColor 28%, transparent); border-radius: var(--radius-pill, 999px);
+  background: transparent; color: inherit; box-shadow: none; opacity: 1;
+  font: inherit; font-size: 0.8125em; font-weight: 600; letter-spacing: 0.04em; line-height: 1; text-transform: none; white-space: nowrap; cursor: pointer;
+  transition: border-color var(--transition-fast, 120ms) var(--ease, ease), background-color var(--transition-fast, 120ms) var(--ease, ease);
+}
+/* Hover/open only firm up the outline: a tinted fill would cut text contrast on some headers. */
+.sf-currency .sf-currency__btn:hover, .sf-currency.is-open .sf-currency__btn { border-color: currentColor; }
+.sf-currency .sf-currency__btn:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; }
+.sf-currency .sf-currency__btn > span, .sf-currency .sf-currency__opt > span {
+  position: static; display: inline; inline-size: auto; block-size: auto; min-inline-size: 0; min-block-size: 0; margin: 0; padding: 0;
+  border: 0; border-radius: 0; background: none; color: inherit; font: inherit; line-height: inherit;
+}
+.sf-currency .sf-currency__code { font-variant-numeric: tabular-nums; }
+.sf-currency .sf-currency__chev {
+  flex: none; display: block; inline-size: 10px; block-size: 6px; margin: 0; opacity: 0.75;
+  transition: transform var(--transition-fast, 120ms) var(--ease, ease);
+}
+.sf-currency.is-open .sf-currency__chev { transform: rotate(180deg); }
+.sf-currency .sf-currency__list {
+  position: absolute; inset-block-start: calc(100% + 6px); inset-inline-end: 0; inset-inline-start: auto; z-index: 60;
+  display: block; inline-size: max-content; min-inline-size: 15rem; max-inline-size: min(22rem, calc(100vw - 2rem)); max-block-size: min(20rem, 60vh); overflow-y: auto;
+  margin: 0; padding: 0.25rem; list-style: none; text-align: start;
+  border: 1px solid var(--border, rgba(0, 0, 0, 0.12)); border-radius: var(--radius, 8px);
+  background: var(--surface, #fff); color: var(--text, #111); box-shadow: var(--shadow, 0 12px 32px rgba(0, 0, 0, 0.14));
+  font-family: var(--font, inherit); font-size: var(--fs-sm, 0.875rem); font-weight: 400; font-style: normal; letter-spacing: normal; line-height: 1.3; text-transform: none;
+}
+.sf-currency .sf-currency__list:focus { outline: none; }
+.sf-currency .sf-currency__list:focus-visible { outline: 2px solid var(--accent, var(--primary, currentColor)); outline-offset: 2px; }
+.sf-currency .sf-currency__opt {
+  position: relative; display: flex; align-items: center; gap: 0.25em; min-block-size: 2.5rem; margin: 0;
+  padding-block: 0.375rem; padding-inline: 0.75rem 2rem; border: 0; border-radius: var(--radius-sm, 6px);
+  background: none; color: inherit; cursor: pointer; white-space: normal;
+}
+.sf-currency .sf-currency__opt::before { content: none; }
+.sf-currency .sf-currency__opt[data-active='true'] { background: var(--surface-2, rgba(0, 0, 0, 0.05)); }
+.sf-currency .sf-currency__opt[aria-selected='true'] { font-weight: 600; }
+.sf-currency .sf-currency__opt[aria-selected='true']::after {
+  content: ''; position: absolute; inset-inline-end: 0.75rem; inset-block-start: 50%;
+  inline-size: 0.35rem; block-size: 0.65rem; margin-block-start: -0.4rem;
+  border: solid currentColor; border-width: 0 2px 2px 0; transform: rotate(45deg);
+}
+/* The code keeps the list's text colour: theme `--muted` tones fall under 4.5:1 on the hover fill. */
+.sf-currency .sf-currency__opt > .sf-currency__iso { font-variant-numeric: tabular-nums; letter-spacing: 0.03em; }
+/* Drawer row: label on the start edge, pill on the end, list opens in place (no floating clip). */
+.sf-currency.sf-currency--drawer {
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--sp-2, 0.5rem);
+  inline-size: 100%; min-block-size: 44px; margin-inline: 0; padding: 0; border: 0; background: none;
+}
+.sf-currency.sf-currency--drawer .sf-currency__label { font-size: var(--fs-sm, 0.875rem); font-weight: 500; }
+.sf-currency.sf-currency--drawer .sf-currency__btn { min-block-size: 44px; min-inline-size: 5.5rem; }
+.sf-currency.sf-currency--drawer .sf-currency__list { position: static; flex: 1 0 100%; inline-size: auto; min-inline-size: 0; max-inline-size: none; box-shadow: none; }
+@media (pointer: coarse), (max-width: 767px) {
+  .sf-currency .sf-currency__btn { min-block-size: 44px; min-inline-size: 44px; }
+  .sf-currency .sf-currency__opt { min-block-size: 44px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sf-currency .sf-currency__btn, .sf-currency .sf-currency__chev { transition: none; }
+}
+
 /* Code and content loading share one full-page placeholder; chrome stays visible. */
 .sf-page-loading.sf-section { padding-block:0; }
 .sf-page-loading__content { display:grid; justify-items:center; align-content:start; gap:var(--sp-3); min-block-size:100svh; padding-block-start:clamp(8rem,30svh,20rem); color:var(--muted); }
