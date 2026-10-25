@@ -201,6 +201,11 @@
 .kr-header__lang .sf-lang__btn[aria-pressed='true'] { color: var(--accent-ink); background: transparent; }
 .kr-header__lang .sf-lang__btn + .sf-lang__btn { border-inline-start-color: var(--border-strong); }
 @media (max-width: 359px) { .kr-header__lang .sf-lang__btn { padding-inline: 6px; } }
+.kr-header__currency { margin-inline: var(--sp-1); color: var(--text); font-size: 11px; letter-spacing: 0.1em; }
+.kr-header__currency.sf-currency .sf-currency__btn { min-block-size: var(--tap); border-color: var(--border-strong); }
+.kr-header__currency.sf-currency.is-open .sf-currency__btn, .kr-header__currency.sf-currency .sf-currency__btn:hover { color: var(--accent-ink); }
+@media (max-width: 1023px) { .kr-header__currency { display: none; } }
+.kr-mnav__currency { margin-block-start: var(--sp-3); color: var(--text); }
 
 .kr-header__navrow { display: none; border-block-start: 1px solid var(--border); }
 @media (min-width: 1024px) { .kr-header__navrow { display: block; } }

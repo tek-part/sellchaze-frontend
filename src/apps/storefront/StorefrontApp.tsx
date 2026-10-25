@@ -1,4 +1,4 @@
-import { ProductHeaderChrome, ProductPresentationProvider } from './state/product-presentation';
+import { ProductPresentationProvider } from './state/product-presentation';
 import { UiBlocksProvider } from './ui-blocks/UiBlocks';
 import { useLocation } from 'react-router-dom';
 import { CartProvider } from './state/cart';
@@ -174,7 +174,7 @@ export function StorefrontApp(): ReactElement {
   const { locale } = useLocale();
   const direction = useDirection();
   const Layout = useLayout('default');
-  const { store, navigation, setCurrency, apiOk } = useStore();
+  const { store, navigation, apiOk } = useStore();
   // Re-fetched per locale: category names in the chrome come back translated by the API (`?lang=`).
   const categoriesQ = useAsync(() => getCategories(), [locale]);
   const [previewData, setPreviewData] = useState<PreviewData | null>(null);
@@ -262,14 +262,6 @@ export function StorefrontApp(): ReactElement {
 
   return (
     <ProductPresentationProvider><UiBlocksProvider><div className="sf-root" data-theme-id={manifest.id}>
-      <ProductHeaderChrome>{!templatePreview && store.supportedCurrencies.length > 1 ? (
-        <label className="sf-currency-widget fixed bottom-4 end-4 z-[var(--z-toast,9999)] rounded-full border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 text-xs shadow-lg">
-          <span className="sr-only">{locale === 'ar' ? 'عملة العرض' : 'Display currency'}</span>
-          <select aria-label={locale === 'ar' ? 'عملة العرض' : 'Display currency'} value={store.currency} onChange={(event) => setCurrency(event.target.value)} className="bg-transparent font-semibold outline-none">
-            {store.supportedCurrencies.map((currency) => <option key={currency} value={currency}>{currency}</option>)}
-          </select>
-        </label>
-      ) : null}</ProductHeaderChrome>
       <StoreIdentityHead />
       <Suspense fallback={null}><DesignAssetsHead /></Suspense>
       <NavigationInterceptor />

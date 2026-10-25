@@ -14,6 +14,7 @@ import type { NavItem } from '../../../types/navigation';
 import { useCart } from '../../../state/cart';
 import { useWishlist } from '../../../state/wishlist';
 import { LanguageSwitcher } from '../../../shared-ui';
+import { CurrencySwitcher } from '../../../foundation/components/CurrencySwitcher';
 import { useLocale } from '../../../i18n/useLocale';
 import { formatMoney } from '../../../utils/format';
 import { frText } from './text';
@@ -143,6 +144,7 @@ export function Header(props: HeaderProps): ReactElement {
 
             <div className="fr-actions">
               <LanguageSwitcher ns="sf" locale={locale} onChange={setLocale} label={t('header.changeLanguage')} className="fr-actions__lang" />
+              <CurrencySwitcher className="fr-actions__currency" />
               <button type="button" className="fr-icon-btn fr-icon-btn--mobile-only" aria-label={t('header.search')} onClick={onSearchOpen}>
                 <IconSearch />
               </button>

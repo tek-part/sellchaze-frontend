@@ -22,3 +22,6 @@ html:has(.ew-root) .hyp-cart{font-family:"Instrument Sans","IBM Plex Sans Arabic
 .ew-root .lib-cat-header__title{margin:0}@media(min-width:768px){.ew-root .lib-cat-header__title{padding-inline-end:200px}.ew-listing .ew-sort{position:absolute;top:-64px;inset-inline-end:32px;padding:0}.ew-root:has(.lib-cat-header__desc) .ew-listing .ew-sort{position:static;padding-bottom:24px}}
 .ew-sort select{height:40px;box-sizing:border-box;padding-block:8px}
 .ew-home:not(:has(.ew-announcement)) .ew-header{top:0}
+
+/* Header currency pill (CurrencySwitcher): beside the language toggle on wider screens; phones use the menu drawer row. */
+@media (max-width: 767px) { .ew-currency { display: none; } }

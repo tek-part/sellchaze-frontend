@@ -11,3 +11,6 @@
 @media(prefers-reduced-motion:reduce){.hpf-root *{animation:none!important;transition:none!important;scroll-behavior:auto!important}}.hpf-root[data-reduced-motion=true] *{animation:none!important;transition:none!important}.hpf-root:dir(rtl){font-family:"IBM Plex Sans Arabic",sans-serif}.hpf-root:dir(rtl) .hpf-hero h1{font-family:"IBM Plex Sans Arabic",serif;font-weight:400}
 .hpf-menu-language{display:block;width:100%;min-height:44px;padding:12px;border:0;border-top:1px solid var(--border);background:none;color:inherit;text-align:start;font:inherit;cursor:pointer}
 .hpf-linked-look .nkd-look-products del{color:#666}
+
+/* Header currency pill (CurrencySwitcher): beside the language toggle on wider screens; phones use the menu drawer row. */
+@media (max-width: 767px) { .hpf-currency { display: none; } }

@@ -8,6 +8,7 @@ import { useTranslation } from 'react-i18next';
 import { Drawer } from '../../../foundation/components/Drawer';
 import type { NavItem } from '../../../types/navigation';
 import { LanguageSwitcher } from '../../../shared-ui';
+import { CurrencySwitcher } from '../../../foundation/components/CurrencySwitcher';
 import { useLocale } from '../../../i18n/useLocale';
 import { useLocaleCode } from '../../../sections-lib';
 import { glText } from '../components/i18n';
@@ -68,6 +69,7 @@ export function MobileNav(props: MobileNavProps): ReactElement {
             <span>{glText(code, 'language')}</span>
             <LanguageSwitcher ns="sf" locale={locale} onChange={setLocale} label={t('header.changeLanguage')} className="gl-lang" />
           </div>
+          <CurrencySwitcher variant="drawer" className="gl-mnav__currency" />
         </div>
       </div>
     </Drawer>

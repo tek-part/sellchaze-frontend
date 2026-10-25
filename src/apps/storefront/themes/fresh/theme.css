@@ -56,6 +56,9 @@
 /* actions */
 .fr-actions { display: flex; align-items: center; gap: var(--sp-1); justify-self: end; }
 .fr-actions__lang { margin-inline-end: var(--sp-1); }
+.fr-actions__currency { display: none; margin-inline-end: var(--sp-1); color: var(--text); font-size: var(--fs-sm); }
+@media (min-width: 1024px) { .fr-actions__currency { display: inline-flex; } }
+.fr-mobilenav__currency { margin-block-start: var(--sp-3); color: var(--text); }
 .fr-icon-btn { position: relative; display: inline-grid; place-items: center; width: var(--tap); height: var(--tap); border: 0; border-radius: var(--radius-pill); background: transparent; color: var(--text); text-decoration: none; cursor: pointer; transition: background-color var(--transition-fast) var(--ease), color var(--transition-fast) var(--ease); }
 .fr-icon-btn:hover { background: var(--surface-2); color: var(--primary); }
 .fr-icon-btn:focus-visible { outline: none; box-shadow: var(--shadow-focus); }

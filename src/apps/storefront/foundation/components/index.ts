@@ -47,6 +47,8 @@ export {
   type SizeOption,
 } from './VariantPicker';
 
+export { CurrencySwitcher, type CurrencySwitcherProps } from './CurrencySwitcher';
+
 /* Icons */
 export * as Icons from './icons';
 export type { IconProps } from './icons';

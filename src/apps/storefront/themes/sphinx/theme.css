@@ -184,3 +184,6 @@
 .sph-checkout__footer { padding-block:32px; }.sph-checkout__footer nav { display:flex; flex-wrap:wrap; justify-content:center; gap:24px; font-size:14px; color:var(--muted); }
 @media(max-width:767px) { .sph-checkout__header { min-height:88px; }.sph-checkout .sf-cart-page { display:flex; flex-direction:column; gap:24px; }.sph-checkout .sf-cart-summary { order:-1; }.sph-checkout .sf-page-head__title { font-size:24px; }.sph-checkout .sf-cart-summary { padding:20px; } }
 @media (prefers-reduced-motion: reduce) { .sph-root *, .sph-cart *, .sph-more * { scroll-behavior: auto; transition: none; animation: none; } }
+
+/* Header currency pill (CurrencySwitcher): beside the language toggle on wider screens; phones use the menu drawer row. */
+@media (max-width: 767px) { .sph-currency { display: none; } }

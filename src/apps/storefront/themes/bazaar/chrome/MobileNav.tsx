@@ -9,6 +9,7 @@ import { Drawer } from '../../../foundation/components/Drawer';
 import type { NavItem } from '../../../types/navigation';
 import type { CategoryCardModel } from '../../../types/catalog';
 import { LanguageSwitcher } from '../../../shared-ui';
+import { CurrencySwitcher } from '../../../foundation/components/CurrencySwitcher';
 import { useLocale } from '../../../i18n/useLocale';
 import { IconChevronDown, IconGrid, IconHeart, IconSearch, IconUser } from './icons';
 
@@ -91,6 +92,7 @@ export function MobileNav(props: MobileNavProps): ReactElement {
         <div className="bz-mobilenav__lang">
           <LanguageSwitcher ns="sf" locale={locale} onChange={setLocale} label={t('header.changeLanguage')} />
         </div>
+        <CurrencySwitcher variant="drawer" className="bz-mobilenav__currency" />
       </div>
     </Drawer>
   );

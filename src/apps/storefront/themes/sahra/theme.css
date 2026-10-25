@@ -51,6 +51,9 @@
 .sh-lang { margin-inline: var(--sp-1); }
 .sh-header--centered .sh-lang { display: none; }
 @media (min-width: 640px) { .sh-header--centered .sh-lang { display: inline-flex; } }
+.sh-currency { display: none; margin-inline: var(--sp-1); color: var(--text); font-size: var(--fs-sm); letter-spacing: 0.06em; }
+@media (min-width: 1024px) { .sh-currency { display: inline-flex; } }
+.sh-mobilenav__currency { margin-block-start: var(--sp-3); color: var(--text); }
 
 .sh-icon-btn { position: relative; display: inline-grid; place-items: center; width: var(--tap); height: var(--tap); border: 0; border-radius: var(--radius-pill); background: transparent; color: var(--text); text-decoration: none; cursor: pointer; transition: color var(--transition-fast) var(--ease), background-color var(--transition-fast) var(--ease); }
 .sh-icon-btn:hover { color: var(--accent-ink); }

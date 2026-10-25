@@ -21,3 +21,7 @@
 .bpt-product-category{width:fit-content}.bpt-product .sf-price__current{color:#e60013;font-family:Jost,var(--font-arabic),sans-serif}.bpt-product .sf-price__compare{font-family:Jost,var(--font-arabic),sans-serif;color:#666;font-size:18px}
 
 .bpt-cart,.bpt-menu{font-family:Jost,"IBM Plex Sans Arabic",sans-serif}.bpt-cart .sf-overlay__title,.bpt-menu .sf-overlay__title{font-family:inherit}.bpt-shipping progress::-webkit-progress-bar{background:#ddd}.bpt-shipping progress::-webkit-progress-value{background:var(--primary,#FDAE03)}.bpt-shipping progress::-moz-progress-bar{background:var(--primary,#FDAE03)}
+
+/* Header currency pill (CurrencySwitcher): beside the language toggle on wider screens; phones use the menu drawer row. */
+@media (max-width: 767px) { .bpt-currency { display: none; } }
+.bpt-menu-currency.sf-currency { align-self: start; }

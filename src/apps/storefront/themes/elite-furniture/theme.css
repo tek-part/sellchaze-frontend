@@ -9,3 +9,6 @@
 
 /* One image: no thumbnail rail. */
 .elt-product .sf-gallery--single{grid-template-columns:minmax(0,1fr)}
+
+/* Header currency pill (CurrencySwitcher): beside the language toggle on wider screens; phones use the menu drawer row. */
+@media (max-width: 767px) { .elt-currency { display: none; } }

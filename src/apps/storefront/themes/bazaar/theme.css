@@ -24,6 +24,11 @@
 .bz-topbar .sf-lang { border-color: rgba(255, 255, 255, 0.25); }
 .bz-topbar .sf-lang__btn { color: inherit; opacity: 0.8; }
 .bz-topbar .sf-lang__btn[aria-pressed='true'], .bz-topbar .sf-lang__btn.is-active { opacity: 1; background: var(--primary); color: var(--on-primary); }
+/* Currency pill sits beside the language pair on desktop; on phones it lives in the drawer. */
+.bz-topbar__currency { display: none; }
+.bz-topbar__currency.sf-currency .sf-currency__btn { min-block-size: 26px; font-size: 1em; border-color: rgba(255, 255, 255, 0.25); }
+@media (min-width: 768px) { .bz-topbar__currency { display: inline-flex; } }
+.bz-mobilenav__currency { color: var(--text); }
 
 /* ------------------------------------------------------------ header (main row) */
 .bz-header { position: relative; background: var(--surface); border-bottom: 1px solid var(--border); transition: box-shadow var(--transition) var(--ease); }

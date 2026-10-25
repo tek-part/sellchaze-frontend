@@ -127,6 +127,7 @@
   .gl-header__search-label { display: inline; }
 }
 .gl-lang { margin-inline-end: var(--sp-2); }
+.gl-currency { margin-inline-end: var(--sp-2); color: var(--text); font-size: var(--fs-sm); }
 .gl-root .sf-lang__btn, .gl-drawer .sf-lang__btn { min-block-size: 36px; font-family: var(--font); }
 
 /* nav row (desktop) */
@@ -173,6 +174,9 @@
 .gl-mnav__sublink:hover { color: var(--text); }
 .gl-mnav__foot { display: grid; grid-template-columns: 1fr 1fr; gap: var(--sp-2); margin-block-start: auto; padding-block-start: var(--sp-4); }
 .gl-mnav__foot-link { display: inline-flex; align-items: center; justify-content: center; gap: var(--sp-2); min-block-size: var(--tap); border: 1px solid var(--border-strong); border-radius: var(--radius-pill); color: var(--text); font-size: var(--fs-sm); font-weight: 600; text-decoration: none; }
+.gl-mnav__currency { grid-column: 1 / -1; color: var(--muted); font-size: var(--fs-sm); }
+.gl-mnav__currency.sf-currency .sf-currency__label { font-size: inherit; font-weight: inherit; }
+.gl-mnav__currency.sf-currency .sf-currency__btn { color: var(--text); }
 .gl-mnav__lang { grid-column: 1 / -1; display: flex; align-items: center; justify-content: space-between; gap: var(--sp-3); padding-block-start: var(--sp-3); color: var(--muted); font-size: var(--fs-sm); }
 
 /* cart drawer */

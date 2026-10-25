@@ -55,6 +55,9 @@ const EMPTY_STORE: StoreInfo = {
 const DEV_STORE: StoreInfo = {
   ...EMPTY_STORE,
   id: 'dev', name: 'Sellchaze Demo Store', slug: 'demo', supportedLocales: ['en', 'ar'],
+  // Several display currencies so previews show the header currency switcher.
+  supportedCurrencies: ['USD', 'EGP', 'SAR'],
+  currencyMultipliers: { USD: 1, EGP: 48.5, SAR: 3.75 },
   // Real stores get this from the API (StoreResource.logo_url); the demo store
   // ships a wordmark so the header renders a logo rather than plain text.
   logoUrl: '/brand-logo.svg',
@@ -124,7 +127,10 @@ export function StoreProvider(props: { children: ReactNode; initialData?: ApiSto
       description: s.description || undefined,
     };
   } else if (previewOrDev()) {
-    store = previewStore(DEV_STORE, typeof window === 'undefined' ? null : new URLSearchParams(window.location.search).get('theme'));
+    const preview = previewStore(DEV_STORE, typeof window === 'undefined' ? null : new URLSearchParams(window.location.search).get('theme'));
+    // Previews honour an in-session pick so the header switcher visibly works without an API.
+    const picked = selectedCurrency.storeId === preview.id ? selectedCurrency.currency : '';
+    store = picked && picked !== preview.currency && preview.supportedCurrencies.includes(picked) ? { ...preview, currency: picked } : preview;
   } else {
     store = EMPTY_STORE;
   }

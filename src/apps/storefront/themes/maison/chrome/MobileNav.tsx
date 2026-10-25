@@ -8,6 +8,7 @@ import { useTranslation } from 'react-i18next';
 import { Drawer } from '../../../foundation/components/Drawer';
 import type { NavItem } from '../../../types/navigation';
 import { LanguageSwitcher } from '../../../shared-ui';
+import { CurrencySwitcher } from '../../../foundation/components/CurrencySwitcher';
 import { useLocale } from '../../../i18n/useLocale';
 import { useLocaleCode } from '../../../sections-lib';
 import { maiText } from '../components/i18n';
@@ -65,6 +66,7 @@ export function MobileNav(props: MobileNavProps): ReactElement {
           <a href="/account" className="mai-mnav__foot-link" onClick={onClose}><IconUser width={20} height={20} /> {t('header.account')}</a>
           <a href="/wishlist" className="mai-mnav__foot-link" onClick={onClose}><IconHeart width={20} height={20} /> {t('header.wishlist')}</a>
           <LanguageSwitcher ns="sf" locale={locale} onChange={setLocale} label={t('header.changeLanguage')} className="mai-mnav__lang" />
+          <CurrencySwitcher variant="drawer" className="mai-mnav__currency" />
         </div>
       </div>
     </Drawer>
