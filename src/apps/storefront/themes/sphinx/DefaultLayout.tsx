@@ -11,7 +11,7 @@ import { CartProvider, useCart } from '../../state/cart';
 import { useStore } from '../../state/store-context';
 import { ToastProvider } from '../../foundation/components/toast/ToastProvider';
 import { Drawer } from '../../foundation/components/Drawer';
-import { CurrencySwitcher } from '../../foundation/components/CurrencySwitcher';
+import { CurrencySwitcher, currencyDrawerPicked } from '../../foundation/components/CurrencySwitcher';
 import { UiBlock } from '../../ui-blocks/UiBlocks';
 import { useLocale } from '../../i18n/useLocale';
 import { withSessionParams } from '../../pages/NavigationInterceptor';
@@ -53,7 +53,7 @@ function Chrome({ context, children, checkout = false }: LayoutRenderProps & { c
   const navigation = data.managedHeaderNavigation ?? [...categories, ...pages];
   const footerGroups = data.sphinxFooterNavigation ?? [];
   const [cartOpen, setCartOpen] = useState(false);
-  const [moreOpen, setMoreOpen] = useState(false);
+  const [moreOpen, setMoreOpen] = useState(currencyDrawerPicked);
   const [query, setQuery] = useState('');
   const fonts = [...new Set([settings['heading_font'], settings['body_font']].filter((font): font is string => typeof font === 'string' && ['Raleway', 'Cairo', 'IBM Plex Sans Arabic'].includes(font)))].sort().join('|');
   useEffect(() => {

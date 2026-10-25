@@ -11,7 +11,7 @@ import { useStore } from '../../state/store-context';
 import { useLocale } from '../../i18n/useLocale';
 import { ToastProvider } from '../../foundation/components/toast/ToastProvider';
 import { Drawer } from '../../foundation/components/Drawer';
-import { CurrencySwitcher } from '../../foundation/components/CurrencySwitcher';
+import { CurrencySwitcher, currencyDrawerPicked } from '../../foundation/components/CurrencySwitcher';
 import { UiBlock } from '../../ui-blocks/UiBlocks';
 import { subscribeNewsletter } from '../../api/storefront';
 import { EliteCart } from './CartDrawer';
@@ -36,7 +36,7 @@ function Chrome({ context, children, checkout = false }: LayoutRenderProps & { c
   const settings = useThemeSettings(); const tokens = useThemeTokens(); const { store } = useStore(); const { locale, setLocale } = useLocale(); const { totals } = useCart();
   const ar = locale === 'ar'; const text = (a: string, e: string): string => ar ? a : e; const data = context.data as NavigationData;
   const nav = data.managedHeaderNavigation ?? [...data.categoryNavigation ?? [], ...data.headerPageNavigation ?? []]; const footer = data.sphinxFooterNavigation ?? [];
-  const [menuOpen, setMenuOpen] = useState(false); const [cartOpen, setCartOpen] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(currencyDrawerPicked); const [cartOpen, setCartOpen] = useState(false);
   const root = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (!root.current || !('IntersectionObserver' in window) || window.matchMedia('(prefers-reduced-motion:reduce)').matches) return;
