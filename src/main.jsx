@@ -16,10 +16,11 @@ import { Toaster } from 'react-hot-toast';
 import App from './App';
 import { ConfirmDialogHost } from './components/ui/confirmDialog';
 import { PlatformToast } from './components/ui/notify';
+import { preloadAppLayout } from './lib/appShell';
 import './index.css';
-import './i18n';
+import { i18nReady, storedLanguage } from './i18n';
 
-const lng = localStorage.getItem('sellchase_locale') || 'en';
+const lng = storedLanguage();
 document.documentElement.setAttribute('dir', lng === 'ar' ? 'rtl' : 'ltr');
 document.documentElement.setAttribute('lang', lng);
 
@@ -35,8 +36,13 @@ if ('serviceWorker' in navigator) {
     ));
 }
 
+// A signed-in visit renders the app shell next: fetch it alongside the active language's
+// translations rather than after the first render.
+if (localStorage.getItem('sellchase_access_token')) void preloadAppLayout();
+
 const el = document.getElementById('root');
-if (el) {
+// Render once the active language is loaded, so the first paint never shows raw translation keys.
+if (el) void i18nReady.then(() => {
     createRoot(el).render(
         <React.StrictMode>
             <BrowserRouter
@@ -59,4 +65,4 @@ if (el) {
             </BrowserRouter>
         </React.StrictMode>,
     );
-}
+});

@@ -1,6 +1,5 @@
 import { Fragment, useEffect, useLayoutEffect, useRef, useState, Suspense } from 'react';
 import { Dialog, DialogBackdrop, DialogPanel, DialogTitle } from '@headlessui/react';
-import { motion, useReducedMotion } from 'framer-motion';
 import { Link, Navigate, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
@@ -63,7 +62,6 @@ export default function AppLayout() {
     const [impersonationActive, setImpersonationActive] = useState(() => isImpersonating());
     const [impersonationExitLoading, setImpersonationExitLoading] = useState(false);
     const appearance = useWorkspaceAppearance();
-    const reducedMotion = useReducedMotion();
     const ws = useWorkspaceCopy();
     const [searchOpen, setSearchOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
@@ -205,8 +203,8 @@ export default function AppLayout() {
 
     function toggleLanguage() {
         const next = currentLng === 'en' ? 'ar' : 'en';
-        void i18n.changeLanguage(next);
-        applyLocale(next);
+        // The other language's translations load on demand; flip direction together with the copy.
+        void i18n.changeLanguage(next).then(() => applyLocale(next));
     }
 
     async function handleExitImpersonation() {
@@ -244,10 +242,11 @@ export default function AppLayout() {
     return (
         <WorkspaceIconProvider><div className="sc-workspace ws-frame" data-workspace-theme={appearance.theme} data-merchant-workspace={merchantWorkspace || undefined}>
             <a href="#workspace-content" className="ws-skip-link">{currentLng === 'ar' ? 'انتقل إلى المحتوى' : 'Skip to content'}</a>
-            <motion.div id="workspace-sidebar" className="ws-sidebar-container" data-collapsed={sidebarCollapsed || undefined} initial={false} animate={{ width: sidebarCollapsed ? 64 : 272 }} transition={{ duration: reducedMotion ? 0 : 0.15, ease: [0.4, 0, 0.2, 1] }}>
+            {/* The width change animates through a CSS transition in workspace.css (reduced-motion aware). */}
+            <div id="workspace-sidebar" className="ws-sidebar-container" data-collapsed={sidebarCollapsed || undefined} style={{ width: sidebarCollapsed ? 64 : 272 }}>
                 <Sidebar me={me} permissions={permissions} storeUrl={storeUrl} toggleButtonRef={merchantWorkspace ? sidebarToggleRef : undefined} collapsed={sidebarCollapsed} onSearch={() => setSearchOpen(true)} onCollapse={() => { setSidebarCollapsed(true); requestAnimationFrame(() => sidebarToggleRef.current?.focus()); }} onExpand={() => { setSidebarCollapsed(false); requestAnimationFrame(() => sidebarToggleRef.current?.focus()); }} />
                 {merchantWorkspace ? <button type="button" className="ws-sidebar-rail" tabIndex={-1} aria-label={ws(sidebarCollapsed ? 'expand' : 'collapse')} title={ws(sidebarCollapsed ? 'expand' : 'collapse')} aria-expanded={!sidebarCollapsed} aria-controls="workspace-sidebar" onClick={() => { setSidebarCollapsed(value => !value); requestAnimationFrame(() => sidebarToggleRef.current?.focus()); }} /> : null}
-            </motion.div>
+            </div>
             <div className="ws-main-column">
                 <div className="ws-header-container">
                 {impersonationActive ? <div className="ws-impersonation" role="status">

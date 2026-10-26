@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import api from '../api/client';
-import { getEcho } from './echo';
+import { loadEcho, realtimeConfigured } from './echo';
 import { CHAT_ENABLED } from './features';
 
 /** Fallback refresh when real-time (Pusher) is not configured, and only while the tab is visible. */
@@ -29,16 +29,26 @@ function start(userId) {
     void refresh();
     const onChanged = () => { void refresh(); };
     window.addEventListener('chat:unread-changed', onChanged);
-    const echo = getEcho();
+    let echo = null;
     let channel = null;
     let timer = null;
-    if (echo && store.userId) {
-        channel = `App.Models.User.${store.userId}`;
-        echo.private(channel).notification(onChanged);
-    } else {
+    let stopped = false;
+    const poll = () => {
         timer = window.setInterval(() => { if (document.visibilityState === 'visible') void refresh(); }, POLL_MS);
+    };
+    if (store.userId && realtimeConfigured()) {
+        void loadEcho().then((loaded) => {
+            if (stopped) return;
+            if (!loaded) { poll(); return; }
+            echo = loaded;
+            channel = `App.Models.User.${store.userId}`;
+            echo.private(channel).notification(onChanged);
+        });
+    } else {
+        poll();
     }
     return () => {
+        stopped = true;
         window.removeEventListener('chat:unread-changed', onChanged);
         if (timer) window.clearInterval(timer);
         if (channel) { try { echo.leave(channel); } catch { /* noop */ } }
