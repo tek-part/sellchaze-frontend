@@ -11,7 +11,8 @@ test('forgot and reset password use the store customer endpoints', async ({ page
     const path = new URL(request.url()).pathname.replace(/\/$/, '');
     if (path === '/api/v1/storefront') return route.fulfill({ json: { store: { id: STORE_ID, name: 'Synthetic Atelier', slug: 'synthetic-atelier', currency: 'USD', supported_currencies: ['USD'], default_locale: 'en', supported_locales: ['en', 'ar'], tracking_enabled: false }, theme: { key: 'naseem', version: '1.0.0', settings: {} }, navigation: { header: [], footer: [] } } });
     if (request.method() === 'POST') {
-      posts.push({ path, body: request.postDataJSON() });
+      // Only the password requests are under test (analytics visits may post at any time).
+      if (path.includes('/auth/')) posts.push({ path, body: request.postDataJSON() });
       return route.fulfill({ json: { message: 'ok' } });
     }
     return route.fulfill({ json: { data: [] } });
