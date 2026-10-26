@@ -78,3 +78,22 @@
  .ws-product-list .ws-catalog-pagination > div { gap:2px; }
  .ws-product-list .ws-catalog-pagination .ws-icon-button { width:32px;height:32px;min-height:32px; }
 }
+/* G3 catalog power tools (TAR-036): price changes, sheets */
+.ws-catalog-help { margin:0 0 12px;padding-inline-start:18px;list-style:disc;color:var(--ws-muted);font-size:12px;line-height:1.8; }
+.ws-catalog-help code { font-size:12px;padding:1px 4px;border:1px solid var(--ws-border);border-radius:4px; }
+.ws-catalog-sheet { max-width:860px;width:min(860px,100%); }
+.ws-catalog-grid { display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px; }
+.ws-catalog-choice { display:grid;gap:8px;border:0;padding:0;margin:0;min-width:0; }
+.ws-catalog-choice legend { font-size:13px;font-weight:600;margin-bottom:8px; }
+.ws-catalog-choice label,.ws-catalog-check { display:flex !important;align-items:center;gap:8px;font-size:13px; }
+.ws-catalog-choice input,.ws-catalog-check input { width:auto !important;flex:none; }
+.ws-catalog-inline-actions { display:flex;flex-wrap:wrap;gap:8px;margin-top:12px; }
+.ws-catalog-table-scroll { max-height:320px;overflow:auto;margin:12px 0;border:1px solid var(--ws-border);border-radius:8px; }
+.ws-catalog-tools-table { width:100%;border-collapse:collapse;font-size:12px; }
+.ws-catalog-tools-table :is(th,td) { padding:8px 10px;text-align:start;vertical-align:top;border-bottom:1px solid var(--ws-border); }
+.ws-catalog-tools-table thead th { position:sticky;top:0;background:var(--ws-panel-soft);font-weight:600; }
+.ws-catalog-tools-table tbody th { font-weight:500; }
+.ws-catalog-tools-table ul { margin:0;padding-inline-start:16px;list-style:disc;max-height:none; }
+.ws-catalog-tools-table li { border:0;padding:0;display:list-item; }
+.ws-catalog-tools-table tr.is-error td,.ws-catalog-tools-table tr.is-error th { background:color-mix(in srgb, #dc2626 6%, transparent); }
+.ws-catalog-import-preview .ws-catalog-error,.ws-catalog-import-preview .ws-catalog-error :is(p,span,small,label) { color:#b42332; }
