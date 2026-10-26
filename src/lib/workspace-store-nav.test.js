@@ -52,7 +52,9 @@ describe('Store workspace navigation', () => {
     });
     it('lists gift cards under Products for people who manage discounts', () => {
         const owner = buildWorkspaceStoreNav(t, storeAccess(['Merchant'], []));
-        const giftCards = owner.find((group) => group.key === 'products').items[1];
+        const productItems = owner.find((group) => group.key === 'products').items;
+        const giftCards = productItems.find((item) => item.key === 'gift-cards');
+        expect(productItems.map((item) => item.key).indexOf('gift-cards')).toBe(productItems.map((item) => item.key).indexOf('collections') + 1);
         expect(giftCards).toMatchObject({ key: 'gift-cards', to: '/store/gift-cards', label: 'Gift cards' });
         expect(workspaceStoreItemActive(giftCards, '/store/gift-cards/12')).toBe(true);
         expect(merchantWorkspaceRouteAllowed('/store/gift-cards/12')).toBe(true);
