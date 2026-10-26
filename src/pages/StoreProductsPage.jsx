@@ -7,7 +7,7 @@ import RssIcon from '@hugeicons/core-free-icons/RssIcon';
 import { HiOutlinePlusCircle, HiOutlineArrowDownTray, HiOutlineCloudArrowUp, HiOutlineCube, HiOutlinePencilSquare, HiOutlineEye, HiOutlineDocumentDuplicate, HiOutlineTrash, HiOutlinePlayCircle, HiOutlineCheckCircle, HiOutlineArchiveBox } from '../components/workspace/WorkspaceIcons';
 import CatalogBulkEditDialog from '../components/store/CatalogBulkEditDialog';
 import CatalogImportDialog, { saveCatalogFile } from '../components/store/CatalogImportDialog';
-import { IndexFilters, IndexTable, downloadCsv, useIndexTable } from '../components/data-table';
+import { IndexFilters, IndexTable, downloadCsv, useIndexQuery, useIndexTable } from '../components/data-table';
 import api from '../api/client';
 import useStoreScope from '../hooks/useStoreScope';
 import { fetchAllPages } from '../utils/fetchAllPages';
@@ -27,10 +27,8 @@ export default function StoreProductsPage() {
     const ar = i18n.language.startsWith('ar');
     const text = (a, e) => ar ? a : e;
     const [categories, setCategories] = useState([]);
-    const [result, setResult] = useState(null); const [error, setError] = useState('');
     const [actionError, setActionError] = useState(''); const [busy, setBusy] = useState(false);
-    const [loading, setLoading] = useState(true);
-    const [reload, setReload] = useState(0); const [bulkOpen, setBulkOpen] = useState(false);
+    const [bulkOpen, setBulkOpen] = useState(false);
     const [importFormat, setImportFormat] = useState(''); const [confirm, setConfirm] = useState(null);
     const [guide, setGuide] = useState(''); const [notice, setNotice] = useState('');
     const scope = useRef(apiBase); scope.current = apiBase;
@@ -100,21 +98,14 @@ export default function StoreProductsPage() {
     ], [ar, uiBase, storefrontUrl, permissions, busy, store?.currency]);
 
     const table = useIndexTable({ scope: `store:${store?.id ?? apiBase}:products`, filters, columns, views, defaults: DEFAULTS });
-    const paramsKey = JSON.stringify(table.apiParams);
-    useEffect(() => {
-        let active = true; setLoading(true); setError('');
-        api.get(`${apiBase}/catalog/products`, { params: table.apiParams })
-            .then(({ data }) => { if (active) setResult(data); }).catch((e) => { if (active) setError(errorText(e)); }).finally(() => { if (active) setLoading(false); });
-        return () => { active = false; };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [apiBase, paramsKey, reload]);
-    useEffect(() => { table.clearSelection(); setBulkOpen(false); setImportFormat(''); setConfirm(null); setNotice(''); setActionError(''); setBusy(false); setResult(null); }, [apiBase]); // eslint-disable-line react-hooks/exhaustive-deps
+    const { data: rows, meta, loading, error, reload } = useIndexQuery({ url: `${apiBase}/catalog/products`, params: table.apiParams, formatError: errorText });
+    const { clearSelection } = table;
+    useEffect(() => { clearSelection(); setBulkOpen(false); setImportFormat(''); setConfirm(null); setNotice(''); setActionError(''); setBusy(false); }, [apiBase, clearSelection]);
 
-    const rows = result?.data || [];
     const selectedRows = [...table.selected.values()];
     const targets = () => selectedRows.map((product) => ({ id: product.id, version: product.transfer_version }));
     const versioned = (list) => list.length > 0 && list.every((product) => product.transfer_version) && !loading && !busy;
-    const refreshSelection = () => { setBulkOpen(false); table.clearSelection(); setReload((value) => value + 1); };
+    const refreshSelection = () => { setBulkOpen(false); table.clearSelection(); reload(); };
     const run = async (work) => {
         if (inFlight.current) return;
         const originalScope = apiBase; inFlight.current = true; setBusy(true); setActionError('');
@@ -163,7 +154,7 @@ export default function StoreProductsPage() {
         <div className="ws-dt-card">
             <IndexFilters table={table} searchPlaceholder={text('ابحث بالاسم أو SKU', 'Search by name or SKU')} exportDisabled={!rows.length}
                 onExport={() => downloadCsv(`products-${new Date().toISOString().slice(0, 10)}.csv`, table.visibleColumns, selectedRows.length ? selectedRows : rows)} />
-            <IndexTable table={table} rows={rows} loading={loading} error={error} onRetry={() => setReload((value) => value + 1)} meta={result?.meta}
+            <IndexTable table={table} rows={rows} loading={loading} error={error} onRetry={reload} meta={meta}
                 label={text('المنتجات', 'Products')} bulkActions={bulkActions} maxSelection={200} rowHref={(p) => `${uiBase}/products/${p.id}/edit`}
                 emptyState={{ icon: HiOutlineCube, title: text('أضف أول منتج لمتجرك', 'Add your first product'), description: text('ابدأ بإضافة منتج أو استيراد كتالوج كامل من ملف Excel.', 'Start by adding a product or importing a full catalog from Excel.'),
                     action: permissions.includes('products-create') ? <Link className="ws-dt-button ws-dt-button-primary" to={`${uiBase}/products/new`}>{text('إضافة منتج', 'Add product')}</Link> : null }} />

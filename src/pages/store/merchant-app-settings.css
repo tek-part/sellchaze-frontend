@@ -19,5 +19,4 @@
 .ws-app-settings-preview small { display:block;color:var(--ws-muted); }
 .ws-app-settings button[type='submit'] { justify-self:start; }
 @media (max-width:480px) { .ws-app-settings-grid { grid-template-columns:1fr; } .ws-app-settings button[type='submit'] { justify-self:stretch; } }
-.ws-app-settings .ws-apps-primary { background:#087a2e; }
 .ws-app-settings .ws-apps-outlined { color:#087a2e;border-color:#087a2e;justify-self:start; }

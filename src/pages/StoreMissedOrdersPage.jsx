@@ -1,10 +1,10 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useOutletContext } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import api from '../api/client';
 import useStoreScope from '../hooks/useStoreScope';
 import { fetchAllPages } from '../utils/fetchAllPages';
-import { IndexFilters, IndexTable, downloadCsv, useIndexTable } from '../components/data-table';
+import { IndexFilters, IndexTable, downloadCsv, useIndexQuery, useIndexTable } from '../components/data-table';
 import { HiOutlineArrowDownTray, HiOutlineArrowUturnLeft, HiOutlineCheckCircle, HiOutlineShoppingCart } from '../components/workspace/WorkspaceIcons';
 
 const DEFAULTS = { sort: null, perPage: 25 };
@@ -17,14 +17,11 @@ export default function StoreMissedOrdersPage() {
 function MissedOrders({ apiBase }) {
     const { i18n } = useTranslation(); const ar = i18n.language.startsWith('ar'); const text = (a, e) => ar ? a : e;
     const { store } = useOutletContext() ?? {};
-    const [result, setResult] = useState(null); const [loading, setLoading] = useState(true); const [error, setError] = useState(''); const [reload, setReload] = useState(0);
     const [busy, setBusy] = useState(false); const [actionError, setActionError] = useState('');
-    // The 45 s auto-refresh runs in the background: it keeps the current rows on screen instead of
-    // flashing the loading state, which made the page look like it kept reloading.
-    const backgroundRefresh = useRef(false);
     const path = `${apiBase}/missed-orders`;
     const statusLabel = (status) => (status === 'completed' ? text('مكتمل', 'Completed') : text('تحت المراجعة', 'Under review'));
-    const counts = result?.counts;
+    // Per-status counts arrive with each page of results and label the built-in views.
+    const [counts, setCounts] = useState(null);
 
     const filters = useMemo(() => [
         { key: 'status', label: text('الحالة', 'Status'), type: 'select', options: [{ value: 'under_review', label: statusLabel('under_review') }, { value: 'completed', label: statusLabel('completed') }] },
@@ -58,26 +55,23 @@ function MissedOrders({ apiBase }) {
     ], [ar, busy]); // eslint-disable-line react-hooks/exhaustive-deps
 
     const table = useIndexTable({ scope: `store:${store?.id ?? apiBase}:missed-orders`, filters, columns, views, defaults: DEFAULTS });
-    const paramsKey = JSON.stringify(table.apiParams);
-    useEffect(() => {
-        let active = true; const quiet = backgroundRefresh.current; backgroundRefresh.current = false;
-        if (!quiet) { setLoading(true); setError(''); }
-        api.get(path, { params: table.apiParams }).then(({ data }) => { if (active) setResult(data); }).catch((e) => { if (active && !quiet) setError(e.response?.data?.message || e.message); }).finally(() => { if (active && !quiet) setLoading(false); });
-        return () => { active = false; };
-    }, [path, paramsKey, reload]); // eslint-disable-line react-hooks/exhaustive-deps
-    useEffect(() => { const timer = window.setInterval(() => { if (document.visibilityState !== 'hidden' && !busy) { backgroundRefresh.current = true; setReload((value) => value + 1); } }, 45000); return () => window.clearInterval(timer); }, [busy]);
-    const pending = loading || table.searching; const rows = result?.data || [];
+    const { result, data: rows, meta, loading, error, reload } = useIndexQuery({ url: path, params: table.apiParams });
+    useEffect(() => { if (result) setCounts(result.counts ?? null); }, [result]);
+    // The 45 s auto-refresh runs in the background: it keeps the current rows on screen instead of
+    // flashing the loading state, which made the page look like it kept reloading.
+    useEffect(() => { const timer = window.setInterval(() => { if (document.visibilityState !== 'hidden' && !busy) reload({ quiet: true }); }, 45000); return () => window.clearInterval(timer); }, [busy, reload]);
+    const pending = loading || table.searching;
     const selectedRows = [...table.selected.values()];
 
     async function updateStatus(nextStatus, selections) {
         if (busy || !selections.length) return; setBusy(true); setActionError('');
-        try { await api.post(`${path}/bulk-status`, { status: nextStatus, leads: selections.map((row) => ({ id: row.id, version: row.edit_version })) }); table.clearSelection(); setReload((value) => value + 1); }
+        try { await api.post(`${path}/bulk-status`, { status: nextStatus, leads: selections.map((row) => ({ id: row.id, version: row.edit_version })) }); table.clearSelection(); reload(); }
         catch (e) { setActionError(e.response?.data?.message || e.message); } finally { setBusy(false); }
     }
     async function exportRows() {
         if (busy || pending) return; setBusy(true); setActionError('');
         try {
-            if (!selectedRows.length && result?.meta?.total > 10000) throw new Error(text('ضيّق الفلاتر لتصدير 10,000 محاولة أو أقل.', 'Narrow filters to export 10,000 checkouts or fewer.'));
+            if (!selectedRows.length && meta?.total > 10000) throw new Error(text('ضيّق الفلاتر لتصدير 10,000 محاولة أو أقل.', 'Narrow filters to export 10,000 checkouts or fewer.'));
             const { page: _page, per_page: _perPage, ...filterParams } = table.apiParams;
             const data = selectedRows.length ? selectedRows : await fetchAllPages(path, filterParams);
             const href = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type: 'application/json;charset=utf-8' })); const link = document.createElement('a'); link.href = href; link.download = 'missed-orders.json'; link.click(); URL.revokeObjectURL(href);
@@ -89,12 +83,12 @@ function MissedOrders({ apiBase }) {
     ];
 
     return <section className="ws-catalog-page ws-missed">
-        <header className="ws-catalog-heading"><div><h1>{text('الطلبات المفقودة', 'Missed orders')}</h1><p>{text('الطلبات المفقودة هي الطلبات التي لم يتم إرسالها لمتجرك بسبب عدم إكمال العميل للطلب.', 'Missed orders are checkouts the customer did not complete.')}</p></div><div className="ws-catalog-actions"><button type="button" className="ws-dt-button" disabled={busy || pending || (!selectedRows.length && !result?.meta?.total)} onClick={exportRows}><HiOutlineArrowDownTray aria-hidden />{selectedRows.length ? text('تصدير المحدد JSON', 'Export selected (JSON)') : text('تصدير JSON', 'Export JSON')}</button></div></header>
+        <header className="ws-catalog-heading"><div><h1>{text('الطلبات المفقودة', 'Missed orders')}</h1><p>{text('الطلبات المفقودة هي الطلبات التي لم يتم إرسالها لمتجرك بسبب عدم إكمال العميل للطلب.', 'Missed orders are checkouts the customer did not complete.')}</p></div><div className="ws-catalog-actions"><button type="button" className="ws-dt-button" disabled={busy || pending || (!selectedRows.length && !meta?.total)} onClick={exportRows}><HiOutlineArrowDownTray aria-hidden />{selectedRows.length ? text('تصدير المحدد JSON', 'Export selected (JSON)') : text('تصدير JSON', 'Export JSON')}</button></div></header>
         {actionError ? <p role="alert" className="rounded-lg bg-red-50 p-3 text-red-700">{actionError}</p> : null}
         <div className="ws-dt-card">
             <IndexFilters table={table} searchPlaceholder={text('الاسم أو الهاتف أو البريد الإلكتروني', 'Name, phone or email')} exportDisabled={!rows.length}
                 onExport={() => downloadCsv(`missed-orders-${new Date().toISOString().slice(0, 10)}.csv`, table.visibleColumns, selectedRows.length ? selectedRows : rows)} />
-            <IndexTable table={table} rows={rows} loading={loading} error={error} onRetry={() => setReload((value) => value + 1)} meta={result?.meta}
+            <IndexTable table={table} rows={rows} loading={loading} error={error} onRetry={reload} meta={meta}
                 label={text('الطلبات المفقودة', 'Missed orders')} bulkActions={bulkActions} maxSelection={100}
                 emptyState={{ icon: HiOutlineShoppingCart, title: text('لا توجد طلبات مفقودة حتى الآن', 'No missed orders yet'), description: text('تظهر هنا محاولات الشراء التي لم يكملها العملاء لتتواصل معهم.', 'Checkouts that customers did not complete appear here so you can follow up.') }} />
         </div>

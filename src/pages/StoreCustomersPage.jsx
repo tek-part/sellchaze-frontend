@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link, useOutletContext } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { HiOutlineShoppingBag, HiOutlineUsers } from '../components/workspace/WorkspaceIcons';
-import { IndexFilters, IndexTable, downloadCsv, useIndexTable } from '../components/data-table';
+import { IndexFilters, IndexTable, downloadCsv, useIndexQuery, useIndexTable } from '../components/data-table';
 import api from '../api/client';
 import useStoreScope from '../hooks/useStoreScope';
 import { customerHref } from '../lib/customerKeys';
@@ -26,10 +26,6 @@ export default function StoreCustomersPage() {
     const { i18n } = useTranslation();
     const ar = i18n.language.startsWith('ar');
     const text = (a, e) => (ar ? a : e);
-    const [result, setResult] = useState(null);
-    const [error, setError] = useState('');
-    const [loading, setLoading] = useState(true);
-    const [reload, setReload] = useState(0);
     const [tags, setTags] = useState([]);
     const [exporting, setExporting] = useState(false);
 
@@ -89,20 +85,7 @@ export default function StoreCustomersPage() {
     ], [ar, uiBase, store?.currency]);
 
     const table = useIndexTable({ scope: `store:${store?.id ?? apiBase}:customers`, filters, columns, views, defaults: DEFAULTS });
-    const paramsKey = JSON.stringify(table.apiParams);
-    useEffect(() => {
-        let active = true;
-        setLoading(true);
-        setError('');
-        api.get(`${apiBase}/customers/directory`, { params: table.apiParams })
-            .then(({ data }) => { if (active) setResult(data); })
-            .catch((e) => { if (active) setError(errorText(e)); })
-            .finally(() => { if (active) setLoading(false); });
-        return () => { active = false; };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [apiBase, paramsKey, reload]);
-
-    const rows = result?.data ?? [];
+    const { data: rows, meta, loading, error, reload, setError } = useIndexQuery({ url: `${apiBase}/customers/directory`, params: table.apiParams, formatError: errorText });
     const selectedRows = [...table.selected.values()];
     const exportAll = async () => {
         setExporting(true);
@@ -133,7 +116,7 @@ export default function StoreCustomersPage() {
         <div className="ws-dt-card">
             <IndexFilters table={table} searchPlaceholder={text('ابحث بالاسم أو الهاتف أو البريد', 'Search name, phone or email')} exportDisabled={!rows.length || exporting}
                 onExport={() => (selectedRows.length ? downloadCsv(`customers-${new Date().toISOString().slice(0, 10)}.csv`, table.visibleColumns, selectedRows) : exportAll())} />
-            <IndexTable table={table} rows={rows} rowKey={(c) => c.key} loading={loading} error={error} onRetry={() => setReload((value) => value + 1)} meta={result?.meta}
+            <IndexTable table={table} rows={rows} rowKey={(c) => c.key} loading={loading} error={error} onRetry={reload} meta={meta}
                 label={text('العملاء', 'Customers')} bulkActions={bulkActions} rowHref={detailLink}
                 emptyState={{ icon: HiOutlineUsers, title: text('لا يوجد عملاء بعد', 'No customers yet'), description: text('سيظهر هنا كل عميل يطلب من متجرك تلقائيًا.', 'Everyone who orders from your store will appear here automatically.') }} />
         </div>

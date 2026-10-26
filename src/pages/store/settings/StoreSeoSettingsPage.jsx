@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import useStoreContext from '../../../hooks/useStoreContext';
-import useMerchantSettings from '../../../hooks/useMerchantSettings';
+import useStoreSettings from '../../../hooks/useStoreSettings';
 import MerchantSettingsHeading from '../../../components/store/MerchantSettingsHeading';
 import MerchantSettingsFeedback from '../../../components/store/MerchantSettingsFeedback';
 import MerchantSettingsSave from '../../../components/store/MerchantSettingsSave';
@@ -12,7 +12,7 @@ export default function StoreSeoSettingsPage() {
     return <SeoEditor key={context.apiBase} context={context} />;
 }
 function SeoEditor({ context }) {
-    const state = useMerchantSettings(context, 'seo-settings');
+    const state = useStoreSettings({ endpoint: 'seo-settings', enabled: context.access.canStoreSettings });
     const { ar, text, initial, draft, change, loading, busy, save } = state;
     const [logo, setLogo] = useState(null); const [favicon, setFavicon] = useState(null);
     const [removeLogo, setRemoveLogo] = useState(false); const [removeFavicon, setRemoveFavicon] = useState(false);

@@ -3,9 +3,9 @@ import { act, createElement } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
-const fixture = vi.hoisted(() => ({ category: vi.fn(), collection: vi.fn(), products: vi.fn(), context: null as unknown }));
+const fixture = vi.hoisted(() => ({ category: vi.fn(), collection: vi.fn(), products: vi.fn(), context: null as unknown, hasCollections: undefined as boolean | undefined }));
 vi.mock('../theme-engine', () => ({ useThemeManifest: () => ({ id: 'classic' }), useTemplate: () => ({}), ThemeRenderer: ({ context }: { context: unknown }) => { fixture.context = context; return null; } }));
-vi.mock('../state/store-context', () => ({ useStore: () => ({ store: { id: 'merchant-1', name: 'Merchant', currency: 'USD', currencyMultipliers: { USD: 1 } } }) }));
+vi.mock('../state/store-context', () => ({ useStore: () => ({ store: { id: 'merchant-1', name: 'Merchant', currency: 'USD', currencyMultipliers: { USD: 1 }, hasCollections: fixture.hasCollections } }) }));
 vi.mock('../i18n/useLocale', () => ({ useLocale: () => ({ locale: 'en' }) }));
 vi.mock('react-i18next', () => ({ useTranslation: () => ({ t: (key: string) => key }) }));
 vi.mock('../preview', () => ({ previewOrDev: () => false }));
@@ -23,7 +23,7 @@ const render = (path: string) => act(async () => root.render(createElement(Memor
 
 beforeEach(() => {
   (globalThis as Record<string, unknown>)['IS_REACT_ACT_ENVIRONMENT'] = true;
-  fixture.context = null; fixture.category.mockReset(); fixture.collection.mockReset(); fixture.products.mockReset();
+  fixture.context = null; fixture.hasCollections = undefined; fixture.category.mockReset(); fixture.collection.mockReset(); fixture.products.mockReset();
   container = document.createElement('div'); document.body.appendChild(container); root = createRoot(container);
 });
 afterEach(async () => { await act(async () => root.unmount()); container.remove(); });
@@ -52,4 +52,25 @@ it('never asks for a collection on curated views', async () => {
   fixture.products.mockResolvedValue({ data: [], meta: { last_page: 1 } });
   await render('/collections/all');
   expect(fixture.collection).not.toHaveBeenCalled();
+});
+
+it('goes straight to the category when the store has no published collections', async () => {
+  fixture.hasCollections = false;
+  fixture.products.mockResolvedValue({ data: [{ id: 21 }], meta: { last_page: 1 } });
+  fixture.category.mockResolvedValue({ data: { id: 2, name: 'Shoes', slug: 'shoes' }, children: [] });
+  await render('/collections/shoes');
+  expect(fixture.collection).not.toHaveBeenCalled();
+  expect(fixture.products).toHaveBeenCalledWith({ category: 'shoes', perPage: 60 });
+  expect(data().products.map((p) => p.id)).toEqual([21]);
+  expect(data().pageHeader).toMatchObject({ title: 'Shoes' });
+});
+
+it('asks for the collection when the store has published collections', async () => {
+  fixture.hasCollections = true;
+  fixture.collection.mockResolvedValue({ data: { id: 4, name: 'Summer deals', slug: 'summer' }, products: { data: [{ id: 11 }], meta: { last_page: 1 } } });
+  fixture.products.mockResolvedValue({ data: [{ id: 99 }], meta: { last_page: 1 } });
+  fixture.category.mockRejectedValue(new Error('404'));
+  await render('/collections/summer');
+  expect(fixture.collection).toHaveBeenCalledWith('summer', { perPage: 60 });
+  expect(data().products.map((p) => p.id)).toEqual([11]);
 });

@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
 import { HiCheck, HiOutlineShieldCheck, HiXMark } from '../components/workspace/WorkspaceIcons';
-import { IndexFilters, IndexTable, downloadCsv, useIndexTable } from '../components/data-table';
+import { IndexFilters, IndexTable, downloadCsv, useIndexQuery, useIndexTable } from '../components/data-table';
 import { clientIndexRows } from '../lib/clientIndexRows';
 import api from '../api/client';
 
@@ -17,10 +17,6 @@ const CLIENT = {
 
 export default function AdminVerificationsPage() {
     const { t, i18n } = useTranslation();
-    const [list, setList] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [err, setErr] = useState('');
-    const [reload, setReload] = useState(0);
     const [busyId, setBusyId] = useState(null);
 
     const statusOptions = STATUSES.map((value) => ({ value, label: t(`verification_status_${value}`) }));
@@ -40,7 +36,7 @@ export default function AdminVerificationsPage() {
         try {
             await api.post(`/admin/verifications/${id}/${kind}`, { review_notes: notes });
             toast.success(kind === 'approve' ? t('verification_approved') : t('verification_rejected'));
-            setReload((value) => value + 1);
+            reload();
         } catch (e) {
             toast.error(e.response?.data?.message || e.message);
         } finally {
@@ -92,16 +88,8 @@ export default function AdminVerificationsPage() {
     }, []);
 
     const status = table.state.filters.status;
-    useEffect(() => {
-        let active = true;
-        setLoading(true);
-        setErr('');
-        api.get('/admin/verifications', { params: status ? { status } : {} })
-            .then(({ data }) => { if (active) setList(data.data ?? []); })
-            .catch((e) => { if (active) { setErr(e.response?.data?.message || e.message); toast.error(e.response?.data?.message || e.message); } })
-            .finally(() => { if (active) setLoading(false); });
-        return () => { active = false; };
-    }, [status, reload]);
+    const { data: list, loading, error: err, reload } = useIndexQuery({ url: '/admin/verifications', params: status ? { status } : {},
+        map: (data) => ({ data: data.data ?? [] }), onError: (e) => toast.error(e.response?.data?.message || e.message) });
 
     const { rows, meta, all } = clientIndexRows(list, table.state, CLIENT);
 
@@ -114,7 +102,7 @@ export default function AdminVerificationsPage() {
             <div className="ws-dt-card">
                 <IndexFilters table={table} searchPlaceholder={t('admin_dt_search_verifications')} exportDisabled={loading || !all.length}
                     onExport={() => downloadCsv(`verifications-${new Date().toISOString().slice(0, 10)}.csv`, table.visibleColumns, all)} />
-                <IndexTable table={table} rows={rows} loading={loading} error={err} onRetry={() => setReload((value) => value + 1)} meta={meta}
+                <IndexTable table={table} rows={rows} loading={loading} error={err} onRetry={reload} meta={meta}
                     label={t('admin_verifications_title')}
                     emptyState={{ icon: HiOutlineShieldCheck, title: t('admin_verifications_empty') }} />
             </div>

@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
 import api from '../api/client';
 import ConfirmDialog from '../components/ConfirmDialog';
-import { IndexFilters, IndexTable, downloadCsv, useIndexTable } from '../components/data-table';
+import { IndexFilters, IndexTable, downloadCsv, useIndexQuery, useIndexTable } from '../components/data-table';
 import { HiOutlineStar } from '../components/workspace/WorkspaceIcons';
 
 const STATUSES = ['pending', 'approved', 'rejected', 'hidden'];
@@ -22,10 +22,6 @@ export default function StoreReviewsPage() {
     const productId = searchParams.get('product') || '';
     const productName = searchParams.get('product_name') || '';
 
-    const [result, setResult] = useState(null);
-    const [err, setErr] = useState('');
-    const [loading, setLoading] = useState(true);
-    const [reload, setReload] = useState(0);
     const [busyId, setBusyId] = useState(null);
     const [confirmDelete, setConfirmDelete] = useState(null);
     const [deleting, setDeleting] = useState(false);
@@ -67,7 +63,7 @@ export default function StoreReviewsPage() {
             const { data } = await api.post(`${apiBase}/reviews/bulk-status`, { ids: list.map((review) => review.id), status: next });
             if (scope.current !== origin) return;
             toast.success(text(`تم تحديث ${data.meta.updated} تقييم`, `${data.meta.updated} reviews updated`));
-            clear(); setReload((value) => value + 1);
+            clear(); reload();
         } catch (e) {
             toast.error(e.response?.data?.message || e.message);
         } finally {
@@ -107,19 +103,8 @@ export default function StoreReviewsPage() {
 
     const table = useIndexTable({ scope: `store:${store?.id ?? apiBase}:reviews`, filters, columns, views, defaults: DEFAULTS });
     const params = { ...table.apiParams, ...(productId ? { product_id: productId } : {}) };
-    const paramsKey = JSON.stringify(params);
-    useEffect(() => {
-        let active = true; setLoading(true); setErr('');
-        api.get(`${apiBase}/reviews`, { params })
-            .then(({ data }) => { if (active) setResult(data); })
-            .catch((e) => { if (active) setErr(e.response?.data?.message || e.message); })
-            .finally(() => { if (active) setLoading(false); });
-        return () => { active = false; };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [apiBase, paramsKey, reload]);
-    useEffect(() => { setConfirmDelete(null); setResult(null); }, [apiBase]);
-
-    const rows = result?.data ?? [];
+    const { data: rows, meta, loading, error: err, reload, setResult } = useIndexQuery({ url: `${apiBase}/reviews`, params });
+    useEffect(() => { setConfirmDelete(null); }, [apiBase]);
 
     const runDelete = async () => {
         if (!confirmDelete) return;
@@ -164,7 +149,7 @@ export default function StoreReviewsPage() {
             <div className="ws-dt-card">
                 <IndexFilters table={table} searchPlaceholder={text('ابحث في التقييمات أو اسم المنتج', 'Search reviews or product name')} exportDisabled={!rows.length}
                     onExport={() => downloadCsv(`reviews-${new Date().toISOString().slice(0, 10)}.csv`, table.visibleColumns, rows)} />
-                <IndexTable table={table} rows={rows} loading={loading} error={err} onRetry={() => setReload((value) => value + 1)} meta={result?.meta}
+                <IndexTable table={table} rows={rows} loading={loading} error={err} onRetry={reload} meta={meta}
                     label={t('reviews_title', 'Reviews')} maxSelection={100}
                     bulkActions={['approved', 'hidden', 'rejected'].map((status) => ({ key: status, label: statusLabel(status), disabled: () => bulkBusy, onAction: (list, clear) => void moderateMany(list, status, clear) }))}
                     emptyState={{ icon: HiOutlineStar, title: text('لا توجد تقييمات بعد', 'No reviews yet'), description: text('تظهر هنا تقييمات العملاء لمنتجاتك لمراجعتها ونشرها.', 'Customer reviews of your products appear here for moderation.') }} />

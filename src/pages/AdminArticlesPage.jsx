@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
@@ -12,7 +12,7 @@ import {
 } from '../components/workspace/WorkspaceIcons';
 import api from '../api/client';
 import ConfirmDialog from '../components/ConfirmDialog';
-import { IndexFilters, IndexTable, downloadCsv, useIndexTable } from '../components/data-table';
+import { IndexFilters, IndexTable, downloadCsv, useIndexQuery, useIndexTable } from '../components/data-table';
 import { fetchAllPages } from '../utils/fetchAllPages';
 
 const DEFAULTS = { sort: null, perPage: 25 };
@@ -26,10 +26,6 @@ function ArticleThumb({ url }) {
 export default function AdminArticlesPage() {
     const { t, i18n } = useTranslation();
     const isAr = (i18n.language || '').toLowerCase().startsWith('ar');
-    const [result, setResult] = useState(null);
-    const [loading, setLoading] = useState(true);
-    const [err, setErr] = useState('');
-    const [reload, setReload] = useState(0);
     const [exporting, setExporting] = useState(false);
     const [confirmDel, setConfirmDel] = useState(null);
 
@@ -54,7 +50,7 @@ export default function AdminArticlesPage() {
         try {
             await api.post(`/admin/articles/${row.id}/${row.published ? 'unpublish' : 'publish'}`);
             toast.success(t('saved', 'Saved'));
-            setReload((value) => value + 1);
+            reload();
         } catch (e) {
             toast.error(errorText(e));
         }
@@ -89,20 +85,7 @@ export default function AdminArticlesPage() {
         const { search, ...rest } = table.apiParams;
         return { ...rest, ...(search ? { q: search } : {}) };
     }, [table.apiParams]);
-    const paramsKey = JSON.stringify(listParams);
-    useEffect(() => {
-        let active = true;
-        setLoading(true);
-        setErr('');
-        api.get('/admin/articles', { params: listParams })
-            .then(({ data }) => { if (active) setResult(data); })
-            .catch((e) => { if (active) setErr(errorText(e)); })
-            .finally(() => { if (active) setLoading(false); });
-        return () => { active = false; };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [paramsKey, reload]);
-
-    const rows = result?.data ?? [];
+    const { data: rows, meta, loading, error: err, reload } = useIndexQuery({ url: '/admin/articles', params: listParams, formatError: errorText });
 
     const handleExport = async () => {
         setExporting(true);
@@ -122,7 +105,7 @@ export default function AdminArticlesPage() {
             await api.delete(`/admin/articles/${confirmDel.id}`);
             toast.success(t('deleted', 'Deleted'));
             setConfirmDel(null);
-            setReload((value) => value + 1);
+            reload();
         } catch (e) {
             toast.error(errorText(e));
         }
@@ -147,7 +130,7 @@ export default function AdminArticlesPage() {
 
             <div className="ws-dt-card">
                 <IndexFilters table={table} searchPlaceholder={t('admin_dt_search_articles')} onExport={() => void handleExport()} exportDisabled={loading || exporting || !rows.length} />
-                <IndexTable table={table} rows={rows} loading={loading} error={err} onRetry={() => setReload((value) => value + 1)} meta={result?.meta}
+                <IndexTable table={table} rows={rows} loading={loading} error={err} onRetry={reload} meta={meta}
                     label={t('admin_articles_title', 'Articles')} rowHref={(a) => `/admin/articles/${a.id}/edit`}
                     emptyState={{ icon: HiOutlineNewspaper, title: t('admin_articles_empty', 'No articles yet.'),
                         action: <Link className="ws-dt-button ws-dt-button-primary" to="/admin/articles/new">{t('admin_articles_new', 'New article')}</Link> }} />

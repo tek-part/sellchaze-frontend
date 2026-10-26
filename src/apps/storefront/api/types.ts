@@ -141,6 +141,8 @@ export interface ApiStoreSummary {
   downsell_enabled?: boolean;
   social_proof_enabled?: boolean;
   bundles_enabled?: boolean;
+  /** A published merchant collection exists, so `/collections/:slug` may be one. */
+  has_collections?: boolean;
   merchant_information?: ApiMerchantInformation | null;
   shipping?: import('../types/shipping').ShippingOffer;
   id: number;

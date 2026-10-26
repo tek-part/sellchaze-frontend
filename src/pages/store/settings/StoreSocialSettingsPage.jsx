@@ -1,6 +1,6 @@
 import { Navigate } from 'react-router-dom';
 import useStoreContext from '../../../hooks/useStoreContext';
-import useMerchantSettings from '../../../hooks/useMerchantSettings';
+import useStoreSettings from '../../../hooks/useStoreSettings';
 import MerchantSettingsHeading from '../../../components/store/MerchantSettingsHeading';
 import MerchantSettingsFeedback from '../../../components/store/MerchantSettingsFeedback';
 import MerchantSettingsSave from '../../../components/store/MerchantSettingsSave';
@@ -11,7 +11,7 @@ export default function StoreSocialSettingsPage() {
     const context = useStoreContext(); return <SocialEditor key={context.apiBase} context={context} />;
 }
 function SocialEditor({ context }) {
-    const state = useMerchantSettings(context, 'social-links');
+    const state = useStoreSettings({ endpoint: 'social-links', enabled: context.access.canStoreSettings });
     const { ar, text, initial, draft, change, loading, busy, save } = state;
     if (!context.access.canStoreSettings) return <Navigate to={`${context.uiBase}/overview`} replace />;
     const dirty = Boolean(draft && initial && JSON.stringify(draft) !== JSON.stringify(initial));

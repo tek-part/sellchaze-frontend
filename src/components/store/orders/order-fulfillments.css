@@ -12,5 +12,3 @@
 .ws-fulfil-panel .ws-order-action-body small{display:block;margin-top:4px;font-size:12px}
 .ws-order-danger-button{background:#b42318!important;color:#fff;padding:8px 16px;border-radius:8px;min-height:40px;font-weight:500;border:0}
 .ws-orders-fulfillment{display:block;margin-top:4px;width:fit-content}
-/* Shared green fails AA with white 14px text; shipment actions use the darker green (5:1+). */
-:is(.ws-fulfillments,.ws-fulfil-panel) .ws-order-primary-button{background:#0b7a3b!important;color:#fff}

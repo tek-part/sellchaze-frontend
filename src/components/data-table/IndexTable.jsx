@@ -7,7 +7,7 @@ const INTERACTIVE = 'a,button,input,select,textarea,label,[role="button"],[data-
 /**
  * Shopify-style index table. Pair with `useIndexTable` (state) and `IndexFilters` (toolbar).
  *
- * Columns: { key, header, render(row), sortKey?, align?: 'start'|'end'|'center', width?, hideable?, defaultHidden?, primary? }
+ * Columns: { key, header, render(row, { loading }), sortKey?, align?: 'start'|'end'|'center', width?, hideable?, defaultHidden?, primary? }
  * Bulk actions: { key, label, icon?, tone?: 'danger', onAction(rows, clear), disabled?(rows) }
  * Rows keep showing while a new page loads (no flash); first load shows skeleton rows.
  */
@@ -77,7 +77,7 @@ export default function IndexTable({
                                 onMouseDown={(event) => { if (event.shiftKey) event.preventDefault(); }}
                                 onClick={(event) => { event.stopPropagation(); if (event.shiftKey) window.getSelection?.()?.removeAllRanges(); table.toggleRow(row, rows, rowKey, event.currentTarget.checked, event.shiftKey); }} onChange={() => {}}
                                 aria-label={text('تحديد الصف', 'Select row')} /></label></td> : null}
-                            {columns.map((column) => <td key={column.key} data-label={column.primary || typeof column.header !== 'string' ? undefined : column.header} className={[column.align ? `is-${column.align}` : '', column.primary ? 'is-primary' : ''].join(' ').trim() || undefined}>{column.render(row)}</td>)}
+                            {columns.map((column) => <td key={column.key} data-label={column.primary || typeof column.header !== 'string' ? undefined : column.header} className={[column.align ? `is-${column.align}` : '', column.primary ? 'is-primary' : ''].join(' ').trim() || undefined}>{column.render(row, { loading })}</td>)}
                         </tr>;
                     })}
                     {!loading && !rows.length ? <tr className="ws-dt-empty-row"><td colSpan={span}><div className="ws-dt-empty">
