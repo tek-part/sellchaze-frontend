@@ -5,6 +5,11 @@
  * A few slugs are curated views rather than real categories — `all`, `new-arrivals`, `best-sellers`
  * (see ./curated). Fetching a category for those would 404 and strand the primary nav, so they are
  * recognised here and served from the unfiltered products endpoint. No invented endpoint.
+ *
+ * Merchant collections (manual or automated, managed in the dashboard) share the `/collections/:slug`
+ * URL with categories. The collection endpoint is asked first, in parallel with the category
+ * listing; a published collection wins, anything else (404, network) falls back to the category, so
+ * every existing category link keeps working.
  */
 import { previewOrDev } from '../preview';
 import { useMemo, type ReactElement } from 'react';
@@ -13,7 +18,8 @@ import { kidsListingSearch, sortKidsPreview } from '../themes/nature-kids/listin
 import { ThemeRenderer, useTemplate, type StorefrontContext, useThemeManifest } from '../theme-engine';
 import { useStore } from '../state/store-context';
 import { useAsync } from '../api/useAsync';
-import { getCategory, getProducts } from '../api/storefront';
+import { getCategory, getCollection, getProducts } from '../api/storefront';
+import type { ApiCollection, ApiPaginated, ApiProduct } from '../api/types';
 import { toProductCard } from '../api/mappers';
 import type { ProductCardModel } from '../types/catalog';
 import { useLocale } from '../i18n/useLocale';
@@ -23,6 +29,16 @@ import { breadcrumbSchema, collectionSchema } from '../seo/schema';
 import { sampleCategory, sampleNewest } from '../dev/sampleData';
 import { curatedView, isCuratedSlug } from './curated';
 import { useProductListingPages } from './useProductListingPages';
+
+/** The merchant collection behind a slug, or null when there is none (or it cannot be read). */
+async function findCollection(slug: string, params: { perPage: number; page?: number; sort?: string }): Promise<{ data: ApiCollection; products: ApiPaginated<ApiProduct> } | null> {
+  try {
+    const response = await getCollection(slug, params);
+    return response?.data && response.products ? { data: response.data, products: response.products } : null;
+  } catch {
+    return null;
+  }
+}
 
 export function CategoryPage(): ReactElement | null {
   const manifest = useThemeManifest();
@@ -43,10 +59,18 @@ export function CategoryPage(): ReactElement | null {
   const category = useAsync(() => (curated ? Promise.resolve(null) : getCategory(slug)), [slug, locale]);
   const listingScope = `${store.id}:${slug}:${locale}:${kids ? listing.sort : "default"}:${perPage}`;
   const productScope = `${listingScope}:${kids ? listing.page : 1}`;
+  const collectionKey = `${store.id}:${slug}:${locale}`;
   const productsQ = useAsync(
-    async () => ({ scope: productScope, listingScope, payload: await getProducts({ ...(curated ? {} : { category: slug }), perPage, ...(kids ? listing : {}) }) }),
+    async () => {
+      const collectionRequest = curated ? Promise.resolve(null) : findCollection(slug, { perPage, ...(kids ? listing : {}) });
+      const productsRequest = getProducts({ ...(curated ? {} : { category: slug }), perPage, ...(kids ? listing : {}) });
+      productsRequest.catch(() => undefined); // a collection hit makes this response unused
+      const collection = await collectionRequest;
+      return { scope: productScope, listingScope, collectionKey, collection: collection?.data ?? null, payload: collection?.products ?? await productsRequest };
+    },
     [productScope],
   );
+  const collection = productsQ.data?.collectionKey === collectionKey ? productsQ.data.collection : null;
 
   const productsData = productsQ.data?.scope === productScope ? productsQ.data.payload : null;
   const loadedProducts = useProductListingPages(wallets, `${store.id}:${slug}:${locale}:${listing.sort}`, listing.page, productsData?.data);
@@ -61,7 +85,8 @@ export function CategoryPage(): ReactElement | null {
   }
   if (curated?.rank && !kids) products = [...curated.rank(products)];
 
-  const c = category.data?.data;
+  // A merchant collection takes over the header; otherwise the category (if any) provides it.
+  const c = collection ?? category.data?.data;
   // DEV, no API: fall back to the demo category so the page gets its real title
   // and hero image instead of a slug-cased heading with an empty header band.
   const demoCategory = dev && !c && !curated ? sampleCategory(slug, manifest.id, locale) : undefined;
@@ -90,7 +115,7 @@ export function CategoryPage(): ReactElement | null {
               ? { descriptionHtml: c.description }
               : {}),
           ...(headerImage ? { image: headerImage } : {}),
-          children: (category.data?.children ?? []).map((child) => ({ label: child.name, url: `/collections/${child.slug}` })),
+          children: (collection ? [] : category.data?.children ?? []).map((child) => ({ label: child.name, url: `/collections/${child.slug}` })),
           breadcrumbs: [
             { label: t('nav.home'), url: '/' },
             { label: title, url: `/collections/${slug}` },
@@ -99,7 +124,7 @@ export function CategoryPage(): ReactElement | null {
       },
     }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [productsData, productsQ.data, productsQ.loading, productsQ.error, category.data, category.loading, currency, slug, store.id, store.name, curated, locale, kids, listing.sort, listing.page, searchParams, setSearchParams],
+    [productsData, productsQ.data, productsQ.loading, productsQ.error, category.data, category.loading, collection, currency, slug, store.id, store.name, curated, locale, kids, listing.sort, listing.page, searchParams, setSearchParams],
   );
 
   return (

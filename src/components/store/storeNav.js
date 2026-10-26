@@ -53,6 +53,7 @@ export function buildStoreNav(t, access = {}) {
                 { key: 'newsletter', to: 'newsletter', label: 'NewsLetter', Icon: HiOutlineDocumentText, show: access.canStoreOrders },
                 { key: 'inventory', to: 'inventory', label: t('store_nav_inventory', 'Store inventory'), Icon: HiOutlineSquares2X2, show: access.canStoreInventory },
                 { key: 'products', to: 'products', label: t('products', 'Products'), Icon: HiOutlineCube, show: access.canStoreProducts },
+                { key: 'collections', to: 'collections', label: t('store_nav_collections', 'Collections'), Icon: HiOutlineSquares2X2, show: access.canStoreCategories },
                 { key: 'ab-tests', to: 'ab-tests', label: 'A/B Tests', Icon: HiOutlineChartBar, show: access.canStoreProducts },
                 { key: 'coupons', to: 'coupons', label: t('store_nav_coupons', 'Discounts'), Icon: HiOutlineTicket, show: access.canStoreCoupons },
                 { key: 'reviews', to: 'reviews', label: t('store_nav_reviews', 'Reviews'), Icon: HiOutlineStar, show: access.canStoreReviews },
