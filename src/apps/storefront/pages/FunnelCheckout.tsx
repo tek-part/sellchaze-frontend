@@ -31,6 +31,7 @@ import { CheckoutMinimum } from './CheckoutMinimum';
 import { minimumOrderAllows } from './minimum-order';
 import { useCheckoutLead } from './useCheckoutLead';
 import { useCheckoutMetrics } from '../analytics/checkout-hooks';
+import { useProductViewMetrics } from '../analytics/hooks';
 import type { ApiProduct } from '../api/types';
 import { useProductAdvertising } from '../advertising/hooks';
 
@@ -84,6 +85,7 @@ export function FunnelCheckout({ productSlug, renderLayout, compactHeader = fals
   const items = useMemo<ReadonlyArray<CheckoutItem>>(() => selectionReady && product ? [{ product_id: product.id, quantity, personalization: normalizedPersonalization(JSON.parse(customKey) as Record<string, string>), ...(variantId ? { variant_id: Number(variantId) } : {}), ...(offerId ? { quantity_offer_id: offerId, quantity_offer_version: offerVersion } : {}) }] : [], [product, selectionReady, quantity, variantId, customKey, offerId, offerVersion]);
   const payment = useCheckoutPaymentFlow({ items, preserveCart: true, surface: 'funnel' });
   useProductAdvertising(product ? String(product.id) : undefined, variantId || undefined);
+  useProductViewMetrics(product ? String(product.id) : undefined, 'funnel');
   useCheckoutMetrics(items, 'funnel');
   const contact = useCheckoutFields(payment.paymentMethod, product ? [product.id] : []);
   const lead = useCheckoutLead({ contact: { ...contact.payload(), coupon_code: appliedCoupon }, items, source: 'funnel', paymentMethod: payment.paymentMethod, kind: `funnel:${productSlug ?? ''}`, enabled: contact.ready && !payment.busy && !payment.completed && !payment.unresolved && !payment.paymentRetry });

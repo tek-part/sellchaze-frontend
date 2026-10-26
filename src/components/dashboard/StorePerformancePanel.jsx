@@ -9,6 +9,8 @@ import api from '../../api/client';
 import useWorkspaceAppearance from '../workspace/useWorkspaceAppearance';
 import MetricDateRange from './MetricDateRange';
 import StoreConversionFlow from './StoreConversionFlow';
+import OrderedProductsPanel from '../analytics/OrderedProductsPanel';
+import ProductFunnelReport from '../analytics/ProductFunnelReport';
 import { metricPreset } from './metric-range';
 import './merchant-metrics.css';
 
@@ -106,6 +108,9 @@ export default function StorePerformancePanel({ canOrders = true, canInventory =
             </div>
             <details className="ws-metrics-definitions"><summary>{text('كيفية حساب الإحصائيات', 'How statistics are calculated')}</summary><p>{text('المبيعات ومتوسط سعر الطلب من الطلبات المسلّمة. الربح من قيمة المنتجات بعد الخصم وتكلفتها المحفوظة، ولا يشمل رسوم الدفع أو التكاليف التشغيلية.', 'Sales and average order value use delivered orders. Profit subtracts saved product costs from discounted merchandise, excluding payment fees and operating expenses.')}</p>{!metrics.profit_complete ? <p>{text('الربح غير متاح للفترة لأن بعض الطلبات لا تحتوي تكلفة محفوظة.', 'Profit is unavailable for this period because some orders have no saved cost.')}</p> : null}<p>{text('الزيارات ومراحل التحويل تعتمد الجلسات المسجلة، وتستثني معاينات التصميم. المعدل بالمفقودة = الطلبات ÷ (الطلبات + الطلبات المفقودة).', 'Visits and conversion stages use recorded sessions and exclude design previews. Completion including missed orders = orders ÷ (orders + missed orders).')}</p><p>{metrics.tracking_started_at ? text('بداية البيانات المسجلة للزيارات ومراحل الشراء: ', 'Visits and checkout stages are recorded from: ') + metrics.tracking_started_at : text('لم تسجل زيارات بعد. لا تتوفر بيانات الزيارات السابقة.', 'No visits have been recorded yet. Earlier traffic is unavailable.')}</p><p>{text('توقيت الفترة', 'Period timezone')}: {metrics.period.timezone}</p></details>
         </>}
+        {/* G4: products ordered on a day (#7) and the per-product funnel (#49) keep their own periods. */}
+        <OrderedProductsPanel apiBase="/my-store" />
+        <ProductFunnelReport apiBase="/my-store" />
         {children}
     </div>;
 }

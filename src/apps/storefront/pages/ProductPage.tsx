@@ -22,6 +22,7 @@ import { useProductAdvertising } from '../advertising/hooks';
 import { catalogVariantSelection, resolveVariant, selectionAutomatic, variantAvailable } from '../state/variant-selection';
 import { variantImage } from '../utils/variant-image';
 import { recordReferral } from '../analytics/events';
+import { useProductViewMetrics } from '../analytics/hooks';
 import { referralFromSearch } from '../../../shared/marketing/referral';
 import { useProductPresentation } from '../state/product-presentation';
 import { ProductPurchaseProvider } from '../state/product-purchase';
@@ -57,6 +58,7 @@ export function ProductPage(): ReactElement | null {
 
   // Record the view (client-side history) once the product resolves.
   const viewedId = detail?.id;
+  useProductViewMetrics(productQ.data ? viewedId : undefined, 'storefront');
   useProductAdvertising(productQ.data ? viewedId : undefined, detail?.variants?.find((row) => row.id === catalogVariantId)?.id);
   useEffect(() => {
     if (detail && viewedId) {
