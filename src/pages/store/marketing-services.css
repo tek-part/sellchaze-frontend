@@ -10,7 +10,7 @@
 .sc-workspace .ws-page .ws-marketing-services h2 { margin:0;font-size:24px;line-height:36px;font-weight:700;letter-spacing:0; }
 .sc-workspace .ws-page .ws-marketing-services-columns p { margin:10px 0 0;font-size:16px;line-height:24px; }
 .ws-marketing-services-columns p:nth-of-type(2) { min-height:48px; }
-.ws-marketing-services-columns a { display:flex;justify-content:center;align-items:center;border-radius:8px;padding:8px 16px;min-height:40.5px;background:#0abb45;color:#fff;font-size:14px;line-height:24.5px;font-weight:500;margin-top:16px; }
+.ws-marketing-services-columns a { display:flex;justify-content:center;align-items:center;border-radius:8px;padding:8px 16px;min-height:40.5px;background:var(--ws-green-fill,#0b7a3b);color:#fff;font-size:14px;line-height:24.5px;font-weight:500;margin-top:16px; }
 .ws-marketing-services-columns a:focus-visible { outline:2px solid var(--ws-green-ink);outline-offset:3px; }
 .ws-marketing-services-note { width:max-content;max-width:100%;margin-top:32px;padding:14px 16px;border-radius:8px;background:var(--ws-green-soft);color:var(--ws-green-ink);font-size:14px;line-height:22px; }
 @media(max-width:767px) { .ws-marketing-services-columns { grid-template-columns:minmax(0,1fr);gap:40px; }.ws-marketing-services-panel { padding:32px 16px; }.ws-marketing-services-brands { flex-wrap:wrap;gap:16px; }.ws-marketing-services-brands strong { font-size:22px; }.ws-marketing-services-brands span { font-size:16px; } }

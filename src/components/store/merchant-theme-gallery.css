@@ -21,7 +21,7 @@ body[data-workspace-theme='dark'] .ws-theme-activation-panel :is(p,strong){color
 .ws-theme-modern{padding:32px;margin-bottom:16px;border:1px solid color-mix(in srgb,var(--ws-green) 30%,transparent);border-radius:24px;background:linear-gradient(180deg,color-mix(in srgb,var(--ws-green) 4%,var(--ws-panel)),var(--ws-panel) 80%);box-shadow:0 0 16px color-mix(in srgb,var(--ws-green) 8%,transparent)}
 .ws-theme-modern-heading{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:32px}
 .ws-theme-section-title{display:flex;align-items:center;gap:20px;min-width:0}
-.ws-theme-star{display:grid;place-items:center;flex-shrink:0;width:40px;height:40px;border-radius:12px;background:#0abb45;color:white;box-shadow:0 0 10px #0abb4555}
+.ws-theme-star{display:grid;place-items:center;flex-shrink:0;width:40px;height:40px;border-radius:12px;background:var(--ws-green-fill,#0b7a3b);color:white;box-shadow:0 0 10px #0abb4555}
 .ws-theme-star svg{width:24px;height:24px}
 .sc-workspace .ws-page :is(.ws-theme-modern-heading,.ws-theme-classic>header) h2{font-size:15px;line-height:24px;font-weight:600;margin:0}
 .ws-theme-section-title p,.ws-theme-classic>header p{font-size:13px;line-height:19.5px;margin-top:4px}
