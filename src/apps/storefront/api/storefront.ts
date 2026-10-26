@@ -330,9 +330,24 @@ export interface ApiReturnEligibility {
   deadline?: string | null;
   items: ReadonlyArray<{ store_order_item_id: number; name: string; variant_name?: string | null; quantity: number; returnable_quantity: number }>;
 }
+export type ApiShipmentStatus = 'pending' | 'in_transit' | 'delivered' | 'failed';
+/** A parcel of the order handed to a carrier (cancelled ones are never sent to the customer). */
+export interface ApiOrderFulfillment {
+  id: number;
+  status: ApiShipmentStatus;
+  carrier: string;
+  carrier_name: string;
+  tracking_number?: string | null;
+  tracking_url?: string | null;
+  items: ReadonlyArray<{ store_order_item_id: number; name?: string | null; variant_name?: string | null; quantity: number }>;
+  shipped_at?: string | null;
+  delivered_at?: string | null;
+}
 export interface ApiOrder {
   payment_adjustment_total?: string;
   refunded_total?: string;
+  fulfillment_status?: 'unfulfilled' | 'partial' | 'fulfilled';
+  fulfillments?: ReadonlyArray<ApiOrderFulfillment>;
   returns?: ReadonlyArray<ApiOrderReturn>;
   return_eligibility?: ApiReturnEligibility;
   /** Paid by gift cards; `total` stays the order total and `amount_due` is what is left. */

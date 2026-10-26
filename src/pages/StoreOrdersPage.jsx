@@ -13,6 +13,8 @@ import OrderBulkPaymentReview from '../components/store/orders/OrderBulkPaymentR
 import OrderProductFilter from '../components/store/orders/OrderProductFilter';
 import { ORDER_STATUSES, ORDER_BULK_STATUSES, ORDER_PAYMENT_TARGETS, ORDER_RISK_STATUSES, ORDER_RETURN_STATUSES, orderAddress, orderStatusLabel } from '../components/store/orders/order-workspace';
 import { PAYMENT_STATUS_LABELS } from '../components/store/orders/order-refunds';
+import { FULFILLMENT_STATUSES, FULFILLMENT_STATUS_TONES, vocabularyLabel } from '../components/store/orders/order-fulfillments';
+import '../components/store/orders/order-fulfillments.css';
 import '../components/store/orders/orders-workspace.css';
 
 const uuid = /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i;
@@ -56,6 +58,7 @@ export default function StoreOrdersPage() {
     const filters = useMemo(() => [
         { key: 'status', label: text('حالة الطلب', 'Order status'), type: 'select', options: ORDER_STATUSES.map(option) },
         { key: 'payment', param: 'payment_status', label: text('حالة الدفع', 'Payment status'), type: 'select', options: PAYMENT_FILTERS.map((key) => ({ value: key, label: PAYMENT_LABELS[key][ar ? 0 : 1] })) },
+        { key: 'fulfillment', param: 'fulfillment_status', label: text('حالة الشحن', 'Fulfillment'), type: 'select', options: FULFILLMENT_STATUSES.map(option) },
         { key: 'risk', param: 'classification', label: text('تصنيف المخاطر', 'Risk'), type: 'select', options: ORDER_RISK_STATUSES.map(option) },
         { key: 'product', param: 'product_id', label: text('المنتج', 'Product'), type: 'custom',
             describe: (id) => productNames.current.get(String(id)) || `#${id}`,
@@ -88,7 +91,7 @@ export default function StoreOrdersPage() {
         { key: 'address', header: text('العنوان', 'Address'), csv: (row) => orderAddress(row.shipping_address), render: (row) => <span className="ws-orders-address">{orderAddress(row.shipping_address) || '—'}</span> },
         { key: 'total', header: text('الإجمالي', 'Total'), sortKey: 'grand_total', align: 'end', csv: (row) => row.grand_total, render: (row) => <span className="ws-dt-num">{money(row.grand_total, row.currency)}</span> },
         { key: 'status', header: text('حالة الطلب', 'Order status'), sortKey: 'status', csv: (row) => row.status,
-            render: (row) => <span className="ws-orders-status-cell"><span className={`ws-orders-status is-${row.status}`}>{orderStatusLabel(row.status, ar)}</span>{row.review?.classification ? <small className={`ws-orders-review is-${row.review.classification}`}>{ORDER_RISK_STATUSES.find(([key]) => key === row.review.classification)?.[ar ? 1 : 2] || text('طلب مزعج', 'Spam')}</small> : null}</span> },
+            render: (row) => <span className="ws-orders-status-cell"><span className={`ws-orders-status is-${row.status}`}>{orderStatusLabel(row.status, ar)}</span>{row.fulfillment_status && row.fulfillment_status !== 'unfulfilled' ? <small className={`ws-dt-badge ws-orders-fulfillment ${FULFILLMENT_STATUS_TONES[row.fulfillment_status] || ''}`}>{vocabularyLabel(FULFILLMENT_STATUSES, row.fulfillment_status, ar)}</small> : null}{row.review?.classification ? <small className={`ws-orders-review is-${row.review.classification}`}>{ORDER_RISK_STATUSES.find(([key]) => key === row.review.classification)?.[ar ? 1 : 2] || text('طلب مزعج', 'Spam')}</small> : null}</span> },
         { key: 'payment', header: text('الدفع', 'Payment'), defaultHidden: true, csv: (row) => row.payment_status ?? '',
             render: (row) => row.payment_status ? <span className={`ws-dt-badge ${row.payment_status === 'paid' ? 'is-success' : row.payment_status === 'failed' ? 'is-critical' : ['refunded', 'partially_refunded'].includes(row.payment_status) ? 'is-info' : 'is-warning'}`}>{PAYMENT_LABELS[row.payment_status]?.[ar ? 0 : 1] ?? row.payment_status}</span> : '—' },
         { key: 'ip_country', header: 'IP Country', csv: (row) => row.ip_country ?? '', render: (row) => row.ip_country ?? '' },
