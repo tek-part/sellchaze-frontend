@@ -12,6 +12,7 @@ import { useAsync } from '../api/useAsync';
 import { Button, Input, Spinner } from '../foundation/components';
 import { useLocale } from '../i18n/useLocale';
 import { useCheckoutPaymentFlow } from './useCheckoutPaymentFlow';
+import { useQuoteContact } from './useQuoteContact';
 import { CheckoutFieldsForm, useCheckoutFields } from './CheckoutFields';
 import { CheckoutRecovery } from './CheckoutRecovery';
 import { PersonalizationSummary } from '../foundation/components/PersonalizationSummary';
@@ -31,15 +32,16 @@ export default function ProductInlineCheckout({ productId, items, ready, buttonT
   const giftCards = useGiftCards();
   useCheckoutMetrics(ready ? stableItems : [], 'storefront', surface === 'product' ? 'product' : undefined);
   const lead = useCheckoutLead({ contact: { ...contact.payload(), coupon_code: appliedCoupon }, items: stableItems, source: 'storefront', kind: `product:${productId}`, paymentMethod: payment.paymentMethod, enabled: ready && contact.ready && !payment.busy && !payment.completed && !payment.unresolved && !payment.paymentRetry });
-  const quoteKey = JSON.stringify([items, appliedCoupon, giftCards.codes, contact.shippingSelection, contact.shippingReady, ready, payment.paymentMethod, payment.unresolved]);
-  const quotes = useAsync(async () => !payment.unresolved && ready && items.length && contact.shippingReady ? { key: quoteKey, data: (await quoteCheckout(items, appliedCoupon, contact.shippingSelection, payment.paymentMethod, giftCards.codes)).data } : null, [quoteKey, locale]);
-  const quote = !quotes.loading && !quotes.error && quotes.data?.key === quoteKey ? quotes.data.data : null;
+  const quoteContact = useQuoteContact(contact.payload());
+  const quoteKey = JSON.stringify([items, appliedCoupon, giftCards.codes, contact.shippingSelection, contact.shippingReady, ready, payment.paymentMethod, payment.unresolved, quoteContact]);
+  const quotes = useAsync(async () => !payment.unresolved && ready && items.length && contact.shippingReady ? { key: quoteKey, data: (await quoteCheckout(items, appliedCoupon, contact.shippingSelection, payment.paymentMethod, giftCards.codes, quoteContact)).data } : null, [quoteKey, locale]);
+  const quote = payment.correctedQuote(quoteKey) ?? (!quotes.loading && !quotes.error && quotes.data?.key === quoteKey ? quotes.data.data : null);
   const paidByGiftCards = giftCardsCoverTotal(quote, giftCards.codes);
   const submit = async (event: FormEvent): Promise<void> => {
     event.preventDefault();
     if (!payment.paymentRetry && (!ready || !quote || !minimumOrderAllows(quote) || !contact.shippingReady || !contact.phoneVerification.ready || !contact.botProtection.ready || contact.countryAllowed === false)) return;
     await payment.submit({ ...contact.payload(), coupon_code: appliedCoupon, lead_token: lead.submitToken(), ...(quote?.payment_adjustment_token ? { payment_adjustment_token: quote.payment_adjustment_token } : {}),
-      ...(giftCards.codes.length ? { gift_cards: giftCards.codes } : {}), ...(paidByGiftCards ? { payment_method: undefined } : {}) });
+      ...(giftCards.codes.length ? { gift_cards: giftCards.codes } : {}), ...(paidByGiftCards ? { payment_method: undefined } : {}), ...(quote ? { expected_total: quote.totals.grand_total } : {}) }, quoteKey);
   };
   return <section className="sf-product-checkout" aria-label={text('الشراء من صفحة المنتج', 'Product checkout')}><h2>{text('أكمل طلبك', 'Complete your order')}</h2><CheckoutRecovery flow={payment} />
     <form onSubmit={(event) => void submit(event)}><fieldset disabled={payment.busy || payment.unresolved} className="sf-product-checkout__fields"><CheckoutFieldsForm model={contact} quote={quote ?? quotes.data?.data} />

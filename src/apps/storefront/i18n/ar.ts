@@ -446,6 +446,7 @@ export const ar: TranslationShape = {
     calculatedAfterAddress: 'يُحتسب بعد إدخال العنوان',
     total: 'الإجمالي',
     orderFailed: 'تعذّر إتمام طلبك. يُرجى المحاولة مرة أخرى.',
+    totalChanged: 'تم تحديث الإجمالي. يرجى مراجعته ثم تأكيد طلبك.',
     thankYou: 'شكرًا على طلبك',
     thankYouHearth: 'شكرًا — تم استلام طلبك',
     orderConfirmed: 'تم استلام طلبك.',

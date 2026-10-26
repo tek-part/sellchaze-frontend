@@ -240,8 +240,8 @@ export interface QuoteGiftCard { last4: string; applied: string; balance_after: 
 export interface GiftCardBalance { last4: string; balance: string; currency: string; expires_at: string | null }
 /** Rate-limited server-side; every failure is the same generic message. */
 export const checkGiftCard = (code: string): Promise<{ data: GiftCardBalance }> => apiSend('/checkout/gift-card/check', 'POST', { code });
-export const quoteCheckout = (items: ReadonlyArray<CheckoutItem>, coupon_code: string, selection: import('../types/shipping').ShippingSelection = {}, payment_method?: string, gift_cards: ReadonlyArray<string> = []): Promise<{ data: CheckoutQuote }> =>
-  apiSend('/checkout/quote', 'POST', { items, coupon_code, ...selection, ...(payment_method ? { payment_method } : {}), ...(gift_cards.length ? { gift_cards } : {}) });
+export const quoteCheckout = (items: ReadonlyArray<CheckoutItem>, coupon_code: string, selection: import('../types/shipping').ShippingSelection = {}, payment_method?: string, gift_cards: ReadonlyArray<string> = [], contact: import('../pages/useQuoteContact').QuoteContact = {}): Promise<{ data: CheckoutQuote }> =>
+  apiSend('/checkout/quote', 'POST', { items, coupon_code, ...selection, ...(payment_method ? { payment_method } : {}), ...(gift_cards.length ? { gift_cards } : {}), ...contact });
 export const retryCheckoutPayment = (token: string): Promise<{ data: unknown; payment?: { redirect_url?: string | null } }> =>
   apiSend('/checkout/payment/retry', 'POST', { token });
 
