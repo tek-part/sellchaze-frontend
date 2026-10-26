@@ -43,7 +43,7 @@ export function buildWorkspaceStoreNav(t, access, permissions = []) {
             ['pixels-settings', 'pixel-conversion', 'ga'].map((key) => absolute(item(key)))),
         group('marketing', t('workspace_marketing_tools', 'Marketing tools'), MarketingIcon, [
             app('cross-selling', 'CROSS SELLING'),
-            ...['coupons', 'retargeting'].map((key) => absolute(item(key))),
+            ...['coupons', 'email-campaigns', 'retargeting'].map((key) => absolute(item(key))),
             app('whatsapp-unofficial', 'Whatsapp Marketing'),
             app('top-media-buyer', t('workspace_top_mb', 'Verify orders with Top MB')),
             ...['utm-builder', 'google-merchant'].map((key) => absolute(item(key))),
