@@ -19,3 +19,15 @@ export function campaignFromSearch(search: string): CampaignAttribution | undefi
   return cleanCampaign({ source: params.get('utm_source'), campaign: params.get('utm_campaign') });
 }
 
+
+/** Optional utm_medium for first-party product analytics; it never joins the checkout attribution payload. */
+export function campaignMediumFromSearch(search: string): string | undefined {
+  const params = new URLSearchParams(search);
+  if (params.getAll('utm_medium').length !== 1) return undefined;
+  return cleanCampaignLabel(params.get('utm_medium'), 100);
+}
+
+export function cleanCampaignLabel(text: unknown, max: number): string | undefined {
+  if (typeof text !== 'string' || /[<>\p{C}\uFFFD]/u.test(text) || [...text].length > max) return undefined;
+  return text.trim().replace(/\s+/gu, ' ') || undefined;
+}

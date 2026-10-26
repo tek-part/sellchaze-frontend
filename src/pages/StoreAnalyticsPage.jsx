@@ -6,6 +6,8 @@ import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
 import { Doughnut } from 'react-chartjs-2';
 import api from '../api/client';
 import StatCard from '../components/StatCard';
+import OrderedProductsPanel from '../components/analytics/OrderedProductsPanel';
+import ProductFunnelReport from '../components/analytics/ProductFunnelReport';
 
 ChartJS.register(ArcElement, Tooltip, Legend);
 
@@ -56,6 +58,10 @@ export default function StoreAnalyticsPage() {
                 </div>
                 {id ? <Link to="/stores" className="text-sm text-brand hover:underline">← {t('stores_title', 'Stores')}</Link> : null}
             </div>
+
+            {/* G4: products ordered on a day (#7) and the per-product funnel (#49) */}
+            <OrderedProductsPanel apiBase={apiBase} />
+            <ProductFunnelReport apiBase={apiBase} />
 
             {/* Revenue */}
             <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">

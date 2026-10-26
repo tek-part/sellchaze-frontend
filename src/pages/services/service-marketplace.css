@@ -41,3 +41,18 @@
 
 .ws-service-card-title > span { display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden; }
 @media(max-width:767px) { .ws-services-heading { gap:16px; } }
+/* G4 (#50): freelancer analytics */
+.ws-service-analytics h3 { font-size:16px;line-height:28px;font-weight:500;margin:24px 0 12px; }
+.ws-service-analytics-note { font-size:14px;line-height:22px;color:var(--ws-muted);margin:-12px 0 16px; }
+.ws-service-analytics-cards { display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-top:20px; }
+.ws-service-analytics-cards > div { padding:16px;border:1px solid var(--ws-border);border-radius:12px; }
+.ws-service-analytics-cards dt { font-size:13px;line-height:20px;color:var(--ws-muted); }
+.ws-service-analytics-cards dd { margin-top:4px;font-size:22px;line-height:30px;font-weight:600;font-variant-numeric:tabular-nums; }
+.ws-service-analytics-table { overflow-x:auto; }
+.ws-service-analytics-table table { width:100%;font-size:14px;border-collapse:collapse; }
+.ws-service-analytics-table :is(th,td) { padding:8px 12px;border-bottom:1px solid var(--ws-border);text-align:start;font-variant-numeric:tabular-nums; }
+.ws-service-analytics-table thead th { font-size:12px;font-weight:500;color:var(--ws-muted); }
+.ws-service-analytics-table td:last-child { width:30%; }
+.ws-service-analytics-bar { display:block;height:6px;min-width:2px;border-radius:999px;background:var(--ws-green-fill,#0b7a3b); }
+@media(max-width:767px) { .ws-service-analytics-cards { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+.ws-service-analytics-table:focus-visible { outline:2px solid var(--ws-green-ink,#0b7a3b); outline-offset:2px; }
