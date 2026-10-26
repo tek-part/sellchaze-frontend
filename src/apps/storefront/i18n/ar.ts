@@ -445,6 +445,11 @@ export const ar: TranslationShape = {
     shipmentStatusDelivered: 'تم التسليم',
     shipmentStatusFailed: 'تعذر التسليم',
     // ---- G2 account polish ----
+    confirmPhoneTitle: 'الدخول برقم هاتفك',
+    confirmPhoneHint: 'أكّد رقمك برمز واتساب لتسجّل الدخول به في المرة القادمة.',
+    confirmPhone: 'تأكيد الرقم',
+    confirmPhoneDone: 'تم تأكيد رقمك. يمكنك الآن الدخول برمز واتساب.',
+    phoneConfirmed: 'رقم الدخول',
     setPassword: 'تعيين كلمة مرور',
     setPasswordHint: 'أضف كلمة مرور لتتمكن أيضًا من الدخول ببريدك الإلكتروني.',
     passwordSet: 'تم تعيين كلمة المرور.',

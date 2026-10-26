@@ -2,6 +2,9 @@
 <html lang="en" dir="ltr">
   <head>
     <meta charset="UTF-8" />
+    <!-- G2: a Google sign-in return carries a one-time code in the fragment. Take it out of the URL
+         before anything else on the page (merchant head code, pixels) runs; the app redeems it once. -->
+    <script>(function(){try{if(location.pathname!=='/login/google'||location.hash.indexOf('code=')<0)return;var c=new URLSearchParams(location.hash.slice(1)).get('code');history.replaceState(history.state,'',location.pathname+location.search);Object.defineProperty(window,'__sfGoogleCode',{configurable:true,value:function(){var v=c;c=null;return v}})}catch(e){}})()</script>
     <link rel="icon" type="image/png" href="/icon.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#073f4b" />

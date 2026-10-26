@@ -22,6 +22,8 @@ export interface Customer {
   /** Empty for accounts created by WhatsApp code (G2); they sign in with their phone. */
   email: string;
   phone: string | null;
+  /** The phone was confirmed by a WhatsApp code and signs this customer in. */
+  phoneVerified: boolean;
   hasPassword: boolean;
 }
 
@@ -40,10 +42,10 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 
 function normalize(raw: unknown): Customer | null {
   if (!raw || typeof raw !== 'object') return null;
-  const value = raw as { id?: number | string; name?: string; email?: string | null; phone?: string | null; has_password?: boolean };
+  const value = raw as { id?: number | string; name?: string; email?: string | null; phone?: string | null; phone_verified?: boolean; has_password?: boolean };
   if (value.id === undefined || (!value.email && !value.phone)) return null;
   const email = value.email ?? '';
-  return { id: String(value.id), name: value.name || email || value.phone || '', email, phone: value.phone ?? null, hasPassword: value.has_password !== false };
+  return { id: String(value.id), name: value.name || email || value.phone || '', email, phone: value.phone ?? null, phoneVerified: value.phone_verified === true, hasPassword: value.has_password !== false };
 }
 
 export function AuthProvider(props: { children: ReactNode }): ReactElement {

@@ -310,6 +310,9 @@ export const getLoginMethods = (): Promise<{ data: ApiLoginMethods }> => apiGet(
 export const sendLoginCode = (body: { phone: string; token: string }): Promise<{ data: ApiPhoneCodeResult }> => apiSend('/auth/phone/send', 'POST', body);
 /** Signs in (data + token), or answers `{ data: { status: 'name_required' } }` for a new phone. */
 export const verifyLoginCode = (body: { token: string; code?: string; name?: string }): Promise<ApiAuthResult & { data: unknown }> => apiSend('/auth/phone/verify', 'POST', body);
+/** Signed-in customer confirms their phone (it then signs them in by WhatsApp code). */
+export const sendAccountPhoneCode = (body: { phone: string; token: string }): Promise<{ data: ApiPhoneCodeResult }> => apiSend('/account/phone/send', 'POST', body);
+export const verifyAccountPhone = (body: { token: string; code: string }): Promise<{ data: unknown }> => apiSend('/account/phone/verify', 'POST', body);
 export const startGoogleLogin = (challenge: string): Promise<{ data: { url: string } }> => apiGet(`/auth/google/start?challenge=${encodeURIComponent(challenge)}`);
 export const exchangeGoogleLogin = (body: { code: string; verifier: string }): Promise<ApiAuthResult> => apiSend('/auth/google/exchange', 'POST', body);
 export interface ApiOrderTimelineEntry { status: string; at: string | null }

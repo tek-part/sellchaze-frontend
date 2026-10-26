@@ -443,6 +443,11 @@ export const en = {
     shipmentStatusDelivered: 'Delivered',
     shipmentStatusFailed: 'Delivery issue',
     // ---- G2 account polish ----
+    confirmPhoneTitle: 'Sign in with your phone',
+    confirmPhoneHint: 'Confirm your number with a WhatsApp code to sign in with it next time.',
+    confirmPhone: 'Confirm number',
+    confirmPhoneDone: 'Your number is confirmed. You can now sign in with a WhatsApp code.',
+    phoneConfirmed: 'Sign-in phone',
     setPassword: 'Set a password',
     setPasswordHint: 'Add a password to also sign in with your email.',
     passwordSet: 'Your password has been set.',

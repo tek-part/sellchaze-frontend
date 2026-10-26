@@ -8,7 +8,7 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Button, Input } from '../foundation/components';
 import { useAsync } from '../api/useAsync';
-import { getLoginMethods, sendLoginCode, startGoogleLogin, verifyLoginCode, type ApiPhoneCodeResult } from '../api/storefront';
+import { getLoginMethods, sendAccountPhoneCode, sendLoginCode, startGoogleLogin, verifyAccountPhone, verifyLoginCode, type ApiPhoneCodeResult } from '../api/storefront';
 import { useAuth } from '../state/auth-context';
 import { apiErrorText, asciiDigits, newRequestToken, newVerifier, saveGoogleAttempt, sha256Hex } from './customer-login';
 
@@ -177,6 +177,87 @@ function PhoneSignIn({ next }: { next: string }): ReactElement {
           <Button type="submit" block loading={busy} disabled={!name.trim()}>{t('auth.finishSignUp')}</Button>
         </form>
       ) : null}
+      {error ? <p role="alert" className="sf-field__error">{error}</p> : null}
+    </section>
+  );
+}
+
+/**
+ * Account page: confirm the customer's phone with a WhatsApp code so it can sign them in. A typed
+ * phone never signs anyone in; only a confirmed one does. Shown when the store offers WhatsApp sign-in.
+ */
+export function AccountPhoneConfirm(): ReactElement | null {
+  const { t } = useTranslation();
+  const { customer, refresh } = useAuth();
+  const methods = useAsync(() => getLoginMethods(), []).data?.data;
+  const [phone, setPhone] = useState(customer?.phone ?? '');
+  const [code, setCode] = useState('');
+  const [result, setResult] = useState<ApiPhoneCodeResult>();
+  const [error, setError] = useState<string>();
+  const [busy, setBusy] = useState(false);
+  const [done, setDone] = useState(false);
+  const token = useRef('');
+
+  if (!customer || !methods?.phone) return null;
+  if (customer.phoneVerified || done) {
+    return done ? <p className="sf-newsletter__success" role="status">{t('account.confirmPhoneDone')}</p>
+      : <p className="sf-card-row__meta">{t('account.phoneConfirmed')}: <bdi dir="ltr">{customer.phone}</bdi></p>;
+  }
+
+  const send = async (event: FormEvent): Promise<void> => {
+    event.preventDefault();
+    if (busy || !phone.trim()) return;
+    setBusy(true);
+    setError(undefined);
+    token.current = newRequestToken();
+    try {
+      const { data } = await sendAccountPhoneCode({ phone: asciiDigits(phone.trim()), token: token.current });
+      setResult(data);
+      setCode('');
+      if (data.state !== 'sent') setError(t('auth.codeNotConfirmed'));
+    } catch (failure) {
+      setError(apiErrorText(failure, t('auth.genericError')));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const verify = async (event: FormEvent): Promise<void> => {
+    event.preventDefault();
+    if (busy) return;
+    setBusy(true);
+    setError(undefined);
+    try {
+      await verifyAccountPhone({ token: token.current, code });
+      setDone(true);
+      await refresh();
+    } catch (failure) {
+      setError(apiErrorText(failure, t('auth.genericError')));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <section className="sf-account__panel sf-auth-phone" aria-labelledby="sf-confirm-phone-title">
+      <h2 id="sf-confirm-phone-title" className="sf-footer__group-title">{t('account.confirmPhoneTitle')}</h2>
+      <p className="sf-card-row__meta">{t('account.confirmPhoneHint')}</p>
+      {result ? (
+        <form className="sf-account__panel" onSubmit={(event) => void verify(event)} noValidate>
+          <p className="sf-card-row__meta" role="status">{t('auth.codeSent', { phone: result.phone })}</p>
+          <Input label={t('auth.codeLabel')} name="code" autoComplete="one-time-code" inputMode="numeric" dir="ltr" maxLength={6} required value={code}
+            onChange={(event) => setCode(asciiDigits(event.target.value).replace(/[^0-9]/g, '').slice(0, 6))} />
+          <div className="sf-pdp__row">
+            <Button type="submit" loading={busy} disabled={code.length !== 6}>{t('account.confirmPhone')}</Button>
+            <Button type="button" variant="ghost" size="sm" onClick={() => { setResult(undefined); setError(undefined); }}>{t('auth.changeNumber')}</Button>
+          </div>
+        </form>
+      ) : (
+        <form className="sf-account__panel" onSubmit={(event) => void send(event)} noValidate>
+          <Input label={t('auth.phoneNumber')} type="tel" name="phone" autoComplete="tel" inputMode="tel" dir="ltr" required value={phone} onChange={(event) => setPhone(event.target.value)} />
+          <Button type="submit" variant="secondary" loading={busy} disabled={!phone.trim()}>{t('auth.sendCode')}</Button>
+        </form>
+      )}
       {error ? <p role="alert" className="sf-field__error">{error}</p> : null}
     </section>
   );

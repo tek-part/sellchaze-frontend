@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { asciiDigits, codeFromHash, newRequestToken, newVerifier, orderStatusKey, saveGoogleAttempt, sha256Hex, takeGoogleAttempt } from './customer-login';
+import { asciiDigits, codeFromHash, takeReturnedCode, newRequestToken, newVerifier, orderStatusKey, saveGoogleAttempt, sha256Hex, takeGoogleAttempt } from './customer-login';
 
 function memoryStorage(): Storage {
   const values = new Map<string, string>();
@@ -44,6 +44,18 @@ describe('customer sign-in helpers', () => {
     expect(codeFromHash('#code=short')).toBeNull();
     expect(codeFromHash('#code=' + '-'.repeat(64))).toBeNull();
     expect(codeFromHash('')).toBeNull();
+  });
+
+  it('takes the return code from the early inline script once, else from the fragment', () => {
+    const code = 'Z9'.repeat(32);
+    let stash: string | null = code;
+    const take = (): string | null => { const value = stash; stash = null; return value; };
+    const location = { hash: '' } as Location;
+    expect(takeReturnedCode({ __sfGoogleCode: take, location })).toBe(code);
+    expect(takeReturnedCode({ __sfGoogleCode: take, location })).toBeNull();
+    expect(takeReturnedCode({ location: { hash: `#code=${code}` } as Location })).toBe(code);
+    stash = 'not-a-code';
+    expect(takeReturnedCode({ __sfGoogleCode: take, location: { hash: `#code=${code}` } as Location })).toBeNull();
   });
 
   it('turns Arabic-Indic digits into ASCII and maps order statuses to copy keys', () => {

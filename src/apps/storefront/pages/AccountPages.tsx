@@ -22,6 +22,7 @@ import { flowContext } from './flow-context';
 import { OrderReturnSection } from './OrderReturnSection';
 import { OrderShipmentsSection } from './OrderShipmentsSection';
 import { OrderStatusLabel, OrderTimeline, OrderTotals } from './OrderProgress';
+import { AccountPhoneConfirm } from './CustomerLoginOptions';
 
 /** Render the active theme's account sub-template when it provides one; otherwise null (fallback). */
 function useAccountTemplate(name: 'account-profile' | 'account-orders' | 'account-order' | 'account-addresses'): ReactElement | null {
@@ -132,6 +133,7 @@ export function AccountPage(): ReactElement {
           {t('account.saveChanges')}
         </Button>
       </form>
+      <AccountPhoneConfirm />
       <hr className="sf-divider" />
       <ChangePasswordForm />
     </div>

@@ -49,6 +49,22 @@ export function takeGoogleAttempt(storage: Pick<Storage, 'getItem' | 'removeItem
   }
 }
 
+declare global {
+  interface Window {
+    /** Set by the inline script in storefront.html, which clears `#code=` before any other script runs. */
+    __sfGoogleCode?: () => string | null;
+  }
+}
+
+/** The Google return code: handed over once by the inline script, else (no script ran) read from the fragment. */
+export function takeReturnedCode(win: Pick<Window, '__sfGoogleCode' | 'location'> = window): string | null {
+  if (typeof win.__sfGoogleCode === 'function') {
+    const code = win.__sfGoogleCode();
+    return code && /^[A-Za-z0-9]{64}$/.test(code) ? code : null;
+  }
+  return codeFromHash(win.location.hash);
+}
+
 /** The one-time code from `#code=…` (fragments never reach servers or referrers). */
 export function codeFromHash(hash: string): string | null {
   const code = new URLSearchParams(hash.replace(/^#/, '')).get('code');

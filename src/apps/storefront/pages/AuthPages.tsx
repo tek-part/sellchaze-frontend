@@ -13,7 +13,7 @@ import { Input } from '../foundation/components';
 import { useAuth } from '../state/auth-context';
 import { exchangeGoogleLogin, forgotPassword, resetPassword } from '../api/storefront';
 import { CustomerLoginOptions } from './CustomerLoginOptions';
-import { apiErrorText, codeFromHash, takeGoogleAttempt } from './customer-login';
+import { apiErrorText, takeGoogleAttempt, takeReturnedCode } from './customer-login';
 import { ThemeRenderer, useTemplate } from '../theme-engine';
 import { useStore } from '../state/store-context';
 import { flowContext } from './flow-context';
@@ -253,10 +253,10 @@ export function GoogleReturnPage(): ReactElement {
   useEffect(() => {
     if (started.current) return;
     started.current = true;
-    const code = codeFromHash(window.location.hash);
+    // storefront.html already moved the code out of the URL before any other script ran.
+    const code = takeReturnedCode();
     const attempt = takeGoogleAttempt();
-    // Drop the code from the address bar and history straight away.
-    window.history.replaceState(window.history.state, '', window.location.pathname + window.location.search);
+    if (window.location.hash) window.history.replaceState(window.history.state, '', window.location.pathname + window.location.search);
     if (!code || !attempt) {
       setError(t('auth.googleExpired'));
       return;

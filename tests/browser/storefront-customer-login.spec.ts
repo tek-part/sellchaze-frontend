@@ -19,9 +19,11 @@ const tracked = {
   subtotal: '100.00', shipping_total: '20.00', discount_total: '10.00', tax_total: '0.00', grand_total: '110.00', refunded_total: '0.00', amount_due: '110.00',
 };
 
-async function mockStore(page: Page, locale: Locale, methods: { phone: boolean; google: boolean }): Promise<Posts> {
+async function mockStore(page: Page, locale: Locale, methods: { phone: boolean; google: boolean }, signedInAtStart = false): Promise<Posts> {
   const posts: Posts = [];
-  let signedIn = false;
+  let signedIn = signedInAtStart;
+  let phoneVerified = false;
+  if (signedInAtStart) await page.addInitScript(() => { window.localStorage.setItem('sf:auth-token', 'synthetic-customer-token'); });
   await page.route('https://accounts.google.com/**', (route) => route.fulfill({ contentType: 'text/html', body: '<!doctype html><title>Synthetic Google</title><p>Synthetic consent screen</p>' }));
   await page.route('**/api/v1/**', async (route) => {
     const request = route.request();
@@ -34,7 +36,16 @@ async function mockStore(page: Page, locale: Locale, methods: { phone: boolean; 
       return route.fulfill({ json: { data: { url: 'https://accounts.google.com/o/oauth2/v2/auth?client_id=synthetic&state=synthetic' } } });
     }
     if (path === '/api/v1/storefront/account') {
-      return signedIn ? route.fulfill({ json: { data: { id: 9, name: 'Nour', email: null, phone: '+201001234567', has_password: false } } }) : route.fulfill({ status: 401, json: { message: 'Unauthenticated.' } });
+      return signedIn ? route.fulfill({ json: { data: { id: 9, name: 'Nour', email: null, phone: '+201001234567', has_password: false, phone_verified: phoneVerified } } }) : route.fulfill({ status: 401, json: { message: 'Unauthenticated.' } });
+    }
+    if (path === '/api/v1/storefront/account/phone/send' && request.method() === 'POST') {
+      posts.push({ path, body: request.postDataJSON() as Record<string, unknown> });
+      return route.fulfill({ json: { data: { state: 'sent', phone: '+201001234567', expires_at: new Date(Date.now() + 300_000).toISOString(), resend_at: new Date(Date.now() + 60_000).toISOString() } } });
+    }
+    if (path === '/api/v1/storefront/account/phone/verify' && request.method() === 'POST') {
+      posts.push({ path, body: request.postDataJSON() as Record<string, unknown> });
+      phoneVerified = true;
+      return route.fulfill({ json: { data: { id: 9, name: 'Nour', email: null, phone: '+201001234567', phone_verified: true } } });
     }
     if (request.method() === 'POST') {
       const body = (request.postDataJSON() ?? {}) as Record<string, unknown>;
@@ -144,36 +155,77 @@ for (const locale of ['en', 'ar'] as const) {
   });
 }
 
-test('Google sign-in keeps the verifier in the tab and exchanges the returned code', async ({ page }) => {
-  const posts = await mockStore(page, 'en', { phone: true, google: true });
-  await page.goto('/login?preview=1&theme=naseem&lang=en', { waitUntil: 'networkidle' });
-  await expect(page.getByRole('button', { name: copy.en.whatsapp })).toBeVisible();
-  await page.getByRole('button', { name: copy.en.google }).click();
-  await page.waitForURL(/accounts\.google\.com/);
-  // Session storage is per origin: read the verifier back on the storefront tab.
-  await page.goBack({ waitUntil: 'networkidle' });
-  const attempt = JSON.parse((await page.evaluate(() => sessionStorage.getItem('sf:google-login'))) ?? '{}') as { verifier: string; next: string };
-  expect(attempt.verifier).toMatch(/^[A-Za-z0-9]{64}$/);
-  expect(attempt.next).toMatch(/^\/account/);
-  expect(posts[0]).toEqual({ path: '/api/v1/storefront/auth/google/start', body: { challenge: createHash('sha256').update(attempt.verifier).digest('hex') } });
+test.describe('Google return', () => {
+  // The PWA worker would answer the navigation itself; block it so the server-style injection below applies.
+  test.use({ serviceWorkers: 'block' });
+  test('Google sign-in keeps the verifier in the tab and exchanges the returned code', async ({ page }) => {
+    const posts = await mockStore(page, 'en', { phone: true, google: true });
+    await page.goto('/login?preview=1&theme=naseem&lang=en', { waitUntil: 'networkidle' });
+    await expect(page.getByRole('button', { name: copy.en.whatsapp })).toBeVisible();
+    await page.getByRole('button', { name: copy.en.google }).click();
+    await page.waitForURL(/accounts\.google\.com/);
+    // Session storage is per origin: read the verifier back on the storefront tab.
+    await page.goBack({ waitUntil: 'networkidle' });
+    const attempt = JSON.parse((await page.evaluate(() => sessionStorage.getItem('sf:google-login'))) ?? '{}') as { verifier: string; next: string };
+    expect(attempt.verifier).toMatch(/^[A-Za-z0-9]{64}$/);
+    expect(attempt.next).toMatch(/^\/account/);
+    expect(posts[0]).toEqual({ path: '/api/v1/storefront/auth/google/start', body: { challenge: createHash('sha256').update(attempt.verifier).digest('hex') } });
 
-  await page.goto(`/login/google?preview=1&theme=naseem&lang=en#code=${CODE}`, { waitUntil: 'networkidle' });
-  await expect(page).toHaveURL(/\/account/);
-  expect(posts.find((post) => post.path.endsWith('/google/exchange'))?.body).toEqual({ code: CODE, verifier: attempt.verifier });
-  expect(await page.evaluate(() => sessionStorage.getItem('sf:google-login'))).toBeNull();
-  expect(await page.evaluate(() => localStorage.getItem('sf:auth-token'))).toBe('synthetic-google-token');
+    // Stand-in for merchant head code, injected before </head> like the server does: it must never see the code.
+    const headCodeSaw: string[] = [];
+    page.on('console', (message) => { if (message.text().startsWith('head-code-saw ')) headCodeSaw.push(message.text()); });
+    await page.route((url) => url.pathname === '/login/google', async (route) => {
+      const response = await route.fetch();
+      const html = (await response.text()).replace('</head>', '<script>console.log("head-code-saw " + location.href);</script></head>');
+      await route.fulfill({ response, body: html });
+    });
+    await page.goto(`/login/google?preview=1&theme=naseem&lang=en#code=${CODE}`, { waitUntil: 'networkidle' });
+    await expect(page).toHaveURL(/\/account/);
+    expect(headCodeSaw).toHaveLength(1);
+    expect(headCodeSaw[0]).toContain('/login/google');
+    expect(headCodeSaw[0]).not.toContain(CODE);
+    expect(posts.find((post) => post.path.endsWith('/google/exchange'))?.body).toEqual({ code: CODE, verifier: attempt.verifier });
+    expect(await page.evaluate(() => sessionStorage.getItem('sf:google-login'))).toBeNull();
+    expect(await page.evaluate(() => localStorage.getItem('sf:auth-token'))).toBe('synthetic-google-token');
 
-  // A replayed link in a tab that never started the sign-in is refused without calling the API.
-  await page.goto(`/login/google?preview=1&theme=naseem&lang=en#code=${CODE}`, { waitUntil: 'networkidle' });
-  await expect(page.getByRole('alert')).toHaveText('This Google sign-in has expired. Please start again.');
-  expect(posts.filter((post) => post.path.endsWith('/google/exchange'))).toHaveLength(1);
+    // A replayed link in a tab that never started the sign-in is refused without calling the API.
+    await page.goto(`/login/google?preview=1&theme=naseem&lang=en#code=${CODE}`, { waitUntil: 'networkidle' });
+    await expect(page.getByRole('alert')).toHaveText('This Google sign-in has expired. Please start again.');
+    expect(posts.filter((post) => post.path.endsWith('/google/exchange'))).toHaveLength(1);
+  });
 });
 
 test('login shows only e-mail when the store offers no other method, and explains a failed Google return', async ({ page }) => {
   await mockStore(page, 'en', { phone: false, google: false });
+  // Assert absence only after the store has answered which methods it offers.
+  const methods = page.waitForResponse((response) => response.url().includes('/storefront/auth/methods'));
   await page.goto('/login?preview=1&theme=naseem&lang=en&google=failed', { waitUntil: 'networkidle' });
+  await methods;
   await expect(page.getByRole('alert')).toHaveText('Google sign-in did not complete. Please try again.');
   await expect(page.getByRole('button', { name: copy.en.whatsapp })).toHaveCount(0);
   await expect(page.getByRole('button', { name: copy.en.google })).toHaveCount(0);
   await expect(page.getByRole('link', { name: 'Track an order without signing in' })).toHaveAttribute('href', '/track');
 });
+
+for (const locale of ['en', 'ar'] as const) {
+  test(`signed-in customer confirms their phone for WhatsApp sign-in (${locale})`, async ({ page }) => {
+    const posts = await mockStore(page, locale, { phone: true, google: false }, true);
+    const t = (ar: string, en: string): string => (locale === 'ar' ? ar : en);
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto(`/account?preview=1&theme=naseem&lang=${locale}`, { waitUntil: 'networkidle' });
+    const panel = page.locator('section[aria-labelledby="sf-confirm-phone-title"]');
+    await expect(panel.getByRole('heading', { name: t('الدخول برقم هاتفك', 'Sign in with your phone') })).toBeVisible();
+    await expect(panel.getByLabel(copy[locale].number)).toHaveValue('+201001234567');
+    await panel.getByRole('button', { name: copy[locale].send }).click();
+    await panel.getByLabel(copy[locale].code).fill('654321');
+    await healthy(page, '.sf-account');
+    await panel.getByRole('button', { name: t('تأكيد الرقم', 'Confirm number') }).click();
+    await expect(page.getByRole('status').filter({ hasText: t('تم تأكيد رقمك', 'Your number is confirmed') })).toBeVisible();
+    const token = posts[0]!.body.token as string;
+    expect(token).toMatch(/^[a-f0-9]{64}$/);
+    expect(posts).toEqual([
+      { path: '/api/v1/storefront/account/phone/send', body: { phone: '+201001234567', token } },
+      { path: '/api/v1/storefront/account/phone/verify', body: { token, code: '654321' } },
+    ]);
+  });
+}
