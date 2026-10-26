@@ -138,6 +138,9 @@ const StoreProductsPage = lazy(() => import('./pages/StoreProductsPage'));
 const StoreProductEditorPage = lazy(() => import('./pages/StoreProductEditorPage'));
 const StoreCategoriesPage = lazy(() => import('./pages/StoreCategoriesPage'));
 const StoreNewsletterPage = lazy(() => import('./pages/StoreNewsletterPage'));
+const StoreEmailCampaignsPage = lazy(() => import('./pages/StoreEmailCampaignsPage'));
+const StoreEmailCampaignEditorPage = lazy(() => import('./pages/StoreEmailCampaignEditorPage'));
+const StoreEmailCampaignReportPage = lazy(() => import('./pages/StoreEmailCampaignReportPage'));
 const StoreMissedOrdersPage = lazy(() => import('./pages/StoreMissedOrdersPage'));
 const StoreCustomersPage = lazy(() => import('./pages/StoreCustomersPage'));
 const StoreCustomerDetailPage = lazy(() => import('./pages/StoreCustomerDetailPage'));
@@ -260,6 +263,10 @@ const STORE_ROUTES = [
     { path: 'blocked-phone-numbers', element: <StoreBlockedPhonesPage /> },
     { path: 'blocked-phones', element: <StoreBlockedPhonesPage otp /> },
     { path: 'newsletter', element: <StoreNewsletterPage /> },
+    { path: 'email-campaigns', element: <StoreEmailCampaignsPage /> },
+    { path: 'email-campaigns/new', element: <StoreEmailCampaignEditorPage key="new" /> },
+    { path: 'email-campaigns/:campaignId', element: <StoreEmailCampaignEditorPage /> },
+    { path: 'email-campaigns/:campaignId/report', element: <StoreEmailCampaignReportPage /> },
     { path: 'missed-orders', element: <StoreMissedOrdersPage /> },
     { path: 'customers', element: <StoreCustomersPage /> },
     { path: 'customers/view', element: <StoreCustomerDetailPage /> },
