@@ -23,6 +23,8 @@ export interface StoreInfo {
   autoSelectVariants?: boolean;
   trackingEnabled?: boolean;
   downsellEnabled?: boolean;
+  socialProofEnabled?: boolean;
+  bundlesEnabled?: boolean;
   merchantInformation?: import('../api/types').ApiMerchantInformation | null;
   shipping?: import('../types/shipping').ShippingOffer;
   id: string;
@@ -108,6 +110,8 @@ export function StoreProvider(props: { children: ReactNode; initialData?: ApiSto
       autoSelectVariants: s.auto_select_variants,
       trackingEnabled: s.tracking_enabled,
       downsellEnabled: s.downsell_enabled,
+      socialProofEnabled: s.social_proof_enabled,
+      bundlesEnabled: s.bundles_enabled,
       merchantInformation: s.merchant_information,
       name: s.name,
       identity: s.identity,

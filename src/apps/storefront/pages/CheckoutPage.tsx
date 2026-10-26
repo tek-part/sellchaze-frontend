@@ -126,7 +126,7 @@ function BasketCheckout(): ReactElement {
   const paidByGiftCards = giftCardsCoverTotal(quote, giftCards.codes);
   const placeOrder = async (event: FormEvent): Promise<void> => {
     event.preventDefault();
-    if (!checkout.paymentRetry && (!minimumOrderAllows(quote) || !contact.shippingReady || !contact.phoneVerification.ready || !contact.botProtection.ready)) return;
+    if (!checkout.paymentRetry && (!minimumOrderAllows(quote) || !contact.shippingReady || !contact.phoneVerification.ready || !contact.botProtection.ready || contact.countryAllowed === false)) return;
     await checkout.submit({ ...contact.payload(), coupon_code: appliedCoupon, lead_token: lead.submitToken(), ...(quote?.payment_adjustment_token ? { payment_adjustment_token: quote.payment_adjustment_token } : {}),
       ...(giftCards.codes.length ? { gift_cards: giftCards.codes } : {}), ...(paidByGiftCards ? { payment_method: undefined } : {}) });
   };
@@ -180,7 +180,7 @@ function BasketCheckout(): ReactElement {
         {checkout.error && !checkout.unresolved ? <div className="sf-co-alert" role="alert"><p>{checkout.error}</p>{!checkout.paymentRetry ? <Button type="button" variant="secondary" onClick={reloadAll}>{ar ? 'تحديث خيارات التوصيل' : 'Refresh delivery options'}</Button> : null}</div> : null}
         {!checkout.paymentRetry && !checkout.unresolved ? <CheckoutMinimum quote={quote} /> : null}
         {quote?.order_minimum?.eligible === false && !checkout.paymentRetry && !checkout.unresolved ? <ButtonLink href="/cart" variant="secondary" block>{ar ? 'تعديل السلة' : 'Edit cart'}</ButtonLink> : null}
-        {!checkout.unresolved ? <Button type="submit" block className="sf-co-pay" loading={checkout.busy} disabled={(!checkout.paymentMethod && !paidByGiftCards) || !quote || !contact.shippingReady || (!checkout.paymentRetry && (!minimumOrderAllows(quote) || !contact.phoneVerification.ready || !contact.botProtection.ready))}>
+        {!checkout.unresolved ? <Button type="submit" block className="sf-co-pay" loading={checkout.busy} disabled={(!checkout.paymentMethod && !paidByGiftCards) || !quote || !contact.shippingReady || (!checkout.paymentRetry && (!minimumOrderAllows(quote) || !contact.phoneVerification.ready || !contact.botProtection.ready || contact.countryAllowed === false))}>
           {`${t('checkout.placeOrder')}${quote ? ` · ${formatMoney(quoteAmountDue(quote), quote.currency, locale)}` : ''}`}
         </Button> : null}
         <p className="sf-co-trust"><LockIcon />{ar ? 'بياناتك محمية ولا تُشارك مع أي طرف.' : 'Your details are protected and never shared.'}</p>

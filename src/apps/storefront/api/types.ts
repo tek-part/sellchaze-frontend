@@ -139,6 +139,8 @@ export interface ApiStoreSummary {
   auto_select_variants?: boolean;
   tracking_enabled?: boolean;
   downsell_enabled?: boolean;
+  social_proof_enabled?: boolean;
+  bundles_enabled?: boolean;
   merchant_information?: ApiMerchantInformation | null;
   shipping?: import('../types/shipping').ShippingOffer;
   id: number;

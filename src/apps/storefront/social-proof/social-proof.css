@@ -1,0 +1,14 @@
+.sf-social-proof{position:fixed;z-index:1000;bottom:max(16px,env(safe-area-inset-bottom));width:min(360px,calc(100vw - 32px));pointer-events:none}
+.sf-social-proof[data-position='bottom-start']{inset-inline-start:16px}
+.sf-social-proof[data-position='bottom-end']{inset-inline-end:16px}
+.sf-social-proof__card{pointer-events:auto;display:flex;align-items:center;gap:12px;padding-block:12px;padding-inline:12px 8px;border-radius:14px;background:#fff;color:#111827;box-shadow:0 10px 30px rgba(0,0,0,.18);border:1px solid rgba(0,0,0,.08);animation:sf-social-proof-in .3s ease-out}
+.sf-social-proof__image{width:48px;height:48px;border-radius:10px;object-fit:cover;flex-shrink:0}
+.sf-social-proof__text{margin:0;flex:1;min-width:0;font-size:14px;line-height:1.45;overflow-wrap:anywhere}
+.sf-social-proof__text a{color:inherit;font-weight:600;text-decoration:underline;text-underline-offset:2px}
+.sf-social-proof__text small{display:block;margin-top:2px;font-size:12px;opacity:.75}
+.sf-social-proof__close{flex-shrink:0;width:44px;height:44px;border:0;border-radius:10px;background:transparent;color:inherit;font-size:22px;line-height:1;cursor:pointer}
+.sf-social-proof__close:focus-visible,.sf-social-proof__text a:focus-visible{outline:2px solid currentColor;outline-offset:2px}
+@keyframes sf-social-proof-in{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+/* Phones: keep clear of fixed add-to-cart and checkout bars at the bottom of the screen. */
+@media(max-width:640px){.sf-social-proof{top:max(8px,env(safe-area-inset-top));bottom:auto;inset-inline:8px;width:auto}.sf-social-proof[data-position]{inset-inline:8px}}
+@media(prefers-reduced-motion:reduce){.sf-social-proof__card{animation:none}}
