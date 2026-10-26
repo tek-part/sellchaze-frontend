@@ -6,7 +6,7 @@
  *   3. the active theme's own `home` template.
  * Page data (catalogue rows, merchandising, editable content) comes from `useHomeContext()`.
  */
-import { useMemo, type ReactElement } from 'react';
+import { useEffect, useMemo, useState, type ReactElement } from 'react';
 import { ThemeRenderer, useTemplate, type PageDefinition, type SectionInstance } from '../theme-engine';
 import { useStore } from '../state/store-context';
 import { useAsync } from '../api/useAsync';
@@ -60,11 +60,25 @@ export function HomePage(): ReactElement | null {
   // area until both are ready, rather than collapsing main or painting default content first.
   const waiting = !isolatedPreview && (homeLoading || (!draft && !skipLayout && layout.loading));
 
+  // Every home needs one top-level heading. Theme heroes and a titled first slide provide it; a
+  // merchant composition that opens with an image-only slider or a product row does not, so the
+  // store name becomes a visually hidden heading. Checked after render (and once more for lazily
+  // loaded sections) because the section set and its content are merchant data.
+  const [needsHeading, setNeedsHeading] = useState(false);
+  useEffect(() => {
+    if (waiting || !page || typeof document === 'undefined') return undefined;
+    const check = (): void => setNeedsHeading(!document.querySelector('#sf-main h1:not([data-fallback-heading])'));
+    const frame = requestAnimationFrame(check);
+    const later = window.setTimeout(check, 1500);
+    return () => { cancelAnimationFrame(frame); window.clearTimeout(later); };
+  }, [waiting, page]);
+
   const site = typeof window !== 'undefined' ? window.location.origin : '';
 
   return (
     <>
       <Seo path="/" jsonLd={[organizationSchema(store.name, site), websiteSchema(store.name, site)]} />
+      {needsHeading ? <h1 className="sr-only" data-fallback-heading="">{store.name}</h1> : null}
       {waiting ? <PageLoading /> : page ? <ThemeRenderer page={page} context={context} selectedSectionId={customizer.active ? customizer.selectedId : null} /> : null}
     </>
   );
