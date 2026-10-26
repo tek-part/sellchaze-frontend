@@ -1,19 +1,10 @@
 /**
- * Static content pages — About, Contact, FAQ. Real, self-contained content (no CMS endpoint exists
- * in the storefront API, so these are first-party editorial pages, not placeholders).
+ * Static content pages — policy pages and the FAQ. About, contact and the blog live in
+ * CompanyPages.tsx and BlogPages.tsx.
  */
-import { useState, type FormEvent, type ReactElement } from 'react';
+import type { ReactElement } from 'react';
 import { useParams } from 'react-router-dom';
-import {
-  Accordion,
-  Button,
-  ButtonLink,
-  Container,
-  EmptyState,
-  Input,
-  Section,
-  Textarea,
-} from '../foundation/components';
+import { Accordion, ButtonLink, Container, EmptyState, Section } from '../foundation/components';
 import { Seo } from '../seo/Seo';
 import { useStoreContent } from '../content/useStoreContent';
 import { fillTokens, getPolicy } from '../content/policies';
@@ -57,14 +48,6 @@ function withFaqOverride(page: PageDefinition, override: FaqOverride | null): Pa
         : s,
     ),
   };
-}
-
-/** Render the active theme's static template when it provides one; otherwise null (foundation fallback). */
-function useStaticTemplate(name: 'blog' | 'about' | 'contact' | 'faq'): ReactElement | null {
-  const tpl = useTemplate(name);
-  const { store } = useStore();
-  if (!tpl) return null;
-  return <ThemeRenderer page={tpl} context={flowContext(store)} />;
 }
 
 /**
@@ -210,83 +193,6 @@ export function PolicyPage(): ReactElement {
             <ButtonLink href="/contact">{t('nav.contact')}</ButtonLink>
           </footer>
         </article>
-      </Container>
-    </Section>
-  );
-}
-
-export function BlogPage(): ReactElement {
-  const themed = useStaticTemplate('blog');
-  if (themed) return themed;
-  // The storefront API exposes no articles endpoint yet; render a graceful, finished empty state.
-  return (
-    <Section>
-      <Container narrow>
-        <div className="sf-page-head">
-          <h1 className="sf-page-head__title">The journal</h1>
-          <p className="sf-page-head__sub">Stories from the atelier — coming soon.</p>
-        </div>
-        <EmptyState variant="generic" title="No stories yet" description="Our first journal entries are being written." />
-      </Container>
-    </Section>
-  );
-}
-
-export function AboutPage(): ReactElement {
-  const { store } = useStore();
-  const themed = useStaticTemplate('about');
-  if (themed) return themed;
-  return (
-    <Section>
-      <Container narrow>
-        <div className="sf-page-head">
-          <h1 className="sf-page-head__title">The house</h1>
-          {store.description ? <p className="sf-page-head__sub">{store.description}</p> : null}
-        </div>
-        <div className="sf-prose sf-prose--narrow">
-          <p>
-            {store.name} began with a single conviction: that fewer, finer things — cut from natural fibres and made
-            to last — are a quieter kind of luxury. Each piece is designed in-house and made by hands that have
-            practised their craft for a lifetime.
-          </p>
-          <p>
-            We work in small runs, with mills we know by name, and we design for longevity rather than season. What
-            we make is meant to be worn, repaired, and kept — an antidote to the disposable.
-          </p>
-        </div>
-      </Container>
-    </Section>
-  );
-}
-
-export function ContactPage(): ReactElement {
-  const themed = useStaticTemplate('contact');
-  const [form, setForm] = useState({ name: '', email: '', message: '' });
-  const set = (key: keyof typeof form) => (e: { target: { value: string } }) => setForm((f) => ({ ...f, [key]: e.target.value }));
-
-  const submit = (e: FormEvent): void => {
-    e.preventDefault();
-    // No contact endpoint in the storefront API — open the client's mail app with the message.
-    const subject = encodeURIComponent(`Enquiry from ${form.name}`);
-    const body = encodeURIComponent(`${form.message}\n\n— ${form.name} (${form.email})`);
-    window.location.href = `mailto:client.care@sellchaze.example?subject=${subject}&body=${body}`;
-  };
-
-  if (themed) return themed;
-
-  return (
-    <Section>
-      <Container narrow>
-        <div className="sf-page-head">
-          <h1 className="sf-page-head__title">Contact</h1>
-          <p className="sf-page-head__sub">Our client care team replies within one business day.</p>
-        </div>
-        <form className="sf-auth" onSubmit={submit} noValidate>
-          <Input label="Your name" value={form.name} onChange={set('name')} required />
-          <Input label="Email" type="email" value={form.email} onChange={set('email')} required />
-          <Textarea label="How can we help?" rows={5} value={form.message} onChange={set('message')} required />
-          <Button type="submit">Send message</Button>
-        </form>
       </Container>
     </Section>
   );
