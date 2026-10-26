@@ -22,6 +22,9 @@ export function keyboardTarget(key, index, length) {
 /** True when two id lists differ in order. */
 export const orderChanged = (original, current) => original.length !== current.length || original.some((id, i) => id !== current[i]);
 
+/** Token that clears an optional sheet cell; a blank cell keeps the current value. */
+export const SHEET_CLEAR = '[clear]';
+
 /** Request body for a bulk price change. */
 export function priceChangePayload(form, scope) {
     return {
@@ -52,7 +55,7 @@ const SHEET_ERRORS = {
     no_variants: ['هذا المنتج بلا خيارات؛ امسح أعمدة الخيارات لهذا الصف.', 'This product has no options; clear the option columns for this row.'],
     duplicate_row: ['صف آخر يعدّل نفس المنتج أو الخيار.', 'Another row already changes the same product or option.'],
     product_conflict: ['قيمة المنتج تختلف عن أول صف له.', 'This product value differs from its first row.'],
-    required: ['هذه الخانة مطلوبة.', 'This cell is required.'],
+    required: ['هذه الخانة مطلوبة ولا يمكن مسحها.', 'This value is required and cannot be cleared.'],
     invalid_price: ['السعر يجب أن يكون رقمًا موجبًا بحد أقصى خانتين عشريتين.', 'Prices must be positive numbers with at most two decimals.'],
     invalid_number: ['المخزون يجب أن يكون عددًا صحيحًا موجبًا.', 'Stock must be a whole positive number.'],
     invalid_boolean: ['استخدم 1 للتتبع أو 0 لإيقافه.', 'Use 1 to track inventory or 0 to stop tracking.'],
@@ -61,7 +64,7 @@ const SHEET_ERRORS = {
     sku_duplicate: ['رمز المخزون مكرر في الملف.', 'This SKU is repeated in the file.'],
     stock_reserved: ['المخزون أقل من الكمية المحجوزة للطلبات.', 'Stock is below the quantity reserved for orders.'],
     stock_digital: ['مخزون المنتجات الرقمية يُدار من إعدادات التسليم.', 'Digital product stock is managed by delivery settings.'],
-    category_permission: ['إنشاء أقسام جديدة يحتاج صلاحية إنشاء الأقسام.', 'Creating new categories requires the create-categories permission.'],
+    category_not_found: ['استخدم أرقام أقسام موجودة في هذا المتجر (حتى 20) مفصولة بفواصل.', 'Use up to 20 category IDs from this store, separated by commas.'],
     too_long: ['النص أطول من المسموح.', 'The text is too long.'],
     options_mismatch: ['استخدم نفس أسماء الخيارات بنفس الترتيب في كل صفوف المنتج.', 'Use the same option names in the same order on every row of the product.'],
 };

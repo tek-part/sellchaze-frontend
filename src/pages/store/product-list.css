@@ -79,6 +79,8 @@
  .ws-product-list .ws-catalog-pagination .ws-icon-button { width:32px;height:32px;min-height:32px; }
 }
 /* G3 catalog power tools (TAR-036): price changes, sheets */
+.ws-catalog-help { margin:0 0 12px;padding-inline-start:18px;list-style:disc;color:var(--ws-muted);font-size:12px;line-height:1.8; }
+.ws-catalog-help code { font-size:12px;padding:1px 4px;border:1px solid var(--ws-border);border-radius:4px; }
 .ws-catalog-sheet { max-width:860px;width:min(860px,100%); }
 .ws-catalog-grid { display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px; }
 .ws-catalog-choice { display:grid;gap:8px;border:0;padding:0;margin:0;min-width:0; }
@@ -94,3 +96,4 @@
 .ws-catalog-tools-table ul { margin:0;padding-inline-start:16px;list-style:disc;max-height:none; }
 .ws-catalog-tools-table li { border:0;padding:0;display:list-item; }
 .ws-catalog-tools-table tr.is-error td,.ws-catalog-tools-table tr.is-error th { background:color-mix(in srgb, #dc2626 6%, transparent); }
+.ws-catalog-import-preview .ws-catalog-error,.ws-catalog-import-preview .ws-catalog-error :is(p,span,small,label) { color:#b42332; }

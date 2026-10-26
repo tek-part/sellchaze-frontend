@@ -32,8 +32,9 @@ async function workspace(page: Page, locale: 'ar' | 'en') {
     if (path === '/my-store/catalog/products' && method === 'GET') return json({ data: PRODUCTS, meta: { current_page: 1, last_page: 1, per_page: 25, total: 2 } });
     if (path === '/my-store/catalog/products/price-changes' && method === 'GET') return json({ data: history });
     if (path === '/my-store/catalog/products/price-changes/preview') {
-      writes.push({ method, path, body: body() });
-      return json({ data: { product_count: 2, variant_count: 1, out_of_range: 0, compare_below_price: 0, fingerprint: 'f'.repeat(64), samples: [{ id: 1, name: 'Red Runner', price: '150.00', new_price: '165.00', compare_price: null, new_compare_price: null, variants: 1 }, { id: 2, name: 'Blue Tote', price: '40.00', new_price: '44.00', compare_price: '50.00', new_compare_price: '55.00', variants: 0 }] } });
+      const sent = body() as Json; writes.push({ method, path, body: sent });
+      const free = sent.direction === 'decrease' && sent.value === '100';
+      return json({ data: { product_count: 2, variant_count: 1, out_of_range: 0, option_compare_below_price: 0, zero_prices: free ? 2 : 0, compare_below_price: 0, fingerprint: 'f'.repeat(64), samples: [{ id: 1, name: 'Red Runner', price: '150.00', new_price: '165.00', compare_price: null, new_compare_price: null, variants: 1 }, { id: 2, name: 'Blue Tote', price: '40.00', new_price: '44.00', compare_price: '50.00', new_compare_price: '55.00', variants: 0 }] } });
     }
     if (path === '/my-store/catalog/products/price-changes' && method === 'POST') {
       writes.push({ method, path, body: body() });
@@ -105,6 +106,23 @@ for (const locale of ['ar', 'en'] as const) {
     expect(api.writes.at(-1)?.path).toBe('/my-store/catalog/products/price-changes/7/revert');
   });
 
+  test(`price change to zero needs explicit confirmation in ${locale}`, async ({ page }) => {
+    const api = await workspace(page, locale);
+    await page.goto('/store/products');
+    await page.getByRole('button', { name: t('تعديل الأسعار بالجملة', 'Bulk price change') }).click();
+    const dialog = page.getByRole('dialog');
+    await dialog.getByRole('combobox', { name: new RegExp(`^${t('القسم', 'Category')}`) }).selectOption('3');
+    await dialog.getByRole('combobox', { name: new RegExp(`^${t('نوع التعديل', 'Change')}`) }).selectOption('decrease');
+    await dialog.getByLabel(t('القيمة', 'Value')).fill('100');
+    await dialog.getByRole('button', { name: t('معاينة التعديل', 'Preview change') }).click();
+    const apply = dialog.getByRole('button', { name: t('تطبيق التعديل', 'Apply change') });
+    await expect(apply).toBeDisabled();
+    await dialog.getByRole('checkbox', { name: t('أؤكد أن هذه المنتجات ستصبح مجانية', 'I confirm these products become free') }).check();
+    await accessible(page, '[role="dialog"]');
+    await apply.click();
+    await expect.poll(() => (api.writes.find(w => w.path === '/my-store/catalog/products/price-changes')?.body as Json | undefined)?.confirm_zero).toBe(true);
+  });
+
   test(`bulk edit adds selected products to a category in ${locale}`, async ({ page }) => {
     const api = await workspace(page, locale);
     await page.goto('/store/products');
@@ -124,6 +142,7 @@ for (const locale of ['ar', 'en'] as const) {
     await page.getByRole('button', { name: t('ملف Excel / CSV', 'Excel / CSV sheet') }).click();
     const dialog = page.getByRole('dialog');
     await expect(dialog.getByRole('radio', { name: t('تحديث المنتجات الموجودة (مطابقة بالمعرّف أو SKU)', 'Update existing products (match by ID or SKU)') })).toBeChecked();
+    await expect(dialog.getByText('[clear]', { exact: true })).toBeVisible();
     await dialog.getByLabel(t('ملف المنتجات', 'Products file')).setInputFiles({ name: 'broken.csv', mimeType: 'text/csv', buffer: Buffer.from('product_id,price\n1,120\n999,5\n') });
     await dialog.getByRole('button', { name: t('فحص الملف', 'Check file') }).click();
     await expect(dialog.getByRole('table')).toContainText(t('لا يوجد منتج مطابق في هذا المتجر.', 'No matching product exists in this store.'));

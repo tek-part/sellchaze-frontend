@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { HiOutlineArrowDownTray, HiOutlineArrowUpTray, HiOutlineXMark } from '../workspace/WorkspaceIcons';
 import api from '../../api/client';
 import { saveCatalogFile } from './CatalogImportDialog';
-import { sheetErrorText } from './catalog-tools';
+import { SHEET_CLEAR, sheetErrorText } from './catalog-tools';
 
 const errorText = (e) => Object.values(e.response?.data?.errors || {}).flat().join('\n') || e.response?.data?.message || e.message;
 async function blobError(e) {
@@ -84,7 +84,12 @@ export default function CatalogSheetDialog({ apiBase, categories, selected = [],
                     {canUpdate ? <label><input type="radio" name="sheet-mode" checked={mode === 'update'} onChange={() => { setMode('update'); setPreview(null); }} />{text('تحديث المنتجات الموجودة (مطابقة بالمعرّف أو SKU)', 'Update existing products (match by ID or SKU)')}</label> : null}
                     {canCreate ? <label><input type="radio" name="sheet-mode" checked={mode === 'create'} onChange={() => { setMode('create'); setPreview(null); }} />{text('إنشاء منتجات جديدة', 'Create new products')}</label> : null}
                 </fieldset>
-                <p>{mode === 'update' ? text('تُطابق الصفوف بـ product_id أو variant_id أو SKU. الخانة الفارغة في السعر قبل الخصم أو SKU أو سعر الخيار تمسح القيمة، والفارغة في المخزون أو الأقسام تتركها كما هي. لا تُنشأ خيارات جديدة في هذا الوضع.', 'Rows match by product_id, variant_id or SKU. An empty compare-at price, SKU or option price clears it; an empty stock or categories cell leaves it unchanged. New options are not created in this mode.') : text('كل مجموعة صفوف بنفس الاسم (أو نفس product_id) تصبح منتجًا جديدًا، وكل صف بقيم خيارات يصبح خيارًا بسعره ومخزونه.', 'Each group of rows with the same name (or product_id) becomes a new product, and each row with option values becomes an option with its own price and stock.')}</p>
+                <p>{mode === 'update' ? text('تُطابق الصفوف بـ product_id أو variant_id أو SKU. لا تُنشأ خيارات جديدة في هذا الوضع.', 'Rows match by product_id, variant_id or SKU. New options are not created in this mode.') : text('كل مجموعة صفوف بنفس الاسم (أو نفس product_id) تصبح منتجًا جديدًا، وكل صف بقيم خيارات يصبح خيارًا بسعره ومخزونه.', 'Each group of rows with the same name (or product_id) becomes a new product, and each row with option values becomes an option with its own price and stock.')}</p>
+                <ul className="ws-catalog-help">
+                    <li>{text('الخانة الفارغة تُبقي القيمة الحالية.', 'A blank cell keeps the current value.')}</li>
+                    <li>{text('لمسح قيمة اختيارية (السعر قبل الخصم، SKU، سعر الخيار، الأقسام) اكتب', 'To clear an optional value (compare-at price, SKU, option price, categories) type')} <code dir="ltr">{SHEET_CLEAR}</code>.</li>
+                    <li>{text('الأقسام تُحدد بأرقامها في عمود category_ids مفصولة بفواصل (مثل 3,7)؛ عمود categories للقراءة فقط ويتم تجاهله.', 'Categories are set by their IDs in the category_ids column, separated by commas (for example 3,7); the categories column is for reading only and is ignored.')}</li>
+                </ul>
                 <button type="button" disabled={!!busy} className="ws-catalog-dropzone" onClick={() => { if (input.current) { input.current.value = ''; input.current.click(); } }} onDragOver={(e) => e.preventDefault()} onDrop={(e) => { e.preventDefault(); if (e.dataTransfer.files.length === 1) choose(e.dataTransfer.files[0]); }}><HiOutlineArrowUpTray aria-hidden /><strong>{file?.name || text('اسحب ملف XLSX أو CSV هنا أو اضغط للاختيار', 'Drop an XLSX or CSV file here or click to choose')}</strong><small>{text('حتى 2000 صف و8 ميجابايت', 'Up to 2000 rows and 8 MiB')}</small></button>
                 <input ref={input} type="file" accept=".xlsx,.csv,text/csv" hidden aria-label={text('ملف المنتجات', 'Products file')} onChange={(e) => choose(e.target.files?.[0])} />
             </div></div> : null}

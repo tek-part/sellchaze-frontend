@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { estimatePrice, importProgress, importRunning, keyboardTarget, moveItem, orderChanged, priceChangePayload, sheetErrorText, validPriceValue } from '../components/store/catalog-tools';
+import { SHEET_CLEAR, estimatePrice, importProgress, importRunning, keyboardTarget, moveItem, orderChanged, priceChangePayload, sheetErrorText, validPriceValue } from '../components/store/catalog-tools';
 
 describe('catalog option ordering', () => {
     it('moves items without mutating the source and clamps targets', () => {
@@ -41,5 +41,7 @@ describe('imports', () => {
         expect(sheetErrorText({ code: 'sku_taken', message: 'x' }, true)).toContain('رمز المخزون');
         expect(sheetErrorText({ code: 'duplicate_row', message: 'Row 2 already updates this product.' }, false)).toContain('Row 2');
         expect(sheetErrorText({ code: 'unknown', message: 'Server text' }, false)).toBe('Server text');
+        expect(sheetErrorText({ code: 'category_not_found', message: 'x' }, false)).toContain('category IDs');
+        expect(SHEET_CLEAR).toBe('[clear]');
     });
 });

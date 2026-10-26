@@ -21,6 +21,7 @@ export default function CatalogPriceChangeDialog({ apiBase, categories, selected
     const [busy, setBusy] = useState('');
     const [error, setError] = useState('');
     const [notice, setNotice] = useState('');
+    const [confirmZero, setConfirmZero] = useState(false);
     const active = useRef(true); const inFlight = useRef(false); const key = useRef(null);
     const path = `${apiBase}/catalog/products/price-changes`;
     useEffect(() => { active.current = true; return () => { active.current = false; }; }, []);
@@ -32,7 +33,7 @@ export default function CatalogPriceChangeDialog({ apiBase, categories, selected
     const money = (value) => value === null || value === undefined ? '—' : new Intl.NumberFormat(ar ? 'ar-EG' : 'en', { style: 'currency', currency: currency || 'EGP', maximumFractionDigits: 2 }).format(Number(value));
     const scope = scopeType === 'products' ? { type: 'products', product_ids: selected.map((product) => product.id) } : { type: 'category', category_id: Number(categoryId) };
     const ready = validPriceValue(form) && (scopeType === 'products' ? selected.length > 0 : categoryId !== '');
-    const update = (patch) => { setForm((current) => ({ ...current, ...patch })); setPreview(null); setNotice(''); };
+    const update = (patch) => { setForm((current) => ({ ...current, ...patch })); setPreview(null); setConfirmZero(false); setNotice(''); };
     const run = async (mode, work) => {
         if (inFlight.current) return; inFlight.current = true; setBusy(mode); setError('');
         try { await work(); } catch (e) { if (active.current) setError(e.response?.status === 409 ? text('تغيّرت الأسعار أو المنتجات منذ المعاينة. اعرض المعاينة مرة أخرى.', 'Prices or products changed since the preview. Preview the change again.') : errorText(e)); }
@@ -41,10 +42,10 @@ export default function CatalogPriceChangeDialog({ apiBase, categories, selected
     const runPreview = () => run('preview', async () => {
         const { data } = await api.post(`${path}/preview`, priceChangePayload(form, scope));
         if (!active.current) return;
-        key.current = crypto.randomUUID(); setPreview(data.data);
+        key.current = crypto.randomUUID(); setConfirmZero(false); setPreview(data.data);
     });
     const apply = () => run('apply', async () => {
-        const { data } = await api.post(path, { ...priceChangePayload(form, scope), fingerprint: preview.fingerprint, idempotency_key: key.current });
+        const { data } = await api.post(path, { ...priceChangePayload(form, scope), fingerprint: preview.fingerprint, idempotency_key: key.current, ...(preview.zero_prices ? { confirm_zero: confirmZero } : {}) });
         if (!active.current) return;
         setHistory((rows) => [data.data, ...(rows || []).filter((row) => row.id !== data.data.id)]);
         setPreview(null); setForm(INITIAL);
@@ -89,13 +90,14 @@ export default function CatalogPriceChangeDialog({ apiBase, categories, selected
             </form>
             {preview ? <section className="ws-catalog-import-preview" aria-label={text('معاينة تعديل الأسعار', 'Price change preview')}>
                 <h3>{text(`سيتغير سعر ${preview.product_count} منتج و${preview.variant_count} خيار`, `${preview.product_count} products and ${preview.variant_count} options will change`)}</h3>
-                {preview.out_of_range ? <p role="alert" className="ws-catalog-error">{text(`${preview.out_of_range} سعر سيصبح أقل من صفر أو أكبر من الحد الأقصى. عدّل القيمة قبل التطبيق.`, `${preview.out_of_range} prices would fall below zero or exceed the maximum. Adjust the value before applying.`)}</p> : null}
+                {preview.out_of_range ? <p role="alert" className="ws-catalog-error">{text(`${preview.out_of_range} سعر سيصبح أقل من صفر أو أكبر من الحد الأقصى، أو سيصبح السعر قبل الخصم لخيار أقل من سعره. عدّل القيمة قبل التطبيق.`, `${preview.out_of_range} prices would fall below zero, exceed the maximum, or leave an option's compare-at price below its price. Adjust the value before applying.`)}{preview.option_compare_below_price ? ` ${text(`(${preview.option_compare_below_price} خيار يتبع سعر المنتج — فعّل تعديل أسعار الخيارات والسعر قبل الخصم)`, `(${preview.option_compare_below_price} options follow the product price — also apply to option and compare-at prices)`)}` : ''}</p> : null}
+                {preview.zero_prices ? <div role="alert" className="ws-catalog-error"><p>{text(`${preview.zero_prices} سعر سيصبح 0.00، أي أن المنتج سيُباع مجانًا.`, `${preview.zero_prices} prices would become 0.00, so those products would be sold for free.`)}</p><label className="ws-catalog-check"><input type="checkbox" checked={confirmZero} onChange={(e) => setConfirmZero(e.target.checked)} />{text('أؤكد أن هذه المنتجات ستصبح مجانية', 'I confirm these products become free')}</label></div> : null}
                 {preview.compare_below_price ? <p>{text(`${preview.compare_below_price} منتج سيفقد عرض الخصم لأن السعر قبل الخصم لن يكون أعلى من السعر.`, `${preview.compare_below_price} products will stop showing a sale because the compare-at price will no longer be above the price.`)}</p> : null}
                 {preview.product_count ? <div className="ws-catalog-table-scroll"><table className="ws-catalog-tools-table"><caption className="sr-only">{text('أمثلة على الأسعار الجديدة', 'Sample new prices')}</caption><thead><tr><th scope="col">{text('المنتج', 'Product')}</th><th scope="col">{text('السعر الحالي', 'Current price')}</th><th scope="col">{text('السعر الجديد', 'New price')}</th><th scope="col">{text('قبل الخصم', 'Compare-at')}</th></tr></thead>
                     <tbody>{preview.samples.map((row) => <tr key={row.id}><th scope="row">{row.name}{row.variants ? <small> · {text(`${row.variants} خيار`, `${row.variants} options`)}</small> : null}</th><td dir="ltr">{money(row.price)}</td><td dir="ltr">{row.new_price === null ? '—' : money(row.new_price)}</td><td dir="ltr">{row.compare_price === null ? '—' : `${money(row.compare_price)} → ${money(row.new_compare_price)}`}</td></tr>)}</tbody></table></div> : <p>{text('لا توجد منتجات مطابقة.', 'No matching products.')}</p>}
                 {preview.product_count > preview.samples.length ? <p>{text(`تُعرض أول ${preview.samples.length} منتجات فقط.`, `Showing the first ${preview.samples.length} products.`)}</p> : null}
                 <p>{text('يُطبّق التعديل على كل المنتجات دفعة واحدة، وتُحفظ الأسعار السابقة لتتمكن من التراجع بخطوة واحدة.', 'The change applies to every product at once, and previous prices are kept so you can undo it in one step.')}</p>
-                <div className="ws-confirm-actions"><button type="button" className="ws-secondary-button" disabled={!!busy} onClick={() => setPreview(null)}>{text('تعديل الإعدادات', 'Edit settings')}</button><button type="button" className="ws-primary-button" disabled={!!busy || !preview.product_count || preview.out_of_range > 0} onClick={() => void apply()}>{busy === 'apply' ? text('جارٍ التطبيق…', 'Applying…') : text('تطبيق التعديل', 'Apply change')}</button></div>
+                <div className="ws-confirm-actions"><button type="button" className="ws-secondary-button" disabled={!!busy} onClick={() => setPreview(null)}>{text('تعديل الإعدادات', 'Edit settings')}</button><button type="button" className="ws-primary-button" disabled={!!busy || !preview.product_count || preview.out_of_range > 0 || (preview.zero_prices > 0 && !confirmZero)} onClick={() => void apply()}>{busy === 'apply' ? text('جارٍ التطبيق…', 'Applying…') : text('تطبيق التعديل', 'Apply change')}</button></div>
             </section> : null}
             {error ? <p role="alert" className="ws-catalog-error ws-import-errors">{error}</p> : null}
             {notice ? <p role="status" className="ws-catalog-notice">{notice}</p> : null}
