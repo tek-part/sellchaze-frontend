@@ -29,4 +29,9 @@ describe('refund amounts', () => {
         expect(paymentStatusLabel('partially_refunded', false)).toBe('Partially refunded');
         expect(paymentStatusLabel('refunded', true)).toBe('مسترد');
     });
+    it('values a refund when only gift card value is left on an order whose money was never collected', () => {
+        const giftOnly = { ...summary, payment_collected: false, refundable_total: '78.00', refundable_to_gift_cards: '78.00', refundable_money: '0.00' };
+        expect(refundTotals(giftOnly, { 1: 3 }, '10')).toMatchObject({ items: 10000, shipping: 1000, computed: 11000, max: 7800 });
+        expect(refundTotals({ ...giftOnly, refundable_total: '1.00' }, { 1: 3 }, '10').max).toBe(100);
+    });
 });

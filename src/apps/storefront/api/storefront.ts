@@ -226,13 +226,22 @@ export interface CheckoutQuote {
   currency: string;
   /** Applied discounts, one per line on the summary (absent on older APIs: show `discount_total` alone). */
   discounts?: ReadonlyArray<AppliedDiscount>;
-  totals: { subtotal: string; discount_total: string; shipping_total: string; tax_total: string; grand_total: string; payment_adjustment_total?: string };
+  /** Gift cards in the order submitted: what each pays after every other total. */
+  gift_cards?: ReadonlyArray<QuoteGiftCard>;
+  /** What is left to pay after gift cards (absent on older APIs: the grand total). */
+  amount_due?: string;
+  totals: { subtotal: string; discount_total: string; shipping_total: string; tax_total: string; grand_total: string; payment_adjustment_total?: string; gift_card_total?: string };
   /** Zone rates eligible for this cart and address, and the one applied (absent on older APIs). */
   shipping?: import('../types/shipping').QuoteShipping | null;
   tax?: import('../types/shipping').TaxRule | null;
 }
-export const quoteCheckout = (items: ReadonlyArray<CheckoutItem>, coupon_code: string, selection: import('../types/shipping').ShippingSelection = {}, payment_method?: string): Promise<{ data: CheckoutQuote }> =>
-  apiSend('/checkout/quote', 'POST', { items, coupon_code, ...selection, ...(payment_method ? { payment_method } : {}) });
+/** A gift card on a quote: only the last four characters ever come back. */
+export interface QuoteGiftCard { last4: string; applied: string; balance_after: string }
+export interface GiftCardBalance { last4: string; balance: string; currency: string; expires_at: string | null }
+/** Rate-limited server-side; every failure is the same generic message. */
+export const checkGiftCard = (code: string): Promise<{ data: GiftCardBalance }> => apiSend('/checkout/gift-card/check', 'POST', { code });
+export const quoteCheckout = (items: ReadonlyArray<CheckoutItem>, coupon_code: string, selection: import('../types/shipping').ShippingSelection = {}, payment_method?: string, gift_cards: ReadonlyArray<string> = []): Promise<{ data: CheckoutQuote }> =>
+  apiSend('/checkout/quote', 'POST', { items, coupon_code, ...selection, ...(payment_method ? { payment_method } : {}), ...(gift_cards.length ? { gift_cards } : {}) });
 export const retryCheckoutPayment = (token: string): Promise<{ data: unknown; payment?: { redirect_url?: string | null } }> =>
   apiSend('/checkout/payment/retry', 'POST', { token });
 
@@ -326,6 +335,9 @@ export interface ApiOrder {
   refunded_total?: string;
   returns?: ReadonlyArray<ApiOrderReturn>;
   return_eligibility?: ApiReturnEligibility;
+  /** Paid by gift cards; `total` stays the order total and `amount_due` is what is left. */
+  gift_card_total?: string;
+  amount_due?: string;
   id: number;
   number: string;
   status: string;
