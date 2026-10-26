@@ -9,7 +9,7 @@ import clike from 'refractor/lang/clike.js';
 import javascript from 'refractor/lang/javascript.js';
 import '@uiw/react-textarea-code-editor/dist.css';
 import useStoreContext from '../../../hooks/useStoreContext';
-import useMerchantSettings from '../../../hooks/useMerchantSettings';
+import useStoreSettings from '../../../hooks/useStoreSettings';
 import useWorkspaceAppearance from '../../../components/workspace/useWorkspaceAppearance';
 import MerchantSettingsFeedback from '../../../components/store/MerchantSettingsFeedback';
 import MerchantSettingsSave from '../../../components/store/MerchantSettingsSave';
@@ -24,7 +24,7 @@ export default function StoreHeadCodePage() {
     return <HeadEditor key={context.apiBase} context={context} />;
 }
 function HeadEditor({ context }) {
-    const state = useMerchantSettings({ ...context, access: { ...context.access, canStoreSettings: context.access.canStoreHeadCode } }, 'head-code');
+    const state = useStoreSettings({ endpoint: 'head-code', enabled: context.access.canStoreHeadCode });
     const { ar, text, initial, draft, change, loading, busy, save } = state;
     const dialog = useRef(null);
     const appearance = useWorkspaceAppearance();
