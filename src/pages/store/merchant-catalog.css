@@ -9,7 +9,7 @@
 .ws-feed-channel { position:relative; }
 .ws-feed-channel span { position:absolute;top:-9px;inset-inline-start:14px;font-size:12px;line-height:18px;padding-inline:4px;background:var(--ws-panel);color:var(--ws-muted); }
 .sc-workspace .ws-page .ws-feed-channel select { width:100%;height:56px;padding:16px 14px;border:1px solid var(--ws-border);border-radius:8px;color:var(--ws-text);background:var(--ws-panel);font-size:16px;line-height:23px; }
-.ws-feed-create { width:100%;min-height:50.25px;padding:12px 20px;border-radius:6px;background:#0abb45;color:#fff;font-size:15px;line-height:26.25px;font-weight:500;cursor:pointer; }
+.ws-feed-create { width:100%;min-height:50.25px;padding:12px 20px;border-radius:6px;background:var(--ws-green-fill,#0b7a3b);color:#fff;font-size:15px;line-height:26.25px;font-weight:500;cursor:pointer; }
 .ws-feed-create:disabled,.ws-merchant-export:disabled { opacity:.6;cursor:wait; }
 .ws-feed-result { margin:24px 0;padding:16px;border:1px solid var(--ws-border);border-radius:8px;font-size:14px;line-height:22px; }
 .ws-feed-result > div { display:flex;gap:12px;margin:12px 0; }
@@ -25,7 +25,7 @@
 .ws-merchant-toggle input:checked { background:#0abb45; }
 .ws-merchant-toggle input:checked:after { inset-inline-start:22px; }
 .ws-merchant-toggle input:focus-visible { outline:2px solid var(--ws-green);outline-offset:3px; }
-.ws-merchant-export { display:flex;align-items:center;gap:0;max-width:100%;width:max-content;padding:8px 16px;background:#0abb45;border-radius:8px;color:#fff;font-size:14px;line-height:24.5px;font-weight:500;margin-top:16px;cursor:pointer; }
+.ws-merchant-export { display:flex;align-items:center;gap:0;max-width:100%;width:max-content;padding:8px 16px;background:var(--ws-green-fill,#0b7a3b);border-radius:8px;color:#fff;font-size:14px;line-height:24.5px;font-weight:500;margin-top:16px;cursor:pointer; }
 .ws-merchant-export img { width:512px;height:512px;object-fit:contain; }
 .sc-workspace .ws-page .ws-merchant-section h2 { font-size:24px;line-height:32.016px;font-weight:500;letter-spacing:0;margin:0 0 10.390625px; }
 .ws-merchant-section { margin-top:40px; }
