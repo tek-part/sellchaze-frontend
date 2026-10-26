@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Link, useNavigate, useOutletContext, useParams } from 'react-router-dom';
+import { Link, useLocation, useNavigate, useOutletContext, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import api from '../api/client';
 import useStoreScope from '../hooks/useStoreScope';
@@ -35,13 +35,15 @@ function Thumb({ url }) {
 }
 
 export default function StoreCollectionEditorPage() {
-    const { collectionId } = useParams(); const isNew = !collectionId; const navigate = useNavigate(); const { apiBase, uiBase } = useStoreScope();
+    const { collectionId } = useParams(); const isNew = !collectionId; const navigate = useNavigate(); const location = useLocation(); const { apiBase, uiBase } = useStoreScope();
     const { permissions = [] } = useOutletContext(); const { i18n } = useTranslation(); const ar = i18n.language.startsWith('ar'); const text = (a, e) => ar ? a : e;
     const path = `${apiBase}/catalog/collections`; const canEdit = permissions.includes(isNew ? 'categories-create' : 'categories-edit');
     const [draft, setDraft] = useState(blank); const [products, setProducts] = useState([]); const [record, setRecord] = useState(null);
     const [options, setOptions] = useState({ categories: [], brands: [], tags: [] });
     const [loading, setLoading] = useState(true); const [loadError, setLoadError] = useState(false); const [reload, setReload] = useState(0);
     const [busy, setBusy] = useState(false); const [error, setError] = useState(''); const [saved, setSaved] = useState(false);
+    // Store pages remount per path: a just-created collection arrives here with the confirmation, shown once.
+    const savedOnArrival = useRef(location.state?.collectionSaved === true);
     const [image, setImage] = useState(null); const [imagePreview, setImagePreview] = useState(''); const [removeImage, setRemoveImage] = useState(false);
     const [handleTouched, setHandleTouched] = useState(false);
     const [search, setSearch] = useState(''); const [results, setResults] = useState([]); const [searching, setSearching] = useState(false);
@@ -56,7 +58,7 @@ export default function StoreCollectionEditorPage() {
     };
 
     useEffect(() => {
-        let active = true; setLoading(true); setError(''); setSaved(false); setLoadError(false); setImage(null); setRemoveImage(false);
+        let active = true; setLoading(true); setError(''); setSaved(savedOnArrival.current); savedOnArrival.current = false; setLoadError(false); setImage(null); setRemoveImage(false);
         const read = isNew ? Promise.resolve(null) : api.get(`${path}/${collectionId}`).then(({ data }) => data.data);
         const ruleOptions = api.get(`${path}/rule-options`).then(({ data }) => data.data).catch(() => ({ categories: [], brands: [], tags: [] }));
         Promise.all([read, ruleOptions]).then(([row, opts]) => {
@@ -129,7 +131,7 @@ export default function StoreCollectionEditorPage() {
             const row = data.data; const next = fromRow(row); const list = row.products || [];
             setRecord(row); setDraft(next); setProducts(list); setImage(null); setRemoveImage(false); setHandleTouched(true); if (fileInput.current) fileInput.current.value = '';
             setSnapshot(JSON.stringify({ draft: next, ids: list.map((p) => p.id) })); setSaved(true);
-            if (isNew) navigate(`${uiBase}/collections/${row.id}`, { replace: true });
+            if (isNew) navigate(`${uiBase}/collections/${row.id}`, { replace: true, state: { collectionSaved: true } }); // the new page shows the confirmation
         } catch (e) { setError(failure(e)); } finally { saving.current = false; setBusy(false); }
     }
 

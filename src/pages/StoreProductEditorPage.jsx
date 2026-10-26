@@ -1,6 +1,6 @@
 import { SidebarChevronIcon } from '../components/workspace/SidebarReferenceIcons';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Link, useNavigate, useOutletContext, useParams } from 'react-router-dom';
+import { Link, useLocation, useNavigate, useOutletContext, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import api from '../api/client';
 import useStoreScope from '../hooks/useStoreScope';
@@ -27,14 +27,16 @@ const blank = { name: '', description: '', short_description: '', slug: '', sku:
 const errorText = (e) => Object.values(e.response?.data?.errors || {}).flat().join(' ') || e.response?.data?.message || e.message;
 
 export default function StoreProductEditorPage() {
-    const { productId } = useParams(); const isNew = !productId; const navigate = useNavigate();
+    const { productId } = useParams(); const isNew = !productId; const navigate = useNavigate(); const location = useLocation();
     const { apiBase, uiBase } = useStoreScope(); const { store, permissions = [] } = useOutletContext();
     const { locales, defaultLocale } = useStoreLocales(); const { i18n } = useTranslation();
     const ar = i18n.language.startsWith('ar'); const text = (a, e) => ar ? a : e;
     const [locale, setLocale] = useState(defaultLocale);
     const [product, setProduct] = useState(null); const [draft, setDraft] = useState(blank); const [categories, setCategories] = useState([]);
     const [variantCount, setVariantCount] = useState(0); const [loading, setLoading] = useState(!isNew); const [busy, setBusy] = useState(false);
-    const [error, setError] = useState(''); const [saved, setSaved] = useState(false); const [loadError, setLoadError] = useState(false); const [nonce, setNonce] = useState(0);
+    const [error, setError] = useState(''); const [saved, setSaved] = useState(false);
+    // Store pages remount per path: a just-created record arrives here with the confirmation, shown once.
+    const savedOnArrival = useRef(location.state?.editorSaved === true); const [loadError, setLoadError] = useState(false); const [nonce, setNonce] = useState(0);
     const [cover, setCover] = useState(null); const [gallery, setGallery] = useState([]); const [removedMedia, setRemovedMedia] = useState([]); const [removeCover, setRemoveCover] = useState(false);
     const [mediaOrder, setMediaOrder] = useState([]);
     const [preferencesOpen, setPreferencesOpen] = useState(false);
@@ -49,7 +51,7 @@ export default function StoreProductEditorPage() {
     const path = `${apiBase}/catalog/products`;
     useEffect(() => { setLocale(defaultLocale); }, [defaultLocale, productId]);
     useEffect(() => {
-        let active = true; generation.current += 1; inFlight.current = false; setBusy(false); setLoading(!isNew); setLoadError(false); setError(''); setSaved(false);
+        let active = true; generation.current += 1; inFlight.current = false; setBusy(false); setLoading(!isNew); setLoadError(false); setError(''); setSaved(savedOnArrival.current); savedOnArrival.current = false;
         setCover(null); setGallery([]); setRemovedMedia([]); setRemoveCover(false); setConfirmDelete(false); setMediaOrder([]);
         setPreferencesOpen(false);
         setAiOpen(false);
@@ -104,7 +106,7 @@ export default function StoreProductEditorPage() {
             setCover(null); setGallery([]); setRemovedMedia([]); setRemoveCover(false); fileVersion.current += 1;
             setProduct(data.data); setMediaOrder((data.data.media || []).map((item) => item.id)); setDraft({ ...blank, ...Object.fromEntries(Object.keys(blank).map((key) => [key, data.data[key] ?? blank[key]])) }); setSaved(true);
             setPixelRows(productPixelRows(data.data.product_preferences?.browser_pixels));
-            if (isNew) navigate(`${uiBase}/products/${data.data.id}/edit`, { replace: true });
+            if (isNew) navigate(`${uiBase}/products/${data.data.id}/edit`, { replace: true, state: { editorSaved: true } });
         } catch (e) { if (generation.current === attemptGeneration) { setError(errorText(e)); if (Object.keys(e.response?.data?.errors || {}).some((key) => key.startsWith('product_preferences') && !key.startsWith('product_preferences.browser_pixels'))) setPreferencesOpen(true); } } finally { if (generation.current === attemptGeneration) { inFlight.current = false; setBusy(false); } }
     }
     async function destroy() {

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Link, useNavigate, useOutletContext, useParams } from 'react-router-dom';
+import { Link, useLocation, useNavigate, useOutletContext, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import api from '../api/client';
 import useStoreScope from '../hooks/useStoreScope';
@@ -10,13 +10,15 @@ const blank = { name: '', slug: '', description: '', parent_id: '', position: 0,
 const field = 'mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-3 text-sm';
 const failure = (e) => Object.values(e.response?.data?.errors || {}).flat().join(' ') || e.response?.data?.message || e.message;
 export default function StoreCategoryEditorPage() {
-    const { categoryId } = useParams(); const isNew = !categoryId; const navigate = useNavigate(); const { apiBase, uiBase } = useStoreScope();
+    const { categoryId } = useParams(); const isNew = !categoryId; const navigate = useNavigate(); const location = useLocation(); const { apiBase, uiBase } = useStoreScope();
     const { permissions = [] } = useOutletContext(); const { i18n } = useTranslation(); const ar = i18n.language.startsWith('ar'); const text = (a, e) => ar ? a : e;
     const path = `${apiBase}/catalog/categories`; const canEdit = permissions.includes(isNew ? 'categories-create' : 'categories-edit');
     const [draft, setDraft] = useState(blank); const [category, setCategory] = useState(null); const [parents, setParents] = useState([]); const [loading, setLoading] = useState(true); const [loadError, setLoadError] = useState(false);
-    const [image, setImage] = useState(null); const [preview, setPreview] = useState(''); const [removeImage, setRemoveImage] = useState(false); const [busy, setBusy] = useState(false); const [error, setError] = useState(''); const [saved, setSaved] = useState(false); const [reload, setReload] = useState(0); const saving = useRef(false); const fileInput = useRef(null);
+    const [image, setImage] = useState(null); const [preview, setPreview] = useState(''); const [removeImage, setRemoveImage] = useState(false); const [busy, setBusy] = useState(false); const [error, setError] = useState(''); const [saved, setSaved] = useState(false);
+    // Store pages remount per path: a just-created record arrives here with the confirmation, shown once.
+    const savedOnArrival = useRef(location.state?.editorSaved === true); const [reload, setReload] = useState(0); const saving = useRef(false); const fileInput = useRef(null);
     useEffect(() => {
-        let active = true; setLoading(true); setError(''); setSaved(false); setLoadError(false); setImage(null); setRemoveImage(false);
+        let active = true; setLoading(true); setError(''); setSaved(savedOnArrival.current); savedOnArrival.current = false; setLoadError(false); setImage(null); setRemoveImage(false);
         const read = isNew ? Promise.resolve(null) : api.get(`${path}/${categoryId}`).then(({ data }) => data.data);
         Promise.all([read, fetchAllPages(path)]).then(([row, list]) => { if (!active) return; setCategory(row); setDraft(row ? Object.fromEntries(Object.keys(blank).map((key) => [key, row[key] ?? blank[key]])) : { ...blank }); setParents(list); }).catch((e) => { if (active) { setError(failure(e)); setLoadError(true); } }).finally(() => { if (active) setLoading(false); });
         return () => { active = false; };
@@ -31,7 +33,7 @@ export default function StoreCategoryEditorPage() {
         try {
             const { data } = await api.post(isNew ? path : `${path}/${categoryId}`, payload); const row = data.data;
             setCategory(row); setDraft(Object.fromEntries(Object.keys(blank).map((key) => [key, row[key] ?? blank[key]]))); setImage(null); setRemoveImage(false); if (fileInput.current) fileInput.current.value = ''; setSaved(true);
-            if (isNew) navigate(`${uiBase}/categories/${row.id}/edit`, { replace: true });
+            if (isNew) navigate(`${uiBase}/categories/${row.id}/edit`, { replace: true, state: { editorSaved: true } });
         } catch (e) { setError(failure(e)); } finally { saving.current = false; setBusy(false); }
     }
     const blockedParents = new Set([Number(categoryId)]); let changed = true;

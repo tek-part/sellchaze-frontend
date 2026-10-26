@@ -164,6 +164,8 @@
 /* ----------------------------------------------------------------- Commerce · Price */
 .sf-price { font-family: var(--heading); color: var(--text); font-variant-numeric: tabular-nums; }
 .sf-price__current { color: inherit; }
+/* Card prices wrap the compare price under the current one instead of overflowing narrow grids. */
+.sf-product-card__meta .sf-price { display: flex; flex-wrap: wrap; align-items: baseline; column-gap: 0.4em; min-width: 0; max-width: 100%; }
 .sf-price__compare {
   margin-inline-start: var(--sp-2);
   color: var(--muted);

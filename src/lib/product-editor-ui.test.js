@@ -7,7 +7,7 @@ import api from '../api/client';
 
 const { navigate, params } = vi.hoisted(() => ({ navigate: vi.fn(), params: {} }));
 vi.mock('../api/client', () => ({ default: { get: vi.fn(), post: vi.fn() } }));
-vi.mock('react-router-dom', () => ({ Link: ({ to, children, ...props }) => React.createElement('a', { href: to, ...props }, children), useNavigate: () => navigate, useParams: () => params, useOutletContext: () => ({ store: { currency: 'EGP' }, permissions: ['products-create', 'products-edit'] }) }));
+vi.mock('react-router-dom', () => ({ Link: ({ to, children, ...props }) => React.createElement('a', { href: to, ...props }, children), useNavigate: () => navigate, useLocation: () => ({ pathname: '/', search: '', state: null }), useParams: () => params, useOutletContext: () => ({ store: { currency: 'EGP' }, permissions: ['products-create', 'products-edit'] }) }));
 vi.mock('react-i18next', () => ({ useTranslation: () => ({ i18n: { language: 'en' } }) }));
 vi.mock('../hooks/useStoreScope', () => ({ default: () => ({ apiBase: '/my-store', uiBase: '/store' }) }));
 vi.mock('../hooks/useStoreLocales', () => ({ default: () => ({ locales: ['en', 'ar'], defaultLocale: 'en' }) }));
@@ -43,7 +43,7 @@ describe('initial editor save workflow', () => {
         expect(host.querySelector('[role=alert]').textContent).toContain('Connection interrupted');
         api.post.mockResolvedValueOnce(response); await submit();
         expect(api.post.mock.calls[1][1].get('creation_key')).toBe(first.get('creation_key'));
-        expect(navigate).toHaveBeenCalledExactlyOnceWith('/store/products/99/edit', { replace: true });
+        expect(navigate).toHaveBeenCalledExactlyOnceWith('/store/products/99/edit', { replace: true, state: { editorSaved: true } });
     });
     it('blocks incomplete properties without sending a request', async () => {
         await mount(); await fill(host.querySelector('.pe-name input'), 'Review product');
