@@ -16,6 +16,9 @@ export function storeAccess(roles = [], permissions = []) {
     const canStoreCategories = isStoreOwner || can('store.categories.manage');
     const canStoreOrders = isStoreOwner || can('store.orders.manage');
     const canStoreCoupons = isStoreOwner || can('store.coupons.manage');
+    // Discount managers may look up gift cards; issuing, adjusting and disabling needs its own grant.
+    const canManageGiftCards = isStoreOwner || can('store.gift_cards.manage');
+    const canStoreGiftCards = canManageGiftCards || canStoreCoupons;
     const canStoreReviews = isStoreOwner || can('store.reviews.manage');
     const canStoreAnalytics = isStoreOwner || can('store.analytics.view');
     const canStoreThemes = isStoreOwner || can('store.themes.manage');
@@ -25,7 +28,7 @@ export function storeAccess(roles = [], permissions = []) {
     const canStorePayments = isStoreOwner || can('store.settings.manage');
     const storeMyGroup = canStoreSettings || canStorePayments || canStoreThemes || canStorePages || canStoreMenus;
     const storeCatalogGroup = canStoreProducts || canStoreCategories;
-    const storeSalesGroup = canStoreOrders || canStoreCoupons;
+    const storeSalesGroup = canStoreOrders || canStoreCoupons || canStoreGiftCards;
     const hasStoreAccess = canStoreView || storeMyGroup || storeCatalogGroup
         || storeSalesGroup || canStoreReviews || canStoreAnalytics;
 
@@ -38,6 +41,8 @@ export function storeAccess(roles = [], permissions = []) {
         canStoreCategories,
         canStoreOrders,
         canStoreCoupons,
+        canStoreGiftCards,
+        canManageGiftCards,
         canStoreReviews,
         canStoreAnalytics,
         canStoreThemes,

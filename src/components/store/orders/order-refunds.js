@@ -1,3 +1,5 @@
+import { refundValueAvailable } from '../../../lib/gift-card-refunds';
+
 // Refund and return vocabulary shared by the order detail page and the Returns list.
 // Labels are [ar, en] pairs, like the rest of the orders workspace.
 
@@ -86,7 +88,8 @@ export function lineRefundCents(line, quantity) {
 /** Computed refund (items + shipping) and the ceiling the merchant may type, both in cents. */
 export function refundTotals(summary, quantities, shippingAmount) {
     if (!summary) return { items: 0, shipping: 0, computed: 0, max: 0 };
-    const collected = Boolean(summary.payment_collected);
+    // Collected money, or gift card value not yet returned (cash on delivery returned undelivered).
+    const collected = refundValueAvailable(summary);
     const items = collected ? (summary.items || []).reduce((sum, line) => sum + lineRefundCents(line, quantities[line.store_order_item_id] || 0), 0) : 0;
     const shipping = collected ? Math.min(toCents(shippingAmount), toCents(summary.shipping?.refundable)) : 0;
     const computed = items + shipping;

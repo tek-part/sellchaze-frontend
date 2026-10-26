@@ -17,7 +17,9 @@ const BADGE = { active: 'bg-emerald-50 text-emerald-800 ring-emerald-200', expir
 export default function StoreGiftCardDetailPage() {
     const { giftCardId } = useParams();
     const { apiBase, uiBase } = useStoreScope();
-    const { store } = useOutletContext() ?? {};
+    const { store, access } = useOutletContext() ?? {};
+    // Discount managers can look; issuing, adjusting and disabling needs store.gift_cards.manage.
+    const canManage = access?.canManageGiftCards ?? true;
     const { i18n } = useTranslation();
     const ar = i18n.language?.startsWith('ar'); const text = (a, e) => (ar ? a : e);
     const [card, setCard] = useState(null);
@@ -81,7 +83,7 @@ export default function StoreGiftCardDetailPage() {
                         <p className="text-sm text-slate-600">{text('القيمة الأصلية', 'Initial value')}: {money(card.initial_value)}</p>
                     </section>
 
-                    <section className={CARD} aria-labelledby="gift-card-adjust">
+                    {canManage ? <section className={CARD} aria-labelledby="gift-card-adjust">
                         <h2 id="gift-card-adjust" className={HEADING}>{text('تعديل الرصيد', 'Adjust balance')}</h2>
                         <form className="space-y-4" onSubmit={async (event) => {
                             event.preventDefault();
@@ -109,7 +111,7 @@ export default function StoreGiftCardDetailPage() {
                             <p className="text-xs text-slate-600">{text('يُسجَّل كل تعديل مع السبب واسمك في سجل البطاقة. لا يمكن أن يصبح الرصيد سالبًا.', 'Every adjustment is logged with its reason and your name. The balance can never go below zero.')}</p>
                             <button type="submit" className={BUTTON} disabled={!adjustBody || busy === 'adjust'}>{busy === 'adjust' ? '…' : text('حفظ التعديل', 'Save adjustment')}</button>
                         </form>
-                    </section>
+                    </section> : null}
 
                     <section className={CARD} aria-labelledby="gift-card-history">
                         <h2 id="gift-card-history" className={HEADING}>{text('السجل', 'History')}</h2>
@@ -143,10 +145,12 @@ export default function StoreGiftCardDetailPage() {
                     <section className={CARD} aria-labelledby="gift-card-status">
                         <h2 id="gift-card-status" className={HEADING}>{text('الحالة', 'Status')}</h2>
                         <p className="text-sm text-slate-600">{enabled ? text('البطاقة قابلة للاستخدام عند الدفع.', 'The card can be used at checkout.') : text('البطاقة معطلة ولا يمكن استخدامها.', 'The card is disabled and cannot be used.')}</p>
+                        {canManage ? <>
                         <button type="button" className={enabled ? 'rounded-xl border border-red-200 px-4 py-2.5 text-sm font-semibold text-red-700 hover:bg-red-50 disabled:opacity-50' : BUTTON} disabled={busy === 'status'}
                             onClick={() => void run('status', () => api.put(`${apiBase}/gift-cards/${card.id}`, { status: enabled ? 'disabled' : 'active' }), enabled ? text('تم تعطيل البطاقة', 'Gift card disabled') : text('تم تفعيل البطاقة', 'Gift card enabled'))}>
                             {enabled ? text('تعطيل البطاقة', 'Disable gift card') : text('تفعيل البطاقة', 'Enable gift card')}
                         </button>
+                        </> : null}
                     </section>
 
                     <section className={CARD} aria-labelledby="gift-card-details">
@@ -155,6 +159,7 @@ export default function StoreGiftCardDetailPage() {
                             <div><dt className="text-slate-600">{text('العميل', 'Customer')}</dt><dd className="text-slate-900">{[card.customer_name, card.customer_email, card.customer_phone].filter(Boolean).join(' · ') || '—'}</dd></div>
                             <div><dt className="text-slate-600">{text('تاريخ الإصدار', 'Issued')}</dt><dd className="text-slate-900">{fmtDate(card.created_at)}</dd></div>
                         </dl>
+                        {canManage ? <>
                         <form className="space-y-3" onSubmit={(event) => { event.preventDefault(); void run('details', () => api.put(`${apiBase}/gift-cards/${card.id}`, { expires_at: details.expires_at || null, note: details.note.trim() || null }), text('تم الحفظ', 'Saved')); }}>
                             <div>
                                 <label className={LABEL} htmlFor="gift-card-expiry">{text('تاريخ الانتهاء', 'Expiry date')}</label>
@@ -166,6 +171,7 @@ export default function StoreGiftCardDetailPage() {
                             </div>
                             <button type="submit" className={BUTTON} disabled={busy === 'details'}>{busy === 'details' ? '…' : text('حفظ', 'Save')}</button>
                         </form>
+                        </> : <p className="text-sm text-slate-600">{text('تاريخ الانتهاء', 'Expiry date')}: {fmtDate(card.expires_at)}{card.note ? ` · ${card.note}` : ''}</p>}
                     </section>
                 </div>
             </div>

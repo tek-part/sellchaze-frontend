@@ -62,6 +62,11 @@ describe('Store workspace navigation', () => {
         expect(buildWorkspaceStoreNav(t, storeAccess(['Employee'], coupons), coupons).flatMap((group) => group.items ?? [group]).some((item) => item.key === 'gift-cards')).toBe(true);
         const products = ['store.products.manage'];
         expect(buildWorkspaceStoreNav(t, storeAccess(['Employee'], products), products).flatMap((group) => group.items ?? [group]).some((item) => item.key === 'gift-cards')).toBe(false);
+        const giftCardsOnly = ['store.gift_cards.manage'];
+        expect(buildWorkspaceStoreNav(t, storeAccess(['Employee'], giftCardsOnly), giftCardsOnly).flatMap((group) => group.items ?? [group]).some((item) => item.key === 'gift-cards')).toBe(true);
+        expect(storeAccess(['Employee'], coupons)).toMatchObject({ canStoreGiftCards: true, canManageGiftCards: false });
+        expect(storeAccess(['Employee'], giftCardsOnly)).toMatchObject({ canStoreGiftCards: true, canManageGiftCards: true });
+        expect(storeAccess(['Merchant'], [])).toMatchObject({ canStoreGiftCards: true, canManageGiftCards: true });
     });
     it('shows blog posts only to people who can manage pages, highlighting it on the editor routes', () => {
         const pages = ['store.pages.manage'];

@@ -215,7 +215,7 @@ for (const locale of ['ar', 'en'] as const) for (const width of [1920, 390, 320]
     await products.focus(); await page.keyboard.press('Enter');
     await expect(orders).toHaveAttribute('aria-expanded', 'true');
     await expect(products).toHaveAttribute('aria-expanded', 'true');
-    await expect(sidebar.locator('nav>div').first()).toHaveCSS('height', '835px');
+    await expect(sidebar.locator('nav>div').first()).toHaveCSS('height', '866px');
     const geometry = await sidebar.evaluate(element => {
       const scroll = element.querySelector('.ws-sidebar-scroll')!;
       const groups = Array.from(element.querySelectorAll('nav>div'));
@@ -232,7 +232,7 @@ for (const locale of ['ar', 'en'] as const) for (const width of [1920, 390, 320]
     });
     expect(geometry.firstMenuInset).toBe(48);
     expect(geometry.community).toBe(true);
-    expect(geometry.groups.map(group => group.height)).toEqual([835, 204]);
+    expect(geometry.groups.map(group => group.height)).toEqual([866, 204]);
     for (const group of geometry.groups) expect(group).toMatchObject({ paddingBottom: '4px', labelHeight: 28, labelInset: 12, labelPadding: '0px 8px', letterSpacing: '0.66px', textTransform: 'uppercase' });
     const newsletter = sidebar.locator('a[href="/store/newsletter"]');
     await expect(newsletter.locator('.ws-nav-badge')).toHaveCount(0);

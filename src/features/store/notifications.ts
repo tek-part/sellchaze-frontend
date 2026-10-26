@@ -40,7 +40,7 @@ export interface NotificationDelivery {
 
 export const LIMITS = { senderName: 100, subject: 200, emailBody: 6000, whatsappBody: 3000, staffRecipients: 5 } as const;
 
-export const DEFAULT_VARIABLES = ['customer_name', 'order_number', 'order_total', 'store_name', 'order_url', 'items', 'payment_method', 'shipping_address', 'tracking_number', 'carrier'];
+export const DEFAULT_VARIABLES = ['customer_name', 'order_number', 'order_total', 'store_name', 'order_url', 'items', 'payment_method', 'shipping_address', 'tracking_number', 'carrier', 'amount_due', 'gift_card_total'];
 
 /** Order in which catalog groups are rendered; unknown groups follow in catalog order. */
 export const GROUP_ORDER = ['orders', 'shipping', 'staff'];

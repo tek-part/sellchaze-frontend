@@ -6,6 +6,7 @@ import {
     REFUND_METHODS, REFUND_REASONS, RETURN_REASONS, RETURN_RESOLUTIONS, RETURN_STATUSES, RETURN_STATUS_TONES,
     fromCents, refundTotals, toCents, vocabularyLabel,
 } from './order-refunds';
+import { giftCardRefundSplit, refundValueAvailable } from '../../../lib/gift-card-refunds';
 import './order-refunds.css';
 
 const errorMessage = (error) => Object.values(error.response?.data?.errors || {}).flat().join(' ') || error.response?.data?.message || error.message;
@@ -58,9 +59,11 @@ export default function StoreOrderRefunds({ apiBase, endpoint, order, ar, theme,
             {!summary && !error ? <p role="status" className="ws-order-muted">{text('جار تحميل المبالغ المستردة…', 'Loading refunds…')}</p> : null}
             {summary ? <>
                 <p className="ws-refunds-total" data-testid="refunded-of"><bdi>{refunded}</bdi></p>
-                {!summary.payment_collected ? <p className="ws-order-muted">{text('لم يُحصَّل مبلغ لهذا الطلب، لذلك يسجل الاسترداد المنتجات المرتجعة فقط.', 'No payment was collected for this order, so a refund records returned items only.')}</p> : null}
+                {!refundValueAvailable(summary) ? <p className="ws-order-muted">{text('لم يُحصَّل مبلغ لهذا الطلب، لذلك يسجل الاسترداد المنتجات المرتجعة فقط.', 'No payment was collected for this order, so a refund records returned items only.')}</p> : null}
+                {Number(summary.gift_card_total || 0) > 0 ? <p className="ws-order-muted" data-testid="refund-gift-card-balance">{text('بطاقات الهدايا', 'Gift cards')}: <bdi>{money(summary.refunded_to_gift_cards)}</bdi> {text('أعيدت من', 'returned of')} <bdi>{money(summary.gift_card_total)}</bdi></p> : null}
                 {summary.refunds?.length ? <ol className="ws-refunds-history">{summary.refunds.map((refund) => <li key={refund.id}>
                     <strong><bdi>{money(refund.amount)}</bdi> · {vocabularyLabel(REFUND_METHODS, refund.method, ar)}</strong>
+                    {Number(refund.gift_card_amount || 0) > 0 ? <small data-testid="refund-history-split">{text('إلى بطاقة الهدية', 'To gift card')} <bdi>{money(refund.gift_card_amount)}</bdi> · {text('مبلغ نقدي', 'Money')} <bdi>{money(refund.money_amount)}</bdi></small> : null}
                     <small>{refund.actor || text('النظام', 'System')} · {date(refund.created_at)}{refund.reason ? ` · ${vocabularyLabel(REFUND_REASONS, refund.reason, ar)}` : ''}</small>
                     <ul>{refund.items.map((item) => <li key={item.store_order_item_id}>{item.name || `#${item.store_order_item_id}`} × {item.quantity}{item.restocked_quantity ? ` · ${text('أعيد للمخزون', 'restocked')} ${item.restocked_quantity}` : ''}</li>)}
                         {Number(refund.shipping_amount) > 0 ? <li>{text('الشحن', 'Shipping')} <bdi>{money(refund.shipping_amount)}</bdi></li> : null}</ul>
@@ -94,7 +97,8 @@ function RefundDialog({ apiBase, endpoint, summary, returnRow, order, ar, theme,
     const [reason, setReason] = useState(returnRow ? 'returned' : 'customer_request'); const [method, setMethod] = useState('original_payment');
     const [restock, setRestock] = useState(true); const [note, setNote] = useState(''); const [busy, setBusy] = useState(false); const [error, setError] = useState('');
     const working = useRef(false);
-    const collected = Boolean(summary.payment_collected);
+    // Money that was collected, or gift card value still on the order (see gift-card-refunds.js).
+    const collected = refundValueAvailable(summary);
     const totals = refundTotals(summary, quantities, shipping);
     const shippingMax = collected ? toCents(summary.shipping?.refundable) : 0;
     const amountCents = manual ? toCents(amount) : totals.max;
@@ -103,6 +107,8 @@ function RefundDialog({ apiBase, endpoint, summary, returnRow, order, ar, theme,
     const shippingInvalid = toCents(shipping) > shippingMax || Number(shipping) < 0;
     const amountInvalid = manual && (amount === '' || amountCents > totals.max || Number(amount) < 0);
     const nothing = units === 0 && toCents(shipping) === 0;
+    const hasGiftCards = Number(summary.gift_card_total || 0) > 0;
+    const split = giftCardRefundSplit(summary, amountCents);
     const money = (cents) => `${fromCents(cents)} ${order.currency}`;
     const setQuantity = (line, value) => setQuantities((current) => ({ ...current, [line.store_order_item_id]: Math.max(0, Math.min(line.refundable_quantity, Math.trunc(Number(value) || 0))) }));
 
@@ -119,7 +125,10 @@ function RefundDialog({ apiBase, endpoint, summary, returnRow, order, ar, theme,
                 const items = Object.entries(quantities).filter(([, quantity]) => quantity > 0).map(([id, quantity]) => ({ store_order_item_id: Number(id), quantity }));
                 await api.post(`${endpoint}/refunds`, { ...refund, items, expected_refunded_total: summary.refunded_total });
             }
-            await onSaved(text(`سُجل استرداد ${money(amountCents)}. أعد المبلغ للعميل عبر بوابة الدفع أو يدويًا.`, `Refund of ${money(amountCents)} recorded. Return the money to the customer through your payment gateway or manually.`));
+            const cardNote = split.giftCard > 0 ? text(` عاد ${money(split.giftCard)} إلى بطاقة الهدية تلقائيًا.`, ` ${money(split.giftCard)} went back to the gift card automatically.`) : '';
+            await onSaved(split.money > 0 || split.giftCard === 0
+                ? text(`سُجل استرداد ${money(amountCents)}. أعد ${money(split.money)} للعميل عبر بوابة الدفع أو يدويًا.`, `Refund of ${money(amountCents)} recorded. Return ${money(split.money)} to the customer through your payment gateway or manually.`) + cardNote
+                : text(`سُجل استرداد ${money(amountCents)}.`, `Refund of ${money(amountCents)} recorded.`) + cardNote);
         } catch (e) { setError(errorMessage(e)); }
         finally { working.current = false; setBusy(false); }
     }
@@ -129,7 +138,8 @@ function RefundDialog({ apiBase, endpoint, summary, returnRow, order, ar, theme,
             <header><DialogTitle>{returnRow ? text(`استلام واسترداد الإرجاع #${returnRow.id}`, `Receive and refund return #${returnRow.id}`) : text('استرداد مبلغ', 'Refund')}</DialogTitle><button type="button" onClick={onClose} disabled={busy} aria-label={text('إغلاق', 'Close')}><HiOutlineXMark aria-hidden /></button></header>
             <div className="ws-order-action-body">
                 <p className="ws-refund-warning" role="note">{text('لا تُعيد سيلشيز الأموال تلقائيًا. يُسجَّل الاسترداد في دفاترك فقط، ويجب عليك إعادة المبلغ للعميل عبر لوحة بوابة الدفع أو نقدًا أو بتحويل بنكي.', 'Sellchaze does not send money back automatically. This records the refund in your books; return the money to the customer yourself through your payment gateway dashboard, in cash or by bank transfer.')}</p>
-                {!collected ? <p className="ws-order-muted">{text('لم يُحصَّل مبلغ لهذا الطلب، لذلك قيمة الاسترداد صفر ويُسجَّل إرجاع المنتجات فقط.', 'No payment was collected for this order, so the refund amount is zero and only the returned items are recorded.')}</p> : null}
+                {!collected ? <p className="ws-order-muted">{text('لم يُحصَّل مبلغ لهذا الطلب، لذلك قيمة الاسترداد صفر ويُسجَّل إرجاع المنتجات فقط.', 'No payment was collected for this order, so the refund amount is zero and only the returned items are recorded.')}</p>
+                    : !summary.payment_collected ? <p className="ws-order-muted">{text('لم يُحصَّل أي مبلغ نقدي، لذلك يعود جزء بطاقة الهدية فقط إلى البطاقة.', 'No money was collected, so only the gift card part goes back to the card.')}</p> : null}
                 <fieldset className="ws-refund-items"><legend>{text('المنتجات', 'Items')}</legend>
                     {(summary.items || []).map((line) => {
                         const value = quantities[line.store_order_item_id] || 0; const id = `refund-qty-${line.store_order_item_id}`;
@@ -147,7 +157,8 @@ function RefundDialog({ apiBase, endpoint, summary, returnRow, order, ar, theme,
                 {collected && shippingMax > 0 ? <label>{text('استرداد الشحن', 'Shipping refund')} <small className="ws-order-muted">({text('الحد الأقصى', 'max')} <bdi>{money(shippingMax)}</bdi>)</small>
                     <input type="number" inputMode="decimal" min={0} max={fromCents(shippingMax)} step="0.01" value={shipping} disabled={busy} aria-invalid={shippingInvalid} onChange={(event) => setShipping(event.target.value)} /></label> : null}
                 <div className="ws-refund-summary" aria-live="polite"><span>{text('قيمة الاسترداد', 'Refund amount')}</span><strong><bdi data-testid="refund-total">{money(manual ? amountCents : totals.max)}</bdi></strong>
-                    <small className="ws-order-muted">{text('المتبقي القابل للاسترداد', 'Remaining refundable')} <bdi>{money(toCents(summary.refundable_total))}</bdi></small></div>
+                    <small className="ws-order-muted">{text('المتبقي القابل للاسترداد', 'Remaining refundable')} <bdi>{money(toCents(summary.refundable_total))}</bdi></small>
+                    {hasGiftCards ? <small data-testid="refund-split">{text('إلى بطاقة الهدية', 'To gift card')} <bdi>{money(split.giftCard)}</bdi> · {text('مبلغ تعيده للعميل', 'Money you return')} <bdi>{money(split.money)}</bdi></small> : null}</div>
                 {collected ? <label className="ws-refund-check"><input type="checkbox" checked={manual} disabled={busy} onChange={(event) => { setManual(event.target.checked); setAmount(fromCents(totals.max)); }} />{text('إدخال مبلغ مختلف', 'Enter a different amount')}</label> : null}
                 {manual ? <label>{text('المبلغ', 'Amount')} <small className="ws-order-muted">({text('الحد الأقصى', 'max')} <bdi>{money(totals.max)}</bdi>)</small>
                     <input type="number" inputMode="decimal" min={0} max={fromCents(totals.max)} step="0.01" value={amount} disabled={busy} aria-invalid={amountInvalid} onChange={(event) => setAmount(event.target.value)} /></label> : null}

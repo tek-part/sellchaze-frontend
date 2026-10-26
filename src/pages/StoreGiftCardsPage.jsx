@@ -14,7 +14,8 @@ const DEFAULTS = { sort: null, perPage: 25 };
 
 export default function StoreGiftCardsPage() {
     const { id, apiBase, uiBase } = useStoreScope();
-    const { store } = useOutletContext() ?? {};
+    const { store, access } = useOutletContext() ?? {};
+    const canManage = access?.canManageGiftCards ?? true;
     const { i18n } = useTranslation();
     const ar = i18n.language?.startsWith('ar'); const text = (a, e) => (ar ? a : e);
     const [result, setResult] = useState(null);
@@ -80,7 +81,7 @@ export default function StoreGiftCardsPage() {
                 </div>
                 <div className="ws-catalog-actions">
                     {id ? <Link to="/stores" className="ws-dt-button">← {text('المتاجر', 'Stores')}</Link> : null}
-                    {issueButton}
+                    {canManage ? issueButton : null}
                 </div>
             </header>
 
@@ -90,10 +91,10 @@ export default function StoreGiftCardsPage() {
                 <IndexTable table={table} rows={rows} loading={loading} error={err} onRetry={() => setReload((value) => value + 1)} meta={result?.meta}
                     label={text('بطاقات الهدايا', 'Gift cards')} rowHref={href}
                     emptyState={{ icon: HiOutlineGift, title: text('لا توجد بطاقات هدايا بعد', 'No gift cards yet'),
-                        description: text('أصدر بطاقة هدية وسلّم الكود للعميل بنفسك.', 'Issue a gift card and hand its code to the customer yourself.'), action: issueButton }} />
+                        description: text('أصدر بطاقة هدية وسلّم الكود للعميل بنفسك.', 'Issue a gift card and hand its code to the customer yourself.'), action: canManage ? issueButton : null }} />
             </div>
 
-            <IssueGiftCardDialog open={issuing} onClose={() => setIssuing(false)} onIssued={() => setReload((value) => value + 1)}
+            <IssueGiftCardDialog open={issuing && canManage} onClose={() => setIssuing(false)} onIssued={() => setReload((value) => value + 1)}
                 apiBase={apiBase} currency={store?.currency || 'EGP'} ar={ar} />
         </section>
     );

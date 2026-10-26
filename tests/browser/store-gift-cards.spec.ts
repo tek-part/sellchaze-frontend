@@ -226,3 +226,81 @@ for (const locale of ['en', 'ar'] as const) {
     await expect(page).toHaveURL(/\/order\/success\?number=SYNTHETIC-GIFT/);
   });
 }
+
+/* ---- merchant refund dialog: gift card vs money ---- */
+const refundOrder = {
+  id: 42, order_number: 'SYN-GIFT-42', status: 'delivered', currency: 'EGP', payment_method: 'cod', payment_status: 'paid', grand_total: '130.00', subtotal: '100.00',
+  shipping_total: '30.00', discount_total: '0.00', tax_total: '0.00', refunded_total: '0.00', gift_card_total: '78.00', amount_due: '52.00',
+  gift_cards: [{ gift_card_id: 5, last4: 'AB12', amount: '78.00' }], next_statuses: ['request_refund', 'refunded'], fulfillment: { requires_shipping: true },
+  customer: { name: 'Synthetic buyer', phone: '+201000000000', email: 'buyer@example.test' }, shipping_address: { city: 'Cairo', line1: '1 Synthetic Street' },
+  items: [{ id: 601, name: 'Synthetic tee', unit_price: '100.00', quantity: 1, line_total: '100.00' }], timeline: [],
+  review: { classification: null, version: 0 }, placed_at: '2026-10-18T10:00:00Z', created_at: '2026-10-18T10:00:00Z', updated_at: '2026-10-20T10:00:00Z',
+};
+const refundSummary = (collected: boolean) => ({
+  currency: 'EGP', order_status: collected ? 'delivered' : 'returning_from_delivery', payment_status: collected ? 'paid' : 'pending', payment_collected: collected, refundable: true,
+  grand_total: '130.00', refunded_total: '0.00', refundable_total: collected ? '130.00' : '78.00', fully_refunded: false,
+  gift_card_total: '78.00', money_collected: collected ? '52.00' : '0.00', refunded_money: '0.00', refunded_to_gift_cards: '0.00',
+  refundable_money: collected ? '52.00' : '0.00', refundable_to_gift_cards: '78.00',
+  shipping: { total: '30.00', refunded: '0.00', refundable: '30.00' },
+  items: [{ store_order_item_id: 601, name: 'Synthetic tee', variant_name: null, sku: null, unit_price: '100.00', line_total: '100.00', quantity: 1, refunded_quantity: 0,
+    refundable_quantity: 1, allocated_amount: '100.00', refunded_amount: '0.00', refundable_amount: '100.00', restockable: true, digital: false }],
+  refunds: [],
+});
+
+async function refundDashboard(page: Page, locale: Locale, collected: boolean) {
+  const posts: unknown[] = [];
+  await page.addInitScript((language) => { localStorage.setItem('sellchase_access_token', 'isolated-gift-refunds'); localStorage.setItem('sellchase_locale', language); localStorage.setItem('sellchaze_workspace_appearance', 'light'); }, locale);
+  await page.route('**/api/v1/**', async (route) => {
+    const request = route.request(); const path = new URL(request.url()).pathname.replace('/api/v1', '');
+    const headers = { 'Access-Control-Allow-Origin': request.headers()['origin'] || 'http://127.0.0.1:4183', 'Access-Control-Allow-Credentials': 'true', 'Access-Control-Allow-Headers': 'authorization,content-type,x-requested-with', 'Access-Control-Allow-Methods': 'GET,POST,PATCH,OPTIONS' };
+    if (request.method() === 'OPTIONS') return route.fulfill({ status: 204, headers });
+    if (request.method() !== 'GET') { posts.push(request.postDataJSON()); return route.fulfill({ status: 201, json: { data: refundSummary(collected) }, headers }); }
+    if (path === '/auth/me') return route.fulfill({ json: { user: { id: 1, name: 'Gift refund fixture', roles: ['Merchant'], permissions: ['store.orders.manage'], is_active: true } }, headers });
+    if (path === '/my-store') return route.fulfill({ json: { data: { id: 1, owner_user_id: 1, name: 'Local gift refund fixture', slug: 'fixture', status: 'active', currency: 'EGP' } }, headers });
+    if (path === '/my-store/orders/42/detail') return route.fulfill({ json: { data: { ...refundOrder, status: collected ? 'delivered' : 'returning_from_delivery', payment_status: collected ? 'paid' : 'pending' } }, headers });
+    if (path === '/my-store/orders/42/refunds') return route.fulfill({ json: { data: refundSummary(collected) }, headers });
+    return route.fulfill({ json: { data: [], unread_count: 0 }, headers });
+  });
+  return posts;
+}
+
+for (const locale of ['en', 'ar'] as const) {
+  const t = (ar: string, en: string): string => (locale === 'ar' ? ar : en);
+
+  test(`refund dialog shows what goes back to the gift card and what is money (${locale})`, async ({ page }) => {
+    await refundDashboard(page, locale, true);
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto('/store/orders/42');
+    await expect(page.getByTestId('refund-gift-card-balance')).toContainText('78.00 EGP');
+    await page.locator('.ws-order-toolbar').getByRole('button', { name: t('استرداد', 'Refund'), exact: true }).click();
+    const dialog = page.getByRole('dialog');
+    await dialog.getByRole('button', { name: t('زيادة Synthetic tee', 'Increase Synthetic tee'), exact: true }).click();
+    await expect(dialog.getByTestId('refund-total')).toHaveText('100.00 EGP');
+    await expect(dialog.getByTestId('refund-split')).toContainText('60.00 EGP');
+    await expect(dialog.getByTestId('refund-split')).toContainText('40.00 EGP');
+    await dialog.getByLabel(new RegExp(t('استرداد الشحن', 'Shipping refund'))).fill('30');
+    await expect(dialog.getByTestId('refund-total')).toHaveText('130.00 EGP');
+    await expect(dialog.getByTestId('refund-split')).toContainText('78.00 EGP');
+    await expect(dialog.getByTestId('refund-split')).toContainText('52.00 EGP');
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)).toBe(true);
+    const axe = await new AxeBuilder({ page }).include('.ws-refund-panel').withTags(['wcag2a', 'wcag2aa']).analyze();
+    expect(axe.violations.filter((v) => ['serious', 'critical'].includes(v.impact ?? '')).map((v) => v.id)).toEqual([]);
+  });
+
+  test(`an undelivered cash-on-delivery return refunds only the gift card part (${locale})`, async ({ page }) => {
+    const posts = await refundDashboard(page, locale, false);
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await page.goto('/store/orders/42');
+    await page.locator('.ws-order-toolbar').getByRole('button', { name: t('استرداد', 'Refund'), exact: true }).click();
+    const dialog = page.getByRole('dialog');
+    await expect(dialog).toContainText(t('يعود جزء بطاقة الهدية فقط', 'only the gift card part goes back'));
+    await dialog.getByRole('button', { name: t('زيادة Synthetic tee', 'Increase Synthetic tee'), exact: true }).click();
+    await dialog.getByLabel(new RegExp(t('استرداد الشحن', 'Shipping refund'))).fill('30');
+    await expect(dialog.getByTestId('refund-total')).toHaveText('78.00 EGP');
+    await expect(dialog.getByTestId('refund-split')).toContainText('78.00 EGP');
+    await expect(dialog.getByTestId('refund-split')).toContainText('0.00 EGP');
+    await dialog.getByRole('button', { name: new RegExp(`^${t('استرداد', 'Refund')} 78\\.00`) }).click();
+    await expect.poll(() => posts.length).toBe(1);
+    expect(posts[0]).toMatchObject({ items: [{ store_order_item_id: 601, quantity: 1 }], shipping_amount: '30.00', amount: null });
+  });
+}
