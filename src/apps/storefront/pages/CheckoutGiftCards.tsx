@@ -26,14 +26,15 @@ export function GiftCardField({ model, disabled = false, className }: { model: G
   </div>;
 }
 
-/** "Gift card •••• 1234 −X" lines, then what is left to pay. */
+/** "Gift card •••• 1234 −X" lines, then what is left to pay — or, with a deposit, "pay now X / on delivery Y". */
 export function GiftCardLines({ quote, definition = false, className }: {
-  quote: Pick<CheckoutQuote, 'gift_cards' | 'amount_due' | 'totals' | 'currency'>; definition?: boolean; className?: string;
+  quote: Pick<CheckoutQuote, 'gift_cards' | 'amount_due' | 'totals' | 'currency' | 'deposit'>; definition?: boolean; className?: string;
 }): ReactElement | null {
   const { locale } = useLocale();
   const ar = locale === 'ar';
   const lines = giftCardLines(quote);
-  if (!lines.length) return null;
+  const deposit = quote.deposit;
+  if (!lines.length && !deposit) return null;
   const Label = definition ? 'dt' : 'span';
   const Value = definition ? 'dd' : 'span';
   return <>
@@ -41,9 +42,18 @@ export function GiftCardLines({ quote, definition = false, className }: {
       <Label>{ar ? 'بطاقة هدية' : 'Gift card'} <bdi dir="ltr">{maskGiftCard(line.last4)}</bdi></Label>
       <Value>−{formatMoney(line.amount, quote.currency, locale)}</Value>
     </div>)}
-    <div className={className} data-amount-due>
+    {deposit ? <>
+      <div className={className} data-deposit-now>
+        <Label>{ar ? 'ادفع الآن (عربون)' : 'Pay now (deposit)'}</Label>
+        <Value>{formatMoney(Number(deposit.amount), quote.currency, locale)}</Value>
+      </div>
+      {Number(deposit.remaining) > 0 ? <div className={className} data-deposit-remaining>
+        <Label>{ar ? 'عند الاستلام' : 'On delivery'}</Label>
+        <Value>{formatMoney(Number(deposit.remaining), quote.currency, locale)}</Value>
+      </div> : null}
+    </> : <div className={className} data-amount-due>
       <Label>{ar ? 'المبلغ المستحق' : 'Amount due'}</Label>
       <Value>{formatMoney(quoteAmountDue(quote), quote.currency, locale)}</Value>
-    </div>
+    </div>}
   </>;
 }

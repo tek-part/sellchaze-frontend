@@ -8,6 +8,7 @@ import {
   retryCheckoutPayment,
   submitCheckout,
   type StorefrontPaymentMethod,
+  type PaymentDepositRule,
   type CheckoutItem,
   type CheckoutQuote,
 } from '../api/storefront';
@@ -42,6 +43,8 @@ export interface CheckoutContactPayload {
   payment_method?: string;
   /** The grand total shown to the shopper; the server answers 409 total_changed with a new quote if it differs. */
   expected_total?: string;
+  /** The deposit shown to the shopper ('0.00' when none); a different deposit also answers 409 total_changed. */
+  expected_deposit?: string;
 }
 
 interface RetryState {
@@ -66,6 +69,8 @@ export function useCheckoutPaymentFlow(options?: { items: ReadonlyArray<Checkout
   const scope = window.location.origin;
   const [attempt, setAttempt] = useState<CheckoutAttempt | undefined>(() => readCheckoutAttempt(scope));
   const [paymentMethods, setPaymentMethods] = useState<ReadonlyArray<StorefrontPaymentMethod>>([]);
+  // The basket needs a deposit: only methods that collect it now are offered (G1).
+  const [depositRule, setDepositRule] = useState<PaymentDepositRule | null>(null);
   const [paymentMethod, setPaymentMethod] = useState('');
   const [paymentRetry, setPaymentRetry] = useState<RetryState>();
   const [error, setError] = useState<string>();
@@ -84,9 +89,10 @@ export function useCheckoutPaymentFlow(options?: { items: ReadonlyArray<Checkout
   useEffect(() => {
     let active = true;
     void getPaymentMethods(JSON.parse(paymentBasketKey) as number[])
-      .then(({ data }) => {
+      .then(({ data, deposit }) => {
         if (!active) return;
         setPaymentMethods(data);
+        setDepositRule(deposit ?? null);
         setPaymentMethod((current) => data.some((method) => method.slug === current) ? current : data[0]?.slug || '');
       })
       .catch((requestError: unknown) => {
@@ -208,6 +214,7 @@ export function useCheckoutPaymentFlow(options?: { items: ReadonlyArray<Checkout
     correctedQuote,
     totalChanged,
     paymentMethods,
+    depositRule,
     paymentMethod,
     setPaymentMethod,
     paymentRetry,

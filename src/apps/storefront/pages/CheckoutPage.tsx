@@ -20,6 +20,8 @@ import { taxLineLabel } from '../utils/shipping';
 import { ThemeRenderer, useTemplate } from '../theme-engine';
 import { flowContext } from './flow-context';
 import { useCheckoutPaymentFlow } from './useCheckoutPaymentFlow';
+import { DepositNote, PaymentMethodDetail, useDepositPaymentMethods } from './CheckoutDeposit';
+import { quoteConfirmation } from './checkout-deposit';
 import { useQuoteContact } from './useQuoteContact';
 import { CheckoutRecovery } from './CheckoutRecovery';
 import { clearCheckoutAttempt, readCheckoutAttempt } from './checkout-attempt';
@@ -126,11 +128,12 @@ function BasketCheckout(): ReactElement {
   const quote = checkout.correctedQuote(quoteKey) ?? (!quoteQ.loading && !quoteQ.error && quoteQ.data?.key === quoteKey ? quoteQ.data.data : null);
   // Gift cards that pay everything leave nothing for a payment method to collect.
   const paidByGiftCards = giftCardsCoverTotal(quote, giftCards.codes);
+  const paymentMethods = useDepositPaymentMethods(checkout, quote);
   const placeOrder = async (event: FormEvent): Promise<void> => {
     event.preventDefault();
     if (!checkout.paymentRetry && (!minimumOrderAllows(quote) || !contact.shippingReady || !contact.phoneVerification.ready || !contact.botProtection.ready || contact.countryAllowed === false)) return;
     await checkout.submit({ ...contact.payload(), coupon_code: appliedCoupon, lead_token: lead.submitToken(), ...(quote?.payment_adjustment_token ? { payment_adjustment_token: quote.payment_adjustment_token } : {}),
-      ...(giftCards.codes.length ? { gift_cards: giftCards.codes } : {}), ...(paidByGiftCards ? { payment_method: undefined } : {}), ...(quote ? { expected_total: quote.totals.grand_total } : {}) }, quoteKey);
+      ...(giftCards.codes.length ? { gift_cards: giftCards.codes } : {}), ...(paidByGiftCards ? { payment_method: undefined } : {}), ...quoteConfirmation(quote) }, quoteKey);
   };
   if (!cart.lines.length && !checkout.completed && !checkout.busy && !checkout.unresolved) return <Navigate to="/cart" replace />;
   // A rate that stopped fitting the cart (coupon, quantity) is dropped so the cheapest eligible one applies.
@@ -138,7 +141,7 @@ function BasketCheckout(): ReactElement {
   const summary = <OrderSummary quote={quote} quoteQ={quoteQ} coupon={coupon} setCoupon={setCoupon} appliedCoupon={appliedCoupon} disabled={checkout.busy || checkout.unresolved}
     applyCoupon={() => { setAppliedCoupon(coupon.trim()); quoteQ.reload(); }} removeCoupon={() => { clearOfferCoupon(store); setAppliedCoupon(''); setCoupon(''); }} giftCards={giftCards} reloadAll={reloadAll} />;
   const totalText = quote ? formatMoney(Number(quote.totals.grand_total), quote.currency, locale) : formatMoney(cart.totals.subtotal, cart.totals.currency || store.currency, locale);
-  const methodName = (method: (typeof checkout.paymentMethods)[number]): string => (method.slug === 'cod' && method.name === 'Cash on delivery' ? (ar ? 'الدفع عند الاستلام' : 'Cash on delivery') : method.slug === 'bank_transfer' && method.name === 'Bank transfer' ? (ar ? 'تحويل بنكي' : 'Bank transfer') : method.name) + (method.test_mode ? (ar ? ' (تجريبي)' : ' (Test)') : '');
+  const methodName = (method: (typeof paymentMethods)[number]): string => (method.slug === 'cod' && method.name === 'Cash on delivery' ? (ar ? 'الدفع عند الاستلام' : 'Cash on delivery') : method.slug === 'bank_transfer' && method.name === 'Bank transfer' ? (ar ? 'تحويل بنكي' : 'Bank transfer') : method.name) + (method.test_mode ? (ar ? ' (تجريبي)' : ' (Test)') : '');
 
   return <div className="sf-co">
     <div className="sf-co__main">
@@ -164,8 +167,8 @@ function BasketCheckout(): ReactElement {
             <h2 id="sf-co-payment">{t('checkout.payment')}</h2>
             <p className="sf-co-section__note">{ar ? 'كل المعاملات آمنة ومشفّرة.' : 'All transactions are secure and encrypted.'}</p>
             {paidByGiftCards ? <p className="sf-co-paid-note" role="status" data-paid-by-gift-cards>{ar ? 'بطاقات الهدايا تغطي إجمالي الطلب، لا حاجة لطريقة دفع.' : 'Your gift cards cover the full total. No payment method is needed.'}</p>
-              : checkout.paymentMethods.length ? <div className="sf-co-choices" role="radiogroup" aria-labelledby="sf-co-payment">
-              {checkout.paymentMethods.map((method) => {
+              : paymentMethods.length ? <><DepositNote quote={quote} /><div className="sf-co-choices" role="radiogroup" aria-labelledby="sf-co-payment">
+              {paymentMethods.map((method) => {
                 const selected = checkout.paymentMethod === method.slug;
                 return <div key={method.slug} style={{ display: 'contents' }}>
                   <label className={`sf-co-choice ${selected ? 'is-selected' : ''}`}>
@@ -173,10 +176,10 @@ function BasketCheckout(): ReactElement {
                     <span className="sf-co-choice__label"><strong>{methodName(method)}</strong></span>
                     <span className="sf-co-choice__aside"><PaymentMethodLogo slug={method.slug} src={method.logo_url} /></span>
                   </label>
-                  {selected && method.description ? <div className="sf-co-choice__detail">{method.description}</div> : null}
+                  {selected ? <PaymentMethodDetail method={method} className="sf-co-choice__detail" /> : null}
                 </div>;
               })}
-            </div> : <p className="sf-field__error">{ar ? 'لا توجد طريقة دفع متاحة حاليًا.' : 'No payment method is currently available.'}</p>}
+            </div></> : <p className="sf-field__error">{ar ? 'لا توجد طريقة دفع متاحة حاليًا.' : 'No payment method is currently available.'}</p>}
           </section>
         </fieldset>
         {checkout.error && !checkout.unresolved ? <div className="sf-co-alert" role="alert"><p>{checkout.error}</p>{!checkout.paymentRetry && !checkout.totalChanged ? <Button type="button" variant="secondary" onClick={reloadAll}>{ar ? 'تحديث خيارات التوصيل' : 'Refresh delivery options'}</Button> : null}</div> : null}

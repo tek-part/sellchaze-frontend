@@ -5,6 +5,7 @@ import PaymentMethodLogo from '../../../shared/payments/PaymentMethodLogo';
 const reasons = {
     order_closed: ['الطلب ملغي أو ضمن مراحل الإرجاع.', 'The order is cancelled or in a return stage.'],
     provider_controls: ['تحدد بوابة الدفع الإلكترونية نتيجة هذه المعاملة.', 'The online payment provider controls this transaction.'],
+    deposit_order: ['طلب بعربون: سجّل العربون والمبلغ المتبقي من صفحة الطلب.', 'Deposit order: record the deposit and the remaining amount from the order page.'],
     settled_payment: ['يوجد تحصيل مسجل؛ لا يمكن إعادته إلى حالة غير مدفوعة.', 'A collection is recorded; it cannot be changed to unpaid.'],
     missing_transaction: ['لا توجد معاملة دفع مسجلة لهذا الطلب.', 'No payment transaction is recorded for this order.'],
     amount_changed: ['مبلغ المعاملة أو عملتها لا يطابق الطلب.', 'The transaction amount or currency differs from the order.'],

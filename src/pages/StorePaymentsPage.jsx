@@ -11,14 +11,19 @@ import StoreMediaPicker from '../components/store/StoreMediaPicker';
 import MerchantSettingsHeading from '../components/store/MerchantSettingsHeading';
 import PaymentMethodLogo from '../shared/payments/PaymentMethodLogo';
 import useStoreContext from '../hooks/useStoreContext';
+import StorePaymentDepositSettings from '../components/store/StorePaymentDepositSettings';
+import { TRANSFER_TARGET_LIMIT, transferTargetsPayload } from '../lib/order-deposit';
 import './store-payments.css';
+const TRANSFER_METHODS = ['bank_transfer', 'transfer_receipt'];
+const TARGET_ERRORS = { incomplete: ['أكمل اسم ورقم كل وجهة تحويل.', 'Complete the label and number of each transfer target.'], link: ['الرابط يجب أن يبدأ بـ https:// أو http://', 'The link must start with https:// or http://'], limit: ['وجهتا تحويل كحد أقصى.', 'At most two transfer targets.'] };
 const MASK = '********';
 function normalize(row) {
     const fields = row.credential_fields || [];
     return { ...row, available: row.available !== false, order: Number(row.order || 0), notes: row.notes || '',
         provider_name: row.provider_name || row.name,
         presentation: { name: row.name || '', description: row.description || '', logo_asset_id: row.logo_asset_id || null,
-            price_adjustment: row.price_adjustment || { enabled: false, type: 'fixed', direction: 'add', value: '0.00' } },
+            price_adjustment: row.price_adjustment || { enabled: false, type: 'fixed', direction: 'add', value: '0.00' },
+            transfer_targets: (row.transfer_targets || []).map(target => ({ label: target.label || '', number: target.number || '', link: target.link || '' })) },
         stored: Object.fromEntries(fields.map(key => [key, Boolean(row.credentials?.[key])])),
         credentials: Object.fromEntries(fields.map(key => [key, (row.visible_fields || []).includes(key) ? (row.credentials?.[key] || '') : ''])) };
 }
@@ -85,7 +90,7 @@ export default function StorePaymentsPage() {
     const context = useStoreContext();
     return <PaymentMethods key={context.apiBase} context={context} />;
 }
-function PaymentMethods({ context: { apiBase, uiBase, access } }) {
+function PaymentMethods({ context: { apiBase, uiBase, access, store } }) {
     const { t, i18n } = useTranslation();
     const ar = i18n.language.startsWith('ar');
     const text = (a, e) => ar ? a : e;
@@ -112,11 +117,14 @@ function PaymentMethods({ context: { apiBase, uiBase, access } }) {
     const save = async (event, gateway = draft) => {
         event?.preventDefault();
         if (saving) return;
+        const { transfer_targets: rawTargets, ...shown } = gateway.presentation;
+        const targets = TRANSFER_METHODS.includes(gateway.slug) ? transferTargetsPayload(rawTargets) : { targets: undefined };
+        if (targets.error) { setError(TARGET_ERRORS[targets.error][ar ? 0 : 1]); return; }
         setSaving(true); setError('');
         try {
             const { data } = await api.put(`${apiBase}/payments`, { gateways: [{ slug: gateway.slug,
                 enabled: Boolean(gateway.enabled), test_mode: Boolean(gateway.test_mode), order: Number(gateway.order || 0), notes: gateway.notes,
-                presentation: gateway.presentation,
+                presentation: targets.targets ? { ...shown, transfer_targets: targets.targets } : shown,
                 credentials: Object.fromEntries(Object.entries(gateway.credentials).filter(([, value]) => value.trim() && value !== MASK)) }] });
             setRows(rowsFrom(data)); setDraft(null);
             notify.success(text('تم حفظ طريقة الدفع', 'Payment method saved'));
@@ -129,6 +137,7 @@ function PaymentMethods({ context: { apiBase, uiBase, access } }) {
         <MerchantSettingsHeading title={text('طرق الدفع', 'Payment methods')} description={text('اختر طرق الدفع المناسبة لمتجرك، ورتّب ظهورها للعملاء.', 'Choose how customers pay and set their display order.')} />
         {error && !draft ? <div role="alert" className="ws-payments-error">{error}<button type="button" onClick={() => setAttempt(n => n + 1)}>{text('إعادة المحاولة', 'Retry')}</button></div> : null}
         <div className="ws-payments-toolbar"><span>{text('طرق الدفع المفعّلة', 'Enabled payment methods')}: {rows.filter(row => row.enabled).length}</span><label><span className="sr-only">{text('بحث عن طريقة دفع', 'Search payment methods')}</span><input type="search" value={filter} onChange={event => setFilter(event.target.value)} placeholder={text('بحث عن طريقة دفع', 'Search payment methods')} /></label></div>
+        <StorePaymentDepositSettings apiBase={apiBase} currency={store?.currency} />
         {loading ? <p role="status">{text('جارٍ تحميل طرق الدفع…', 'Loading payment methods…')}</p> : <div className="ws-payments-grid">{rows.filter(row => `${row.name} ${row.provider_name} ${row.slug}`.toLowerCase().includes(filter.toLowerCase())).map(row => <section className="ws-payment-card" key={row.slug}>
             <div className="ws-payment-card-logo"><PaymentMethodLogo slug={row.slug} src={row.logo_url} width={120} height={64} /></div>
             <h2>{providerName(row)}</h2>
@@ -149,6 +158,16 @@ function PaymentMethods({ context: { apiBase, uiBase, access } }) {
                         <Toggle label={text('تفعيل طريقة الدفع', 'Enable payment method')} checked={draft.enabled} disabled={!draft.available || saving} onChange={enabled => patch({ enabled })} />
                         <FormField label={text('اسم طريقة الدفع', 'Customer-facing name')} htmlFor="payment-name"><input id="payment-name" className={INPUT_CLASS} value={draft.presentation.name} maxLength={120} onChange={event => presentation({ name: event.target.value })} /></FormField>
                         <FormField label={text('وصف طريقة الدفع', 'Customer-facing description')} htmlFor="payment-description"><textarea id="payment-description" className={INPUT_CLASS} value={draft.presentation.description} maxLength={2000} onChange={event => presentation({ description: event.target.value })} /></FormField>
+                        {TRANSFER_METHODS.includes(draft.slug) ? <fieldset className="ws-payment-targets"><legend>{text('وجهات التحويل', 'Transfer targets')}</legend>
+                            <p>{text('حتى وجهتين، مثل حساب بنكي ومحفظة إلكترونية أو إنستاباي. يظهر الرقم للعميل مع زر نسخ، والرابط (مثل رابط الدفع عبر إنستاباي) كرابط قابل للضغط.', 'Up to two, such as a bank account and an e-wallet or InstaPay. Customers see the number with a copy button and the link (e.g. an InstaPay payment link) as a clickable link.')}</p>
+                            {draft.presentation.transfer_targets.map((target, index) => <div className="ws-payment-target" key={index}>
+                                <FormField label={text('الاسم', 'Label')} htmlFor={`payment-target-label-${index}`}><input id={`payment-target-label-${index}`} className={INPUT_CLASS} value={target.label} maxLength={80} placeholder={text('مثال: إنستاباي', 'e.g. InstaPay')} onChange={event => presentation({ transfer_targets: draft.presentation.transfer_targets.map((row, at) => at === index ? { ...row, label: event.target.value } : row) })} /></FormField>
+                                <FormField label={text('الرقم أو العنوان', 'Number or address')} htmlFor={`payment-target-number-${index}`}><input id={`payment-target-number-${index}`} className={INPUT_CLASS} dir="ltr" value={target.number} maxLength={120} onChange={event => presentation({ transfer_targets: draft.presentation.transfer_targets.map((row, at) => at === index ? { ...row, number: event.target.value } : row) })} /></FormField>
+                                <FormField label={text('رابط (اختياري)', 'Link (optional)')} htmlFor={`payment-target-link-${index}`}><input id={`payment-target-link-${index}`} className={INPUT_CLASS} dir="ltr" type="url" inputMode="url" placeholder="https://" value={target.link} maxLength={500} onChange={event => presentation({ transfer_targets: draft.presentation.transfer_targets.map((row, at) => at === index ? { ...row, link: event.target.value } : row) })} /></FormField>
+                                <button type="button" className="ws-payment-target-remove" disabled={saving} onClick={() => presentation({ transfer_targets: draft.presentation.transfer_targets.filter((_, at) => at !== index) })}>{text('حذف الوجهة', 'Remove target')}</button>
+                            </div>)}
+                            {draft.presentation.transfer_targets.length < TRANSFER_TARGET_LIMIT ? <button type="button" className="ws-payment-target-add" disabled={saving} onClick={() => presentation({ transfer_targets: [...draft.presentation.transfer_targets, { label: '', number: '', link: '' }] })}>{text('إضافة وجهة تحويل', 'Add a transfer target')}</button> : null}
+                        </fieldset> : null}
                         <FormField label={text('أولوية الظهور', 'Display priority')} htmlFor="payment-order"><input id="payment-order" type="number" min="0" max="100000" className={INPUT_CLASS} value={draft.order} onChange={event => patch({ order: event.target.value })} /></FormField>
                         <FormField label={text('شعار طريقة الدفع', 'Payment method logo')}><StoreMediaPicker apiBase={apiBase} value={draft.presentation.logo_asset_id ? draft.logo_url : ''} onChange={logo_url => patch({ logo_url })} onSelectAsset={asset => presentation({ logo_asset_id: asset?.id || null })} /><small>{text('دون صورة مخصصة، يظهر الشعار الأصلي لطريقة الدفع.', 'Without a custom image, the original provider logo is used.')}</small></FormField>
                         {draft.credential_fields.length ? <>

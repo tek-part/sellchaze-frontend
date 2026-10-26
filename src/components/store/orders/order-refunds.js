@@ -45,6 +45,7 @@ export const RETURN_RESOLUTIONS = [
 
 export const PAYMENT_STATUS_LABELS = {
     pending: ['في انتظار الدفع', 'Awaiting payment'],
+    deposit_paid: ['تم دفع العربون', 'Deposit paid'],
     paid: ['تم الدفع', 'Paid'],
     failed: ['فشل الدفع', 'Payment failed'],
     partially_refunded: ['مسترد جزئيًا', 'Partially refunded'],
