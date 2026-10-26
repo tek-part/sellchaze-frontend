@@ -22,12 +22,18 @@ interface StateBaseProps {
   art?: ReactNode;
   className?: string;
   ns?: ClassNamespace;
+  /**
+   * 1 when the state IS the page (404, a missing article, a failed product load) so the page keeps
+   * its one top-level heading; 2 (default) when it sits under the page's own title.
+   */
+  headingLevel?: 1 | 2;
 }
 
 export type EmptyStateProps = StateBaseProps;
 
 export function EmptyState(props: EmptyStateProps): ReactElement {
-  const { title, description, actions, art, className, ns = DEFAULT_NS } = props;
+  const { title, description, actions, art, className, ns = DEFAULT_NS, headingLevel = 2 } = props;
+  const Heading = headingLevel === 1 ? 'h1' : 'h2';
 
   return (
     <div className={cn(block('state', ns), className)}>
@@ -36,7 +42,7 @@ export function EmptyState(props: EmptyStateProps): ReactElement {
           {art}
         </div>
       ) : null}
-      <h2 className={el('state', 'title', ns)}>{title}</h2>
+      <Heading className={el('state', 'title', ns)}>{title}</Heading>
       {description ? <p className={el('state', 'text', ns)}>{description}</p> : null}
       {actions ? <div className={el('state', 'actions', ns)}>{actions}</div> : null}
     </div>
@@ -53,7 +59,8 @@ export interface ErrorStateProps extends StateBaseProps {
  * degradation this component exists to prevent.
  */
 export function ErrorState(props: ErrorStateProps): ReactElement {
-  const { code, title, description, actions, art, className, ns = DEFAULT_NS } = props;
+  const { code, title, description, actions, art, className, ns = DEFAULT_NS, headingLevel = 2 } = props;
+  const Heading = headingLevel === 1 ? 'h1' : 'h2';
   const artNode = art ?? (code ? <span className={el('state', 'code', ns)}>{code}</span> : null);
 
   return (
@@ -63,7 +70,7 @@ export function ErrorState(props: ErrorStateProps): ReactElement {
           {artNode}
         </div>
       ) : null}
-      <h2 className={el('state', 'title', ns)}>{title}</h2>
+      <Heading className={el('state', 'title', ns)}>{title}</Heading>
       {description ? <p className={el('state', 'text', ns)}>{description}</p> : null}
       {actions ? <div className={el('state', 'actions', ns)}>{actions}</div> : null}
     </div>

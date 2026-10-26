@@ -107,13 +107,13 @@ export function StrideKitBuilder(props: SectionRenderProps): ReactElement | null
                       <span className="st-kit__name">{p.title}</span>
                       <span className="st-kit__row">
                         <LibPrice amount={p.price} compareAt={p.compareAtPrice} currency={p.currency} />
-                        <span className="st-kit__go">{stText(locale, 'view')}<span aria-hidden> →</span></span>
+                        <span className="st-kit__go">{stText(locale, 'view')} <span className="st-link__arrow" aria-hidden>→</span></span>
                       </span>
                     </a>
                   ) : (
                     <a href={str(b.settings, 'url', '/shop')} className="st-kit__card st-kit__card--empty">
                       <SportIcon name={str(b.settings, 'icon', 'running')} className="st-kit__icon" />
-                      <span className="st-kit__go">{stText(locale, 'choose')}<span aria-hidden> →</span></span>
+                      <span className="st-kit__go">{stText(locale, 'choose')} <span className="st-link__arrow" aria-hidden>→</span></span>
                     </a>
                   )}
                 </li>

@@ -483,6 +483,7 @@ export function BlogDetailPage(): ReactElement {
         <Seo title="Article not found" path={`/blog/${slug}`} noindex />
         <Container narrow>
           <EmptyState
+            headingLevel={1}
             variant="search"
             title={t('blog.articleNotFound')}
             description={t('blog.articleNotFoundHint')}

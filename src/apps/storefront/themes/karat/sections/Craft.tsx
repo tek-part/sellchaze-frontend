@@ -48,7 +48,7 @@ export const karatCraftSchema = defineSection({
       6,
     ),
     fields.text('cta_label', 'Link label', ''),
-    fields.url('cta_url', 'Link', '/pages/care'),
+    fields.url('cta_url', 'Link', '/pages/warranty'),
   ],
 });
 
@@ -110,7 +110,7 @@ export function KaratCraft(props: SectionRenderProps): ReactElement | null {
       </ol>
       {cta ? (
         <p className="kr-craft__more">
-          <a href={str(s, 'cta_url') || '/pages/care'} className="kr-textlink">{cta}<span aria-hidden className="kr-textlink__arrow">→</span></a>
+          <a href={str(s, 'cta_url') || '/pages/warranty'} className="kr-textlink">{cta}<span aria-hidden className="kr-textlink__arrow">→</span></a>
         </p>
       ) : null}
     </LibSection>

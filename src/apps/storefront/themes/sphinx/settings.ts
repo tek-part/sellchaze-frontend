@@ -5,7 +5,7 @@ export const sphinxSettingsSchema: ThemeSettingsSchema = [
   { id: 'primary_color', type: 'color', label: 'Primary color', group: 'Colors', default: '#006C35' },
   { id: 'background_color', type: 'color', label: 'Background', group: 'Colors', default: '#FFFFFF' },
   { id: 'text_color', type: 'color', label: 'Text', group: 'Colors', default: '#131316' },
-  { id: 'sale_color', type: 'color', label: 'Discount badges', group: 'Colors', default: '#E8434C' },
+  { id: 'sale_color', type: 'color', label: 'Discount badges', group: 'Colors', default: '#D32F3A' },
   { id: 'heading_font', type: 'select', label: 'Heading font', group: 'Typography', options: fonts, default: 'Raleway' },
   { id: 'body_font', type: 'select', label: 'Body font', group: 'Typography', options: fonts, default: 'system' },
   { id: 'container_width', type: 'range', label: 'Content width', group: 'Layout', min: 960, max: 1600, step: 4, default: 1316 },

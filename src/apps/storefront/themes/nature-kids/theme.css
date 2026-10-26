@@ -1,7 +1,7 @@
 .nkd-root{width:100%;min-width:0;background:var(--bg);color:var(--text);font-family:var(--font)}
 .nkd-root:dir(rtl){font-family:var(--font-arabic)}
 .nkd-root :where(h1,h2,h3,h4,p){margin:0;font-family:inherit}
-.nkd-root a{text-decoration:none;color:inherit}
+.nkd-root a{text-decoration:none}.nkd-root a:where(:not(.sf-btn)){color:inherit}
 .nkd-root button,.nkd-root input{font:inherit}
 .nkd-container{max-width:1520px;margin-inline:auto;padding-inline:16px;width:100%;box-sizing:border-box}
 .nkd-header{background:var(--bg);position:relative;z-index:40;color:var(--primary)}
@@ -63,10 +63,10 @@
 .nkd-card-discount,.nkd-card-stock{position:absolute;inset-inline-start:12px;top:12px;background:#111111;color:#FFFFFF;padding:6px 11px;border-radius:999px;font-size:12px}
 .nkd-card-stock{top:45px}
 .nkd-card-copy{padding-top:16px}
-.nkd-card-copy>p{font-size:12px;color:#777777;margin-bottom:7px}
+.nkd-card-copy>p{font-size:12px;color:#666666;margin-bottom:7px}
 .nkd-card h3{font-size:16px;font-weight:500;line-height:1.4;margin-bottom:10px}
 .nkd-card-price{display:flex;gap:10px;flex-wrap:wrap;font-size:15px;font-weight:600}
-.nkd-card-price del{color:#999999;font-weight:400}
+.nkd-card-price del{color:#666666;font-weight:400}
 .nkd-card-shop{display:flex;align-items:center;gap:10px;font-size:13px;text-transform:uppercase;letter-spacing:1px;margin-top:18px}
 .nkd-card-shop svg{width:18px;height:18px}
 .nkd-card-actions{position:absolute;inset-inline:12px;bottom:15px;display:flex;gap:8px;opacity:0;transform:translateY(8px);transition:opacity .3s,transform .3s}
@@ -99,7 +99,7 @@
 .nkd-look-products>a{display:grid;grid-template-columns:100px 1fr;gap:24px;align-items:center;padding-block:12px;border-bottom:1px solid #DDD8D0}
 .nkd-look-products .lib-img{width:100px;height:110px;object-fit:cover;border-radius:12px}
 .nkd-look-products h3{font-size:16px;font-weight:500;margin-bottom:10px}
-.nkd-look-products del{font-size:13px;color:#888888}
+.nkd-look-products del{font-size:13px;color:#666666}
 .nkd-look-products p{font-size:15px;font-weight:600}
 .nkd-promotions h2{font-size:44px;margin-bottom:30px}
 .nkd-promotions .lib-carousel__item{flex-basis:calc((100% - 48px)/3)}
@@ -111,6 +111,7 @@
 .nkd-social h2{font-size:30px;text-align:center;max-width:700px;margin:0 auto 20px}
 .nkd-social .nkd-container>p{text-align:center;font-size:12px;letter-spacing:2px;text-transform:uppercase;margin-bottom:30px}
 .nkd-social .nkd-container>div{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:24px}
+.nkd-social .nkd-container>div:focus-visible{outline:2px solid var(--primary);outline-offset:4px}
 .nkd-social a,.nkd-social figure{position:relative;display:block;height:520px;border-radius:24px;overflow:hidden}
 .nkd-social .lib-img{width:100%;height:100%;object-fit:cover}
 .nkd-social a>span,.nkd-social figure>span{position:absolute;bottom:25px;inset-inline:24px;color:#FFFFFF;text-align:center;text-shadow:0 1px 3px #0009}
@@ -132,7 +133,7 @@
 .nkd-footer-grid>nav,.nkd-footer-grid>div{flex:1 1 220px;min-width:0}
 .nkd-footer h4{font-size:16px;font-weight:700;margin-bottom:18px}
 .nkd-footer nav>a{display:block;margin-bottom:12px;font-size:14px}
-.nkd-footer-grid small{display:block;color:#777777;margin-bottom:3px}
+.nkd-footer-grid small{display:block;color:#666666;margin-bottom:3px}
 .nkd-footer-grid p{font-size:14px;line-height:1.7;margin-bottom:15px}
 .nkd-footer-bottom{text-align:center;border-top:1px solid var(--border);padding-top:30px;font-size:12px}
 .nkd-footer-bottom>div,.nkd-footer-bottom>nav{display:flex;align-items:center;justify-content:center;gap:18px;margin-bottom:20px;flex-wrap:wrap}
@@ -210,7 +211,7 @@
 .nkd-product .sf-pdp__accordion details>div,.nkd-product .sf-pdp__accordion details>p{padding-top:18px}
 .nkd-product-reviews{padding-block:60px}
 .nkd-product-reviews h2{font-size:28px;font-weight:400;text-transform:uppercase;letter-spacing:3px;margin-bottom:15px}
-.nkd-product-reviews>p{font-size:14px;color:#888888;margin-bottom:20px}
+.nkd-product-reviews>p{font-size:14px;color:#5f5f5f;margin-bottom:20px}
 .nkd-review-trigger{background:#191919;color:#FFFFFF;border:0;padding:15px 25px;font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:1px;cursor:pointer}
 .nkd-review-modal form{display:grid;gap:20px}
 .nkd-review-modal label{display:grid;gap:8px}
@@ -230,7 +231,7 @@
 
 .nkd-social figure{margin:0}
 .nkd-product .sf-pdp{grid-template-columns:1.4fr 1fr}
-.nkd-breadcrumb{display:flex;gap:12px;padding-block:24px;font-size:12px;color:#777777;flex-wrap:wrap}
+.nkd-breadcrumb{display:flex;gap:12px;padding-block:24px;font-size:12px;color:#5f5f5f;flex-wrap:wrap}
 @media(max-width:767px){.nkd-product .sf-pdp{grid-template-columns:1fr}}
 
 .nkd-hero-slide>a{position:relative}

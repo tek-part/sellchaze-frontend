@@ -106,6 +106,7 @@ export function ProductPage(): ReactElement | null {
       <Section>
         <Container>
           <ErrorState
+            headingLevel={1}
             title={t('pdp.unavailableTitle')}
             description={t('pdp.unavailableBody')}
             actions={<Button onClick={productQ.reload}>{t('pdp.tryAgain')}</Button>}

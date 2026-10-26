@@ -2,7 +2,7 @@ import type { ThemeSettingsSchema, ThemeSettings, DesignTokens } from '../../the
 import { naseemBaseTokens } from '../naseem/tokens';
 
 export const kidsSettings: ThemeSettingsSchema = [
-  { id: 'primary_color', type: 'color', label: 'Navigation accent', group: 'Colors', default: '#1470F2' },
+  { id: 'primary_color', type: 'color', label: 'Navigation accent', group: 'Colors', default: '#1066DD' },
   { id: 'background_color', type: 'color', label: 'Background', group: 'Colors', default: '#FFFFFF' },
   { id: 'text_color', type: 'color', label: 'Text', group: 'Colors', default: '#1A1A1A' },
   { id: 'address', type: 'textarea', label: 'Address', group: 'Footer', translatable: true, default: '' },
@@ -10,7 +10,7 @@ export const kidsSettings: ThemeSettingsSchema = [
 ];
 const color = (s: ThemeSettings, key: string, fallback: string): string => typeof s[key] === 'string' && /^#[\da-f]{6}$/i.test(s[key]) ? s[key] : fallback;
 export function kidsTokens(s: ThemeSettings): DesignTokens {
-  const primary = color(s, 'primary_color', '#1470F2');
+  const primary = color(s, 'primary_color', '#1066DD');
   return { ...naseemBaseTokens,
     color: { light: { ...naseemBaseTokens.color.light, primary, onPrimary: '#FFFFFF', accent: primary, accentInk: primary, bg: color(s, 'background_color', '#FFFFFF'), surface: '#FFFFFF', surface2: '#F5F2ED', text: color(s, 'text_color', '#1A1A1A'), muted: '#666666', border: '#E7E7E7', sale: '#111111' }, dark: { ...naseemBaseTokens.color.dark } },
     typography: { ...naseemBaseTokens.typography, fontSans: '"DM Sans","IBM Plex Sans Arabic",sans-serif', fontArabic: '"IBM Plex Sans Arabic","DM Sans",sans-serif', fontSerif: 'Georgia,serif', lineHeight: '1.6' },

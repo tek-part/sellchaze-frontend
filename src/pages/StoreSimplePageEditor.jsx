@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Link, Navigate, useNavigate, useParams } from 'react-router-dom';
+import { Link, Navigate, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import api from '../api/client';
 import PageHeader from '../components/PageHeader';
@@ -22,9 +22,9 @@ export default function StoreSimplePageEditor() {
 
 function Editor({ context: { apiBase, uiBase }, pageId }) {
     const { i18n } = useTranslation(); const ar = i18n.language.startsWith('ar'); const text = (a, e) => ar ? a : e;
-    const navigate = useNavigate(); const [locale, setLocale] = useState(ar ? 'ar' : 'en');
+    const navigate = useNavigate(); const location = useLocation(); const [locale, setLocale] = useState(ar ? 'ar' : 'en');
     const [settings, setSettings] = useState(pageId ? null : blank); const [initial, setInitial] = useState(pageId ? null : blank);
-    const [error, setError] = useState(''); const [saved, setSaved] = useState(false); const [busy, setBusy] = useState(false); const [conflict, setConflict] = useState(false); const [attempt, setAttempt] = useState(0);
+    const [error, setError] = useState(''); const [saved, setSaved] = useState(() => location.state?.editorSaved === true); const [busy, setBusy] = useState(false); const [conflict, setConflict] = useState(false); const [attempt, setAttempt] = useState(0);
     const working = useRef(false); const dirty = useDirty(initial, settings);
     const apply = (data) => { setSettings(data); setInitial(data); setConflict(false); };
     useEffect(() => {
@@ -41,7 +41,7 @@ function Editor({ context: { apiBase, uiBase }, pageId }) {
         try {
             const { data } = pageId ? await api.put(`${apiBase}/simple-pages/${pageId}`, settings) : await api.post(`${apiBase}/simple-pages`, settings);
             apply(data.data); setSaved(true);
-            if (!pageId) navigate(`${uiBase}/simple-pages/${data.data.id}`, { replace: true });
+            if (!pageId) navigate(`${uiBase}/simple-pages/${data.data.id}`, { replace: true, state: { editorSaved: true } });
         } catch (e) { setConflict(e.response?.status === 409); setError(message(e)); }
         finally { working.current = false; setBusy(false); }
     }

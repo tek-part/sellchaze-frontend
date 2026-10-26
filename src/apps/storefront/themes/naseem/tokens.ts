@@ -21,7 +21,7 @@ export const naseemBaseTokens = {
       borderStrong: '#CBD3DF',
       sale: '#DC2626',
       success: '#16A34A',
-      danger: '#DC2626',
+      danger: '#B91C1C',
       warning: '#F59E0B',
       info: '#0284C7',
       scrim: 'rgba(15,23,42,.55)',

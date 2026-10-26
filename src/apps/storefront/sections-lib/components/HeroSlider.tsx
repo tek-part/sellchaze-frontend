@@ -136,7 +136,8 @@ export function HeroSlider(props: SectionRenderProps): ReactElement | null {
           const content = (
             <div className="lib-hero__content">
               {str(b, 'eyebrow') ? <span className="lib-hero__eyebrow">{str(b, 'eyebrow')}</span> : null}
-              {heading ? <h2 className="lib-hero__title">{heading}</h2> : null}
+              {/* The lead slide carries the page's top-level heading, as HeroBanner's does. */}
+              {heading ? (i === 0 ? <h1 className="lib-hero__title">{heading}</h1> : <h2 className="lib-hero__title">{heading}</h2>) : null}
               {str(b, 'text') ? <p className="lib-hero__text">{str(b, 'text')}</p> : null}
               {str(b, 'cta_label') || str(b, 'cta2_label') ? (
                 <div className="lib-hero__actions">
