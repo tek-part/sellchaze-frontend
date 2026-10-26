@@ -25,6 +25,7 @@ export interface StoreInfo {
   downsellEnabled?: boolean;
   socialProofEnabled?: boolean;
   bundlesEnabled?: boolean;
+  hasCollections?: boolean;
   merchantInformation?: import('../api/types').ApiMerchantInformation | null;
   shipping?: import('../types/shipping').ShippingOffer;
   id: string;
@@ -112,6 +113,7 @@ export function StoreProvider(props: { children: ReactNode; initialData?: ApiSto
       downsellEnabled: s.downsell_enabled,
       socialProofEnabled: s.social_proof_enabled,
       bundlesEnabled: s.bundles_enabled,
+      hasCollections: s.has_collections,
       merchantInformation: s.merchant_information,
       name: s.name,
       identity: s.identity,

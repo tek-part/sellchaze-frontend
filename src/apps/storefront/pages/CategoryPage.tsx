@@ -7,9 +7,11 @@
  * recognised here and served from the unfiltered products endpoint. No invented endpoint.
  *
  * Merchant collections (manual or automated, managed in the dashboard) share the `/collections/:slug`
- * URL with categories. The collection endpoint is asked first, in parallel with the category
- * listing; a published collection wins, anything else (404, network) falls back to the category, so
- * every existing category link keeps working.
+ * URL with categories. When the store has published collections (`store.has_collections` on the
+ * bootstrap; unknown counts as maybe) the collection endpoint is asked first, in parallel with the
+ * category listing; a published collection wins, anything else (404, network) falls back to the
+ * category, so every existing category link keeps working. A store without collections goes
+ * straight to the category and never logs the collection 404.
  */
 import { previewOrDev } from '../preview';
 import { useMemo, type ReactElement } from 'react';
@@ -55,6 +57,7 @@ export function CategoryPage(): ReactElement | null {
   const currency = store.currency;
   const template = useTemplate('category');
   const curated = isCuratedSlug(slug) ? curatedView(slug) : null;
+  const mayBeCollection = !curated && store.hasCollections !== false;
   // Keyed on the locale as well: the API returns translated names per `?lang=`.
   const category = useAsync(() => (curated ? Promise.resolve(null) : getCategory(slug)), [slug, locale]);
   const listingScope = `${store.id}:${slug}:${locale}:${kids ? listing.sort : "default"}:${perPage}`;
@@ -62,13 +65,13 @@ export function CategoryPage(): ReactElement | null {
   const collectionKey = `${store.id}:${slug}:${locale}`;
   const productsQ = useAsync(
     async () => {
-      const collectionRequest = curated ? Promise.resolve(null) : findCollection(slug, { perPage, ...(kids ? listing : {}) });
+      const collectionRequest = mayBeCollection ? findCollection(slug, { perPage, ...(kids ? listing : {}) }) : Promise.resolve(null);
       const productsRequest = getProducts({ ...(curated ? {} : { category: slug }), perPage, ...(kids ? listing : {}) });
       productsRequest.catch(() => undefined); // a collection hit makes this response unused
       const collection = await collectionRequest;
       return { scope: productScope, listingScope, collectionKey, collection: collection?.data ?? null, payload: collection?.products ?? await productsRequest };
     },
-    [productScope],
+    [productScope, mayBeCollection],
   );
   const collection = productsQ.data?.collectionKey === collectionKey ? productsQ.data.collection : null;
 
