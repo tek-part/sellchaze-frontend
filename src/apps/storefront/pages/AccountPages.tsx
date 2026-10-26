@@ -19,6 +19,7 @@ import { DigitalDeliverySummary } from '../foundation/components/DigitalDelivery
 import { useStore } from '../state/store-context';
 import { ThemeRenderer, useLayout, useTemplate } from '../theme-engine';
 import { flowContext } from './flow-context';
+import { OrderReturnSection } from './OrderReturnSection';
 
 /** Render the active theme's account sub-template when it provides one; otherwise null (fallback). */
 function useAccountTemplate(name: 'account-profile' | 'account-orders' | 'account-order' | 'account-addresses'): ReactElement | null {
@@ -176,13 +177,16 @@ export function OrderDetailPage(): ReactElement {
   const { store } = useStore();
   const themed = useAccountTemplate('account-order');
   const orderQ = useAsync(() => getOrder(number), [number]);
-  const order = orderQ.data?.data;
+  const [updated, setUpdated] = useState<ApiOrder | null>(null);
+  const order = updated && updated.number === number ? updated : orderQ.data?.data;
+  const currency = order?.currency || store.currency;
+  // Themes may render their own order template; returns stay available underneath it.
+  const returns = order ? <OrderReturnSection order={order} currency={currency} onChanged={setUpdated} /> : null;
 
-  if (themed) return themed;
+  if (themed) return <>{themed}{returns}</>;
   if (orderQ.loading) return <Spinner label={t('account.loadingOrder')} />;
   if (!order) return <EmptyState variant="orders" title={t('account.orderNotFound')} description={t('account.orderNotFoundHint')} />;
 
-  const currency = order.currency || store.currency;
   return (
     <div className="sf-account__panel">
       <div>
@@ -210,6 +214,7 @@ export function OrderDetailPage(): ReactElement {
         <span>{t('account.orderTotal')}</span>
         <span className="sf-cart-summary__total-value">{formatMoney(Number(order.total), currency)}</span>
       </div>
+      {returns}
       <a href="/account/orders" className="sf-link">
         <span className="sf-link__label">{t('account.backToOrders')}</span>
       </a>

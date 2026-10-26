@@ -1,5 +1,6 @@
 import {
     HiOutlineAdjustmentsHorizontal,
+    HiOutlineArrowUturnLeft,
     HiOutlineUsers,
     HiOutlineBars3BottomLeft,
     HiOutlineChartBar,
@@ -47,6 +48,7 @@ export function buildStoreNav(t, access = {}) {
                 { key: 'overview', to: 'overview', label: t('store_nav_overview', 'Overview'), Icon: HiOutlineSquares2X2, show: true },
                 { key: 'orders', to: 'orders', label: t('store_nav_orders', 'Orders'), Icon: HiOutlineShoppingBag, show: access.canStoreOrders },
                 { key: 'draft-orders', to: 'draft-orders', label: t('store_nav_draft_orders', 'Drafts'), Icon: HiOutlineDocumentText, show: access.canStoreOrders },
+                { key: 'returns', to: 'returns', label: t('store_nav_returns', 'Returns'), Icon: HiOutlineArrowUturnLeft, show: access.canStoreOrders },
                 { key: 'customers', to: 'customers', label: t('store_nav_customers', 'Customers'), Icon: HiOutlineUsers, show: access.canStoreOrders },
                 { key: 'missed-orders', to: 'missed-orders', label: t('store_nav_missed_orders', 'Missed orders'), Icon: HiOutlineShoppingBag, show: access.canStoreOrders },
                 { key: 'blocked-phone-numbers', to: 'blocked-phone-numbers', label: t('store_nav_blocked_phones', 'Blocked phones'), Icon: HiOutlineShoppingBag, show: access.canStoreOrders },

@@ -275,6 +275,11 @@ export const changePassword = (body: { current_password: string; password: strin
   apiSend('/account/password', 'PUT', body);
 export const getOrders = (): Promise<ApiPaginated<ApiOrder>> => apiGet('/orders');
 export const getOrder = (number: string): Promise<{ data: ApiOrder }> => apiGet(`/orders/${encodeURIComponent(number)}`);
+/** Ask the store to take delivered items back (only inside the store's return window, one open request at a time). */
+export const requestOrderReturn = (
+  number: string,
+  body: { items: ReadonlyArray<{ store_order_item_id: number; quantity: number }>; reason: ApiReturnReason; note?: string | null },
+): Promise<{ data: ApiOrder }> => apiSend(`/orders/${encodeURIComponent(number)}/returns`, 'POST', body);
 export const getAddresses = (): Promise<{ data: ReadonlyArray<ApiAddress> }> => apiGet('/account/addresses');
 export const createAddress = (body: Record<string, unknown>): Promise<{ data: ApiAddress }> => apiSend('/account/addresses', 'POST', body);
 export const updateAddress = (id: number, body: Record<string, unknown>): Promise<{ data: ApiAddress }> => apiSend(`/account/addresses/${id}`, 'PUT', body);
@@ -297,8 +302,30 @@ export interface ApiOrderItem {
   price: string | number;
   image_url?: string | null;
 }
+export type ApiReturnReason = 'damaged' | 'wrong_item' | 'not_as_described' | 'size_fit' | 'changed_mind' | 'other';
+export type ApiReturnStatus = 'requested' | 'approved' | 'rejected' | 'received' | 'closed';
+export interface ApiOrderReturn {
+  id: number;
+  status: ApiReturnStatus;
+  reason: ApiReturnReason;
+  customer_note?: string | null;
+  resolution?: 'refund' | 'exchange' | 'store_credit' | null;
+  items: ReadonlyArray<{ store_order_item_id: number; name?: string | null; quantity: number }>;
+  created_at?: string;
+}
+export interface ApiReturnEligibility {
+  eligible: boolean;
+  reason: 'disabled' | 'not_delivered' | 'window_expired' | 'open_return' | 'nothing_returnable' | null;
+  window_days: number;
+  delivered_at?: string | null;
+  deadline?: string | null;
+  items: ReadonlyArray<{ store_order_item_id: number; name: string; variant_name?: string | null; quantity: number; returnable_quantity: number }>;
+}
 export interface ApiOrder {
   payment_adjustment_total?: string;
+  refunded_total?: string;
+  returns?: ReadonlyArray<ApiOrderReturn>;
+  return_eligibility?: ApiReturnEligibility;
   id: number;
   number: string;
   status: string;

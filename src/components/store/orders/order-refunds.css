@@ -1,0 +1,32 @@
+.ws-refunds-head{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:16px}
+.ws-refunds-head h2{margin:0!important}
+.ws-refunds-total{font-weight:500;margin-bottom:12px!important}
+.ws-refunds-history,.ws-returns-list{list-style:none;padding:0;margin:16px 0 0;display:grid;gap:16px}
+.ws-refunds-history>li,.ws-returns-list>li{padding-inline-start:14px;border-inline-start:2px solid var(--ws-border);min-width:0;overflow-wrap:anywhere}
+.ws-refunds-history strong,.ws-returns-list strong{font-weight:500}
+.ws-refunds-history small,.ws-returns-list small{display:block;color:var(--ws-muted);margin:4px 0}
+.ws-refunds-history ul,.ws-returns-list ul{margin:4px 0;padding-inline-start:18px;font-size:13px}
+.ws-returns-row-head{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.ws-returns-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.ws-returns-actions button{padding:6px 12px;min-height:36px;border:1px solid var(--ws-border);border-radius:8px;background:var(--ws-panel);font-size:13px}
+.ws-refund-panel{width:640px}
+.ws-refund-warning{padding:12px;border-radius:8px;background:#fff7e0;color:#6b4700;font-size:13px}
+:where([data-workspace-theme='dark']) .ws-refund-warning{background:#3d2f12;color:#f5d18a}
+.ws-refund-items{border:0;padding:0;margin:0;display:grid;gap:12px;min-width:0}
+.ws-refund-items legend{font-weight:500;margin-bottom:8px}
+.ws-refund-line{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--ws-border);min-width:0}
+.ws-refund-line:last-child{border-bottom:0}
+.ws-refund-line-name{min-width:0;overflow-wrap:anywhere}
+.ws-refund-line-name label{font-weight:500}
+.ws-refund-line-name small{display:block;color:var(--ws-muted);font-size:12px}
+.ws-refund-stepper{display:inline-flex;align-items:center;gap:4px;flex:none}
+.ws-refund-stepper button{width:36px;height:36px;border:1px solid var(--ws-border);border-radius:8px;background:var(--ws-panel);font-size:18px;line-height:1}
+.ws-order-action-body .ws-refund-stepper input{width:64px;margin-top:0;text-align:center;padding:6px 4px}
+.ws-refund-summary{display:grid;grid-template-columns:1fr auto;gap:2px 12px;align-items:center;padding:12px;border-radius:8px;background:var(--ws-panel-soft)}
+.ws-refund-summary strong{font-size:18px;font-weight:600}
+.ws-refund-summary small{grid-column:1/-1}
+.ws-order-action-body .ws-refund-check{display:flex;align-items:center;gap:8px}
+.ws-order-action-body .ws-refund-check input{width:auto;margin:0}
+@media(max-width:480px){.ws-refund-line{flex-direction:column;align-items:stretch}.ws-refund-stepper{align-self:flex-start}}
+/* The shared green fails AA with white 14px text; refund actions use a darker green (5:1+). */
+:is(.ws-refunds,.ws-returns,.ws-refund-panel) .ws-order-primary-button{background:#0b7a3b!important;color:#fff}
