@@ -19,7 +19,7 @@ function BagIcon(): ReactElement {
   return <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden focusable="false"><path fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" d="M5 8h14l-1.2 12H6.2L5 8Zm3 0V6a4 4 0 0 1 8 0v2" /></svg>;
 }
 
-export function CheckoutShell({ children }: { children: ReactNode }): ReactElement {
+export function CheckoutShell({ children, cartLink = true }: { children: ReactNode; cartLink?: boolean }): ReactElement {
   const { locale } = useLocale();
   const ar = locale === 'ar';
   const { store } = useStore();
@@ -33,7 +33,7 @@ export function CheckoutShell({ children }: { children: ReactNode }): ReactEleme
       <div className="sf-co-header__inner">
         <a className="sf-co-brand" href="/">{logo ? <img {...densityImage(logo, 240)} alt={store.name} decoding="async" /> : <span>{store.name}</span>}</a>
         <span className="sf-co-secure"><LockIcon />{ar ? 'دفع آمن' : 'Secure checkout'}</span>
-        <a className="sf-co-bag" href="/cart" aria-label={ar ? `العودة إلى السلة (${count})` : `Back to cart (${count})`}><BagIcon />{count ? <span className="sf-co-bag__count">{count}</span> : null}</a>
+        {cartLink ? <a className="sf-co-bag" href="/cart" aria-label={ar ? `العودة إلى السلة (${count})` : `Back to cart (${count})`}><BagIcon />{count ? <span className="sf-co-bag__count">{count}</span> : null}</a> : null}
       </div>
     </header>
     <main id="sf-main" className="sf-co-main">{children}</main>
