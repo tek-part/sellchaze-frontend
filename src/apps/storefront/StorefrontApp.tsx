@@ -166,7 +166,9 @@ export function StorefrontApp(): ReactElement {
   const standaloneFunnel = /^\/funnels\/[^/]+\/?$/.test(route);
   const templatePreview = /^\/funnel-templates\/[^/]+\/?$/.test(route);
   // Checkout renders in a distraction-free frame (logo, secure badge, back to cart) for every theme.
-  const checkoutRoute = /^\/checkout\/?$/.test(route);
+  // Draft-order invoices (/invoices/:token) are a checkout too, without a way back to the cart.
+  const invoiceRoute = /^\/invoices\/[^/]+\/?$/.test(route);
+  const checkoutRoute = invoiceRoute || /^\/checkout\/?$/.test(route);
   const manifest = useThemeManifest();
   const { t } = useTranslation();
   // Applies direction + <html lang> from the active language. Called here so every theme gets it
@@ -283,7 +285,7 @@ export function StorefrontApp(): ReactElement {
       >
         Skip to content
       </a>
-      {templatePreview ? <main id="sf-main"><AppErrorBoundary><AppRoutes /></AppErrorBoundary></main> : standaloneFunnel ? <ToastProvider><CartProvider><main id="sf-main"><AppErrorBoundary><AppRoutes /></AppErrorBoundary></main></CartProvider></ToastProvider> : checkoutRoute && !isCustomizeMode() ? <ToastProvider><CartProvider><Suspense fallback={null}><CheckoutShell><AppErrorBoundary><AppRoutes /></AppErrorBoundary></CheckoutShell></Suspense></CartProvider></ToastProvider> : Layout ? (
+      {templatePreview ? <main id="sf-main"><AppErrorBoundary><AppRoutes /></AppErrorBoundary></main> : standaloneFunnel ? <ToastProvider><CartProvider><main id="sf-main"><AppErrorBoundary><AppRoutes /></AppErrorBoundary></main></CartProvider></ToastProvider> : checkoutRoute && !isCustomizeMode() ? <ToastProvider><CartProvider><Suspense fallback={null}><CheckoutShell cartLink={!invoiceRoute}><AppErrorBoundary><AppRoutes /></AppErrorBoundary></CheckoutShell></Suspense></CartProvider></ToastProvider> : Layout ? (
         <Layout context={context}>
           <AppErrorBoundary>
             <AppRoutes />

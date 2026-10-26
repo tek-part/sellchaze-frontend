@@ -145,6 +145,8 @@ const StoreCouponFormPage = lazy(() => import('./pages/StoreCouponFormPage'));
 const StoreOrdersPage = lazy(() => import('./pages/StoreOrdersPage'));
 const StoreOrdersPrintPage = lazy(() => import('./pages/StoreOrdersPrintPage'));
 const StoreManualOrderPage = lazy(() => import('./pages/StoreManualOrderPage'));
+const StoreDraftOrdersPage = lazy(() => import('./pages/StoreDraftOrdersPage'));
+const StoreDraftOrderEditorPage = lazy(() => import('./pages/StoreDraftOrderEditorPage'));
 const StoreOrderDetailPage = lazy(() => import('./pages/StoreOrderDetailPage'));
 const StoreAnalyticsPage = lazy(() => import('./pages/StoreAnalyticsPage'));
 const StoreReviewsPage = lazy(() => import('./pages/StoreReviewsPage'));
@@ -223,6 +225,9 @@ const STORE_ROUTES = [
     { path: 'orders/print', element: <StoreOrdersPrintPage /> },
     { path: 'orders/create', element: <StoreManualOrderPage /> },
     { path: 'orders/:orderId', element: <StoreOrderDetailPage /> },
+    { path: 'draft-orders', element: <StoreDraftOrdersPage /> },
+    { path: 'draft-orders/new', element: <StoreDraftOrderEditorPage key="new" /> },
+    { path: 'draft-orders/:draftId', element: <StoreDraftOrderEditorPage /> },
     { path: 'coupons', element: <StoreCouponsPage /> },
     { path: 'inventory', element: <StoreInventoryPage /> },
     { path: 'coupons/new', element: <StoreCouponFormPage /> },

@@ -233,6 +233,33 @@ export const quoteCheckout = (items: ReadonlyArray<CheckoutItem>, coupon_code: s
 export const retryCheckoutPayment = (token: string): Promise<{ data: unknown; payment?: { redirect_url?: string | null } }> =>
   apiSend('/checkout/payment/retry', 'POST', { token });
 
+/* ---- draft-order invoices (merchant-shared link; the token is the capability) ---- */
+export interface InvoicePaymentMethod extends StorefrontPaymentMethod { grand_total: string }
+export interface StorefrontInvoice {
+  number: string;
+  status: string;
+  currency: string;
+  expires_at: string | null;
+  store: { name: string };
+  customer: { name: string | null; email: string | null; phone: string | null };
+  shipping_address: Partial<Record<'line1' | 'city' | 'country' | 'postal_code' | 'phone_alt' | 'national_address', string>>;
+  line_items: ReadonlyArray<{ title: string; variant_name: string | null; sku: string | null; quantity: number; unit_price: string; line_total: string | null; image_url: string | null }>;
+  totals: { subtotal: string; discount_total: string; discounts: ReadonlyArray<{ title: string; code: string | null; amount: string }>; shipping_total: string; shipping_title: string | null; tax_total: string; tax_included: boolean; grand_total: string };
+  requires_shipping: boolean;
+  has_digital: boolean;
+  fields: ReadonlyArray<import('../pages/checkout-contact').CheckoutField>;
+  payment_methods: ReadonlyArray<InvoicePaymentMethod>;
+}
+export interface InvoiceCheckoutResponse {
+  data?: { id?: number; number?: string };
+  receipt?: { token?: string };
+  payment?: { redirect_url?: string | null };
+  payment_retry?: { token?: string };
+}
+export const getInvoice = (token: string): Promise<{ data: StorefrontInvoice }> => apiGet(`/invoices/${encodeURIComponent(token)}`);
+export const checkoutInvoice = (token: string, body: Record<string, unknown>): Promise<InvoiceCheckoutResponse> =>
+  apiSend(`/invoices/${encodeURIComponent(token)}/checkout`, 'POST', body);
+
 /* ---- auth / account ----
  * login/register return a bearer `token` the client must persist (see client.ts setAuthToken) —
  * the `store.customer` routes authenticate via that token, not a cookie. */
