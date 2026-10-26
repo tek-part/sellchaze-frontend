@@ -25,7 +25,7 @@ body:has(.ws-sidebar-compact) .ws-tracking.is-unified .ws-tracking-field { width
 .sc-workspace .ws-page .ws-tracking-field textarea { width:100%; min-height:152.78125px; display:block; resize:vertical; padding:18.9px 14px; border:1px solid #d6d6d6; border-radius:8px; background:var(--ws-panel); color:var(--ws-text); font-size:16px; line-height:23px; }
 .ws-tracking-field textarea:focus { border-color:var(--ws-green); outline:1px solid var(--ws-green); }
 .ws-tracking-toolbar { min-height:64px; background:#e0e0e0; display:flex; align-items:center; padding:12px 24px; }
-.ws-tracking-toolbar button { padding:10px 24px; height:40px; line-height:20px; border:0; background:var(--ws-green); border-radius:6px; color:white; font-size:14px; cursor:pointer; }
+.ws-tracking-toolbar button { padding:10px 24px; height:40px; line-height:20px; border:0; background:var(--ws-green-fill); border-radius:6px; color:white; font-size:14px; cursor:pointer; }
 .ws-tracking-toolbar button:disabled { background:#c2c2c2; color:#777; cursor:default; }
 .ws-tracking-error { border:1px solid #d96470; border-radius:8px; padding:16px; margin-bottom:24px; font-size:14px; color:var(--ws-text); }
 .ws-tracking-error button { text-decoration:underline; margin-top:8px; cursor:pointer; }

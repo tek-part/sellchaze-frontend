@@ -54,7 +54,7 @@ body[data-workspace-theme='dark'] .ws-theme-activation-panel :is(p,strong){color
 .ws-theme-card button:focus-visible,.ws-theme-gallery button:focus-visible,.ws-theme-gallery select:focus-visible{outline:2px solid var(--ws-green);outline-offset:3px}
 .ws-theme-pagination{display:flex;justify-content:center;align-items:center;gap:4px;margin-top:32px}
 .ws-theme-pagination button,.ws-theme-pagination>span{display:grid;place-items:center;flex-shrink:0;width:32px;height:32px;border-radius:50%;font-size:14px;cursor:pointer}
-.ws-theme-pagination button[aria-current='page']{background:var(--ws-green);color:white}
+.ws-theme-pagination button[aria-current='page']{background:var(--ws-green-fill);color:white}
 .ws-theme-pagination button:disabled{opacity:.35;cursor:default}.ws-theme-pagination svg{width:18px;height:18px}
 .ws-theme-pagination button:last-child svg{transform:rotate(180deg)}[dir='ltr'] .ws-theme-pagination button:first-child svg{transform:rotate(180deg)}[dir='ltr'] .ws-theme-pagination button:last-child svg{transform:none}
 .ws-theme-classic{padding:32px 0 0}.ws-theme-classic>header{margin-bottom:24px}

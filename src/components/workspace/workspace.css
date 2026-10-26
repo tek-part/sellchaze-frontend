@@ -12,6 +12,10 @@ body[data-workspace-theme] #root .max-h-dvh { max-height:100dvh; }
   --ws-canvas: #f5f6f8; --ws-panel: #fff; --ws-panel-soft: #f8fafb;
   --ws-text: #233043; --ws-muted: #657184; --ws-border: #e5e9ef;
   --ws-green: #198754; --ws-green-ink: #127044; --ws-green-soft: #e3f3ea;
+  /* Fill behind white text (primary buttons, selected days, badges). The brand greens are too
+     light for white 14px text in the merchant theme (#0ea44f is 3.3:1); this one is 5.4:1 in
+     every workspace theme, hover 6.7:1. */
+  --ws-green-fill: #0b7a3b; --ws-green-fill-hover: #086a33;
   --color-brand: #198754; --color-brand-dark: #126c43; --color-brand-light: #e3f3ea;
   --color-accent: #25a366; --color-accent-dark: #198754; --color-accent-light: #edf8f1;
   --color-surface: #fff; --color-surface-card: #fff; --color-surface-muted: #f5f6f8;
@@ -86,7 +90,7 @@ body[data-workspace-merchant='true'] .ws-sidebar-scroll .ws-nav-panel-inner > a 
 .ws-catalog-heading { display:flex; justify-content:space-between; align-items:start; gap:16px; }
 .ws-catalog-heading p { margin-top:6px; color:var(--ws-muted); font-size:13px; line-height:1.7; }
 .ws-catalog-button { display:inline-flex; align-items:center; justify-content:center; gap:8px; min-height:40px; padding:8px 16px; border:1px solid var(--ws-border); border-radius:6px; color:var(--ws-text); background:var(--ws-panel); font-size:14px; cursor:pointer; }
-.ws-catalog-button--primary { background:var(--ws-green); border-color:var(--ws-green); color:white; }
+.ws-catalog-button--primary { background:var(--ws-green-fill); border-color:var(--ws-green-fill); color:white; }
 .ws-catalog-button:disabled { opacity:.45; cursor:default; }
 .ws-catalog-filter { width:min(100%,320px); height:40px; padding:8px 12px; border:1px solid var(--ws-border); border-radius:6px; background:var(--ws-panel); color:var(--ws-text); }
 .ws-notifications-heading { display:flex; justify-content:space-between; align-items:start; gap:20px; margin-bottom:24px; }
@@ -198,7 +202,7 @@ body[data-workspace-merchant='true'] .ws-sidebar-scroll .ws-nav-panel-inner > a 
 .ws-account-name strong { color:var(--ws-text); font-size:12px; font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .ws-account-chevron { width:12px; height:12px; color:var(--ws-muted); }
 .ws-chat-link { position:relative; }
-.ws-notification-dot { position:absolute; inset-block-start:-2px; inset-inline-end:-3px; border-radius:9px; background:var(--ws-green); color:#fff; padding:1px 4px; font-size:9px; }
+.ws-notification-dot { position:absolute; inset-block-start:-2px; inset-inline-end:-3px; border-radius:9px; background:var(--ws-green-fill); color:#fff; padding:1px 4px; font-size:9px; }
 .ws-sidebar { display:flex; flex-direction:column; flex-shrink:0; width:272px; min-height:0; background:var(--ws-canvas); color:var(--ws-text); }
 .ws-sidebar-brand { display:flex; flex-shrink:0; align-items:center; justify-content:space-between; gap:10px; height:85px; padding:0 16px; border-bottom:1px solid var(--ws-border); }
 .ws-sidebar-brand-actions { display:flex; align-items:center; gap:2px; }
@@ -286,8 +290,8 @@ body[data-workspace-merchant='true'] .ws-sidebar-scroll .ws-nav-panel-inner > a 
 .ws-confirm-dialog p { margin-top:10px; color:var(--ws-muted); font-size:13px; }
 .ws-confirm-actions { display:flex; justify-content:flex-end; gap:8px; margin-top:24px; }
 .ws-primary-button,.ws-secondary-button { display:inline-flex; justify-content:center; align-items:center; gap:7px; padding:8px 14px; border:1px solid transparent; border-radius:6px; font-size:12px; font-weight:600; cursor:pointer; }
-.ws-primary-button { background:var(--ws-green); color:#fff; }
-.ws-primary-button:hover { background:#126c43; }
+.ws-primary-button { background:var(--ws-green-fill); color:#fff; }
+.ws-primary-button:hover { background:var(--ws-green-fill-hover); }
 .ws-secondary-button { background:var(--ws-panel); border-color:var(--ws-border); color:var(--ws-text); }
 .ws-secondary-button:hover { border-color:var(--ws-green); }
 .ws-primary-button:disabled,.ws-secondary-button:disabled { opacity:.55; cursor:default; }

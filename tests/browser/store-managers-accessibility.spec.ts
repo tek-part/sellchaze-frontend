@@ -363,6 +363,22 @@ for (const width of [1440, 320]) {
   });
 }
 
+for (const appearance of ['light', 'dark'] as const) {
+  test(`Shared green primary buttons keep white text at AA contrast in the ${appearance} workspace`, async ({ page }) => {
+    await workspace(page, 'en', false, appearance);
+    await page.goto('/store/settings/managers');
+    await expect(page.getByRole('button', { name: 'Add manager', exact: true })).toBeVisible();
+    // Measure the shared .ws-primary-button inside the same themed shell as the managers button.
+    await page.locator('.ws-managers').evaluate((element) => {
+      const probe = document.createElement('button'); probe.type = 'button'; probe.id = 'shared-primary-probe';
+      probe.className = 'ws-primary-button'; probe.textContent = 'Shared primary'; element.append(probe);
+    });
+    const result = await new AxeBuilder({ page }).include('.ws-managers-add.ws-managers-primary').include('#shared-primary-probe').withRules(['color-contrast']).analyze();
+    expect(result.violations.map(v => `${v.id}: ${v.nodes.map(n => n.target.join(' ')).join(' | ')}`)).toEqual([]);
+    expect(result.passes.find(rule => rule.id === 'color-contrast')?.nodes.length ?? 0).toBeGreaterThanOrEqual(2);
+  });
+}
+
 for (const locale of ['ar', 'en'] as const) for (const width of [320, 390, 1440]) {
   test(`Session fields remain readable and keyboard-operable in ${locale} at ${width}px`, async ({ page }) => {
     const api = await workspace(page, locale, false, width === 320 ? 'dark' : 'light', true);
