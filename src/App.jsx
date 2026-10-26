@@ -87,7 +87,7 @@ const StoreFunnelCreatePage = lazy(() => import('./pages/StoreFunnelCreatePage')
 const StoreFunnelEditPage = lazy(() => import('./pages/StoreFunnelEditPage'));
 const StoreMediaPage = lazy(() => import('./pages/StoreMediaPage'));
 const StoreDesignAssetsPage = lazy(() => import('./pages/StoreDesignAssetsPage'));
-const StoreGeneralSettingsPage = lazy(() => import('./pages/store/settings/StoreGeneralSettingsPage'));
+const MerchantGeneralSettingsPage = lazy(() => import('./pages/store/settings/MerchantGeneralSettingsPage'));
 const StorePoliciesSettingsPage = lazy(() => import('./pages/store/settings/StorePoliciesSettingsPage'));
 const StoreSeoSettingsPage = lazy(() => import('./pages/store/settings/StoreSeoSettingsPage'));
 const StoreSocialSettingsPage = lazy(() => import('./pages/store/settings/StoreSocialSettingsPage'));
@@ -294,7 +294,7 @@ const STORE_ROUTES = [
     { path: 'menus', element: <StoreMenusPage /> },
     { path: 'media', element: <StoreMediaPage /> },
     { path: 'upload-assets', element: <StoreDesignAssetsPage /> },
-    { path: 'settings/general', element: <StoreGeneralSettingsPage /> },
+    { path: 'settings/general', element: <MerchantGeneralSettingsPage /> },
     { path: 'settings/store-info', element: <StorePoliciesSettingsPage /> },
     { path: 'settings/seo', element: <StoreSeoSettingsPage /> },
     { path: 'settings/social-links', element: <StoreSocialSettingsPage /> },
