@@ -148,6 +148,7 @@ const StoreManualOrderPage = lazy(() => import('./pages/StoreManualOrderPage'));
 const StoreDraftOrdersPage = lazy(() => import('./pages/StoreDraftOrdersPage'));
 const StoreDraftOrderEditorPage = lazy(() => import('./pages/StoreDraftOrderEditorPage'));
 const StoreOrderDetailPage = lazy(() => import('./pages/StoreOrderDetailPage'));
+const StoreReturnsPage = lazy(() => import('./pages/StoreReturnsPage'));
 const StoreAnalyticsPage = lazy(() => import('./pages/StoreAnalyticsPage'));
 const StoreReviewsPage = lazy(() => import('./pages/StoreReviewsPage'));
 // Merchant catalog pages use the store-scoped API; the operator console retains its taxonomy.
@@ -228,6 +229,7 @@ const STORE_ROUTES = [
     { path: 'draft-orders', element: <StoreDraftOrdersPage /> },
     { path: 'draft-orders/new', element: <StoreDraftOrderEditorPage key="new" /> },
     { path: 'draft-orders/:draftId', element: <StoreDraftOrderEditorPage /> },
+    { path: 'returns', element: <StoreReturnsPage /> },
     { path: 'coupons', element: <StoreCouponsPage /> },
     { path: 'inventory', element: <StoreInventoryPage /> },
     { path: 'coupons/new', element: <StoreCouponFormPage /> },

@@ -12,11 +12,14 @@ import { OrderBotWarning } from '../components/store/orders/OrderBotVerification
 import OrderBulkPaymentReview from '../components/store/orders/OrderBulkPaymentReview';
 import OrderProductFilter from '../components/store/orders/OrderProductFilter';
 import { ORDER_STATUSES, ORDER_BULK_STATUSES, ORDER_PAYMENT_TARGETS, ORDER_RISK_STATUSES, ORDER_RETURN_STATUSES, orderAddress, orderStatusLabel } from '../components/store/orders/order-workspace';
+import { PAYMENT_STATUS_LABELS } from '../components/store/orders/order-refunds';
 import '../components/store/orders/orders-workspace.css';
 
 const uuid = /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i;
 const DEFAULTS = { sort: { by: 'created_at', direction: 'desc' }, perPage: 25, perPageOptions: [25, 50, 100] };
-const PAYMENT_LABELS = { pending: ['في انتظار الدفع', 'Awaiting payment'], paid: ['تم الدفع', 'Paid'], failed: ['فشل الدفع', 'Payment failed'], refunded: ['مسترد', 'Refunded'] };
+// Refund states are set by recorded refunds (partially_refunded / refunded), never by a gateway.
+const PAYMENT_LABELS = PAYMENT_STATUS_LABELS;
+const PAYMENT_FILTERS = ['pending', 'paid', 'failed', 'partially_refunded', 'refunded'];
 
 function ExportFile({ id, apiBase, ar, onClose, theme }) {
     const text = (a, e) => ar ? a : e; const [row, setRow] = useState(null); const [error, setError] = useState(''); const [busy, setBusy] = useState(false);
@@ -52,7 +55,7 @@ export default function StoreOrdersPage() {
     const option = ([value, a, e]) => ({ value, label: ar ? a : e });
     const filters = useMemo(() => [
         { key: 'status', label: text('حالة الطلب', 'Order status'), type: 'select', options: ORDER_STATUSES.map(option) },
-        { key: 'payment', param: 'payment_status', label: text('حالة الدفع', 'Payment status'), type: 'select', options: ['pending', 'paid', 'failed'].map((key) => ({ value: key, label: PAYMENT_LABELS[key][ar ? 0 : 1] })) },
+        { key: 'payment', param: 'payment_status', label: text('حالة الدفع', 'Payment status'), type: 'select', options: PAYMENT_FILTERS.map((key) => ({ value: key, label: PAYMENT_LABELS[key][ar ? 0 : 1] })) },
         { key: 'risk', param: 'classification', label: text('تصنيف المخاطر', 'Risk'), type: 'select', options: ORDER_RISK_STATUSES.map(option) },
         { key: 'product', param: 'product_id', label: text('المنتج', 'Product'), type: 'custom',
             describe: (id) => productNames.current.get(String(id)) || `#${id}`,
@@ -87,7 +90,7 @@ export default function StoreOrdersPage() {
         { key: 'status', header: text('حالة الطلب', 'Order status'), sortKey: 'status', csv: (row) => row.status,
             render: (row) => <span className="ws-orders-status-cell"><span className={`ws-orders-status is-${row.status}`}>{orderStatusLabel(row.status, ar)}</span>{row.review?.classification ? <small className={`ws-orders-review is-${row.review.classification}`}>{ORDER_RISK_STATUSES.find(([key]) => key === row.review.classification)?.[ar ? 1 : 2] || text('طلب مزعج', 'Spam')}</small> : null}</span> },
         { key: 'payment', header: text('الدفع', 'Payment'), defaultHidden: true, csv: (row) => row.payment_status ?? '',
-            render: (row) => row.payment_status ? <span className={`ws-dt-badge ${row.payment_status === 'paid' ? 'is-success' : row.payment_status === 'failed' ? 'is-critical' : 'is-warning'}`}>{PAYMENT_LABELS[row.payment_status]?.[ar ? 0 : 1] ?? row.payment_status}</span> : '—' },
+            render: (row) => row.payment_status ? <span className={`ws-dt-badge ${row.payment_status === 'paid' ? 'is-success' : row.payment_status === 'failed' ? 'is-critical' : ['refunded', 'partially_refunded'].includes(row.payment_status) ? 'is-info' : 'is-warning'}`}>{PAYMENT_LABELS[row.payment_status]?.[ar ? 0 : 1] ?? row.payment_status}</span> : '—' },
         { key: 'ip_country', header: 'IP Country', csv: (row) => row.ip_country ?? '', render: (row) => row.ip_country ?? '' },
         { key: 'date', header: text('تاريخ الطلب', 'Order date'), sortKey: 'created_at', csv: (row) => row.created_at ?? '', render: (row) => <span className="ws-dt-num">{row.created_at ? new Date(row.created_at).toLocaleString(ar ? 'ar-EG' : 'en-GB') : '—'}</span> },
     // eslint-disable-next-line react-hooks/exhaustive-deps

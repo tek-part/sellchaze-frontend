@@ -99,7 +99,7 @@ export default function StoreInventoryPage() {
             setHistory({ name: product.name, rows: data.data, loading: false });
         } catch (e) { setHistory(null); setError(errorText(e)); }
     }
-    const labels = { variant_deleted: text('حذف صنف', 'Variant deleted'), adjusted: text('تعديل الكمية', 'Stock adjustment'), reserved: text('حجز لطلب', 'Order reservation'), shipped: text('شحن الطلب', 'Order shipped'), digital_committed: text('احتساب وحدات رقمية', 'Digital units committed'), cancelled: text('فك حجز طلب ملغى', 'Cancelled order released') };
+    const labels = { variant_deleted: text('حذف صنف', 'Variant deleted'), adjusted: text('تعديل الكمية', 'Stock adjustment'), reserved: text('حجز لطلب', 'Order reservation'), shipped: text('شحن الطلب', 'Order shipped'), digital_committed: text('احتساب وحدات رقمية', 'Digital units committed'), cancelled: text('فك حجز طلب ملغى', 'Cancelled order released'), refund_restock: text('إرجاع للمخزون بعد استرداد', 'Restocked from refund') };
     return <section className="ws-catalog-page">
         <header className="ws-catalog-heading"><div><h1>{text('مخزون المتجر', 'Store inventory')}</h1><p>{text('المتاح للبيع = الكمية الفعلية − المحجوز للطلبات. يُفك الحجز عند الإلغاء وتُخصم الكمية عند الشحن.', 'Available to sell = on hand − reserved orders. Cancellation releases reservations; shipping deducts stock.')}</p><p>{text('فعّل التتبع للمنتجات محدودة الكمية. المنتجات دون تتبع تقبل الطلبات دون حد مخزون.', 'Enable tracking for limited stock. Untracked products have no inventory limit.')}</p></div></header>
         {error ? <p role="alert" className="rounded-lg bg-red-50 p-3 text-red-700">{error}</p> : null}

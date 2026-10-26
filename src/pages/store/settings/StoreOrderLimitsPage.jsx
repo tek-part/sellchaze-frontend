@@ -43,7 +43,7 @@ function OrderLimitsEditor({ context: { apiBase, uiBase, access, store } }) {
         if (working.current) return;
         working.current = true; setBusy(true); setError(''); setSaved(false);
         try {
-            const { data } = await api.put(`${apiBase}/order-limits`, { ...settings, minimum_order_amount: settings.minimum_order_amount === '' ? null : settings.minimum_order_amount, max_product_quantity: Number(settings.max_product_quantity), max_orders_per_phone_24h: Number(settings.max_orders_per_phone_24h) });
+            const { data } = await api.put(`${apiBase}/order-limits`, { ...settings, minimum_order_amount: settings.minimum_order_amount === '' ? null : settings.minimum_order_amount, max_product_quantity: Number(settings.max_product_quantity), max_orders_per_phone_24h: Number(settings.max_orders_per_phone_24h), return_window_days: Number(settings.return_window_days ?? 14) });
             apply(data); setSaved(true);
         } catch (e) { const changed = e.response?.status === 409; setConflict(changed); setError(changed ? text('تغيرت حدود الطلبات في جلسة أخرى. أعد تحميل الإعدادات قبل الحفظ.', 'Order limits changed in another session. Reload the settings before saving.') : message(e)); }
         finally { working.current = false; setBusy(false); }
@@ -67,6 +67,10 @@ function OrderLimitsEditor({ context: { apiBase, uiBase, access, store } }) {
                 <label className="block text-sm font-semibold">{text('أقصى عدد طلبات لرقم الهاتف خلال 24 ساعة', 'Maximum orders per phone in 24 hours')}
                     <input className={input} type="number" inputMode="numeric" min={0} max={100000} step={1} required value={settings.max_orders_per_phone_24h} onChange={(event) => update('max_orders_per_phone_24h', event.target.value)} aria-describedby="phone-limit-help" />
                     <span id="phone-limit-help" className="mt-2 block font-normal leading-6 text-slate-500">{text('يحسب الطلبات المنشأة في متجرك خلال آخر 24 ساعة، بما فيها الملغاة. إعادة محاولة الطلب نفسه لا تُحتسب طلبًا جديدًا. أدخل 0 لتعطيل الحد.', 'Counts orders created in your store during the last 24 hours, including cancelled orders. Replaying the same checkout does not create another order. Enter 0 to disable this limit.')}</span>
+                </label>
+                <label className="block text-sm font-semibold">{text('مدة طلب الإرجاع بالأيام', 'Return window (days)')}
+                    <input className={input} type="number" inputMode="numeric" min={0} max={365} step={1} required value={settings.return_window_days ?? 14} onChange={(event) => update('return_window_days', event.target.value)} aria-describedby="return-window-help" />
+                    <span id="return-window-help" className="mt-2 block font-normal leading-6 text-slate-500">{text('عدد الأيام بعد التوصيل التي يستطيع فيها العميل طلب إرجاع من حسابه. أدخل 0 لإيقاف طلبات الإرجاع عبر المتجر.', 'Days after delivery during which customers can request a return from their account. Enter 0 to turn off online return requests.')}</span>
                 </label>
                 <label className="block text-sm font-semibold">{text('دولة أرقام الهاتف المحلية', 'Country for local phone numbers')}
                     <select className={input} value={settings.phone_country} onChange={(event) => update('phone_country', event.target.value)} aria-describedby="phone-country-help">
