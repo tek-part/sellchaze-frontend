@@ -1,11 +1,11 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Navigate, useOutletContext } from 'react-router-dom';
 import { Dialog, DialogBackdrop, DialogPanel, DialogTitle } from '@headlessui/react';
 import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
 import api from '../api/client';
 import ConfirmDialog from '../components/ConfirmDialog';
-import { IndexFilters, IndexTable, downloadCsv, useIndexTable } from '../components/data-table';
+import { IndexFilters, IndexTable, downloadCsv, useIndexQuery, useIndexTable } from '../components/data-table';
 import { HiOutlineClipboardDocumentList, HiOutlineInformationCircle, HiOutlineTrash } from '../components/workspace/WorkspaceIcons';
 
 function unwrapLog(payload) {
@@ -33,10 +33,6 @@ const errorText = (e) => e.response?.data?.message || e.message;
 export default function AdminActivityPage() {
     const { t, i18n } = useTranslation();
     const { isAdmin } = useOutletContext();
-    const [result, setResult] = useState(null);
-    const [err, setErr] = useState('');
-    const [loading, setLoading] = useState(true);
-    const [reload, setReload] = useState(0);
     const [details, setDetails] = useState(null);
     const [deleting, setDeleting] = useState(false);
     const [confirmBulk, setConfirmBulk] = useState(null);
@@ -82,25 +78,13 @@ export default function AdminActivityPage() {
         const { sort_by: _sortBy, sort_direction: direction, ...rest } = table.apiParams;
         return { ...rest, ...(direction ? { sort_dir: direction } : {}) };
     }, [table.apiParams]);
-    const paramsKey = JSON.stringify(listParams);
-    useEffect(() => {
-        if (!isAdmin) return undefined;
-        let active = true;
-        setLoading(true);
-        setErr('');
-        api.get('/admin/activity-logs', { params: listParams })
-            .then(({ data }) => { if (active) setResult({ data: (data.data ?? []).map(unwrapLog).filter(Boolean), meta: data.meta ?? null }); })
-            .catch((e) => { if (active) setErr(errorText(e)); })
-            .finally(() => { if (active) setLoading(false); });
-        return () => { active = false; };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [isAdmin, paramsKey, reload]);
+    const { data: rows, meta, loading, error: err, reload } = useIndexQuery({ url: '/admin/activity-logs', params: listParams, enabled: Boolean(isAdmin), formatError: errorText,
+        map: (data) => ({ data: (data.data ?? []).map(unwrapLog).filter(Boolean), meta: data.meta ?? null }) });
 
     if (!isAdmin) {
         return <Navigate to="/dashboard" replace />;
     }
 
-    const rows = result?.data ?? [];
     const selectedRows = [...table.selected.values()];
 
     const runBulkDelete = async () => {
@@ -112,7 +96,7 @@ export default function AdminActivityPage() {
             toast.success(`${t('action_delete')} (${data?.deleted ?? ids.length})`);
             setConfirmBulk(null);
             table.clearSelection();
-            setReload((value) => value + 1);
+            reload();
         } catch (e) {
             toast.error(errorText(e));
         } finally {
@@ -134,7 +118,7 @@ export default function AdminActivityPage() {
                 {/* Logs can run into the millions: export covers the selection or the current page only. */}
                 <IndexFilters table={table} searchPlaceholder={t('admin_dt_search_activity')} exportDisabled={loading || !rows.length}
                     onExport={() => downloadCsv(`activity-${new Date().toISOString().slice(0, 10)}.csv`, table.visibleColumns, selectedRows.length ? selectedRows : rows)} />
-                <IndexTable table={table} rows={rows} loading={loading} error={err} onRetry={() => setReload((value) => value + 1)} meta={result?.meta}
+                <IndexTable table={table} rows={rows} loading={loading} error={err} onRetry={reload} meta={meta}
                     label={t('nav_activity_log')} bulkActions={bulkActions}
                     emptyState={{ icon: HiOutlineClipboardDocumentList, title: t('empty'), description: t('activity_log_subtitle') }} />
             </div>

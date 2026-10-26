@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
 import api from '../api/client';
 import ConfirmDialog from '../components/ConfirmDialog';
-import { IndexFilters, IndexTable, downloadCsv, useIndexTable } from '../components/data-table';
+import { IndexFilters, IndexTable, downloadCsv, useIndexQuery, useIndexTable } from '../components/data-table';
 import { HiOutlinePlus, HiOutlinePencilSquare, HiOutlineTrash, HiOutlineTicket } from '../components/workspace/WorkspaceIcons';
 import { fetchAllPages } from '../utils/fetchAllPages';
 import { DISCOUNT_TYPES, discountMethodLabel, discountName, discountTypeLabel, summarizeDiscount } from '../features/store/discounts';
@@ -20,10 +20,6 @@ export default function StoreCouponsPage() {
     const { t, i18n } = useTranslation();
     const ar = i18n.language?.startsWith('ar'); const text = (a, e) => (ar ? a : e);
 
-    const [result, setResult] = useState(null);
-    const [err, setErr] = useState('');
-    const [loading, setLoading] = useState(true);
-    const [reload, setReload] = useState(0);
     const [confirmOne, setConfirmOne] = useState(null);
     const [deleting, setDeleting] = useState(false);
     const [categoryNames, setCategoryNames] = useState(null);
@@ -80,19 +76,8 @@ export default function StoreCouponsPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     ], [ar]);
     const table = useIndexTable({ scope: `store:${store?.id ?? apiBase}:coupons`, filters, columns, views, defaults: DEFAULTS });
-    const paramsKey = JSON.stringify(table.apiParams);
-    useEffect(() => {
-        let active = true; setLoading(true); setErr('');
-        api.get(`${apiBase}/coupons`, { params: table.apiParams })
-            .then(({ data }) => { if (active) setResult(data); })
-            .catch((e) => { if (active) setErr(e.response?.data?.message || e.message); })
-            .finally(() => { if (active) setLoading(false); });
-        return () => { active = false; };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [apiBase, paramsKey, reload]);
-    useEffect(() => { setConfirmOne(null); setResult(null); }, [apiBase]);
-
-    const rows = result?.data ?? [];
+    const { data: rows, meta, loading, error: err, reload, setResult } = useIndexQuery({ url: `${apiBase}/coupons`, params: table.apiParams });
+    useEffect(() => { setConfirmOne(null); }, [apiBase]);
 
     // Category names for summaries like "10% off Tops" (loaded once, only when a row needs them).
     const needsCategories = rows.some((row) => row.applies_to === 'categories' || row.bxgy?.buy_applies_to === 'categories' || row.bxgy?.get_applies_to === 'categories');
@@ -139,7 +124,7 @@ export default function StoreCouponsPage() {
             <div className="ws-dt-card">
                 <IndexFilters table={table} searchPlaceholder={text('ابحث بالكود أو العنوان', 'Search by code or title')} exportDisabled={!rows.length}
                     onExport={() => downloadCsv(`discounts-${new Date().toISOString().slice(0, 10)}.csv`, table.visibleColumns, rows)} />
-                <IndexTable table={table} rows={rows} loading={loading} error={err} onRetry={() => setReload((value) => value + 1)} meta={result?.meta}
+                <IndexTable table={table} rows={rows} loading={loading} error={err} onRetry={reload} meta={meta}
                     label={t('coupons_title', 'Discounts')} rowHref={(row) => `${uiBase}/coupons/${row.id}/edit`}
                     emptyState={{ icon: HiOutlineTicket, title: text('لا توجد خصومات بعد', 'No discounts yet'), description: t('coupons_subtitle', 'Create discount codes and automatic discounts for this store.'),
                         action: <Link className="ws-dt-button ws-dt-button-primary" to={`${uiBase}/coupons/new`}>{t('coupon_create', 'Create discount')}</Link> }} />

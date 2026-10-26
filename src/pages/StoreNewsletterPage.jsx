@@ -1,10 +1,9 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useOutletContext } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import api from '../api/client';
 import useStoreScope from '../hooks/useStoreScope';
 import { fetchAllPages } from '../utils/fetchAllPages';
-import { IndexFilters, IndexTable, downloadCsv, useIndexTable } from '../components/data-table';
+import { IndexFilters, IndexTable, downloadCsv, useIndexQuery, useIndexTable } from '../components/data-table';
 import { HiOutlineArrowDownTray, HiOutlineEnvelope } from '../components/workspace/WorkspaceIcons';
 
 // The newsletter endpoint supports a channel filter, a name/phone/email search and pagination (newest first).
@@ -18,7 +17,6 @@ export default function StoreNewsletterPage() {
 function Subscribers({ apiBase }) {
     const { i18n } = useTranslation(); const ar = i18n.language.startsWith('ar'); const text = (a, e) => ar ? a : e;
     const { store } = useOutletContext() ?? {};
-    const [result, setResult] = useState(null); const [loading, setLoading] = useState(true); const [error, setError] = useState(''); const [reload, setReload] = useState(0);
     const [exporting, setExporting] = useState(false); const [exportError, setExportError] = useState('');
     const path = `${apiBase}/newsletter`;
     const date = (value) => (value ? new Date(value.replace(' ', 'T') + (/Z|[+-]\d\d:\d\d$/.test(value) ? '' : 'Z')).toLocaleString(ar ? 'ar-EG' : 'en-GB') : '—');
@@ -47,19 +45,13 @@ function Subscribers({ apiBase }) {
     ], [ar, channels]); // eslint-disable-line react-hooks/exhaustive-deps
 
     const table = useIndexTable({ scope: `store:${store?.id ?? apiBase}:newsletter`, filters, columns, views, defaults: DEFAULTS });
-    const paramsKey = JSON.stringify(table.apiParams);
-    useEffect(() => {
-        let active = true; setLoading(true); setError('');
-        api.get(path, { params: table.apiParams }).then(({ data }) => { if (active) setResult(data); }).catch((e) => { if (active) setError(e.response?.data?.message || e.message); }).finally(() => { if (active) setLoading(false); });
-        return () => { active = false; };
-    }, [path, paramsKey, reload]); // eslint-disable-line react-hooks/exhaustive-deps
+    const { data: rows, meta, loading, error, reload } = useIndexQuery({ url: path, params: table.apiParams });
     const pending = loading || table.searching;
-    const rows = result?.data ?? [];
 
     async function exportRows() {
         if (exporting || pending) return; setExporting(true); setExportError('');
         try {
-            if (result?.meta?.total > 10000) throw new Error(text('ضيّق البحث لتصدير 10,000 مشترك أو أقل.', 'Narrow the search to export 10,000 subscribers or fewer.'));
+            if (meta?.total > 10000) throw new Error(text('ضيّق البحث لتصدير 10,000 مشترك أو أقل.', 'Narrow the search to export 10,000 subscribers or fewer.'));
             const { page: _page, per_page: _perPage, ...filtersParams } = table.apiParams;
             const all = await fetchAllPages(path, filtersParams);
             const href = URL.createObjectURL(new Blob([JSON.stringify(all, null, 2)], { type: 'application/json;charset=utf-8' }));
@@ -67,12 +59,12 @@ function Subscribers({ apiBase }) {
         } catch (e) { setExportError(e.message); } finally { setExporting(false); }
     }
     return <section className="ws-catalog-page">
-        <header className="ws-catalog-heading"><div><h1>NewsLetter</h1><p>{text('المشتركون في نشرة متجرك الإخبارية', 'Your store newsletter subscribers')}</p></div><div className="ws-catalog-actions"><button type="button" className="ws-dt-button" disabled={pending || exporting || !result?.meta?.total} onClick={exportRows}><HiOutlineArrowDownTray aria-hidden />{exporting ? text('جارٍ التصدير…', 'Exporting…') : text('تصدير JSON', 'Export JSON')}</button></div></header>
+        <header className="ws-catalog-heading"><div><h1>NewsLetter</h1><p>{text('المشتركون في نشرة متجرك الإخبارية', 'Your store newsletter subscribers')}</p></div><div className="ws-catalog-actions"><button type="button" className="ws-dt-button" disabled={pending || exporting || !meta?.total} onClick={exportRows}><HiOutlineArrowDownTray aria-hidden />{exporting ? text('جارٍ التصدير…', 'Exporting…') : text('تصدير JSON', 'Export JSON')}</button></div></header>
         {exportError ? <p role="alert" className="rounded-lg bg-red-50 p-3 text-red-700">{exportError}</p> : null}
         <div className="ws-dt-card">
             <IndexFilters table={table} searchPlaceholder={text('الاسم أو الهاتف أو البريد الإلكتروني', 'Name, phone or email')} exportDisabled={!rows.length}
                 onExport={() => downloadCsv(`newsletter-${new Date().toISOString().slice(0, 10)}.csv`, table.visibleColumns, rows)} />
-            <IndexTable table={table} rows={rows} rowKey={(row) => `${row.channel}-${row.id}`} loading={loading} error={error} onRetry={() => setReload((value) => value + 1)} meta={result?.meta}
+            <IndexTable table={table} rows={rows} rowKey={(row) => `${row.channel}-${row.id}`} loading={loading} error={error} onRetry={reload} meta={meta}
                 label={text('المشتركون', 'Subscribers')} emptyState={{ icon: HiOutlineEnvelope, title: text('لا يوجد مشتركون حتى الآن.', 'No subscribers yet.'), description: text('يظهر هنا من يشترك في نشرتك عبر البريد الإلكتروني أو الهاتف.', 'People who subscribe to your newsletter by email or phone appear here.') }} />
         </div>
     </section>;

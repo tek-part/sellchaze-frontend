@@ -5,7 +5,7 @@ import { Dialog, DialogBackdrop, DialogPanel, DialogTitle } from '@headlessui/re
 import toast from 'react-hot-toast';
 import { HiOutlinePlus, HiOutlineTrash, HiOutlineClipboardDocument, HiOutlineEye, HiOutlinePencil, HiOutlineDocumentDuplicate, HiOutlinePlayCircle, HiOutlineFunnel } from '../components/workspace/WorkspaceIcons';
 import ConfirmDialog from '../components/ConfirmDialog';
-import { IndexFilters, IndexTable, downloadCsv, useIndexTable } from '../components/data-table';
+import { IndexFilters, IndexTable, downloadCsv, useIndexQuery, useIndexTable } from '../components/data-table';
 import { funnelCopy, funnelError } from '../components/store/funnels/funnelCopy';
 import '../components/store/funnels/funnel-workspace.css';
 import api from '../api/client';
@@ -18,10 +18,9 @@ export default function StoreFunnelsPage() {
     const { i18n } = useTranslation(); const ar = i18n.language?.startsWith('ar'); const c = funnelCopy[ar ? 'ar' : 'en'];
     const text = (a, e) => (ar ? a : e);
     const { apiBase, uiBase } = useStoreScope(); const { access, store } = useOutletContext();
-    const [result, setResult] = useState(null);
-    const [loading, setLoading] = useState(true); const [busy, setBusy] = useState(false);
+    const [busy, setBusy] = useState(false);
     const [confirm, setConfirm] = useState(null); const [guide, setGuide] = useState(false);
-    const [error, setError] = useState(''); const [actionError, setActionError] = useState(''); const [reload, setReload] = useState(0);
+    const [actionError, setActionError] = useState('');
     const allowed = access?.canStorePages;
 
     async function copyCode(code) {
@@ -59,27 +58,23 @@ export default function StoreFunnelsPage() {
     // This endpoint names its sort parameters `sort` / `direction`.
     const { sort_by: sortBy, sort_direction: direction, ...rest } = table.apiParams;
     const params = { ...rest, ...(sortBy ? { sort: sortBy, direction } : {}) };
-    const paramsKey = JSON.stringify(params);
-    useEffect(() => {
-        if (!allowed) return undefined;
-        let active = true; const controller = new AbortController();
-        setLoading(true); setError('');
-        api.get(`${apiBase}/funnels`, { params, signal: controller.signal })
-            .then(({ data }) => { if (!active) return; if (data.data.length === 0 && table.state.page > data.meta.last_page) table.setPage(Math.max(1, data.meta.last_page)); else setResult(data); })
-            .catch((e) => { if (active) setError(funnelError(e)); })
-            .finally(() => { if (active) setLoading(false); });
-        return () => { active = false; controller.abort(); };
-    }, [allowed, apiBase, paramsKey, reload]); // eslint-disable-line react-hooks/exhaustive-deps
-    useEffect(() => { table.clearSelection(); setConfirm(null); setActionError(''); setResult(null); }, [apiBase]); // eslint-disable-line react-hooks/exhaustive-deps
+    // A page past the end (e.g. after deleting its last funnels) jumps to the last page instead.
+    const jumpPastEnd = (data) => {
+        if (data.data.length > 0 || table.state.page <= data.meta.last_page) return true;
+        table.setPage(Math.max(1, data.meta.last_page));
+        return false;
+    };
+    const { data: rows, meta, loading, error, reload } = useIndexQuery({ url: `${apiBase}/funnels`, params, enabled: Boolean(allowed), formatError: funnelError, accept: jumpPastEnd });
+    const { clearSelection } = table;
+    useEffect(() => { clearSelection(); setConfirm(null); setActionError(''); }, [apiBase, clearSelection]);
 
     async function remove() {
         if (!confirm) return;
         setBusy(true); setActionError('');
-        try { await api.post(`${apiBase}/funnels/bulk-delete`, { ids: confirm }); setConfirm(null); table.clearSelection(); setReload((value) => value + 1); }
+        try { await api.post(`${apiBase}/funnels/bulk-delete`, { ids: confirm }); setConfirm(null); table.clearSelection(); reload(); }
         catch (e) { setActionError(funnelError(e)); setConfirm(null); } finally { setBusy(false); }
     }
     if (!allowed) return <Navigate to={`${uiBase}/overview`} replace />;
-    const rows = result?.data ?? [];
     const selectedRows = [...table.selected.values()];
     const bulkActions = [
         { key: 'delete', label: c.delete, icon: HiOutlineTrash, tone: 'danger', disabled: () => busy, onAction: (list) => { setActionError(''); setConfirm(list.map((funnel) => funnel.id)); } },
@@ -91,7 +86,7 @@ export default function StoreFunnelsPage() {
         <div className="ws-dt-card">
             <IndexFilters table={table} searchPlaceholder={c.search} exportDisabled={!rows.length}
                 onExport={() => downloadCsv(`funnels-${new Date().toISOString().slice(0, 10)}.csv`, table.visibleColumns, selectedRows.length ? selectedRows : rows)} />
-            <IndexTable table={table} rows={rows} loading={loading} error={error} onRetry={() => setReload((value) => value + 1)} meta={result?.meta}
+            <IndexTable table={table} rows={rows} loading={loading} error={error} onRetry={reload} meta={meta}
                 label={c.title} bulkActions={bulkActions} rowHref={(funnel) => `${uiBase}/funnels/${funnel.id}/edit`}
                 emptyState={{ icon: HiOutlineFunnel, title: c.empty, description: c.hint, action: <Link className="ws-dt-button ws-dt-button-primary" to={`${uiBase}/funnels/create`}>{c.create}</Link> }} />
         </div>

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Link, Navigate, useNavigate, useOutletContext } from 'react-router-dom';
 import { Popover, PopoverButton, PopoverPanel } from '@headlessui/react';
 import { useTranslation } from 'react-i18next';
@@ -6,7 +6,7 @@ import toast from 'react-hot-toast';
 import api from '../api/client';
 import ConfirmDialog from '../components/ConfirmDialog';
 import PageHeader from '../components/PageHeader';
-import { IndexFilters, IndexTable, downloadCsv, useIndexTable } from '../components/data-table';
+import { IndexFilters, IndexTable, downloadCsv, useIndexQuery, useIndexTable } from '../components/data-table';
 import { fetchAllPages } from '../utils/fetchAllPages';
 import {
     HiOutlineBuildingStorefront, HiOutlineEllipsisHorizontal, HiOutlineEye, HiOutlinePencilSquare, HiOutlinePlus, HiOutlineTrash,
@@ -30,10 +30,6 @@ export default function StoresPage() {
     const canEdit = can('stores-edit');
     const canDelete = can('stores-delete');
 
-    const [result, setResult] = useState(null);
-    const [err, setErr] = useState('');
-    const [loading, setLoading] = useState(true);
-    const [reload, setReload] = useState(0);
     const [exporting, setExporting] = useState(false);
     const [confirmOne, setConfirmOne] = useState(null);
     const [deleting, setDeleting] = useState(false);
@@ -91,25 +87,12 @@ export default function StoresPage() {
     ], [i18n.language, canEdit, canDelete, deleting]);
 
     const table = useIndexTable({ scope: 'admin:stores', filters, columns, views, defaults: DEFAULTS });
-    const paramsKey = JSON.stringify(table.apiParams);
-    useEffect(() => {
-        if (!canList) return undefined;
-        let active = true;
-        setLoading(true);
-        setErr('');
-        api.get('/stores', { params: table.apiParams })
-            .then(({ data }) => { if (active) setResult(data); })
-            .catch((e) => { if (active) setErr(errorText(e)); })
-            .finally(() => { if (active) setLoading(false); });
-        return () => { active = false; };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [canList, paramsKey, reload]);
+    const { data: rows, meta, loading, error: err, reload } = useIndexQuery({ url: '/stores', params: table.apiParams, enabled: canList, formatError: errorText });
 
     if (!canList) {
         return <Navigate to="/dashboard" replace />;
     }
 
-    const rows = result?.data ?? [];
     const selectedRows = [...table.selected.values()];
 
     const handleExport = async () => {
@@ -136,7 +119,7 @@ export default function StoresPage() {
             toast.success(t('action_delete'));
             setConfirmOne(null);
             table.clearSelection();
-            setReload((value) => value + 1);
+            reload();
         } catch (e) {
             toast.error(errorText(e));
         } finally {
@@ -162,7 +145,7 @@ export default function StoresPage() {
             />
             <div className="ws-dt-card">
                 <IndexFilters table={table} searchPlaceholder={t('admin_dt_search_stores')} onExport={() => void handleExport()} exportDisabled={loading || exporting || !rows.length} />
-                <IndexTable table={table} rows={rows} loading={loading} error={err} onRetry={() => setReload((value) => value + 1)} meta={result?.meta}
+                <IndexTable table={table} rows={rows} loading={loading} error={err} onRetry={reload} meta={meta}
                     label={t('stores_title')} rowHref={canEdit ? (row) => `/stores/${row.id}/overview` : undefined}
                     emptyState={{ icon: HiOutlineBuildingStorefront, title: t('empty'), description: t('stores_subtitle') }} />
             </div>

@@ -10,7 +10,7 @@ import { notify } from '../components/ui/notify';
 import SearchableSelect from '../components/ui/SearchableSelect';
 import useStoreContext from '../hooks/useStoreContext';
 import SimplePagesPanel from '../components/store/SimplePagesPanel';
-import { IndexFilters, IndexTable, downloadCsv, useIndexTable } from '../components/data-table';
+import { IndexFilters, IndexTable, downloadCsv, useIndexQuery, useIndexTable } from '../components/data-table';
 
 const badgeCls = 'inline-block rounded-full border px-2 py-0.5 text-xs font-medium';
 const thCls = 'px-4 py-3.5 text-start';
@@ -121,12 +121,8 @@ export default function StorePagesPage() {
     const { apiBase, uiBase, locales, store } = useStoreContext();
 
     const [contentPages, setContentPages] = useState([]);
-    const [result, setResult] = useState(null);
-    const [loadingCustom, setLoadingCustom] = useState(true);
-    const [reload, setReload] = useState(0);
     const [creating, setCreating] = useState(false);
     const [err, setErr] = useState('');
-    const [customErr, setCustomErr] = useState('');
 
     const load = useCallback(() => {
         api.get(`${apiBase}/content`)
@@ -182,17 +178,9 @@ export default function StorePagesPage() {
     ], [ar, t, uiBase, apiBase]); // eslint-disable-line react-hooks/exhaustive-deps
 
     const table = useIndexTable({ scope: `store:${store?.id ?? apiBase}:pages`, filters, columns, views, defaults: DEFAULTS });
-    const paramsKey = JSON.stringify(table.apiParams);
-    useEffect(() => {
-        let active = true; setLoadingCustom(true); setCustomErr('');
-        api.get(`${apiBase}/pages`, { params: table.apiParams })
-            .then(({ data }) => { if (active) setResult({ ...data, data: Array.isArray(data?.data) ? data.data : [] }); })
-            .catch((e) => { if (active) setCustomErr(e.response?.data?.message || e.message); })
-            .finally(() => { if (active) setLoadingCustom(false); });
-        return () => { active = false; };
-    }, [apiBase, paramsKey, reload]); // eslint-disable-line react-hooks/exhaustive-deps
-    useEffect(() => { setCreating(false); setResult(null); }, [apiBase]);
-    const customPages = result?.data ?? [];
+    const { data: customPages, meta, loading: loadingCustom, error: customErr, reload, setResult } = useIndexQuery({ url: `${apiBase}/pages`, params: table.apiParams,
+        map: (data) => ({ ...data, data: Array.isArray(data?.data) ? data.data : [] }) });
+    useEffect(() => { setCreating(false); }, [apiBase]);
 
     return (
         <div className="mx-auto max-w-5xl space-y-5">
@@ -274,14 +262,14 @@ export default function StorePagesPage() {
                             uiBase={uiBase}
                             locales={locales}
                             onClose={() => setCreating(false)}
-                            onCreated={() => { setCreating(false); setReload((value) => value + 1); }}
+                            onCreated={() => { setCreating(false); reload(); }}
                         />
                     </div>
                 ) : null}
                 <div className="ws-dt-card">
                     <IndexFilters table={table} searchPlaceholder={text('ابحث بالعنوان أو الرابط', 'Search title or path')} exportDisabled={!customPages.length}
                         onExport={() => downloadCsv(`pages-${new Date().toISOString().slice(0, 10)}.csv`, table.visibleColumns, customPages)} />
-                    <IndexTable table={table} rows={customPages} loading={loadingCustom} error={customErr} onRetry={() => setReload((value) => value + 1)} meta={result?.meta}
+                    <IndexTable table={table} rows={customPages} loading={loadingCustom} error={customErr} onRetry={reload} meta={meta}
                         label={t('store_pages_custom_title', 'Custom pages')} rowHref={(page) => `${uiBase}/pages/${page.id}/builder`}
                         emptyState={{ icon: HiOutlineSquares2X2, title: t('store_pages_custom_empty', 'No custom pages yet. Create one to open the page builder.'),
                             action: <button type="button" className="ws-dt-button ws-dt-button-primary" onClick={() => setCreating(true)}>{t('store_pages_new', 'New page')}</button> }} />

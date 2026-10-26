@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
 import api from '../api/client';
 import ConfirmDialog from '../components/ConfirmDialog';
-import { IndexFilters, IndexTable, downloadCsv, useIndexTable } from '../components/data-table';
+import { IndexFilters, IndexTable, downloadCsv, useIndexQuery, useIndexTable } from '../components/data-table';
 import { fetchAllPages } from '../utils/fetchAllPages';
 import { impersonateUserId } from '../utils/impersonationApi';
 import {
@@ -41,10 +41,6 @@ export default function AdminUsersPage() {
     const pendingTab = searchParams.get('pending') === '1';
     const canDeleteHere = canDeleteUser && (pendingTab ? canListPending : canListEmployees);
 
-    const [result, setResult] = useState(null);
-    const [err, setErr] = useState('');
-    const [loading, setLoading] = useState(true);
-    const [reload, setReload] = useState(0);
     const [exporting, setExporting] = useState(false);
     const [confirmDelete, setConfirmDelete] = useState(null);
     const [deleteLoading, setDeleteLoading] = useState(false);
@@ -97,7 +93,7 @@ export default function AdminUsersPage() {
         { key: 'created', header: t('col_created'), defaultHidden: true, sortKey: 'created_at', csv: (u) => u.created_at ?? '',
             render: (u) => <span className="ws-dt-num">{u.created_at ? new Date(u.created_at).toLocaleDateString() : '—'}</span> },
         { key: 'actions', header: <span className="sr-only">{t('col_actions')}</span>, hideable: false, align: 'end',
-            render: (u) => {
+            render: (u, { loading }) => {
                 const active = u.is_active !== false;
                 return <div className="ws-dt-row-actions">
                     <Link className="ws-dt-icon" to={`/admin/users/${u.id}`} title={t('aria_view')} aria-label={t('aria_view')}><HiOutlineEye aria-hidden /></Link>
@@ -109,26 +105,14 @@ export default function AdminUsersPage() {
                 </div>;
             } },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    ], [i18n.language, pendingTab, canEditUser, canListEmployees, canApprovePending, canDeleteHere, isAdmin, selfId, impersonateBusyId, loading]);
+    ], [i18n.language, pendingTab, canEditUser, canListEmployees, canApprovePending, canDeleteHere, isAdmin, selfId, impersonateBusyId]);
 
     const table = useIndexTable({ scope: pendingTab ? 'admin:users-pending' : 'admin:users', filters, columns, views, defaults: DEFAULTS });
     const listParams = useMemo(() => ({ ...table.apiParams, ...(pendingTab ? { pending_registration: true } : {}) }), [table.apiParams, pendingTab]);
-    const paramsKey = JSON.stringify(listParams);
     const allowed = canAccessEmployeesSection && (pendingTab ? canListPending : canListEmployees);
-    useEffect(() => {
-        if (!allowed) return undefined;
-        let active = true;
-        setLoading(true);
-        setErr('');
-        api.get('/admin/users', { params: listParams })
-            .then(({ data }) => { if (active) setResult({ data: (data.data ?? []).map(unwrapUser).filter(Boolean), meta: data.meta ?? null }); })
-            .catch((e) => { if (active) setErr(errorText(e)); })
-            .finally(() => { if (active) setLoading(false); });
-        return () => { active = false; };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [allowed, paramsKey, reload]);
     // Staff and pending lists have different columns: never show one list's rows under the other's header.
-    useEffect(() => { setResult(null); }, [pendingTab]);
+    const { data: rows, meta, loading, error: err, reload, setResult } = useIndexQuery({ url: '/admin/users', params: listParams, enabled: Boolean(allowed), resetKey: pendingTab,
+        formatError: errorText, map: (data) => ({ data: (data.data ?? []).map(unwrapUser).filter(Boolean), meta: data.meta ?? null }) });
 
     if (!canAccessEmployeesSection) {
         return <Navigate to="/dashboard" replace />;
@@ -143,9 +127,8 @@ export default function AdminUsersPage() {
         return <Navigate to="/dashboard" replace />;
     }
 
-    const rows = result?.data ?? [];
     const selectedRows = [...table.selected.values()];
-    const refresh = () => { table.clearSelection(); setReload((value) => value + 1); };
+    const refresh = () => { table.clearSelection(); reload(); };
     const patchRow = (id, patch) => setResult((current) => (current ? { ...current, data: current.data.map((row) => (row.id === id ? { ...row, ...patch } : row)) } : current));
 
     const handleExport = async () => {
@@ -289,7 +272,7 @@ export default function AdminUsersPage() {
             </div>
             <div className="ws-dt-card">
                 <IndexFilters table={table} searchPlaceholder={t('admin_dt_search_name_email')} onExport={() => void handleExport()} exportDisabled={loading || exporting || !rows.length} />
-                <IndexTable table={table} rows={rows} loading={loading} error={err} onRetry={() => setReload((value) => value + 1)} meta={result?.meta}
+                <IndexTable table={table} rows={rows} loading={loading} error={err} onRetry={reload} meta={meta}
                     label={pendingTab ? t('admin_users_tab_pending') : t('nav_employees')} bulkActions={bulkActions} rowHref={(u) => `/admin/users/${u.id}`}
                     emptyState={{ icon: HiOutlineUsers, title: t('empty') }} />
             </div>
