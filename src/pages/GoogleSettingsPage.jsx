@@ -98,6 +98,23 @@ export default function GoogleSettingsPage() {
         }
     }
 
+    async function toggleStorefront(enabled) {
+        if (!meta?.client_id) return;
+        setSaving(true);
+        setErr('');
+        try {
+            const { data } = await api.put('/admin/settings/google', { client_id: meta.client_id, storefront_enabled: enabled });
+            setMeta(data);
+            toast.success(t('settings_google_saved'));
+        } catch (e) {
+            const msg = e.response?.data?.message || e.message;
+            setErr(msg);
+            toast.error(msg);
+        } finally {
+            setSaving(false);
+        }
+    }
+
     if (!isAdmin) {
         return <Navigate to="/dashboard" replace />;
     }
@@ -238,6 +255,34 @@ export default function GoogleSettingsPage() {
                             <p>{t('settings_google_no_frontend_url')}</p>
                         </div>
                     )}
+                </div>
+            </section>
+
+            {/* G2: storefront customer Google sign-in through one fixed redirect URI on the API host. */}
+            <section className="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-card sm:p-6" aria-labelledby="google-storefront-title">
+                <h2 id="google-storefront-title" className="text-lg font-semibold text-slate-900">{t('settings_google_storefront_title')}</h2>
+                <p className="mt-1 text-sm text-slate-500">{t('settings_google_storefront_help')}</p>
+                <div className="mt-5 space-y-3">
+                    <CopyRow
+                        label={t('settings_google_storefront_callback')}
+                        value={meta?.storefront_callback_url}
+                        hint={t('settings_google_storefront_callback_hint')}
+                        t={t}
+                    />
+                    <label className="flex items-start gap-3 text-sm text-slate-700">
+                        <input
+                            type="checkbox"
+                            className="mt-1"
+                            checked={Boolean(meta?.storefront_enabled)}
+                            disabled={loading || saving || !meta?.oauth_configured || !meta?.client_secret_configured}
+                            onChange={(e) => void toggleStorefront(e.target.checked)}
+                        />
+                        <span>{t('settings_google_storefront_enable')}</span>
+                    </label>
+                    {!meta?.client_secret_configured ? <p className="text-xs text-slate-500">{t('settings_google_storefront_needs_secret')}</p> : null}
+                    <p className="text-sm font-medium text-slate-900">
+                        {meta?.storefront_ready ? t('settings_google_storefront_ready') : t('settings_google_storefront_off')}
+                    </p>
                 </div>
             </section>
 

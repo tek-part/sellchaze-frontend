@@ -15,12 +15,13 @@ import SourceCodeSquareIcon from '@hugeicons/core-free-icons/SourceCodeSquareIco
 import WebhookIcon from '@hugeicons/core-free-icons/WebhookIcon';
 import LockPasswordIcon from '@hugeicons/core-free-icons/LockPasswordIcon';
 import SmartPhone01Icon from '@hugeicons/core-free-icons/SmartPhone01Icon';
+import UserAccountIcon from '@hugeicons/core-free-icons/UserAccountIcon';
 
 // Geometry matched against the reference DOM and the installed Hugeicons package.
 const icons = { general: StoreIcon, domains: WebValidationIcon, 'store-info': StoreVerifiedIcon, 'head-code': CommandLineIcon,
     'seo-settings': SeoIcon, payments: CreditCardPosIcon, 'digital-delivery': MailSetting02Icon, notifications: MailSend01Icon, 'order-push': Notification03Icon,
     managers: UserGroupIcon, shipping: DeliveryTruck02Icon, 'social-links': InstagramIcon, 'public-api-group': SourceCodeSquareIcon,
-    webhooks: WebhookIcon, 'login-sessions': LockPasswordIcon, 'phone-verification': SmartPhone01Icon };
+    webhooks: WebhookIcon, 'login-sessions': LockPasswordIcon, 'phone-verification': SmartPhone01Icon, 'customer-login': UserAccountIcon };
 
 export default function StoreSettingsReferenceIcon({ itemKey, fallback: Fallback, ...props }) {
     return icons[itemKey] ? <HugeiconsIcon icon={icons[itemKey]} size={20} strokeWidth={1.5} {...props} /> : Fallback ? <Fallback {...props} /> : null;
