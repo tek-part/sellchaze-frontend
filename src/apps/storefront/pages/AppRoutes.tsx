@@ -27,6 +27,8 @@ const LoginPage = lazy(() => import('./AuthPages').then((m) => ({ default: m.Log
 const RegisterPage = lazy(() => import('./AuthPages').then((m) => ({ default: m.RegisterPage })));
 const ForgotPasswordPage = lazy(() => import('./AuthPages').then((m) => ({ default: m.ForgotPasswordPage })));
 const ResetPasswordPage = lazy(() => import('./AuthPages').then((m) => ({ default: m.ResetPasswordPage })));
+const GoogleReturnPage = lazy(() => import('./AuthPages').then((m) => ({ default: m.GoogleReturnPage })));
+const TrackOrderPage = lazy(() => import('./TrackOrderPage').then((m) => ({ default: m.TrackOrderPage })));
 const AccountLayout = lazy(() => import('./AccountPages').then((m) => ({ default: m.AccountLayout })));
 const AccountPage = lazy(() => import('./AccountPages').then((m) => ({ default: m.AccountPage })));
 const OrdersPage = lazy(() => import('./AccountPages').then((m) => ({ default: m.OrdersPage })));
@@ -76,6 +78,9 @@ export function AppRoutes(): ReactElement {
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
         <Route path="/reset-password" element={<ResetPasswordPage />} />
+        {/* G2: Google sign-in return and guest order tracking */}
+        <Route path="/login/google" element={<GoogleReturnPage />} />
+        <Route path="/track" element={<TrackOrderPage />} />
 
         <Route path="/account" element={<AccountLayout />}>
           <Route index element={<AccountPage />} />

@@ -19,7 +19,12 @@ import { ApiError, getAuthToken, setAuthToken } from '../api/client';
 export interface Customer {
   id: string;
   name: string;
+  /** Empty for accounts created by WhatsApp code (G2); they sign in with their phone. */
   email: string;
+  phone: string | null;
+  /** The phone was confirmed by a WhatsApp code and signs this customer in. */
+  phoneVerified: boolean;
+  hasPassword: boolean;
 }
 
 interface AuthContextValue {
@@ -29,15 +34,18 @@ interface AuthContextValue {
   register: (input: { name: string; email: string; password: string; password_confirmation: string }) => Promise<void>;
   logout: () => Promise<void>;
   refresh: () => Promise<void>;
+  /** Keep a token issued by WhatsApp-code or Google sign-in and load the customer. */
+  signInWithToken: (token: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
 function normalize(raw: unknown): Customer | null {
   if (!raw || typeof raw !== 'object') return null;
-  const value = raw as { id?: number | string; name?: string; email?: string };
-  if (value.id === undefined || !value.email) return null;
-  return { id: String(value.id), name: value.name ?? value.email, email: value.email };
+  const value = raw as { id?: number | string; name?: string; email?: string | null; phone?: string | null; phone_verified?: boolean; has_password?: boolean };
+  if (value.id === undefined || (!value.email && !value.phone)) return null;
+  const email = value.email ?? '';
+  return { id: String(value.id), name: value.name || email || value.phone || '', email, phone: value.phone ?? null, phoneVerified: value.phone_verified === true, hasPassword: value.has_password !== false };
 }
 
 export function AuthProvider(props: { children: ReactNode }): ReactElement {
@@ -86,6 +94,14 @@ export function AuthProvider(props: { children: ReactNode }): ReactElement {
     [refresh],
   );
 
+  const signInWithToken = useCallback(
+    async (token: string) => {
+      setAuthToken(token);
+      await refresh();
+    },
+    [refresh],
+  );
+
   const logout = useCallback(async () => {
     try {
       await logoutReq();
@@ -96,8 +112,8 @@ export function AuthProvider(props: { children: ReactNode }): ReactElement {
   }, []);
 
   const value = useMemo<AuthContextValue>(
-    () => ({ customer, loading, login, register, logout, refresh }),
-    [customer, loading, login, register, logout, refresh],
+    () => ({ customer, loading, login, register, logout, refresh, signInWithToken }),
+    [customer, loading, login, register, logout, refresh, signInWithToken],
   );
 
   return <AuthContext.Provider value={value}>{props.children}</AuthContext.Provider>;

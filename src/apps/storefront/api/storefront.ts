@@ -280,7 +280,7 @@ export const register = (body: Record<string, unknown>): Promise<{ data: unknown
 export const logout = (): Promise<unknown> => apiSend('/auth/logout', 'POST');
 export const getAccount = (): Promise<{ data: unknown }> => apiGet('/account');
 export const updateAccount = (body: Record<string, unknown>): Promise<{ data: unknown }> => apiSend('/account', 'PATCH', body);
-export const changePassword = (body: { current_password: string; password: string; password_confirmation: string }): Promise<unknown> =>
+export const changePassword = (body: { current_password?: string; password: string; password_confirmation: string }): Promise<unknown> =>
   apiSend('/account/password', 'PUT', body);
 export const getOrders = (): Promise<ApiPaginated<ApiOrder>> => apiGet('/orders');
 export const getOrder = (number: string): Promise<{ data: ApiOrder }> => apiGet(`/orders/${encodeURIComponent(number)}`);
@@ -301,6 +301,40 @@ export const removeWishlist = (productId: number): Promise<unknown> => apiSend(`
 export const forgotPassword = (email: string): Promise<unknown> => apiSend('/auth/forgot-password', 'POST', { email });
 export const resetPassword = (body: { token: string; email: string; password: string; password_confirmation: string }): Promise<unknown> =>
   apiSend('/auth/reset-password', 'POST', body);
+
+/* ---- G2 customer login & tracking: WhatsApp code, Google sign-in, guest order tracking ---- */
+export interface ApiLoginMethods { email: boolean; phone: boolean; google: boolean; phone_country: string; expires_in: number; resend_in: number }
+export interface ApiPhoneCodeResult { state: string; phone: string; expires_at: string; resend_at: string }
+export type ApiAuthResult = { data: unknown; token?: string };
+export const getLoginMethods = (): Promise<{ data: ApiLoginMethods }> => apiGet('/auth/methods');
+export const sendLoginCode = (body: { phone: string; token: string }): Promise<{ data: ApiPhoneCodeResult }> => apiSend('/auth/phone/send', 'POST', body);
+/** Signs in (data + token), or answers `{ data: { status: 'name_required' } }` for a new phone. */
+export const verifyLoginCode = (body: { token: string; code?: string; name?: string }): Promise<ApiAuthResult & { data: unknown }> => apiSend('/auth/phone/verify', 'POST', body);
+/** Signed-in customer confirms their phone (it then signs them in by WhatsApp code). */
+export const sendAccountPhoneCode = (body: { phone: string; token: string }): Promise<{ data: ApiPhoneCodeResult }> => apiSend('/account/phone/send', 'POST', body);
+export const verifyAccountPhone = (body: { token: string; code: string }): Promise<{ data: unknown }> => apiSend('/account/phone/verify', 'POST', body);
+export const startGoogleLogin = (challenge: string): Promise<{ data: { url: string } }> => apiGet(`/auth/google/start?challenge=${encodeURIComponent(challenge)}`);
+export const exchangeGoogleLogin = (body: { code: string; verifier: string }): Promise<ApiAuthResult> => apiSend('/auth/google/exchange', 'POST', body);
+export interface ApiOrderTimelineEntry { status: string; at: string | null }
+export interface ApiTrackedOrder {
+  number: string;
+  status: string;
+  payment_status?: string | null;
+  fulfillment_status?: 'unfulfilled' | 'partial' | 'fulfilled';
+  currency?: string | null;
+  placed_at?: string | null;
+  timeline: ReadonlyArray<ApiOrderTimelineEntry>;
+  fulfillments: ReadonlyArray<ApiOrderFulfillment>;
+  items: ReadonlyArray<{ id: number; name: string; variant_name?: string | null; quantity: number; unit_price: string; line_total: string }>;
+  subtotal: string;
+  shipping_total: string;
+  discount_total: string;
+  tax_total: string;
+  grand_total: string;
+  refunded_total?: string;
+  amount_due?: string;
+}
+export const trackOrder = (body: { order_number: string; contact: string }): Promise<{ data: ApiTrackedOrder }> => apiSend('/orders/track', 'POST', body);
 
 export interface ApiOrderItem {
   digital_delivery?: import('../types/digital').DigitalDelivery | null;
@@ -348,6 +382,7 @@ export interface ApiOrder {
   refunded_total?: string;
   fulfillment_status?: 'unfulfilled' | 'partial' | 'fulfilled';
   fulfillments?: ReadonlyArray<ApiOrderFulfillment>;
+  timeline?: ReadonlyArray<ApiOrderTimelineEntry>;
   returns?: ReadonlyArray<ApiOrderReturn>;
   return_eligibility?: ApiReturnEligibility;
   /** Paid by gift cards; `total` stays the order total and `amount_due` is what is left. */
@@ -359,6 +394,10 @@ export interface ApiOrder {
   total: string | number;
   subtotal?: string | number;
   shipping?: string | number;
+  shipping_total?: string;
+  discount_total?: string;
+  tax_total?: string;
+  grand_total?: string;
   currency?: string;
   created_at?: string;
   items_count?: number;

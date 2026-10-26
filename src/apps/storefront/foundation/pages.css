@@ -51,6 +51,21 @@
 .sf-auth { max-width: 440px; margin-inline: auto; display: flex; flex-direction: column; gap: var(--sp-5); }
 .sf-auth__title { font-family: var(--heading); font-size: var(--fs-2xl); color: var(--text); text-align: center; }
 .sf-auth__alt { text-align: center; color: var(--muted); font-family: var(--font); font-size: var(--fs-sm); }
+/* G2: other sign-in methods, guest order tracking and the order progress timeline */
+.sf-auth-methods { gap: var(--sp-3); width: 100%; }
+.sf-auth-phone { padding: var(--sp-4); border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); width: 100%; box-sizing: border-box; }
+.sf-auth__divider { display: flex; align-items: center; gap: var(--sp-3); margin: 0; color: var(--muted); font-family: var(--font); font-size: var(--fs-sm); }
+.sf-auth__divider::before, .sf-auth__divider::after { content: ''; flex: 1 1 auto; border-top: 1px solid var(--border); }
+.sf-track { max-width: 640px; margin-inline: auto; display: flex; flex-direction: column; gap: var(--sp-6); }
+.sf-timeline { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--sp-3); }
+.sf-timeline__step { position: relative; display: flex; justify-content: space-between; gap: var(--sp-3); padding-inline-start: var(--sp-6); font-family: var(--font); color: var(--text); overflow-wrap: anywhere; }
+.sf-timeline__step::before { content: ''; position: absolute; inset-inline-start: 0; top: .45em; width: 10px; height: 10px; border-radius: 50%; background: var(--muted); }
+.sf-timeline__step:last-child::before { background: var(--text); box-shadow: 0 0 0 3px var(--border); }
+.sf-timeline__step:not(:last-child)::after { content: ''; position: absolute; inset-inline-start: 4px; top: calc(.45em + 12px); bottom: calc(-1 * var(--sp-3) + 2px); border-inline-start: 2px solid var(--border); }
+.sf-timeline__date { color: var(--muted); font-size: var(--fs-sm); white-space: nowrap; }
+.sf-order-totals { display: flex; flex-direction: column; gap: var(--sp-2); margin: 0; }
+.sf-order-totals div { display: flex; justify-content: space-between; gap: var(--sp-3); font-family: var(--font); color: var(--muted); }
+.sf-order-totals dd { margin: 0; color: var(--text); }
 /* Account area */
 .sf-account { display: grid; grid-template-columns: 220px 1fr; gap: var(--sp-8); align-items: start; }
 .sf-account__nav { display: flex; flex-direction: column; gap: var(--sp-1); position: sticky; top: 96px; }

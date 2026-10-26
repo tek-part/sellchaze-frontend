@@ -144,6 +144,7 @@ export function buildStoreNav(t, access = {}) {
                 { key: 'notifications', to: 'settings/notifications', label: t('store_nav_notifications', 'Notifications'), Icon: HiOutlineBell, show: access.canStoreSettings },
                 { key: 'order-limits', to: 'settings/order-limits', label: t('store_nav_order_limits', 'Order limits'), Icon: HiOutlineDocumentText, show: access.canStoreSettings },
                 { key: 'phone-verification', to: 'settings/phone-verification', label: t('store_nav_phone_verification', 'Phone verification'), Icon: HiOutlineDocumentText, show: access.canStoreSettings },
+                { key: 'customer-login', to: 'settings/customer-login', label: t('store_nav_customer_login', 'Customer login'), Icon: HiOutlineUsers, show: access.canStoreSettings },
                 { key: 'domains', to: 'settings/domains', label: t('store_nav_domains', 'Domains'), Icon: HiOutlineGlobeAlt, show: access.canStoreSettings },
                 { key: 'publish', to: 'settings/publish', label: t('store_nav_publish', 'Publish'), Icon: HiOutlineRocketLaunch, show: access.canStoreSettings },
             ],

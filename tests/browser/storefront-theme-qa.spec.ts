@@ -30,7 +30,7 @@ const NOT_APPLICABLE: Partial<Record<Theme, Partial<Record<string, string>>>> = 
 /** Internal link targets the route table (pages/AppRoutes.tsx) serves without the catch-all 404. */
 const ROUTES = [
   /^\/$/,
-  /^\/(shop|collections|categories|brands|search|cart|checkout|wishlist|login|register|forgot-password|reset-password|account|about|contact|faq|blog)$/,
+  /^\/(shop|collections|categories|brands|search|cart|checkout|wishlist|login|register|forgot-password|reset-password|account|about|contact|faq|blog|track)$/,
   /^\/account\/(orders|addresses)$/,
   /^\/account\/orders\/[^/]+$/,
   // Catalogue/journal slugs resolve against store data (demo data in previews).

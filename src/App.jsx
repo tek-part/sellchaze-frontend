@@ -84,6 +84,7 @@ const StoreThankYouPage = lazy(() => import('./pages/store/settings/StoreThankYo
 const StoreUiBlocksPage = lazy(() => import('./pages/StoreUiBlocksPage'));
 const StoreBlockedPhonesPage = lazy(() => import('./pages/store/StoreBlockedPhonesPage'));
 const StorePhoneVerificationPage = lazy(() => import('./pages/store/settings/StorePhoneVerificationPage'));
+const StoreCustomerLoginPage = lazy(() => import('./pages/store/settings/StoreCustomerLoginPage'));
 const StoreFunnelsPage = lazy(() => import('./pages/StoreFunnelsPage'));
 const StoreFunnelCreatePage = lazy(() => import('./pages/StoreFunnelCreatePage'));
 const StoreFunnelEditPage = lazy(() => import('./pages/StoreFunnelEditPage'));
@@ -288,6 +289,7 @@ const STORE_ROUTES = [
     { path: 'retargeting', element: <StoreRetargetingPage /> },
     { path: 'marketing-services', element: <StoreMarketingServicesPage /> },
     { path: 'settings/phone-verification', element: <StorePhoneVerificationPage /> },
+    { path: 'settings/customer-login', element: <StoreCustomerLoginPage /> },
     { path: 'funnels', element: <StoreFunnelsPage /> },
     { path: 'funnels/create', element: <StoreFunnelCreatePage /> },
     { path: 'funnels/:funnelId/edit', element: <StoreFunnelEditPage /> },

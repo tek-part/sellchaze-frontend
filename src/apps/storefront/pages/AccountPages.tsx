@@ -21,6 +21,8 @@ import { ThemeRenderer, useLayout, useTemplate } from '../theme-engine';
 import { flowContext } from './flow-context';
 import { OrderReturnSection } from './OrderReturnSection';
 import { OrderShipmentsSection } from './OrderShipmentsSection';
+import { OrderStatusLabel, OrderTimeline, OrderTotals } from './OrderProgress';
+import { AccountPhoneConfirm } from './CustomerLoginOptions';
 
 /** Render the active theme's account sub-template when it provides one; otherwise null (fallback). */
 function useAccountTemplate(name: 'account-profile' | 'account-orders' | 'account-order' | 'account-addresses'): ReactElement | null {
@@ -124,12 +126,14 @@ export function AccountPage(): ReactElement {
       <form className="sf-account__panel" onSubmit={(e) => void submit(e)} noValidate>
         <Input label={t('account.fullName')} value={name} onChange={(e) => setName(e.target.value)} />
         <Input label={t('account.email')} type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
+        {customer?.phone ? <p className="sf-card-row__meta">{t('account.phone')}: <bdi dir="ltr">{customer.phone}</bdi></p> : null}
         {status === 'saved' ? <p className="sf-newsletter__success">{t('account.profileSaved')}</p> : null}
         {status === 'error' ? <p className="sf-field__error">{t('account.profileError')}</p> : null}
         <Button type="submit" loading={status === 'saving'}>
           {t('account.saveChanges')}
         </Button>
       </form>
+      <AccountPhoneConfirm />
       <hr className="sf-divider" />
       <ChangePasswordForm />
     </div>
@@ -138,6 +142,9 @@ export function AccountPage(): ReactElement {
 
 function ChangePasswordForm(): ReactElement {
   const { t } = useTranslation();
+  const { customer, refresh } = useAuth();
+  // G2: accounts created by WhatsApp code or Google set a first password without a current one.
+  const firstPassword = customer?.hasPassword === false;
   const [form, setForm] = useState({ current_password: '', password: '', password_confirmation: '' });
   const [status, setStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
   const [error, setError] = useState<string>();
@@ -148,9 +155,10 @@ function ChangePasswordForm(): ReactElement {
     setStatus('saving');
     setError(undefined);
     try {
-      await changePassword(form);
+      await changePassword(firstPassword ? { password: form.password, password_confirmation: form.password_confirmation } : form);
       setForm({ current_password: '', password: '', password_confirmation: '' });
       setStatus('saved');
+      if (firstPassword) await refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : t('account.passwordError'));
       setStatus('error');
@@ -159,14 +167,16 @@ function ChangePasswordForm(): ReactElement {
 
   return (
     <form className="sf-account__panel" onSubmit={(e) => void submit(e)} noValidate>
-      <h2 className="sf-footer__group-title">{t('account.changePassword')}</h2>
-      <Input label={t('account.currentPassword')} type="password" autoComplete="current-password" value={form.current_password} onChange={set('current_password')} required />
+      <h2 className="sf-footer__group-title">{firstPassword ? t('account.setPassword') : t('account.changePassword')}</h2>
+      {firstPassword ? <p className="sf-card-row__meta">{t('account.setPasswordHint')}</p> : (
+        <Input label={t('account.currentPassword')} type="password" autoComplete="current-password" value={form.current_password} onChange={set('current_password')} required />
+      )}
       <Input label={t('account.newPassword')} type="password" autoComplete="new-password" value={form.password} onChange={set('password')} required />
       <Input label={t('account.confirmNewPassword')} type="password" autoComplete="new-password" value={form.password_confirmation} onChange={set('password_confirmation')} required />
       {status === 'saved' ? <p className="sf-newsletter__success">{t('account.passwordUpdated')}</p> : null}
       {error ? <p className="sf-field__error">{error}</p> : null}
       <Button type="submit" variant="secondary" loading={status === 'saving'}>
-        {t('account.updatePassword')}
+        {firstPassword ? t('account.setPassword') : t('account.updatePassword')}
       </Button>
     </form>
   );
@@ -194,9 +204,10 @@ export function OrderDetailPage(): ReactElement {
       <div>
         <div style={{ fontFamily: 'var(--heading)', fontSize: 'var(--fs-xl)', color: 'var(--text)' }}>{t('account.orderNumber', { number: order.number })}</div>
         <div className="sf-card-row__meta">
-          {formatDate(order.created_at) ?? ''} · {order.status}
+          {formatDate(order.created_at) ?? ''} · <OrderStatusLabel status={order.status} />
         </div>
       </div>
+      <OrderTimeline timeline={order.timeline} />
       {order.items && order.items.length > 0 ? (
         <div className="sf-card-list">
           {order.items.map((item, i) => (
@@ -212,10 +223,12 @@ export function OrderDetailPage(): ReactElement {
           ))}
         </div>
       ) : null}
-      <div className="sf-cart-summary__total">
-        <span>{t('account.orderTotal')}</span>
-        <span className="sf-cart-summary__total-value">{formatMoney(Number(order.total), currency)}</span>
-      </div>
+      {order.grand_total !== undefined ? <OrderTotals totals={order} currency={currency} /> : (
+        <div className="sf-cart-summary__total">
+          <span>{t('account.orderTotal')}</span>
+          <span className="sf-cart-summary__total-value">{formatMoney(Number(order.total), currency)}</span>
+        </div>
+      )}
       {shipments}
       {returns}
       <a href="/account/orders" className="sf-link">
@@ -245,7 +258,7 @@ export function OrdersPage(): ReactElement {
           <div>
             <div style={{ fontFamily: 'var(--heading)', color: 'var(--text)' }}>{t('account.orderNumber', { number: order.number })}</div>
             <div className="sf-card-row__meta">
-              {formatDate(order.created_at) ?? ''} · {order.status}
+              {formatDate(order.created_at) ?? ''} · <OrderStatusLabel status={order.status} />
             </div>
           </div>
           <div style={{ fontFamily: 'var(--heading)', color: 'var(--text)' }}>
