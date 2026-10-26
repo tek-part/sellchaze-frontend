@@ -1,5 +1,5 @@
 // G1 (TAR-036 #2): the printable invoice's address block and payment line.
-import { paymentSplit } from '../../../lib/order-deposit';
+import { paymentSplit } from './order-deposit';
 
 const text = (value) => (typeof value === 'string' || typeof value === 'number') && String(value).trim() ? String(value).trim() : '';
 const first = (address, keys) => keys.map((key) => text(address?.[key])).find(Boolean) || '';

@@ -18,6 +18,10 @@ describe('printable invoice', () => {
         expect(invoicePaymentLine(deposit, false)).toBe('Paid EGP 24.00 · Remaining on delivery EGP 96.00');
         expect(invoicePaymentLine(deposit, true)).toBe('مدفوع EGP 24.00 · المتبقي عند الاستلام EGP 96.00');
         expect(invoiceCollect(deposit)).toBe('96.00');
+        // After part of the deposit was refunded the courier still collects the remainder.
+        expect(invoicePaymentLine({ ...deposit, payment_status: 'partially_refunded' }, false)).toBe('Paid EGP 24.00 · Remaining on delivery EGP 96.00');
+        expect(invoiceCollect({ ...deposit, payment_status: 'partially_refunded' })).toBe('96.00');
+        expect(invoiceCollect({ ...deposit, payment_status: 'paid', deposit: { ...deposit.deposit, remainder_collected: true } })).toBe('0.00');
         expect(invoicePaymentLine({ ...deposit, payment_status: 'pending', deposit: { ...deposit.deposit, paid: false } }, false)).toBe('Deposit due EGP 24.00 · Remaining on delivery EGP 96.00');
         expect(invoicePaymentLine({ ...order, payment_status: 'paid' }, false)).toBe('Paid in full');
         expect(invoiceCollect({ ...order, payment_status: 'paid' })).toBe('0.00');

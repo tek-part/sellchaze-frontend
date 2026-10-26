@@ -8,6 +8,11 @@ function decimal(value) {
     return `${whole.replace(/^0+(?=\d)/, '')}.${fraction.padEnd(2, '0')}`;
 }
 
+function sum(a, b) {
+    const cents = Math.round(Number(a) * 100) + Math.round(Number(b) * 100);
+    return `${Math.floor(cents / 100)}.${String(cents % 100).padStart(2, '0')}`;
+}
+
 const CLOSED = ['cancelled', 'returning_from_delivery', 'request_refund', 'refund_in_progress', 'refunded'];
 
 /** The order's deposit as the API reports it, or null for an order without one (older APIs too). */
@@ -23,8 +28,12 @@ export function orderDeposit(order) {
 export function paymentSplit(order) {
     const deposit = orderDeposit(order);
     const due = order?.amount_due ?? order?.grand_total ?? '0.00';
+    // A deposit order reads its own deposit state first: a refund recorded from the deposit leaves the remainder due.
+    if (deposit) {
+        if (deposit.remainder_collected) return { kind: 'paid', paid: sum(deposit.amount, deposit.remaining), remaining: '0.00' };
+        return deposit.paid ? { kind: 'deposit_paid', paid: deposit.amount, remaining: deposit.remaining } : { kind: 'deposit_due', paid: '0.00', due: deposit.amount, remaining: deposit.remaining };
+    }
     if (order?.payment_status === 'paid' || order?.payment_status === 'refunded' || order?.payment_status === 'partially_refunded') return { kind: 'paid', paid: due, remaining: '0.00' };
-    if (deposit) return deposit.paid ? { kind: 'deposit_paid', paid: deposit.amount, remaining: deposit.remainder_collected ? '0.00' : deposit.remaining } : { kind: 'deposit_due', paid: '0.00', due: deposit.amount, remaining: deposit.remaining };
     return order?.payment_method === 'cod' ? { kind: 'cod', paid: '0.00', remaining: due } : { kind: 'unpaid', paid: '0.00', remaining: due };
 }
 
@@ -33,7 +42,7 @@ export function remainderCollectionRequest(order, reference, amount, collected, 
     const deposit = orderDeposit(order);
     const normalized = decimal(amount);
     const ref = reference.trim();
-    if (!deposit || !deposit.paid || deposit.remainder_collected || !['deposit_paid', 'partially_refunded'].includes(order.payment_status) || CLOSED.includes(order.status)
+    if (!deposit || !deposit.paid || deposit.remainder_collected || !['deposit_paid', 'partially_refunded', 'refunded'].includes(order.payment_status) || CLOSED.includes(order.status)
         || !collected || !ref || ref.length > 200 || note.length > 2000 || !normalized || normalized !== decimal(deposit.remaining) || Number(normalized) <= 0
         || !/^[A-Za-z]{3}$/.test(order.currency || '')) return null;
     return { reference: ref, amount: normalized, currency: order.currency.toUpperCase(), collected: true, note: note.trim() || null };

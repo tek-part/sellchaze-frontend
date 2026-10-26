@@ -15,13 +15,17 @@ describe('deposit orders', () => {
         expect(paymentSplit(order)).toEqual({ kind: 'deposit_paid', paid: '24.00', remaining: '96.00' });
         expect(paymentSplit({ ...order, payment_status: 'pending', deposit: { ...deposit, paid: false } })).toEqual({ kind: 'deposit_due', paid: '0.00', due: '24.00', remaining: '96.00' });
         expect(paymentSplit({ ...order, deposit: null, payment_method: 'cod', payment_status: 'pending', amount_due: '120.00' })).toEqual({ kind: 'cod', paid: '0.00', remaining: '120.00' });
-        expect(paymentSplit({ ...order, payment_status: 'paid' }).kind).toBe('paid');
+        expect(paymentSplit({ ...order, deposit: { ...deposit, remainder_collected: true }, payment_status: 'paid' })).toEqual({ kind: 'paid', paid: '120.00', remaining: '0.00' });
+        expect(paymentSplit({ ...order, deposit: null, payment_status: 'paid' }).kind).toBe('paid');
+        // A refund recorded from the deposit does not make the order paid: the remainder is still due on delivery.
+        for (const payment_status of ['partially_refunded', 'refunded']) expect(paymentSplit({ ...order, payment_status })).toEqual({ kind: 'deposit_paid', paid: '24.00', remaining: '96.00' });
     });
     it('records the exact remaining amount once, with a reference and acknowledgement', () => {
         expect(remainderCollectionRequest(order, ' CASH-1 ', '96', true, ' ok ')).toEqual({ reference: 'CASH-1', amount: '96.00', currency: 'EGP', collected: true, note: 'ok' });
         for (const amount of ['95.99', '120', '96.001', '']) expect(remainderCollectionRequest(order, 'REF', amount, true)).toBeNull();
         expect(remainderCollectionRequest(order, 'REF', '96', false)).toBeNull();
         expect(remainderCollectionRequest(order, ' ', '96', true)).toBeNull();
+        expect(remainderCollectionRequest({ ...order, payment_status: 'refunded' }, 'REF', '96', true)?.amount).toBe('96.00');
         for (const change of [{ status: 'cancelled' }, { payment_status: 'paid' }, { deposit: { ...deposit, paid: false } }, { deposit: { ...deposit, remainder_collected: true } }, { deposit: null }]) {
             expect(remainderCollectionRequest({ ...order, ...change }, 'REF', '96', true)).toBeNull();
         }

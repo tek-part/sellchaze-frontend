@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import api from '../api/client';
 import useStoreScope from '../hooks/useStoreScope';
 import { orderPrintIds } from '../components/store/orders/order-workspace';
-import { invoiceAddress, invoiceCollect, invoicePaymentLine } from '../components/store/orders/order-invoice';
+import { invoiceAddress, invoiceCollect, invoicePaymentLine } from '../lib/order-invoice';
 import { safeHttpUrl } from '../lib/order-deposit';
 import '../components/store/orders/orders-workspace.css';
 import '../components/store/orders/order-invoice.css';

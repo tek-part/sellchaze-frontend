@@ -21,9 +21,13 @@ const depositOrder = {
 const failedOrder = { ...depositOrder, id: 43, order_number: 'SYN-FAIL-43', status: 'pending', payment_method: 'stripe', payment_status: 'failed', grand_total: '132.00', amount_due: '132.00',
   payment_adjustment_total: '12.00', deposit: null, next_statuses: ['confirmed', 'cancelled'], fulfillment_status: 'unfulfilled', timeline: [] };
 
-async function dashboard(page: Page, locale: Locale) {
+const refundedDepositOrder = { ...depositOrder, id: 44, order_number: 'SYN-DEP-44', payment_status: 'partially_refunded', refunded_total: '10.00',
+  unapplied_payments: [{ gateway: 'stripe', amount: '132.00', currency: 'EGP', reference: 'pi_late', paid_at: '2026-10-21T10:00:00Z' }] };
+const waitingOrder = { ...failedOrder, id: 45, order_number: 'SYN-WAIT-45' };
+
+async function dashboard(page: Page, locale: Locale, options: { depositPayable?: boolean } = {}) {
   const writes: Write[] = [];
-  let deposit = { enabled: false, percentage: '0.00', minimum: '0.00', scope: 'all', confirm_after_payment: false, version: 1 };
+  let deposit = { enabled: options.depositPayable === false, percentage: options.depositPayable === false ? '20.00' : '0.00', minimum: '0.00', scope: 'all', confirm_after_payment: false, version: 1, payable: options.depositPayable ?? true };
   await page.addInitScript((value) => { localStorage.setItem('sellchase_access_token', 'isolated-deposit-fixture'); localStorage.setItem('sellchase_locale', value); localStorage.setItem('sellchaze_workspace_appearance', 'light'); }, locale);
   await page.route('**/api/v1/**', async (route) => {
     const req = route.request(); const url = new URL(req.url()); const path = url.pathname.replace('/api/v1', '');
@@ -41,11 +45,14 @@ async function dashboard(page: Page, locale: Locale) {
     if (path === '/my-store') return route.fulfill({ json: { data: { id: 1, owner_user_id: 1, name: 'Local deposit fixture', slug: 'fixture', status: 'active', currency: 'EGP' } }, headers });
     if (path === '/my-store/orders/42/detail') return route.fulfill({ json: { data: depositOrder }, headers });
     if (path === '/my-store/orders/43/detail') return route.fulfill({ json: { data: failedOrder }, headers });
+    if (path === '/my-store/orders/44/detail') return route.fulfill({ json: { data: refundedDepositOrder }, headers });
+    if (path === '/my-store/orders/45/detail') return route.fulfill({ json: { data: waitingOrder }, headers });
+    if (path === '/my-store/orders/45/payment/methods') return route.fulfill({ json: { data: { current: 'stripe', payment_status: 'failed', grand_total: '132.00', blocker: 'payment_pending', methods: [] } }, headers });
     if (path === '/my-store/orders/43/payment/methods') return route.fulfill({ json: { data: { current: 'stripe', payment_status: 'failed', grand_total: '132.00', blocker: null, methods: [
       { slug: 'cod', name: 'Cash on delivery', grand_total: '125.00', shipping_total: '20.00', tax_total: '0.00', cod_fee: '0.00', payment_adjustment_total: '5.00', amount_due: '125.00', deposit: null, deposit_removed: false },
       { slug: 'bank_transfer', name: 'Bank transfer', grand_total: '120.00', shipping_total: '20.00', tax_total: '0.00', cod_fee: '0.00', payment_adjustment_total: '0.00', amount_due: '120.00', deposit: null, deposit_removed: false },
     ] } }, headers });
-    if (path === '/my-store/orders/print-data') return route.fulfill({ json: { store: { name: 'Local deposit fixture', logo_url: 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2240%22 height=%2240%22/%3E', phone: '+201000000009', email: 'shop@example.test', website: 'https://fixture.sellchase.com/' }, data: [depositOrder] }, headers });
+    if (path === '/my-store/orders/print-data') return route.fulfill({ json: { store: { name: 'Local deposit fixture', logo_url: 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2240%22 height=%2240%22/%3E', phone: '+201000000009', email: 'shop@example.test', website: 'https://fixture.sellchase.com/' }, data: url.searchParams.getAll('ids[]').includes('44') ? [refundedDepositOrder] : [depositOrder] }, headers });
     if (path === '/my-store/payments/deposit') return route.fulfill({ json: { data: deposit }, headers });
     if (path === '/my-store/payments') return route.fulfill({ json: { data: gateways() }, headers });
     return route.fulfill({ json: { data: [], unread_count: 0 }, headers });
@@ -152,6 +159,34 @@ for (const locale of ['en', 'ar'] as const) {
     await expect.poll(() => api.writes.length).toBe(2);
     expect((api.writes[1].body as { gateways: Array<{ presentation: { transfer_targets: unknown } }> }).gateways[0].presentation.transfer_targets)
       .toEqual([{ label: 'InstaPay', number: 'shop@instapay', link: 'https://ipn.eg/S/shop/instapay/abc' }]);
+  });
+}
+
+for (const locale of ['en', 'ar'] as const) {
+  test(`review fixes: refunded deposit, unapplied payment, waiting payment and unpayable deposit (${locale})`, async ({ page }) => {
+    await dashboard(page, locale, { depositPayable: false });
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto('/store/orders/44');
+    await page.getByText(t(locale, 'الدفع والشحن والتسليم', 'Payment, shipping and delivery')).click();
+    await expect(page.locator('[data-unapplied-payments]')).toContainText('EGP 132.00');
+    await expect(page.locator('[data-unapplied-payments]')).toContainText('pi_late');
+    const card = page.getByRole('region', { name: t(locale, 'العربون والمبلغ المتبقي', 'Deposit and remaining amount') });
+    await expect(card.getByLabel(t(locale, 'مرجع التحصيل', 'Collection reference'))).toBeVisible();
+    await healthy(page, `section[aria-label="${t(locale, 'العربون والمبلغ المتبقي', 'Deposit and remaining amount')}"]`);
+
+    await page.goto('/store/orders/print?ids=44');
+    await expect(page.locator('.ws-invoice-payment')).toContainText(t(locale, 'مدفوع EGP 24.00 · المتبقي عند الاستلام EGP 96.00', 'Paid EGP 24.00 · Remaining on delivery EGP 96.00'));
+    await expect(page.locator('.ws-invoice-collect')).toContainText('EGP 96.00');
+
+    await page.goto('/store/orders/45');
+    await page.getByText(t(locale, 'الدفع والشحن والتسليم', 'Payment, shipping and delivery')).click();
+    const method = page.getByRole('region', { name: t(locale, 'تغيير طريقة الدفع', 'Change payment method') });
+    await method.getByRole('button', { name: t(locale, 'عرض الطرق المتاحة', 'Show available methods') }).click();
+    await expect(method.getByRole('status')).toContainText(t(locale, 'بوابة الدفع', 'provider'));
+
+    await page.goto('/store/settings/payments');
+    await expect(page.locator('[data-deposit-unpayable]')).toContainText(t(locale, 'الدفع عند الاستلام', 'pay on delivery'));
+    await healthy(page, '.ws-payment-deposit');
   });
 }
 

@@ -11,7 +11,9 @@ const BLOCKERS = {
     payment_settled: ['تم الدفع بالفعل.', 'A payment was already made.'],
     currency_changed: ['عملة الطلب تختلف عن عملة المتجر الحالية.', 'The order currency differs from the store currency.'],
     shipment_exists: ['أُنشئت شحنة لهذا الطلب.', 'A shipment exists for this order.'],
-    payment_in_progress: ['هناك عملية دفع قيد المعالجة.', 'A payment is being processed.'],
+    payment_in_progress: ['هناك عملية دفع قيد المعالجة أو مسجّلة.', 'A payment is being processed or was recorded.'],
+    payment_pending: ['قد يكون العميل يدفع الآن عبر بوابة الدفع. انتظر حتى تكتمل العملية أو تنتهي مهلتها (ساعتان) ثم حاول مرة أخرى.', 'The customer may be paying on the provider’s page right now. Wait until it completes or expires (two hours), then try again.'],
+    receipt_pending: ['يوجد إيصال تحويل بانتظار المراجعة. راجعه أو ارفضه أولًا.', 'A transfer receipt is waiting for review. Review or reject it first.'],
 };
 const METHOD_NAMES = { cod: ['الدفع عند الاستلام', 'Cash on delivery'], bank_transfer: ['تحويل بنكي', 'Bank transfer'], transfer_receipt: ['تحويل مع إيصال', 'Transfer with receipt'] };
 
