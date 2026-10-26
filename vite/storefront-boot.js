@@ -14,7 +14,8 @@ import { fileURLToPath } from 'node:url';
  *      adopts one only when the URL matches exactly the one it would have requested, so a mismatch
  *      simply costs one extra request;
  *   2. modulepreloads the current route's page chunk (home, product, collection, cart, checkout);
- *   3. modulepreloads the active theme's chunks as soon as the bootstrap names the theme.
+ *   3. modulepreloads the active theme's chunks as soon as the bootstrap names the theme;
+ *   4. modulepreloads the visitor's language chunk (resolved like `detectLocale`).
  *
  * Signed previews and the customizer keep the old path: they carry tokens and query state the
  * script does not reproduce.
@@ -96,7 +97,14 @@ export function buildBootData(bundle, entryFileName, apiBase) {
     const list = listFor(`/src/apps/storefront/${module}`);
     if (list) routes.push([pattern, list, reads]);
   }
-  return { f: files, t: themes, a: legacyAliases(), p: routes, l: locales(), api: apiBase };
+  // The active language's copy is its own chunk (i18n/index.ts loads it on demand): preload it
+  // alongside the entry instead of after the entry has executed.
+  const languages = {};
+  for (const locale of locales()) {
+    const list = listFor(`/src/apps/storefront/i18n/${locale}.ts`);
+    if (list) languages[locale] = list;
+  }
+  return { f: files, t: themes, a: legacyAliases(), p: routes, l: locales(), i: languages, api: apiBase };
 }
 
 /* Kept ES5-only and defensive: it runs before any polyfill and must never block the real boot. */
@@ -109,11 +117,12 @@ function theme(key){key=M.a[key]||key;pre(M.t[key])}
 M.p.forEach(function(r){var m=new RegExp(r[0]).exec(location.pathname);if(!m)return;pre(r[1]);
 reads=r[2].map(function(x){var v='';try{v=m[1]?encodeURIComponent(decodeURIComponent(m[1])):''}catch(e){return null}return x.replace('$1',v)}).filter(Boolean)});
 if(q.get('theme'))theme(q.get('theme'));
-if(q.has('__preview')||q.has('preview')||q.has('customize')||q.has('settings')||!window.fetch)return;
 var lang=q.get('lang'),token=null;
 if(M.l.indexOf(lang)<0){try{lang=localStorage.getItem('sf:locale')}catch(e){lang=null}}
 if(M.l.indexOf(lang)<0)lang=(navigator.language||'').slice(0,2).toLowerCase();
 if(M.l.indexOf(lang)<0)lang=M.l[0];
+pre(M.i&&M.i[lang]);
+if(q.has('__preview')||q.has('preview')||q.has('customize')||q.has('settings')||!window.fetch)return;
 try{token=localStorage.getItem('sf:auth-token')}catch(e){}
 var h={Accept:'application/json','Accept-Language':lang};if(token)h.Authorization='Bearer '+token;
 var E=window.__sfEarly={};
@@ -124,6 +133,21 @@ p.catch(function(){});return p}
 get('').then(function(r){if(!q.get('theme')&&r.status===200&&r.body&&r.body.theme)theme(r.body.theme.key)},function(){});
 reads.forEach(get);
 }catch(e){}})(__DATA__);`;
+
+/**
+ * The self-hosted font stylesheet (`@font-face` rules only, font-display: swap) sits on a separate
+ * origin in production; as a parser-inserted stylesheet it held back the entry module's execution
+ * until it had loaded. Fetch it as a high-priority preload and attach it from script instead, so it
+ * no longer blocks scripts. The href stays on the <link> element, so the production shell's URL
+ * rewriting still applies. ThemeProvider reveals the store only after `document.fonts.ready`.
+ */
+export function nonBlockingFonts(html) {
+  return html.replace(
+    /<link\s+rel="stylesheet"\s+href="(\/media\/fonts\/storefront\/[^"]+\.css)"\s*\/?>/,
+    (_match, href) => `<link data-sf-fonts rel="preload" as="style" href="${href}" />\n    `
+      + `<script>(function(l){if(!l)return;var s=document.createElement('link');s.rel='stylesheet';s.href=l.href;document.head.appendChild(s)})(document.querySelector('link[data-sf-fonts]'))</script>`,
+  );
+}
 
 export function storefrontBoot(apiBase = '/api/v1') {
   return {
@@ -140,7 +164,7 @@ export function storefrontBoot(apiBase = '/api/v1') {
         // origin, which is where the script reads its base from.
         const boot = `<link data-sf-assets rel="preconnect" href="/assets/" crossorigin>\n<script>${SCRIPT.replace('__DATA__', () => data)}</script>`;
         const anchor = /<meta\s+charset=[^>]*>/i.test(html) ? /<meta\s+charset=[^>]*>/i : /<head[^>]*>/i;
-        return html.replace(anchor, match => `${match}\n${boot}`);
+        return nonBlockingFonts(html.replace(anchor, match => `${match}\n${boot}`));
       },
     },
   };

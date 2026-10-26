@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import { mapServerNotification } from '../utils/mapServerNotification';
-import i18n from '../i18n';
+import i18n, { i18nReady } from '../i18n';
+
+// Translations are lazy per language; this suite renders both.
+await i18nReady;
+await i18n.loadLanguages(['en', 'ar']);
 
 const t = (key, options) => typeof options === 'string' ? options : options?.defaultValue || key;
 describe('notification content', () => {

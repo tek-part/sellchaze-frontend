@@ -6,10 +6,14 @@ export default function LanguageSwitcher() {
 
     const toggle = () => {
         const next = lng === 'en' ? 'ar' : 'en';
-        i18n.changeLanguage(next);
-        localStorage.setItem('sellchase_locale', next);
-        document.documentElement.setAttribute('dir', next === 'ar' ? 'rtl' : 'ltr');
-        document.documentElement.setAttribute('lang', next);
+        // The other language's translations load on demand. Fetch them first, then switch copy and
+        // direction in the same tick, exactly as when both languages were bundled.
+        void i18n.loadLanguages(next).then(() => {
+            i18n.changeLanguage(next);
+            localStorage.setItem('sellchase_locale', next);
+            document.documentElement.setAttribute('dir', next === 'ar' ? 'rtl' : 'ltr');
+            document.documentElement.setAttribute('lang', next);
+        });
     };
 
     return (

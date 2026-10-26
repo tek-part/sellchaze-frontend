@@ -1,5 +1,7 @@
 import toast, { resolveValue } from 'react-hot-toast';
-import { HiCheckCircle, HiExclamationTriangle, HiInformationCircle, HiOutlineXMark, HiXCircle } from '../workspace/WorkspaceIcons';
+// Toasts render in main.jsx, outside the workspace icon provider, so they always drew the
+// react-icons originals; toastIcons.js rebuilds exactly those, keeping icon sets out of the entry.
+import { HiCheckCircle, HiExclamationTriangle, HiInformationCircle, HiOutlineXMark, HiXCircle } from './toastIcons';
 
 /**
  * The platform's action-state notifications.

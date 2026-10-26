@@ -2,7 +2,6 @@ import NavigationResults from './workspace/NavigationResults';
 import useWorkspaceCopy from './workspace/workspaceCopy';
 import { Disclosure, DisclosureButton, DisclosurePanel } from '@headlessui/react';
 import { createContext, useContext, useEffect, useMemo, useRef } from 'react';
-import { motion, useReducedMotion } from 'framer-motion';
 import { Link, NavLink, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useChatUnread } from '../lib/useChatUnread';
@@ -129,7 +128,6 @@ function SectionLabel({ children }) {
 function NavGroup({ title, groupKey = title, icon: Icon, defaultOpen, groupActive, reference = false, children }) {
     const mega = useContext(NavVariantContext) === 'mega';
     const expanded = useContext(ExpandedGroupContext) === groupKey;
-    const reducedMotion = useReducedMotion();
     const accordion = useContext(AccordionContext); const buttonRef = useRef(null);
     const ChevronIcon = reference ? SidebarChevronIcon : HiOutlineChevronDown;
     return (
@@ -158,13 +156,11 @@ function NavGroup({ title, groupKey = title, icon: Icon, defaultOpen, groupActiv
                             />
                             <span className="truncate">{title}</span>
                         </span>
-                        <motion.span
-                            animate={{ rotate: open ? 180 : 0 }}
-                            transition={{ duration: reducedMotion ? 0 : 0.2, ease: [0.4, 0, 0.2, 1] }}
-                            className={`shrink-0 ${groupActive ? 'text-brand' : 'text-slate-400'}`}
+                        <span
+                            className={`shrink-0 transition-transform duration-200 ease-[cubic-bezier(0.4,0,0.2,1)] motion-reduce:transition-none ${open ? 'rotate-180' : ''} ${groupActive ? 'text-brand' : 'text-slate-400'}`}
                         >
                             <ChevronIcon className={reference ? 'h-5 w-5' : 'h-4 w-4'} />
-                        </motion.span>
+                        </span>
                     </DisclosureButton>
                     <DisclosurePanel
                         transition

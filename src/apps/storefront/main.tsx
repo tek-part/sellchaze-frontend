@@ -11,7 +11,7 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
 import { I18nextProvider } from 'react-i18next';
-import { detectLocale, storefrontI18n } from './i18n';
+import { detectLocale, storefrontI18nReady } from './i18n';
 import { StorefrontThemeRoot, registerThemes, storefrontConfig, themeRegistry } from './index';
 import { StorefrontApp } from './StorefrontApp';
 import { StoreProvider } from './state/store-context';
@@ -82,8 +82,9 @@ async function bootstrap(): Promise<void> {
   const PreviewNavigation = params.has('__preview')
     ? (await import('./SignedPreviewNavigation')).SignedPreviewNavigation : null;
   // i18n first: it seeds the API client's locale so the bootstrap request carries `?lang=` (the
-  // navigation labels and theme copy it returns are language-resolved server-side).
-  const i18n = storefrontI18n();
+  // navigation labels and theme copy it returns are language-resolved server-side). The active
+  // language's copy downloads in parallel with the bootstrap request and is awaited before render.
+  const i18nReady = storefrontI18nReady();
 
   // ONE bootstrap request for the whole document. It runs in every mode — live store host, dev
   // `?preview=1`, and the customizer iframe `?preview=1&customize=1` — because the SPA has no
@@ -145,6 +146,7 @@ async function bootstrap(): Promise<void> {
     document.head.appendChild(style);
   }
 
+  const i18n = await i18nReady;
   createRoot(storefrontContainer).render(
     <StrictMode>
     {/*

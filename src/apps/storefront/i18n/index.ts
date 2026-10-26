@@ -12,12 +12,10 @@
  * (`setDirection` on the theme context, which writes `dir` on the root), so the locale layer sets
  * language and lets the engine apply direction — one source of truth for each concern.
  */
-import { createInstance, type i18n as I18n } from 'i18next';
+import { createInstance, type BackendModule, type i18n as I18n } from 'i18next';
 import { initReactI18next } from 'react-i18next';
 import { setApiLocale } from '../api/client';
 import type { Direction } from '../theme-engine/types';
-import { en } from './en';
-import { ar } from './ar';
 
 export const SUPPORTED_LOCALES = ['en', 'ar'] as const;
 export type Locale = (typeof SUPPORTED_LOCALES)[number];
@@ -80,26 +78,63 @@ export function persistLocale(locale: Locale): void {
   }
 }
 
-let instance: I18n | undefined;
+/**
+ * One module per language, imported on demand: a visitor downloads only the copy they read. The
+ * entry awaits `storefrontI18nReady()` (in parallel with the bootstrap request) before the first
+ * render, and `changeLanguage()` resolves only once the other language has arrived, so raw keys are
+ * never painted.
+ */
+const bundles: Record<Locale, () => Promise<object>> = {
+  en: () => import('./en').then((module) => module.en),
+  ar: () => import('./ar').then((module) => module.ar),
+};
 
-/** The storefront's i18n instance, created once. */
+const lazyBundles: BackendModule = {
+  type: 'backend',
+  init() {},
+  read(language, _namespace, callback) {
+    if (!isLocale(language)) {
+      callback(null, {});
+      return;
+    }
+    bundles[language]().then(
+      (resources) => callback(null, resources as Record<string, unknown>),
+      // `true` asks i18next to retry a failed fetch rather than settle on raw keys.
+      (error: Error) => callback(error, true),
+    );
+  },
+};
+
+let instance: I18n | undefined;
+let ready: Promise<I18n> | undefined;
+
+/** The storefront's i18n instance, created once. Its copy is usable after `storefrontI18nReady()`. */
 export function storefrontI18n(): I18n {
   if (instance) return instance;
   const i18n = createInstance();
   const initial = detectLocale();
   // Seed the API client before the first render so even the bootstrap-time requests carry `lang`.
   setApiLocale(initial);
-  void i18n.use(initReactI18next).init({
-    resources: { en: { translation: en }, ar: { translation: ar } },
-    lng: initial,
-    fallbackLng: DEFAULT_LOCALE,
-    // Keys are hand-written and namespaced with `.`, and copy contains no interpolation-unsafe
-    // markup, so React's own escaping is sufficient.
-    interpolation: { escapeValue: false },
-    returnNull: false,
-  });
+  ready = i18n
+    .use(lazyBundles)
+    .use(initReactI18next)
+    .init({
+      lng: initial,
+      // en and ar carry identical key sets (pinned by i18n.test.ts), so a language never needs the
+      // other downloaded as its fallback.
+      fallbackLng: { ar: [], default: [DEFAULT_LOCALE] },
+      // Keys are hand-written and namespaced with `.`, and copy contains no interpolation-unsafe
+      // markup, so React's own escaping is sufficient.
+      interpolation: { escapeValue: false },
+      returnNull: false,
+    })
+    .then(() => i18n);
   instance = i18n;
   return i18n;
 }
 
-export { en, ar };
+/** Resolves once the active language's copy is loaded. */
+export function storefrontI18nReady(): Promise<I18n> {
+  storefrontI18n();
+  return ready!;
+}

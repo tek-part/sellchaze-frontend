@@ -27,9 +27,16 @@ test('the inline boot script starts the first-view reads once and preloads theme
   const preloaded = await page.locator('link[rel="modulepreload"]').evaluateAll(links => links.map(link => (link as HTMLLinkElement).href));
   expect(preloaded.some(href => /\/assets\/glow-[\w-]+\.js$/.test(href))).toBe(true);
   expect(preloaded.some(href => /\/assets\/HomePage-[\w-]+\.js$/.test(href))).toBe(true);
+  // The visitor's language copy is lazy (one chunk per language); the boot script preloads it.
+  expect(preloaded.some(href => /\/assets\/en-[\w-]+\.js$/.test(href))).toBe(true);
+  expect(preloaded.some(href => /\/assets\/ar-[\w-]+\.js$/.test(href))).toBe(false);
   await expect(page.locator('html')).toHaveAttribute('data-storefront-ready', 'true');
   // A classic script waits for every stylesheet above it: the boot script must come before them.
   expect(shell.indexOf('window.__sfEarly')).toBeLessThan(shell.indexOf('rel="stylesheet"'));
+  // The @font-face sheet is preloaded and attached from script, so it never blocks the entry
+  // module — but it is still applied.
+  expect(shell).not.toMatch(/<link\s+rel="stylesheet"\s+href="\/media\/fonts\//);
+  expect(await page.evaluate(() => [...document.styleSheets].some(sheet => sheet.href?.includes('/media/fonts/storefront/')))).toBe(true);
 });
 
 test('a product page reads its product once, from the early read', async ({ page }) => {

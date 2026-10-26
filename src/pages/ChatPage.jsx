@@ -9,7 +9,7 @@ import {
     HiOutlineXMark,
 } from '../components/workspace/WorkspaceIcons';
 import api from '../api/client';
-import { getEcho } from '../lib/echo';
+import { loadEcho } from '../lib/echo';
 
 function initials(name) {
     return (name || '?').trim().charAt(0).toUpperCase();
@@ -95,34 +95,43 @@ export default function ChatPage() {
     // subscribe to the open conversation
     useEffect(() => {
         if (!current) return undefined;
-        const echo = getEcho();
-        echoRef.current = echo;
-        if (!echo) {
-            // No real-time transport configured: refresh the open thread while the tab is visible.
-            const conversationId = current.id;
-            const timer = window.setInterval(async () => {
-                if (document.visibilityState !== 'visible') return;
-                try {
-                    const { data } = await api.get(`/chat/conversations/${conversationId}/messages`, { params: { per_page: 50 } });
-                    setMessages(data.data || []);
-                    loadConvs();
-                } catch { /* keep the current thread */ }
-            }, 10_000);
-            return () => window.clearInterval(timer);
-        }
-        const channel = `chat.conversation.${current.id}`;
-        subRef.current = channel;
-        echo.private(channel).listen('.message.sent', (e) => {
-            setMessages((prev) => {
-                if (prev.some((m) => m.id === e.id)) return prev;
-                return [...prev, { id: e.id, body: e.body, mine: e.user?.id === me?.id, user: e.user, created_at: e.created_at }];
+        let stopped = false;
+        let timer = null;
+        let echo = null;
+        let channel = null;
+        void loadEcho().then((loaded) => {
+            if (stopped) return;
+            echo = loaded;
+            echoRef.current = echo;
+            if (!echo) {
+                // No real-time transport configured: refresh the open thread while the tab is visible.
+                const conversationId = current.id;
+                timer = window.setInterval(async () => {
+                    if (document.visibilityState !== 'visible') return;
+                    try {
+                        const { data } = await api.get(`/chat/conversations/${conversationId}/messages`, { params: { per_page: 50 } });
+                        setMessages(data.data || []);
+                        loadConvs();
+                    } catch { /* keep the current thread */ }
+                }, 10_000);
+                return;
+            }
+            channel = `chat.conversation.${current.id}`;
+            subRef.current = channel;
+            echo.private(channel).listen('.message.sent', (e) => {
+                setMessages((prev) => {
+                    if (prev.some((m) => m.id === e.id)) return prev;
+                    return [...prev, { id: e.id, body: e.body, mine: e.user?.id === me?.id, user: e.user, created_at: e.created_at }];
+                });
+                scrollDown();
+                markRead(current.id);
+                loadConvs();
             });
-            scrollDown();
-            markRead(current.id);
-            loadConvs();
         });
         return () => {
-            try { echo.leave(channel); } catch { /* noop */ }
+            stopped = true;
+            if (timer) window.clearInterval(timer);
+            if (channel) { try { echo.leave(channel); } catch { /* noop */ } }
         };
     }, [current, me, loadConvs]);
 

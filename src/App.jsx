@@ -3,13 +3,15 @@ import PlatformReferralCapture from './components/PlatformReferralCapture';
 import { Routes, Route, Navigate, useLocation, useParams } from 'react-router-dom';
 import useStoreScope from './hooks/useStoreScope';
 import AppErrorBoundary from './components/AppErrorBoundary';
-import AppLayout from './components/AppLayout';
 import StoreRedirect from './components/store/StoreRedirect';
 import Login from './pages/Login';
-import RegisterPage from './pages/RegisterPage';
-import ForgotPasswordPage from './pages/ForgotPasswordPage';
-import ResetPasswordPage from './pages/ResetPasswordPage';
-import PendingApprovalPage from './pages/PendingApprovalPage';
+import { loadAppLayout } from './lib/appShell';
+// The signed-in shell and the secondary auth pages are route chunks (see lib/appShell.js).
+const AppLayout = lazy(loadAppLayout);
+const RegisterPage = lazy(() => import('./pages/RegisterPage'));
+const ForgotPasswordPage = lazy(() => import('./pages/ForgotPasswordPage'));
+const ResetPasswordPage = lazy(() => import('./pages/ResetPasswordPage'));
+const PendingApprovalPage = lazy(() => import('./pages/PendingApprovalPage'));
 const Dashboard = lazy(() => import('./pages/Dashboard'));
 // Route-level lazy loading: the community feed (pulls in the Quill rich-text
 // editor) and the pricing page load on demand instead of inflating the main bundle.
@@ -175,7 +177,7 @@ const WavexCampaignNewPage = lazy(() => import('./pages/wavex/WavexCampaignNewPa
 const WavexCampaignDetailPage = lazy(() => import('./pages/wavex/WavexCampaignDetailPage'));
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage'));
 const ForbiddenPage = lazy(() => import('./pages/ForbiddenPage'));
-import ServerErrorPage from './pages/ServerErrorPage';
+const ServerErrorPage = lazy(() => import('./pages/ServerErrorPage'));
 const ServiceUnavailablePage = lazy(() => import('./pages/ServiceUnavailablePage'));
 const SessionExpiredPage = lazy(() => import('./pages/SessionExpiredPage'));
 const OfflinePage = lazy(() => import('./pages/OfflinePage'));
