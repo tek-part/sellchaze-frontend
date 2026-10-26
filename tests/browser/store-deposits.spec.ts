@@ -170,6 +170,7 @@ for (const locale of ['en', 'ar'] as const) {
     await page.getByText(t(locale, 'الدفع والشحن والتسليم', 'Payment, shipping and delivery')).click();
     await expect(page.locator('[data-unapplied-payments]')).toContainText('EGP 132.00');
     await expect(page.locator('[data-unapplied-payments]')).toContainText('pi_late');
+    await expect(page.locator('[data-unapplied-payments]')).toContainText(t(locale, 'ردّ المبلغ من لوحة مزود الدفع أو سجّله على الطلب', 'refund the capture in the provider dashboard or record it against the order'));
     const card = page.getByRole('region', { name: t(locale, 'العربون والمبلغ المتبقي', 'Deposit and remaining amount') });
     await expect(card.getByLabel(t(locale, 'مرجع التحصيل', 'Collection reference'))).toBeVisible();
     await healthy(page, `section[aria-label="${t(locale, 'العربون والمبلغ المتبقي', 'Deposit and remaining amount')}"]`);
