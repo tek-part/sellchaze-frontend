@@ -37,7 +37,7 @@ export default function ProductInlineCheckout({ productId, items, ready, buttonT
   const paidByGiftCards = giftCardsCoverTotal(quote, giftCards.codes);
   const submit = async (event: FormEvent): Promise<void> => {
     event.preventDefault();
-    if (!payment.paymentRetry && (!ready || !quote || !minimumOrderAllows(quote) || !contact.shippingReady || !contact.phoneVerification.ready || !contact.botProtection.ready)) return;
+    if (!payment.paymentRetry && (!ready || !quote || !minimumOrderAllows(quote) || !contact.shippingReady || !contact.phoneVerification.ready || !contact.botProtection.ready || contact.countryAllowed === false)) return;
     await payment.submit({ ...contact.payload(), coupon_code: appliedCoupon, lead_token: lead.submitToken(), ...(quote?.payment_adjustment_token ? { payment_adjustment_token: quote.payment_adjustment_token } : {}),
       ...(giftCards.codes.length ? { gift_cards: giftCards.codes } : {}), ...(paidByGiftCards ? { payment_method: undefined } : {}) });
   };
@@ -54,6 +54,6 @@ export default function ProductInlineCheckout({ productId, items, ready, buttonT
     {quote ? <dl className="sf-product-checkout__totals"><div><dt>{text('المنتجات', 'Products')}</dt><dd>{formatMoney(Number(quote.totals.subtotal), quote.currency, locale)}</dd></div><CheckoutDiscountLines quote={quote} fallbackLabel={text('الخصم', 'Discount')} definition />{quote.requires_shipping ? <div><dt>{text('الشحن', 'Shipping')}</dt><dd>{Number(quote.totals.shipping_total) === 0 && quoteHasFreeShippingDiscount(quote) ? text('مجاني', 'Free') : formatMoney(Number(quote.totals.shipping_total), quote.currency, locale)}</dd></div> : null}{Number(quote.totals.tax_total) > 0 ? <div data-tax-line><dt>{taxLineLabel(quote.tax, locale)}</dt><dd>{formatMoney(Number(quote.totals.tax_total), quote.currency, locale)}</dd></div> : null}<PaymentAdjustmentLine amount={quote.totals.payment_adjustment_total} currency={quote.currency} definition /><div><dt>{text('الإجمالي', 'Total')}</dt><dd>{formatMoney(Number(quote.totals.grand_total), quote.currency, locale)}</dd></div><GiftCardLines quote={quote} definition /></dl> : null}
     {payment.error && !payment.unresolved ? <p role="alert">{payment.error}</p> : null}
     {!payment.paymentRetry && !payment.unresolved ? <CheckoutMinimum quote={quote} /> : null}
-    {!payment.unresolved ? <Button type="submit" block loading={payment.busy} disabled={(!payment.paymentMethod && !paidByGiftCards) || !quote || !contact.shippingReady || (!payment.paymentRetry && (!ready || !minimumOrderAllows(quote) || !contact.phoneVerification.ready || !contact.botProtection.ready))}>{buttonText || text('تأكيد الطلب', 'Place order')}</Button> : null}
+    {!payment.unresolved ? <Button type="submit" block loading={payment.busy} disabled={(!payment.paymentMethod && !paidByGiftCards) || !quote || !contact.shippingReady || (!payment.paymentRetry && (!ready || !minimumOrderAllows(quote) || !contact.phoneVerification.ready || !contact.botProtection.ready || contact.countryAllowed === false))}>{buttonText || text('تأكيد الطلب', 'Place order')}</Button> : null}
     </form></section>;
 }

@@ -38,10 +38,10 @@ function AppDetail({ context: { apiBase, uiBase, access }, appKey }) {
             <div className="ws-app-detail-layout">
                 <aside className="ws-app-detail-panel">
                     <div className="ws-app-detail-title"><AppImage app={app} /><h1>{localized(app.title)}</h1></div>
-                    <div className="ws-app-detail-price"><h2>{text('السعر', 'Price')}</h2><p>{app.available ? text('مجاني', 'Free') : text('غير متاح حاليًا', 'Currently unavailable')}</p></div>
+                    <div className="ws-app-detail-price"><h2>{text('السعر', 'Price')}</h2><p>{app.available ? text('مجاني', 'Free') : <span className="ws-app-soon">{text('قريبًا', 'Coming soon')}</span>}</p></div>
                     <h2>{text('المميزات', 'Features')}</h2>
                     <ul className="ws-app-feature-list">{features.map((feature) => <li key={feature}><FeatureStar /><p>{feature}</p></li>)}</ul>
-                    {app.can_manage ? <Link className="ws-apps-primary" to={`${uiBase}/${app.route}`}>{text('إدارة', 'Manage')}</Link> : <p className="ws-apps-note">{app.missing_permission ? text('يلزم منح صلاحيات الإدارة المطلوبة لاستخدام هذا التطبيق.', 'The required management permissions are needed for this app.') : text('هذا التطبيق قيد التطوير وغير متاح للتفعيل حاليًا.', 'This app is in development and is not currently available for activation.')}</p>}
+                    {app.can_manage ? <Link className="ws-apps-primary" to={`${uiBase}/${app.route}`}>{text('إدارة', 'Manage')}</Link> : <p className="ws-apps-note">{app.missing_permission ? text('يلزم منح صلاحيات الإدارة المطلوبة لاستخدام هذا التطبيق.', 'The required management permissions are needed for this app.') : text('قريبًا: هذا التطبيق لم يُطلق بعد، لذلك لا يمكن تفعيله أو ربطه حاليًا.', 'Coming soon: this app has not launched yet, so it cannot be enabled or connected today.')}</p>}
                     {app.key === 'minimum-order' && app.can_manage ? <Link className="ws-apps-outlined" to={`${uiBase}/settings/shipping`}>{text('إعداد حد الشحن المجاني', 'Set free-shipping threshold')}</Link> : null}
                 </aside>
                 <section className="ws-app-detail-visuals" aria-label={text('معاينات التطبيق', 'App previews')}>
@@ -52,7 +52,7 @@ function AppDetail({ context: { apiBase, uiBase, access }, appKey }) {
                     {app.key === 'sheets' ? <p className="ws-apps-note">{text('يُحفظ مفتاح حساب الخدمة مشفرًا، وتُرسل الطلبات الجديدة إلى تبويب مستقل في الجدول الذي تختاره.', 'The service-account key is encrypted. New orders go into a separate tab of your chosen spreadsheet.')}</p> : null}
                 </section>
             </div>
-            {related.length ? <section className="ws-app-related" aria-labelledby="related-app-heading"><h2 id="related-app-heading">{text('تطبيقات أخرى', 'Other apps')}</h2><div className="ws-apps-grid">{related.map((row) => <Link className="ws-app-card" key={row.key} to={`${uiBase}/apps/${row.key}`}><div className="ws-app-card-heading"><AppImage app={row} /><div><h3>{localized(row.title)}</h3><p>{row.available ? text('مجاني', 'Free') : text('غير متاح حاليًا', 'Currently unavailable')}</p></div></div><p className="ws-app-card-description">{localized(row.description)}</p></Link>)}</div></section> : null}
+            {related.length ? <section className="ws-app-related" aria-labelledby="related-app-heading"><h2 id="related-app-heading">{text('تطبيقات أخرى', 'Other apps')}</h2><div className="ws-apps-grid">{related.map((row) => <Link className="ws-app-card" key={row.key} to={`${uiBase}/apps/${row.key}`}><div className="ws-app-card-heading"><AppImage app={row} /><div><h3>{localized(row.title)}</h3><p>{row.available ? text('مجاني', 'Free') : <span className="ws-app-soon">{text('قريبًا', 'Coming soon')}</span>}</p></div></div><p className="ws-app-card-description">{localized(row.description)}</p></Link>)}</div></section> : null}
         </>}
     </div>;
 }

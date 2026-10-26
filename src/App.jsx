@@ -104,6 +104,7 @@ const StoreBotProtectionPage = lazy(() => import('./pages/store/settings/StoreBo
 const StoreTrackingPage = lazy(() => import('./pages/store/StoreTrackingPage'));
 const StoreAppsPage = lazy(() => import('./pages/store/StoreAppsPage'));
 const StoreAppDetailPage = lazy(() => import('./pages/store/StoreAppDetailPage'));
+const StoreAppSettingsPage = lazy(() => import('./pages/store/StoreAppSettingsPage'));
 const StoreSheetsPage = lazy(() => import('./pages/store/StoreSheetsPage'));
 const StoreDownsellPage = lazy(() => import('./pages/store/StoreDownsellPage'));
 const StoreAbTestsPage = lazy(() => import('./pages/store/StoreAbTestsPage'));
@@ -267,6 +268,7 @@ const STORE_ROUTES = [
     { path: 'ga', element: <StoreTrackingPage mode="google" /> },
     { path: 'apps', element: <StoreAppsPage /> },
     { path: 'apps/:app', element: <StoreAppDetailPage /> },
+    { path: 'apps/:app/settings', element: <StoreAppSettingsPage /> },
     { path: 'sheets', element: <StoreSheetsPage /> },
     { path: 'downsell', element: <StoreDownsellPage /> },
     { path: 'ab-tests', element: <StoreAbTestsPage /> },

@@ -28,6 +28,7 @@ import { ProductPurchaseProvider } from '../state/product-purchase';
 import { parseLanding } from '../landing/document';
 
 const LandingProductLayout = lazy(() => import('../landing/LandingProductLayout'));
+const FrequentlyBoughtTogether = lazy(() => import('../bundles/FrequentlyBoughtTogether'));
 
 export function ProductPage(): ReactElement | null {
   const manifest = useThemeManifest();
@@ -153,6 +154,7 @@ export function ProductPage(): ReactElement | null {
           <Suspense fallback={null}><LandingProductLayout landing={landing} context={context} template={templateBody} /></Suspense>
         ) : templateBody}
       </ProductPurchaseProvider>
+      {store.bundlesEnabled && detail ? <Suspense fallback={null}><FrequentlyBoughtTogether productId={detail.id} /></Suspense> : null}
     </>
   );
 }

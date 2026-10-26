@@ -50,3 +50,4 @@
 @media(max-width:1023px) { .ws-app-detail-layout { grid-template-columns:minmax(0,1fr);grid-template-areas:'visuals' 'summary' 'description';gap:16px; } }
 @media(max-width:767px) { .ws-app-preview-gallery { grid-template-columns:minmax(0,1fr); }.ws-app-preview-thumbnails { flex-direction:row;gap:16px;overflow:auto;scrollbar-width:none; }.ws-app-preview-thumbnails button { width:225px;height:150px;flex-shrink:0; }.ws-app-detail-title h1 { min-width:0; }.ws-app-related { margin-top:16px; } }
 @media(prefers-reduced-motion:reduce) { .ws-app-preview-thumbnails button { transition:none; } }
+.ws-app-soon { display:inline-block;padding:0 10px;border-radius:999px;background:var(--ws-panel-soft);color:var(--ws-text);font-size:12px;line-height:22px;font-weight:500; }

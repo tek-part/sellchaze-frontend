@@ -1,0 +1,23 @@
+.ws-app-settings { max-width:880px; }
+.ws-app-settings .ws-apps-page-header { display:flex;flex-wrap:wrap;align-items:flex-start;justify-content:space-between;gap:12px 24px;margin-bottom:24px; }
+.ws-app-settings .ws-apps-page-header h1 { font-size:24px;line-height:32px;font-weight:600;margin:0 0 6px; }
+.ws-app-settings .ws-apps-page-header p { margin:0;color:var(--ws-muted);font-size:14px;line-height:22px; }
+.ws-app-settings .ws-apps-page-header a { color:var(--ws-green-ink,#087a2e);text-decoration:underline;font-size:14px; }
+.ws-app-settings form > fieldset { display:grid;gap:16px;border:0;margin:0;padding:0;min-width:0; }
+.ws-app-settings .ws-apps-check,.ws-app-settings .ws-apps-field { margin:0; }
+.ws-app-settings select,.ws-app-settings textarea,.ws-app-settings .ws-apps-field > input { width:100%;min-height:44px;padding:10px 12px;border:1px solid var(--ws-border);border-radius:8px;background:var(--ws-panel);color:var(--ws-text);font:inherit; }
+.ws-app-settings-grid { display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px; }
+.ws-app-settings-group { display:grid;gap:12px;border:1px solid var(--ws-border);border-radius:12px;padding:16px;margin:0;min-width:0; }
+.ws-app-settings-group legend { padding-inline:6px;font-weight:600;font-size:15px; }
+.ws-app-settings-radio { display:flex;align-items:center;gap:10px;font-size:14px;min-height:32px; }
+.ws-app-settings-radio input { width:18px;height:18px;accent-color:#0abb45; }
+.ws-app-settings-chips { display:flex;flex-wrap:wrap;gap:8px;list-style:none;margin:0;padding:0; }
+.ws-app-settings-chips li { display:inline-flex;align-items:center;gap:4px;border:1px solid var(--ws-border);border-radius:999px;padding-inline:12px 4px;font-size:13px;min-height:32px; }
+.ws-app-settings-chips button { width:32px;height:32px;border-radius:50%;font-size:18px;line-height:1;cursor:pointer; }
+.ws-app-settings-chips button:focus-visible { outline:2px solid var(--ws-text);outline-offset:1px; }
+.ws-app-settings-preview { border:1px dashed var(--ws-border);border-radius:12px;padding:12px 16px;font-size:14px;line-height:22px;margin:0; }
+.ws-app-settings-preview small { display:block;color:var(--ws-muted); }
+.ws-app-settings button[type='submit'] { justify-self:start; }
+@media (max-width:480px) { .ws-app-settings-grid { grid-template-columns:1fr; } .ws-app-settings button[type='submit'] { justify-self:stretch; } }
+.ws-app-settings .ws-apps-primary { background:#087a2e; }
+.ws-app-settings .ws-apps-outlined { color:#087a2e;border-color:#087a2e;justify-self:start; }

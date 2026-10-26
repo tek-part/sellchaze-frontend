@@ -44,6 +44,7 @@ export interface CartApi {
 
 const CartContext = createContext<CartApi | null>(null);
 const DownsellOffer = lazy(() => import('../downsell/DownsellOffer'));
+const SocialProof = lazy(() => import('../social-proof/SocialProof'));
 
 function loadInitial(store: StoreInfo): CartLine[] {
   try { return loadCart(typeof window === 'undefined' ? undefined : window.localStorage, store.id, store.currency); }
@@ -190,7 +191,7 @@ function ScopedCartProvider({ children, store, apiOk }: { children: ReactNode; s
     [lines, totals, add, remove, updateQuantity, clear],
   );
 
-  return <CartContext.Provider value={api}>{children}{store.downsellEnabled ? <Suspense fallback={null}><DownsellOffer store={store} apiOk={apiOk} locale={locale} productIds={ids} hasCart={lines.length > 0} /></Suspense> : null}</CartContext.Provider>;
+  return <CartContext.Provider value={api}>{children}{store.downsellEnabled ? <Suspense fallback={null}><DownsellOffer store={store} apiOk={apiOk} locale={locale} productIds={ids} hasCart={lines.length > 0} /></Suspense> : null}{store.socialProofEnabled ? <Suspense fallback={null}><SocialProof store={store} apiOk={apiOk} locale={locale} /></Suspense> : null}</CartContext.Provider>;
 }
 
 export function useCart(): CartApi {

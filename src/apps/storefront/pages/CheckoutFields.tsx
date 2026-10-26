@@ -1,4 +1,4 @@
-import { useMemo, useState, type ReactElement } from 'react';
+import { Fragment, useMemo, useState, type ReactElement } from 'react';
 import { Button, Input, Select, Spinner } from '../foundation/components';
 import { apiGet } from '../api/client';
 import { useAsync } from '../api/useAsync';
@@ -12,6 +12,7 @@ import { usePhoneVerification, type PhoneVerificationConfiguration } from './use
 import { CheckoutPhoneVerification } from './CheckoutPhoneVerification';
 import { useBotProtection, type BotConfiguration } from './useBotProtection';
 import { CheckoutBotProtection } from './CheckoutBotProtection';
+import { countryAccepted, countryPolicyText, type CountryRestriction } from './country-restriction';
 import './checkout/checkout.css';
 
 export function useCheckoutFields(paymentMethod: string, productIds: ReadonlyArray<number>) {
@@ -22,7 +23,7 @@ export function useCheckoutFields(paymentMethod: string, productIds: ReadonlyArr
   const query = useAsync(async () => {
     const params = new URLSearchParams({ payment_method: paymentMethod });
     (JSON.parse(basketKey) as number[]).forEach((id) => params.append('product_ids[]', String(id)));
-    return { paymentMethod, basketKey, ...(await apiGet<{ data: CheckoutField[]; shipping: ShippingConfiguration; requires_shipping: boolean; has_digital: boolean; phone_verification?: PhoneVerificationConfiguration; bot_protection?: BotConfiguration }>(`/checkout/fields?${params.toString()}`)) };
+    return { paymentMethod, basketKey, ...(await apiGet<{ data: CheckoutField[]; shipping: ShippingConfiguration; requires_shipping: boolean; has_digital: boolean; phone_verification?: PhoneVerificationConfiguration; bot_protection?: BotConfiguration; country_restriction?: CountryRestriction | null }>(`/checkout/fields?${params.toString()}`)) };
   }, [paymentMethod, basketKey]);
   const ready = !query.loading && !query.error && query.data?.paymentMethod === paymentMethod && query.data?.basketKey === basketKey;
   const fields = ready ? query.data?.data ?? [] : [];
@@ -42,11 +43,15 @@ export function useCheckoutFields(paymentMethod: string, productIds: ReadonlyArr
   }, [addressKey]);
   const addressShipping = !addressQuery.loading && addressQuery.data?.key === addressKey ? addressQuery.data.shipping : undefined;
   const legacy = resolveShipping(shipping, chosenShipping);
-  // Older single-zone stores ignore the country; it only selects a tax override when one exists.
-  const resolved = zonesEnabled ? zone : { ...legacy, selection: { ...legacy.selection, ...(country && shipping?.enabled ? { shipping_country: country } : {}) } };
+  // The store's delivery-country policy; the quote and placement enforce it again on the server.
+  const countryRestriction = ready ? query.data?.country_restriction ?? null : null;
+  const countryField = fields.some((field) => field.enabled && field.key === 'country');
+  // Older single-zone stores ignore the country for rates; it selects a tax override and lets the quote apply the country policy.
+  const resolved = zonesEnabled ? zone : { ...legacy, selection: { ...legacy.selection, ...(country && (shipping?.enabled || (countryRestriction && countryField)) ? { shipping_country: country } : {}) } };
   const phoneVerification = usePhoneVerification(query.data?.phone_verification, values.phone ?? '', locale);
   const botProtection = useBotProtection(query.data?.bot_protection, locale);
   return { fields, ready, query, values, setValues, locale, shipping, phoneVerification, botProtection, paymentMethod, zonesEnabled, zone, addressShipping, addressLoading: addressQuery.loading && !!addressKey,
+    countryRestriction, countryAllowed: countryAccepted(countryRestriction, country || undefined),
     resetRate: () => setChosenShipping((current) => { const { shipping_rate_id: _rate, ...rest } = current; return rest; }), requiresShipping: ready ? query.data?.requires_shipping : undefined, hasDigital: ready && query.data?.has_digital, shippingReady: ready && resolved.ready,
     shippingSelection: resolved.selection, shippingStale: resolved.stale === true, setChosenShipping, resetShipping: () => setChosenShipping({}), payload: () => ({ ...checkoutContact(fields, values), ...resolved.selection, ...(phoneVerification.proof ? { phone_verification: phoneVerification.proof } : {}), ...(botProtection.proof ? { bot_proof: botProtection.proof } : {}) }) };
 }
@@ -75,18 +80,24 @@ export function CheckoutFieldsForm({ model, quote }: { model: ReturnType<typeof 
     if (field.shipping_region) return <Select key={field.key} label={label} hint={hint} required value={model.shippingSelection.shipping_region_id ?? ''}
       onChange={(event) => model.setChosenShipping((current) => ({ ...current, shipping_region_id: event.target.value }))}
       options={[{ value: '', label: lang === 'ar' ? 'اختر منطقة التوصيل' : 'Choose delivery region' }, ...(model.shipping?.regions ?? []).map((region) => ({ value: region.id, label: region.name[lang] }))]} />;
+    const countryHint = [hint, model.countryRestriction ? countryPolicyText(model.countryRestriction, locale) : ''].filter(Boolean).join(' ');
+    const refusal = model.countryAllowed === false && model.countryRestriction ? <p className="sf-field__error" role="alert">{model.countryRestriction.message}</p> : null;
     if (field.key === 'country' && model.zonesEnabled) {
       const { regions, regionRequired, unsupported } = model.zone;
       return <div key={field.key} className="sf-co-zone-address" style={{ display: 'contents' }}>
-        <Select label={label} hint={hint} value={values.country ?? ''} required options={countries} autoComplete="country"
+        <Select label={label} hint={countryHint} value={values.country ?? ''} required options={countries} autoComplete="country"
           onChange={(event) => { change(event); model.setChosenShipping(({ shipping_region_id: _region, shipping_rate_id: _rate, ...rest }) => rest); }} />
+        {refusal}
         {regions.length ? <Select label={`${lang === 'ar' ? 'المنطقة / المحافظة' : 'Region / governorate'}${regionRequired ? ' *' : ''}`} required={regionRequired} value={model.shippingSelection.shipping_region_id ?? ''}
           onChange={(event) => model.setChosenShipping(({ shipping_rate_id: _rate, ...rest }) => ({ ...rest, shipping_region_id: event.target.value || undefined }))}
           options={[{ value: '', label: regionRequired ? (lang === 'ar' ? 'اختر المنطقة' : 'Choose region') : (lang === 'ar' ? 'مناطق أخرى' : 'Other areas') }, ...regions.map((region) => ({ value: region.id, label: region.name[lang] }))]} /> : null}
         {unsupported ? <p role="alert" className="sf-field__error">{lang === 'ar' ? 'لا يتوفر التوصيل إلى هذه الدولة حاليًا. اختر دولة أخرى.' : 'Delivery to this country is not available yet. Choose another country.'}</p> : null}
       </div>;
     }
-    if (field.key === 'country') return <Select key={field.key} label={label} hint={hint} value={values.country ?? ''} onChange={change} required={field.required} options={countries} autoComplete="country" />;
+    if (field.key === 'country') return <Fragment key={field.key}>
+      <Select label={label} hint={countryHint} value={values.country ?? ''} onChange={change} required={field.required} options={countries} autoComplete="country" />
+      {refusal}
+    </Fragment>;
     const autoComplete = { name: 'name', phone: 'tel', email: 'email', address: 'street-address', city: 'address-level2', postal_code: 'postal-code', phone_alt: 'off', notes: 'off', national_address: 'off' }[field.key];
     return <Input key={field.key} label={label} hint={hint} value={values[field.key] ?? ''} onChange={change} required={field.required}
       type={field.key === 'email' ? 'email' : field.key === 'phone' || field.key === 'phone_alt' ? 'tel' : 'text'} autoComplete={autoComplete}

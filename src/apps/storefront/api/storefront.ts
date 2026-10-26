@@ -205,7 +205,7 @@ export function submitProductReview(slug: string, review: { rating: number; titl
  * The storefront uses a client-side cart (offline-first) and submits its line items directly to
  * checkout; the server-cart endpoints (/cart/*) are intentionally not wrapped here. */
 /** One discount the server applied to a quote or cart: automatic discounts carry no code. */
-export interface AppliedDiscount { id: number; title: string; code: string | null; method: 'code' | 'automatic'; type: 'fixed' | 'percentage' | 'free_shipping' | 'buy_x_get_y'; amount: string }
+export interface AppliedDiscount { id: number; title: string; code: string | null; method: 'code' | 'automatic'; type: 'fixed' | 'percentage' | 'free_shipping' | 'buy_x_get_y' | 'bundle'; amount: string; bundle_id?: string }
 export const applyCoupon = (code: string): Promise<{ data: unknown; discounts?: ReadonlyArray<AppliedDiscount> }> => apiSend('/checkout/coupon/apply', 'POST', { code });
 export const removeCoupon = (): Promise<{ data: unknown; discounts?: ReadonlyArray<AppliedDiscount> }> => apiSend('/checkout/coupon', 'DELETE');
 export interface StorefrontPaymentMethod { slug: string; name: string; test_mode: boolean; logo_url?: string | null; description?: string }
