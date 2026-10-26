@@ -26,5 +26,5 @@ function ResolveTest({ slug, storeId }: { slug: string; storeId: number | string
     })().catch(() => { if (active) setError(true); });
     return () => { active = false; };
   }, [slug, storeId, navigate, location.search, location.hash, retry]);
-  return <Section><Container>{!error ? <Spinner label={t('common.loading')} /> : <ErrorState title={t('pdp.unavailableTitle')} description={t('pdp.unavailableBody')} actions={<Button onClick={() => setRetry((n) => n + 1)}>{t('pdp.tryAgain')}</Button>} />}</Container></Section>;
+  return <Section><Container>{!error ? <Spinner label={t('common.loading')} /> : <ErrorState headingLevel={1} title={t('pdp.unavailableTitle')} description={t('pdp.unavailableBody')} actions={<Button onClick={() => setRetry((n) => n + 1)}>{t('pdp.tryAgain')}</Button>} />}</Container></Section>;
 }

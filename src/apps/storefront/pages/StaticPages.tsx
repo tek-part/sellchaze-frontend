@@ -143,6 +143,7 @@ export function PolicyPage(): ReactElement {
         <Seo title="Information" path={`/pages/${slug}`} noindex />
         <Container narrow>
           <EmptyState
+            headingLevel={1}
             variant="generic"
             title={t('states.notFoundTitle')}
             description={t('states.notFoundHint')}

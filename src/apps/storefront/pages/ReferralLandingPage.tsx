@@ -18,5 +18,5 @@ export function ReferralLandingPage(): ReactElement {
     const params = new URLSearchParams(location.search); params.set('ref', code);
     return <Navigate replace to={`/products/${lookup.data.slug}?${params}${location.hash}`} />;
   }
-  return <Section><Container>{lookup.loading ? <Spinner label={t('common.loading')} /> : <ErrorState title={t('pdp.unavailableTitle')} description={t('pdp.unavailableBody')} actions={<Button onClick={lookup.reload}>{t('pdp.tryAgain')}</Button>} />}</Container></Section>;
+  return <Section><Container>{lookup.loading ? <Spinner label={t('common.loading')} /> : <ErrorState headingLevel={1} title={t('pdp.unavailableTitle')} description={t('pdp.unavailableBody')} actions={<Button onClick={lookup.reload}>{t('pdp.tryAgain')}</Button>} />}</Container></Section>;
 }

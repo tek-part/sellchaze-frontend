@@ -541,7 +541,7 @@
 .lib-cat-row__text { display: flex; flex-direction: column; gap: 2px; flex: 1 1 auto; min-width: 0; }
 .lib-cat-row__name { font-family: var(--font); font-size: var(--fs-base); font-weight: 600; }
 .lib-cat-row__meta { font-family: var(--font); font-size: var(--fs-xs); color: var(--muted); }
-.lib-cat-row__arrow { color: var(--muted); }
+.lib-cat-row__arrow { display: inline-block; color: var(--muted); }
 [dir='rtl'] .lib-cat-row__arrow { transform: scaleX(-1); }
 
 /* ------------------------------------------------------------ multicolumn */

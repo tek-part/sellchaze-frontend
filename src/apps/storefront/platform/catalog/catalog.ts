@@ -45,7 +45,7 @@ export const THEME_CATALOG: ThemeCatalog = [
   {
     id: 'nature-pets', name: 'Nature Pets', version: '1.0.0', archetype: 'Pets',
     description: 'Pet collections with Nature-family navigation, peek campaigns, a split story and FAQ, compact product grids and photography.',
-    author: 'Sellchaze', tags: ['pets', 'animals', 'modern', 'rtl'], accent: '#A67500',
+    author: 'Sellchaze', tags: ['pets', 'animals', 'modern', 'rtl'], accent: '#8C6300',
     previewImage: '/media/theme-previews/nature-pets.png',
     minEngineVersion: '1.0.0', capabilities: ['rtl', 'cart-drawer', 'quick-add', 'newsletter'],
     license: { type: 'free', sku: 'theme-nature-pets' }, featured: true,
@@ -76,7 +76,7 @@ export const THEME_CATALOG: ThemeCatalog = [
     id: 'nature-kids', name: 'Nature Kids', version: '1.0.0', archetype: 'Kids & Lifestyle',
     description: 'Playful clothing, toy collections, linked looks and photo stories.',
     previewImage: '/media/theme-previews/nature-kids.png',
-    author: 'Sellchaze', tags: ['kids', 'clothing', 'toys', 'modern', 'rtl'], accent: '#1470F2',
+    author: 'Sellchaze', tags: ['kids', 'clothing', 'toys', 'modern', 'rtl'], accent: '#1066DD',
     minEngineVersion: '1.0.0', capabilities: ['rtl', 'cart-drawer', 'newsletter'],
     license: { type: 'free', sku: 'theme-nature-kids' }, featured: true,
     changelog: [{ version: '1.0.0', date: '2026-10-13', notes: ['Independent layout and editable collections.'] }],

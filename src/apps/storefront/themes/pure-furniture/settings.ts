@@ -15,7 +15,7 @@ function color(s: ThemeSettings, key: string, fallback: string): string { const 
 export function pureTokens(s: ThemeSettings): DesignTokens {
   const primary = color(s, 'primary_color', '#834523'); const bg = color(s, 'background_color', '#FAF7F2');
   return { ...naseemBaseTokens,
-    color: { light: { ...naseemBaseTokens.color.light, primary, onPrimary: '#FFFFFF', accent: primary, accentInk: primary, bg, surface: bg, surface2: '#F1E9E0', text: color(s, 'text_color', '#6C432D'), border: '#DDD1C5', muted: '#846F62', sale: primary }, dark: { ...naseemBaseTokens.color.dark } },
+    color: { light: { ...naseemBaseTokens.color.light, primary, onPrimary: '#FFFFFF', accent: primary, accentInk: primary, bg, surface: bg, surface2: '#F1E9E0', text: color(s, 'text_color', '#6C432D'), border: '#DDD1C5', muted: '#74604F', sale: primary }, dark: { ...naseemBaseTokens.color.dark } },
     typography: { ...naseemBaseTokens.typography, fontSans: 'Jost,"IBM Plex Sans Arabic",sans-serif', fontArabic: '"IBM Plex Sans Arabic",Jost,sans-serif', fontSerif: 'Jost,"IBM Plex Sans Arabic",sans-serif', lineHeight: '1.6' },
     spacing: { ...naseemBaseTokens.spacing, container: '100%', gutter: '40px', sectionY: '80px', gridGap: '24px' },
     radius: { sm: '8px', base: '16px', lg: '24px', pill: '999px' },

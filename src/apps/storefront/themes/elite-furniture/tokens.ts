@@ -7,7 +7,7 @@ export function eliteTokens(s: ThemeSettings): DesignTokens {
   const bg = color(s, 'background_color', '#EFEFEF');
   const font = s['body_font'] === 'IBM Plex Sans Arabic' ? '"IBM Plex Sans Arabic",sans-serif' : s['body_font'] === 'system' ? 'system-ui,sans-serif' : '"Instrument Sans","IBM Plex Sans Arabic",sans-serif';
   return { ...naseemBaseTokens,
-    color: { light: { ...naseemBaseTokens.color.light, primary, onPrimary: '#111111', accent: primary, accentInk: '#111111', bg, surface: '#FFFFFF', surface2: bg, text: color(s, 'text_color', '#111111'), border: '#D8D8D8', muted: '#6B6B6B', sale: '#E86487' }, dark: { ...naseemBaseTokens.color.dark } },
+    color: { light: { ...naseemBaseTokens.color.light, primary, onPrimary: '#111111', accent: primary, accentInk: '#111111', bg, surface: '#FFFFFF', surface2: bg, text: color(s, 'text_color', '#111111'), border: '#D8D8D8', muted: '#6B6B6B', sale: '#B8336A' }, dark: { ...naseemBaseTokens.color.dark } },
     typography: { ...naseemBaseTokens.typography, fontSans: font, fontArabic: font, fontSerif: 'ui-serif,Georgia,Cambria,"Times New Roman",Times,serif', lineHeight: '1.5' },
     spacing: { ...naseemBaseTokens.spacing, container: '100%', gutter: '32px', sectionY: '60px', gridGap: '24px' },
     radius: { sm: '0px', base: '0px', lg: '0px', pill: '999px' },

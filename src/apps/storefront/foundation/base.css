@@ -596,7 +596,8 @@
 .sf-state__title { font-family: var(--heading); font-size: var(--fs-2xl); color: var(--text); margin: 0; }
 .sf-state__text { font-family: var(--font); color: var(--muted); margin: 0; }
 .sf-state--error .sf-state__text { color: var(--danger); }
-.sf-state__code { font-family: var(--heading); font-size: var(--fs-4xl); line-height: 1; color: var(--border-strong); }
+/* The large code is still text: --muted keeps it legible (≥3:1 large-text contrast) where a border tone did not. */
+.sf-state__code { font-family: var(--heading); font-size: var(--fs-4xl); line-height: 1; color: var(--muted); }
 .sf-state__actions { display: flex; flex-wrap: wrap; justify-content: center; gap: var(--sp-3); margin-top: var(--sp-3); }
 
 @media (prefers-reduced-motion: reduce) {

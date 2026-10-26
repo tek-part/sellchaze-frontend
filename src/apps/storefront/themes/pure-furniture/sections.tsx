@@ -25,7 +25,7 @@ export function PureCategories(props: SectionRenderProps): ReactElement {
   return <section className="pur-section"><h2>{str(s, 'title')}</h2><div className="pur-categories">{categories.map(category => <a className="pur-category" href={category.url} key={category.id}><LibImage src={category.image?.src} alt="" /><span>{category.title}</span></a>)}</div>{!categories.length && !data.loading ? <LibEmpty message={t('emptyCategories')} /> : null}</section>;
 }
 export const pureMarqueeSchema = defineSection({ type: 'pure-marquee', label: 'Scrolling message', category: 'content', settings: [fields.text('text', 'Message', tr('مرحبًا بك في متجرنا', 'Welcome to our store'))] });
-export function PureMarquee(props: SectionRenderProps): ReactElement { const s = useSectionSettings(pureMarqueeSchema, props.settings); return <div className="pur-marquee" aria-label={str(s, 'text')}><div aria-hidden>{Array.from({ length: 8 }, (_, i) => <span key={i}>{str(s, 'text')}<span className="pur-star">✦</span></span>)}</div></div>; }
+export function PureMarquee(props: SectionRenderProps): ReactElement { const s = useSectionSettings(pureMarqueeSchema, props.settings); return <div className="pur-marquee"><span className="lib-sr-only">{str(s, 'text')}</span><div aria-hidden>{Array.from({ length: 8 }, (_, i) => <span key={i}>{str(s, 'text')}<span className="pur-star">✦</span></span>)}</div></div>; }
 /** Server merchandising collections take precedence, including an explicitly empty collection. */
 export function pureCollectionContext(context: StorefrontContext): StorefrontContext {
   const authoritative = context.data['merchandisingCollections'];

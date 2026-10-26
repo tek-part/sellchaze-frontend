@@ -1,7 +1,7 @@
 .pur-root{color:var(--text);background:var(--bg);font-family:var(--font);width:100%;min-width:0}
 .pur-root :where(h1,h2,h3,h4,p){margin:0}
 .pur-root :where(h1,h2,h3,h4){font-family:inherit}
-.pur-root a{text-decoration:none;color:inherit}
+.pur-root a{text-decoration:none}.pur-root a:where(:not(.sf-btn)){color:inherit}
 .pur-root button,.pur-root input,.pur-root select{font:inherit}
 .pur-root button{cursor:pointer}
 .pur-announcement{background:var(--primary);color:var(--on-primary);height:46px;display:flex;align-items:center;overflow:hidden;font-size:14px}

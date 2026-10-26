@@ -15,6 +15,7 @@ import { Button, Container, ErrorState, Section, Spinner } from '../foundation/c
 import { useLocale } from '../i18n/useLocale';
 import { pickLocalized } from '../i18n/localized';
 import { useStore } from '../state/store-context';
+import { previewOrDev } from '../preview';
 import { Seo } from '../seo/Seo';
 import { useCustomizerSections, useCustomizerState } from '../customize/customizer-state';
 import { useHomeContext } from './home-context';
@@ -37,7 +38,10 @@ const LitterRobotFunnel = lazy(() => import('../funnels/LitterRobotFunnel'));
 export function BuilderPage({ funnel = false }: { funnel?: boolean }): ReactElement | null {
   const { slug = '' } = useParams();
   const { locale } = useLocale();
-  const { store } = useStore();
+  const { store, apiOk } = useStore();
+  // A theme preview without a store API (the dashboard's preview host) has no published pages to
+  // load: show the built-in policy/static page for the slug instead of a retry error.
+  const isolatedPreview = previewOrDev() && !apiOk;
   const customizer = useCustomizerState();
   const path = `${funnel ? '/funnels' : '/pages'}/${slug}`;
   const draft = useCustomizerSections(path);
@@ -53,8 +57,9 @@ export function BuilderPage({ funnel = false }: { funnel?: boolean }): ReactElem
 
   if (!draft && pageQ.loading) return <Section><Container><Spinner label={locale === 'ar' ? 'جارٍ التحميل…' : 'Loading…'} /></Container></Section>;
 
-  if (!draft && pageQ.error && !(pageQ.error instanceof ApiError && pageQ.error.status === 404)) {
+  if (!draft && pageQ.error && !isolatedPreview && !(pageQ.error instanceof ApiError && pageQ.error.status === 404)) {
     return <Section><Container><ErrorState
+      headingLevel={1}
       title={locale === 'ar' ? 'تعذّر تحميل الصفحة' : 'Unable to load this page'}
       description={locale === 'ar' ? 'حاول مرة أخرى بعد قليل.' : 'Please try again in a moment.'}
       actions={<Button onClick={pageQ.reload}>{locale === 'ar' ? 'إعادة المحاولة' : 'Retry'}</Button>}

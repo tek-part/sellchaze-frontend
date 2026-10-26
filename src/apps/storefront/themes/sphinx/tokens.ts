@@ -9,7 +9,7 @@ export function sphinxTokens(settings: ThemeSettings): DesignTokens {
   return {
     ...naseemBaseTokens,
     color: {
-      light: { ...naseemBaseTokens.color.light, primary, onPrimary: '#FFFFFF', accent: primary, accentInk: primary, text: color(settings, 'text_color', '#131316'), bg: color(settings, 'background_color', '#FFFFFF'), surface: color(settings, 'background_color', '#FFFFFF'), surface2: '#F8F8F8', border: '#E5E7EB', borderStrong: '#D1D5DB', muted: '#737373', sale: color(settings, 'sale_color', '#E8434C') },
+      light: { ...naseemBaseTokens.color.light, primary, onPrimary: '#FFFFFF', accent: primary, accentInk: primary, text: color(settings, 'text_color', '#131316'), bg: color(settings, 'background_color', '#FFFFFF'), surface: color(settings, 'background_color', '#FFFFFF'), surface2: '#F8F8F8', border: '#E5E7EB', borderStrong: '#D1D5DB', muted: '#6B6B6B', sale: color(settings, 'sale_color', '#D32F3A') },
       dark: { ...naseemBaseTokens.color.dark, primary: '#74D99D', onPrimary: '#0D2518', accent: '#74D99D', accentInk: '#74D99D' },
     },
     typography: { ...naseemBaseTokens.typography, fontSans: font(settings['body_font']), fontSerif: font(settings['heading_font']), fontArabic: system, lineHeight: '1.5', fontSize: { ...naseemBaseTokens.typography.fontSize, lg: '20px', base: '16px' } },

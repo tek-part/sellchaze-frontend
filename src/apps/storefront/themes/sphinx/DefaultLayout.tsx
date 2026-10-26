@@ -1,5 +1,6 @@
 import { densityImage } from '../../foundation/media/responsive';
 import { StorePaymentMarks } from '../../shared-ui/PaymentMarks';
+import { LanguageSwitcher } from '../../shared-ui/LanguageSwitcher';
 import { ProductHeaderChrome } from '../../state/product-presentation';
 import { useEffect, useState, type CSSProperties, type ReactElement } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -43,10 +44,12 @@ function Chrome({ context, children, checkout = false }: LayoutRenderProps & { c
   const tokens = useThemeTokens();
   const { store } = useStore();
   const { t } = useTranslation();
-  const { locale } = useLocale();
+  const { locale, setLocale } = useLocale();
   const { totals } = useCart();
   const ar = locale === 'ar';
   const text = (a: string, e: string): string => ar ? a : e;
+  // Bilingual stores need a way between the two languages: in the header row on desktop, in the More drawer on phones.
+  const bilingual = store.supportedLocales.includes('ar') && store.supportedLocales.includes('en');
   const data = context.data as SphinxLayoutData;
   const categories = data.categoryNavigation ?? [];
   const pages = data.headerPageNavigation ?? [];
@@ -79,6 +82,7 @@ function Chrome({ context, children, checkout = false }: LayoutRenderProps & { c
         {brand}
         <form className="sph-search" action="/search" role="search" onSubmit={(event) => { event.preventDefault(); if (query.trim()) window.location.assign(withSessionParams(`/search?q=${encodeURIComponent(query.trim())}`, window.location.search)); }}><label className="lib-sr-only" htmlFor="sph-search">{t('header.search')}</label><input id="sph-search" name="q" type="search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder={text('ابحث عن المنتجات', 'Search for products')} /><button type="submit" aria-label={t('header.search')}><SearchIcon /></button></form>
         <CurrencySwitcher className="sph-currency" />
+        {bilingual ? <button type="button" className="sph-lang" lang={ar ? 'en' : 'ar'} onClick={() => setLocale(ar ? 'en' : 'ar')}>{ar ? 'English' : 'العربية'}</button> : null}
         <button type="button" className="sph-bag" onClick={() => setCartOpen(true)} aria-label={`${t('cart.title')} (${totals.count})`}><BagIcon /><span>{totals.count}</span></button>
       </div>
       <div className="sph-header__navigation">{navigation.length ? <nav className="sph-header__nav sph-container" aria-label={text('القائمة الرئيسية', 'Main navigation')}><ul>{navigation.map((item) => <li key={`${item.url}-${item.label}`}><a href={item.url}>{item.label}</a>{item.children?.length ? <ul>{item.children.map((child) => <li key={child.url}><a href={child.url}>{child.label}</a></li>)}</ul> : null}</li>)}</ul></nav> : <div className="sph-header__nav" />}</div>
@@ -94,7 +98,7 @@ function Chrome({ context, children, checkout = false }: LayoutRenderProps & { c
     <UiBlock slot="after_footer" />
     <nav className="sph-mobile-nav" aria-label={text('التنقل السريع', 'Quick navigation')}><a href="/"><HomeIcon /><span>{text('الرئيسية', 'Home')}</span></a><a href="/categories"><GridIcon /><span>{text('الأقسام', 'Categories')}</span></a><button type="button" onClick={() => setCartOpen(true)}><BagIcon /><span>{text('السلة', 'Cart')}{totals.count ? ` (${totals.count})` : ''}</span></button><button type="button" onClick={() => setMoreOpen(true)}><MoreIcon /><span>{text('المزيد', 'More')}</span></button></nav>
     <SphinxCart open={cartOpen} close={() => setCartOpen(false)} />
-    <Drawer open={moreOpen} onClose={() => setMoreOpen(false)} title={text('المزيد', 'More')} className="sph-more"><div className="sf-overlay__body"><a href="/shop" onClick={() => setMoreOpen(false)}>{t('nav.allProducts')}</a>{navigation.map((item) => <a key={`${item.url}-${item.label}`} href={item.url} onClick={() => setMoreOpen(false)}>{item.label}</a>)}{footerGroups.flatMap((group) => group.links).filter((item, index, list) => list.findIndex((other) => other.url === item.url) === index && !navigation.some((other) => other.url === item.url)).map((item) => <a key={item.url} href={item.url} onClick={() => setMoreOpen(false)}>{item.label}</a>)}<CurrencySwitcher variant="drawer" className="sph-more-currency" /></div></Drawer>
+    <Drawer open={moreOpen} onClose={() => setMoreOpen(false)} title={text('المزيد', 'More')} className="sph-more"><div className="sf-overlay__body"><a href="/shop" onClick={() => setMoreOpen(false)}>{t('nav.allProducts')}</a>{navigation.map((item) => <a key={`${item.url}-${item.label}`} href={item.url} onClick={() => setMoreOpen(false)}>{item.label}</a>)}{footerGroups.flatMap((group) => group.links).filter((item, index, list) => list.findIndex((other) => other.url === item.url) === index && !navigation.some((other) => other.url === item.url)).map((item) => <a key={item.url} href={item.url} onClick={() => setMoreOpen(false)}>{item.label}</a>)}<CurrencySwitcher variant="drawer" className="sph-more-currency" />{bilingual ? <LanguageSwitcher ns="sf" locale={locale} onChange={setLocale} label={t('header.changeLanguage')} className="sph-more-lang" /> : null}</div></Drawer>
   </div>;
 }
 

@@ -7,6 +7,8 @@ import { useTranslation } from 'react-i18next';
 import { Drawer } from '../../../foundation/components/Drawer';
 import { CurrencySwitcher } from '../../../foundation/components/CurrencySwitcher';
 import type { NavItem } from '../../../types/navigation';
+import { LanguageSwitcher } from '../../../shared-ui';
+import { useLocale } from '../../../i18n/useLocale';
 import { IconChevronDown, IconHeart, IconSearch, IconUser } from './icons';
 
 export interface MobileNavProps {
@@ -19,6 +21,7 @@ export interface MobileNavProps {
 export function MobileNav(props: MobileNavProps): ReactElement {
   const { open, onClose, items, onSearchOpen } = props;
   const { t } = useTranslation();
+  const { locale, setLocale } = useLocale();
   return (
     <Drawer open={open} onClose={onClose} side="start" title={t('nav.menu')} className="sh-drawer">
       <div className="sf-overlay__body sh-mobilenav">
@@ -58,6 +61,10 @@ export function MobileNav(props: MobileNavProps): ReactElement {
         <div className="sh-mobilenav__foot">
           <a href="/account" className="sh-mobilenav__foot-link" onClick={onClose}><IconUser /> {t('header.account')}</a>
           <a href="/wishlist" className="sh-mobilenav__foot-link" onClick={onClose}><IconHeart /> {t('header.wishlist')}</a>
+        </div>
+        {/* The header's language switcher is hidden on phones; the drawer keeps it reachable. */}
+        <div className="sh-mobilenav__lang">
+          <LanguageSwitcher ns="sf" locale={locale} onChange={setLocale} label={t('header.changeLanguage')} />
         </div>
         <CurrencySwitcher variant="drawer" className="sh-mobilenav__currency" />
       </div>

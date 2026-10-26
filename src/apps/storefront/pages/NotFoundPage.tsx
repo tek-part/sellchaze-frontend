@@ -19,6 +19,7 @@ export function NotFoundPage(): ReactElement {
     <Section>
       <Container>
         <ErrorState
+          headingLevel={1}
           code="404"
           title={t('notFound.title')}
           description={t('notFound.body')}
