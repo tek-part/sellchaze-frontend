@@ -12,6 +12,8 @@ import { useAsync } from '../api/useAsync';
 import { Button, Input, Spinner } from '../foundation/components';
 import { useLocale } from '../i18n/useLocale';
 import { useCheckoutPaymentFlow } from './useCheckoutPaymentFlow';
+import { DepositNote, PaymentMethodDetail, useDepositPaymentMethods } from './CheckoutDeposit';
+import { quoteConfirmation } from './checkout-deposit';
 import { useQuoteContact } from './useQuoteContact';
 import { CheckoutFieldsForm, useCheckoutFields } from './CheckoutFields';
 import { CheckoutRecovery } from './CheckoutRecovery';
@@ -37,15 +39,16 @@ export default function ProductInlineCheckout({ productId, items, ready, buttonT
   const quotes = useAsync(async () => !payment.unresolved && ready && items.length && contact.shippingReady ? { key: quoteKey, data: (await quoteCheckout(items, appliedCoupon, contact.shippingSelection, payment.paymentMethod, giftCards.codes, quoteContact)).data } : null, [quoteKey, locale]);
   const quote = payment.correctedQuote(quoteKey) ?? (!quotes.loading && !quotes.error && quotes.data?.key === quoteKey ? quotes.data.data : null);
   const paidByGiftCards = giftCardsCoverTotal(quote, giftCards.codes);
+  const paymentMethods = useDepositPaymentMethods(payment, quote);
   const submit = async (event: FormEvent): Promise<void> => {
     event.preventDefault();
     if (!payment.paymentRetry && (!ready || !quote || !minimumOrderAllows(quote) || !contact.shippingReady || !contact.phoneVerification.ready || !contact.botProtection.ready || contact.countryAllowed === false)) return;
     await payment.submit({ ...contact.payload(), coupon_code: appliedCoupon, lead_token: lead.submitToken(), ...(quote?.payment_adjustment_token ? { payment_adjustment_token: quote.payment_adjustment_token } : {}),
-      ...(giftCards.codes.length ? { gift_cards: giftCards.codes } : {}), ...(paidByGiftCards ? { payment_method: undefined } : {}), ...(quote ? { expected_total: quote.totals.grand_total } : {}) }, quoteKey);
+      ...(giftCards.codes.length ? { gift_cards: giftCards.codes } : {}), ...(paidByGiftCards ? { payment_method: undefined } : {}), ...quoteConfirmation(quote) }, quoteKey);
   };
   return <section className="sf-product-checkout" aria-label={text('الشراء من صفحة المنتج', 'Product checkout')}><h2>{text('أكمل طلبك', 'Complete your order')}</h2><CheckoutRecovery flow={payment} />
     <form onSubmit={(event) => void submit(event)}><fieldset disabled={payment.busy || payment.unresolved} className="sf-product-checkout__fields"><CheckoutFieldsForm model={contact} quote={quote ?? quotes.data?.data} />
-      {paidByGiftCards ? <p role="status" data-paid-by-gift-cards>{text('بطاقات الهدايا تغطي إجمالي الطلب، لا حاجة لطريقة دفع.', 'Your gift cards cover the full total. No payment method is needed.')}</p> : <fieldset><legend>{text('طريقة الدفع', 'Payment method')}</legend>{payment.paymentMethods.map((method) => <label className="sf-product-checkout__payment" key={method.slug}><input type="radio" name={`product-payment-${productId}`} checked={payment.paymentMethod === method.slug} onChange={() => payment.setPaymentMethod(method.slug)} required /><PaymentMethodLogo slug={method.slug} src={method.logo_url} />{method.slug === 'cod' && method.name === 'Cash on delivery' ? text('الدفع عند الاستلام', 'Cash on delivery') : method.slug === 'bank_transfer' && method.name === 'Bank transfer' ? text('تحويل بنكي', 'Bank transfer') : method.name}{method.test_mode ? text(' (تجريبي)', ' (Test)') : ''}</label>)}</fieldset>}
+      {paidByGiftCards ? <p role="status" data-paid-by-gift-cards>{text('بطاقات الهدايا تغطي إجمالي الطلب، لا حاجة لطريقة دفع.', 'Your gift cards cover the full total. No payment method is needed.')}</p> : <fieldset><legend>{text('طريقة الدفع', 'Payment method')}</legend><DepositNote quote={quote} />{paymentMethods.map((method) => <div key={method.slug}><label className="sf-product-checkout__payment"><input type="radio" name={`product-payment-${productId}`} checked={payment.paymentMethod === method.slug} onChange={() => payment.setPaymentMethod(method.slug)} required /><PaymentMethodLogo slug={method.slug} src={method.logo_url} />{method.slug === 'cod' && method.name === 'Cash on delivery' ? text('الدفع عند الاستلام', 'Cash on delivery') : method.slug === 'bank_transfer' && method.name === 'Bank transfer' ? text('تحويل بنكي', 'Bank transfer') : method.name}{method.test_mode ? text(' (تجريبي)', ' (Test)') : ''}</label>{payment.paymentMethod === method.slug ? <PaymentMethodDetail method={method} className="sf-product-checkout__payment-detail" /> : null}</div>)}</fieldset>}
       <div className="sf-product-checkout__coupon"><Input label={text('كود الخصم', 'Coupon code')} value={coupon} maxLength={100} onChange={(event) => setCoupon(event.target.value)} /><Button type="button" variant="secondary" disabled={!ready || quotes.loading} onClick={() => { setAppliedCoupon(coupon.trim()); quotes.reload(); }}>{text('تطبيق', 'Apply')}</Button>{appliedCoupon ? <Button type="button" variant="ghost" onClick={() => { setAppliedCoupon(''); setCoupon(''); }}>{text('إزالة', 'Remove')}</Button> : null}</div>
       <GiftCardField model={giftCards} />
     </fieldset>

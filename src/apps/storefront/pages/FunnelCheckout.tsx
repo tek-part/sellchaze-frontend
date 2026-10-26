@@ -7,6 +7,8 @@ import { useMemo, useState, type FormEvent, type ReactElement } from 'react';
 import { Button, Container, ErrorState, Input, Section, Spinner } from '../foundation/components';
 import { getProduct, quoteCheckout, type CheckoutItem } from '../api/storefront';
 import { GiftCardField, GiftCardLines } from './CheckoutGiftCards';
+import { DepositNote, PaymentMethodDetail, useDepositPaymentMethods } from './CheckoutDeposit';
+import { quoteConfirmation } from './checkout-deposit';
 import { useGiftCards } from './useGiftCards';
 import { giftCardsCoverTotal } from './checkout-gift-cards';
 import { useAsync } from '../api/useAsync';
@@ -92,11 +94,12 @@ export function FunnelCheckout({ productSlug, renderLayout, compactHeader = fals
   const quoteQ = useAsync(async () => !payment.unresolved && items.length && contact.shippingReady ? { key: quoteKey, quote: (await quoteCheckout(items, appliedCoupon, contact.shippingSelection, payment.paymentMethod, giftCards.codes, quoteContact)).data } : null, [quoteKey, locale]);
   const quote = payment.correctedQuote(quoteKey) ?? (!quoteQ.loading && !quoteQ.error && quoteQ.data?.key === quoteKey ? quoteQ.data.quote : null);
   const paidByGiftCards = giftCardsCoverTotal(quote, giftCards.codes);
+  const paymentMethods = useDepositPaymentMethods(payment, quote);
   const submit = async (event: FormEvent): Promise<void> => {
     event.preventDefault();
     if (!payment.paymentRetry && (!minimumOrderAllows(quote) || !selectionReady || !contact.shippingReady || !contact.phoneVerification.ready || !contact.botProtection.ready || contact.countryAllowed === false)) return;
     await payment.submit({ ...contact.payload(), coupon_code: appliedCoupon, lead_token: lead.submitToken(), ...(quote?.payment_adjustment_token ? { payment_adjustment_token: quote.payment_adjustment_token } : {}),
-      ...(giftCards.codes.length ? { gift_cards: giftCards.codes } : {}), ...(paidByGiftCards ? { payment_method: undefined } : {}), ...(quote ? { expected_total: quote.totals.grand_total } : {}) }, quoteKey);
+      ...(giftCards.codes.length ? { gift_cards: giftCards.codes } : {}), ...(paidByGiftCards ? { payment_method: undefined } : {}), ...quoteConfirmation(quote) }, quoteKey);
   };
 
   const checkout = <Section id="funnel-checkout" className="sf-funnel-checkout"><Container narrow>
@@ -133,11 +136,12 @@ export function FunnelCheckout({ productSlug, renderLayout, compactHeader = fals
         <GiftCardField model={giftCards} />
         {paidByGiftCards ? <p role="status" data-paid-by-gift-cards>{label('بطاقات الهدايا تغطي إجمالي الطلب، لا حاجة لطريقة دفع.', 'Your gift cards cover the full total. No payment method is needed.')}</p> : <fieldset className="sf-funnel-checkout__payment">
           <legend>{label('طريقة الدفع', 'Payment method')}</legend>
-          {payment.paymentMethods.map((method) => <label key={method.slug}>
+          <DepositNote quote={quote} />
+          {paymentMethods.map((method) => <label key={method.slug}>
             <input type="radio" name="funnel-payment" value={method.slug} checked={payment.paymentMethod === method.slug} onChange={() => payment.setPaymentMethod(method.slug)} required />
-            <PaymentMethodLogo slug={method.slug} src={method.logo_url} /><span>{method.slug === 'cod' && method.name === 'Cash on delivery' ? label('الدفع عند الاستلام', 'Cash on delivery') : method.slug === 'bank_transfer' && method.name === 'Bank transfer' ? label('تحويل بنكي', 'Bank transfer') : method.name}{method.test_mode ? label(' (تجريبي)', ' (Test)') : ''}{method.description ? <small style={{ display: 'block', whiteSpace: 'pre-wrap' }}>{method.description}</small> : null}</span>
+            <PaymentMethodLogo slug={method.slug} src={method.logo_url} /><span>{method.slug === 'cod' && method.name === 'Cash on delivery' ? label('الدفع عند الاستلام', 'Cash on delivery') : method.slug === 'bank_transfer' && method.name === 'Bank transfer' ? label('تحويل بنكي', 'Bank transfer') : method.name}{method.test_mode ? label(' (تجريبي)', ' (Test)') : ''}{payment.paymentMethod === method.slug ? <PaymentMethodDetail method={method} className="sf-funnel-checkout__payment-detail" /> : null}</span>
           </label>)}
-          {!payment.paymentMethods.length ? <p>{label('لا توجد طريقة دفع متاحة حاليًا.', 'No payment method is currently available.')}</p> : null}
+          {!paymentMethods.length ? <p>{label('لا توجد طريقة دفع متاحة حاليًا.', 'No payment method is currently available.')}</p> : null}
         </fieldset>}
       </fieldset>
       <div aria-live="polite" className="sf-funnel-checkout__totals">

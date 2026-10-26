@@ -21,7 +21,7 @@ const uuid = /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i;
 const DEFAULTS = { sort: { by: 'created_at', direction: 'desc' }, perPage: 25, perPageOptions: [25, 50, 100] };
 // Refund states are set by recorded refunds (partially_refunded / refunded), never by a gateway.
 const PAYMENT_LABELS = PAYMENT_STATUS_LABELS;
-const PAYMENT_FILTERS = ['pending', 'paid', 'failed', 'partially_refunded', 'refunded'];
+const PAYMENT_FILTERS = ['pending', 'deposit_paid', 'paid', 'failed', 'partially_refunded', 'refunded'];
 
 function ExportFile({ id, apiBase, ar, onClose, theme }) {
     const text = (a, e) => ar ? a : e; const [row, setRow] = useState(null); const [error, setError] = useState(''); const [busy, setBusy] = useState(false);

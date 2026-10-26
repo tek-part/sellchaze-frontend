@@ -208,8 +208,16 @@ export function submitProductReview(slug: string, review: { rating: number; titl
 export interface AppliedDiscount { id: number; title: string; code: string | null; method: 'code' | 'automatic'; type: 'fixed' | 'percentage' | 'free_shipping' | 'buy_x_get_y' | 'bundle'; amount: string; bundle_id?: string }
 export const applyCoupon = (code: string): Promise<{ data: unknown; discounts?: ReadonlyArray<AppliedDiscount> }> => apiSend('/checkout/coupon/apply', 'POST', { code });
 export const removeCoupon = (): Promise<{ data: unknown; discounts?: ReadonlyArray<AppliedDiscount> }> => apiSend('/checkout/coupon', 'DELETE');
-export interface StorefrontPaymentMethod { slug: string; name: string; test_mode: boolean; logo_url?: string | null; description?: string }
-export const getPaymentMethods = (productIds: ReadonlyArray<number> = []): Promise<{ data: ReadonlyArray<StorefrontPaymentMethod> }> => {
+/** A transfer method's account or wallet: the number is copied, the optional link is http(s) only. */
+export interface TransferTarget { label: string; number: string; link: string | null }
+export interface StorefrontPaymentMethod { slug: string; name: string; test_mode: boolean; logo_url?: string | null; description?: string;
+  /** False for methods that cannot collect a deposit (cash on delivery). Absent on older APIs. */
+  deposit_capable?: boolean; transfer_targets?: ReadonlyArray<TransferTarget> }
+/** The store's deposit rule when this basket needs one (G1). */
+export interface PaymentDepositRule { percentage: string; minimum: string; confirm_after_payment: boolean; remainder_method: 'cod' }
+/** A quote's deposit: `amount` is paid now with the chosen method, `remaining` on delivery. */
+export interface QuoteDeposit { amount: string; remaining: string; percentage: string; minimum: string; confirm_after_payment: boolean; remainder_method: 'cod' }
+export const getPaymentMethods = (productIds: ReadonlyArray<number> = []): Promise<{ data: ReadonlyArray<StorefrontPaymentMethod>; deposit?: PaymentDepositRule | null }> => {
   const params = new URLSearchParams();
   [...new Set(productIds)].forEach((id) => params.append('product_ids[]', String(id)));
   return apiGet(`/payment-methods${params.size ? `?${params.toString()}` : ''}`);
@@ -228,8 +236,10 @@ export interface CheckoutQuote {
   discounts?: ReadonlyArray<AppliedDiscount>;
   /** Gift cards in the order submitted: what each pays after every other total. */
   gift_cards?: ReadonlyArray<QuoteGiftCard>;
-  /** What is left to pay after gift cards (absent on older APIs: the grand total). */
+  /** What is paid now: after gift cards, or the deposit when one applies (absent on older APIs: the grand total). */
   amount_due?: string;
+  /** Present on APIs with deposits: null when none applies. */
+  deposit?: QuoteDeposit | null;
   totals: { subtotal: string; discount_total: string; shipping_total: string; tax_total: string; grand_total: string; payment_adjustment_total?: string; gift_card_total?: string };
   /** Zone rates eligible for this cart and address, and the one applied (absent on older APIs). */
   shipping?: import('../types/shipping').QuoteShipping | null;
@@ -353,6 +363,8 @@ export interface ApiOrder {
   /** Paid by gift cards; `total` stays the order total and `amount_due` is what is left. */
   gift_card_total?: string;
   amount_due?: string;
+  /** A deposit order: paid online first, `remaining` due on delivery. */
+  deposit?: (QuoteDeposit & { paid: boolean; paid_at: string | null; remainder_collected: boolean }) | null;
   id: number;
   number: string;
   status: string;

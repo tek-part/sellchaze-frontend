@@ -271,6 +271,6 @@ export default function StoreCustomerDetailPage() {
 }
 
 function paymentLabel(status, ar) {
-    const labels = { paid: ['مدفوع', 'Paid'], pending: ['في انتظار الدفع', 'Pending'], failed: ['فشل الدفع', 'Failed'], refunded: ['مسترد', 'Refunded'], partially_refunded: ['مسترد جزئيًا', 'Partially refunded'] };
+    const labels = { paid: ['مدفوع', 'Paid'], pending: ['في انتظار الدفع', 'Pending'], deposit_paid: ['تم دفع العربون', 'Deposit paid'], failed: ['فشل الدفع', 'Failed'], refunded: ['مسترد', 'Refunded'], partially_refunded: ['مسترد جزئيًا', 'Partially refunded'] };
     return labels[status]?.[ar ? 0 : 1] ?? status ?? '—';
 }
