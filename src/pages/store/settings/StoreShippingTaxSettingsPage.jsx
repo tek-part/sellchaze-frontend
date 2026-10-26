@@ -9,6 +9,7 @@ import SettingsCard from '../../../components/ui/SettingsCard';
 import Toggle from '../../../components/ui/Toggle';
 import StoreMediaPicker from '../../../components/store/StoreMediaPicker';
 import StoreCarrierSettings from '../../../components/store/StoreCarrierSettings';
+import StoreShippingZones from '../../../components/store/StoreShippingZones';
 import useStoreContext from '../../../hooks/useStoreContext';
 import { useDirty } from '../../../hooks/useStoreSettings';
 import { countryOptions } from '../../../apps/storefront/utils/countries';
@@ -114,9 +115,9 @@ export default function StoreShippingTaxSettingsPage() {
                         <button type="button" className={button} disabled={values.options.length >= 50} onClick={() => addRow('options')}>+ {label('إضافة خيار شحن', 'Add shipping option')}</button>
                     </div>
                 </div>
-                <SettingsCard title={label('الضريبة', 'Tax')}><Toggle label={label('تفعيل الضريبة', 'Enable tax')} checked={values.tax_enabled} onChange={(tax_enabled) => change({ tax_enabled })} /><div className="mt-5 grid items-center gap-5 sm:grid-cols-2">{numeric('tax_rate', label('نسبة الضريبة %', 'Tax rate %'), { max: 100, step: '0.001' })}<Toggle label={label('الأسعار تشمل الضريبة', 'Prices include tax')} checked={values.tax_prices_include} onChange={(tax_prices_include) => change({ tax_prices_include })} /></div></SettingsCard>
+                <SettingsCard title={label('الضريبة', 'Tax')}><Toggle label={label('تفعيل الضريبة', 'Enable tax')} checked={values.tax_enabled} onChange={(tax_enabled) => change({ tax_enabled })} /><div className="mt-5 grid items-center gap-5 sm:grid-cols-2">{numeric('tax_rate', label('نسبة الضريبة %', 'Tax rate %'), { max: 100, step: '0.001' })}<Toggle label={label('الأسعار تشمل الضريبة', 'Prices include tax')} checked={values.tax_prices_include} onChange={(tax_prices_include) => change({ tax_prices_include })} /></div><Toggle className="mt-5" label={label('احتساب الضريبة على الشحن', 'Charge tax on shipping')} description={label('تُضاف قيمة الشحن إلى المبلغ الخاضع للضريبة.', 'Adds the delivery price to the taxable amount.')} checked={Boolean(values.tax_shipping)} onChange={(tax_shipping) => change({ tax_shipping })} /></SettingsCard>
             </fieldset>
             <SaveBar dirty={dirty && !conflict} saving={saving} saveLabel={label('حفظ إعدادات الشحن', 'Save shipping settings')} onReset={() => { setValues(initial); setError(''); setSaved(false); }} />
         </> : null}
-    </form><StoreCarrierSettings key={apiBase} apiBase={apiBase} /></div>;
+    </form>{access?.canStoreSettings ? <StoreShippingZones apiBase={apiBase} currency={store?.currency} reloadKey={initial?.version} /> : null}<StoreCarrierSettings key={apiBase} apiBase={apiBase} /></div>;
 }

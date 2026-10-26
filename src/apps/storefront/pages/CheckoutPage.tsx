@@ -13,6 +13,7 @@ import { getThankYouPage, quoteCheckout } from '../api/storefront';
 import { useAsync } from '../api/useAsync';
 import { useLocale } from '../i18n/useLocale';
 import { formatMoney } from '../utils/format';
+import { taxLineLabel } from '../utils/shipping';
 import { ThemeRenderer, useTemplate } from '../theme-engine';
 import { flowContext } from './flow-context';
 import { useCheckoutPaymentFlow } from './useCheckoutPaymentFlow';
@@ -86,7 +87,7 @@ function OrderSummary({ quote, quoteQ, coupon, setCoupon, appliedCoupon, applyCo
         <div className="sf-co-row"><span>{ar ? 'المجموع الفرعي' : 'Subtotal'}</span><span>{money(quote.totals.subtotal)}</span></div>
         <CheckoutDiscountLines quote={quote} fallbackLabel={t('checkout.discount')} className="sf-co-row" />
         {quote.requires_shipping ? <div className="sf-co-row"><span>{t('checkout.shipping')}</span><span>{Number(quote.totals.shipping_total) > 0 ? money(quote.totals.shipping_total) : (ar ? 'مجاني' : 'Free')}</span></div> : null}
-        {Number(quote.totals.tax_total) > 0 ? <div className="sf-co-row"><span>{ar ? 'الضريبة' : 'Tax'}</span><span>{money(quote.totals.tax_total)}</span></div> : null}
+        {Number(quote.totals.tax_total) > 0 ? <div className="sf-co-row" data-tax-line><span>{taxLineLabel(quote.tax, locale)}</span><span>{money(quote.totals.tax_total)}</span></div> : null}
         <PaymentAdjustmentLine amount={quote.totals.payment_adjustment_total} currency={quote.currency} />
         <div className="sf-co-total"><span>{t('checkout.total')}</span><span className="sf-co-total__value"><span className="sf-co-total__currency">{quote.currency}</span>{money(quote.totals.grand_total)}</span></div>
       </> : !quoteQ.loading && !quoteQ.error ? <>
@@ -121,7 +122,8 @@ function BasketCheckout(): ReactElement {
     await checkout.submit({ ...contact.payload(), coupon_code: appliedCoupon, lead_token: lead.submitToken(), ...(quote?.payment_adjustment_token ? { payment_adjustment_token: quote.payment_adjustment_token } : {}) });
   };
   if (!cart.lines.length && !checkout.completed && !checkout.busy && !checkout.unresolved) return <Navigate to="/cart" replace />;
-  const reloadAll = (): void => { contact.query.reload(); quoteQ.reload(); };
+  // A rate that stopped fitting the cart (coupon, quantity) is dropped so the cheapest eligible one applies.
+  const reloadAll = (): void => { contact.resetRate(); contact.query.reload(); quoteQ.reload(); };
   const summary = <OrderSummary quote={quote} quoteQ={quoteQ} coupon={coupon} setCoupon={setCoupon} appliedCoupon={appliedCoupon} disabled={checkout.busy || checkout.unresolved}
     applyCoupon={() => { setAppliedCoupon(coupon.trim()); quoteQ.reload(); }} removeCoupon={() => { clearOfferCoupon(store); setAppliedCoupon(''); setCoupon(''); }} reloadAll={reloadAll} />;
   const totalText = quote ? formatMoney(Number(quote.totals.grand_total), quote.currency, locale) : formatMoney(cart.totals.subtotal, cart.totals.currency || store.currency, locale);
@@ -145,7 +147,7 @@ function BasketCheckout(): ReactElement {
         <fieldset disabled={checkout.busy || checkout.unresolved}>
           <section className="sf-co-section" aria-labelledby="sf-co-delivery">
             <h2 id="sf-co-delivery">{ar ? 'بيانات التواصل والتوصيل' : 'Contact & delivery'}</h2>
-            <div className="sf-co-fields"><CheckoutFieldsForm model={contact} /></div>
+            <div className="sf-co-fields"><CheckoutFieldsForm model={contact} quote={quote ?? quoteQ.data?.data} /></div>
           </section>
           <section className="sf-co-section" aria-labelledby="sf-co-payment">
             <h2 id="sf-co-payment">{t('checkout.payment')}</h2>
