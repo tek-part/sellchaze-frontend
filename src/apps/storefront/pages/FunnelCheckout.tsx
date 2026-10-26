@@ -9,6 +9,7 @@ import { getProduct, quoteCheckout, type CheckoutItem } from '../api/storefront'
 import { useAsync } from '../api/useAsync';
 import { useLocale } from '../i18n/useLocale';
 import { formatMoney } from '../utils/format';
+import { taxLineLabel } from '../utils/shipping';
 import { useCheckoutPaymentFlow } from './useCheckoutPaymentFlow';
 import { CheckoutRecovery } from './CheckoutRecovery';
 import { CheckoutFieldsForm, useCheckoutFields } from './CheckoutFields';
@@ -115,7 +116,7 @@ export function FunnelCheckout({ productSlug, renderLayout, compactHeader = fals
         {selectedStock != null && selectedStock < quantity ? <p role="status">{label('الكمية المتاحة', 'Available quantity')}: {Math.max(0, selectedStock)}</p> : null}
         {product.order_quantity_limit ? <p>{label('أقصى عدد قطع من هذا المنتج في الطلب', 'Maximum units of this product per order')}: {product.order_quantity_limit}</p> : null}
         <ProductPersonalizationFields key={product.id} productId={String(product.id)} fields={product.personalization_fields ?? []} choice={custom} onChange={(next) => setCustomChoice({ productId: product.id, choice: next })} />
-        <CheckoutFieldsForm model={contact} />
+        <CheckoutFieldsForm model={contact} quote={quote ?? quoteQ.data?.quote} />
         <div className="sf-funnel-checkout__coupon">
           <Input label={label('كود الخصم', 'Coupon code')} value={coupon} onChange={(event) => setCoupon(event.target.value)} maxLength={100} />
           <Button type="button" variant="secondary" disabled={!selectionReady || quoteQ.loading} onClick={() => { setAppliedCoupon(coupon.trim()); quoteQ.reload(); }}>{label('تطبيق', 'Apply')}</Button>
@@ -138,7 +139,7 @@ export function FunnelCheckout({ productSlug, renderLayout, compactHeader = fals
           <div><dt>{label('المنتجات', 'Products')}</dt><dd>{formatMoney(Number(quote.totals.subtotal), quote.currency, locale)}</dd></div>
           <CheckoutDiscountLines quote={quote} fallbackLabel={label('الخصم', 'Discount')} definition />
           {quote.requires_shipping ? <div><dt>{label('الشحن', 'Shipping')}</dt><dd>{Number(quote.totals.shipping_total) === 0 && quoteHasFreeShippingDiscount(quote) ? label('مجاني', 'Free') : formatMoney(Number(quote.totals.shipping_total), quote.currency, locale)}</dd></div> : null}
-          {Number(quote.totals.tax_total) > 0 ? <div><dt>{label('الضريبة', 'Tax')}</dt><dd>{formatMoney(Number(quote.totals.tax_total), quote.currency, locale)}</dd></div> : null}
+          {Number(quote.totals.tax_total) > 0 ? <div data-tax-line><dt>{taxLineLabel(quote.tax, locale)}</dt><dd>{formatMoney(Number(quote.totals.tax_total), quote.currency, locale)}</dd></div> : null}
           <PaymentAdjustmentLine amount={quote.totals.payment_adjustment_total} currency={quote.currency} definition />
           <div className="sf-funnel-checkout__grand"><dt>{label('الإجمالي', 'Total')}</dt><dd>{formatMoney(Number(quote.totals.grand_total), quote.currency, locale)}</dd></div>
         </dl> : null}

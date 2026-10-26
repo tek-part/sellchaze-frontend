@@ -219,6 +219,9 @@ export interface CheckoutQuote {
   /** Applied discounts, one per line on the summary (absent on older APIs: show `discount_total` alone). */
   discounts?: ReadonlyArray<AppliedDiscount>;
   totals: { subtotal: string; discount_total: string; shipping_total: string; tax_total: string; grand_total: string; payment_adjustment_total?: string };
+  /** Zone rates eligible for this cart and address, and the one applied (absent on older APIs). */
+  shipping?: import('../types/shipping').QuoteShipping | null;
+  tax?: import('../types/shipping').TaxRule | null;
 }
 export const quoteCheckout = (items: ReadonlyArray<CheckoutItem>, coupon_code: string, selection: import('../types/shipping').ShippingSelection = {}, payment_method?: string): Promise<{ data: CheckoutQuote }> =>
   apiSend('/checkout/quote', 'POST', { items, coupon_code, ...selection, ...(payment_method ? { payment_method } : {}) });

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { cartRequiresShipping, resolveShipping, shippingThreshold } from './shipping';
+import { cartRequiresShipping, resolveShipping, resolveZoneShipping, shippingThreshold, taxLineLabel } from './shipping';
 import type { ShippingConfiguration } from '../types/shipping';
 
 const config = (): ShippingConfiguration => ({ enabled: true, regions_enabled: true, auto_select_region: true, currency: 'EGP', flat_rate: '25', free_over: null,
@@ -65,5 +65,38 @@ describe('delivery selection', () => {
     data.enabled = true; data.regions_enabled = false; data.options = [];
     expect(resolveShipping(data, { shipping_region_id: 'alex' })).toEqual({ ready: false, selection: {}, stale: true });
     expect(resolveShipping(data, {})).toEqual({ ready: true, selection: {} });
+  });
+});
+
+const zones = (): ShippingConfiguration => ({ enabled: true, regions_enabled: false, auto_select_region: false, currency: 'EGP', flat_rate: '0.00', free_over: null, regions: [], options: [], zones_enabled: true,
+  countries: [{ code: 'EG', region_required: true }, { code: 'SA', region_required: false }],
+  zone_regions: [{ id: 'cairo', name: { ar: 'القاهرة', en: 'Cairo' }, country: 'EG' }, { id: 'giza', name: { ar: 'الجيزة', en: 'Giza' }, country: 'EG' }, { id: 'jeddah', name: { ar: 'جدة', en: 'Jeddah' }, country: 'SA' }] });
+
+describe('zone delivery selection', () => {
+  it('needs a served country and, where the zone only lists regions, one of that country\'s regions', () => {
+    expect(resolveZoneShipping(zones(), {}, '')).toMatchObject({ ready: false, selection: {} });
+    expect(resolveZoneShipping(zones(), {}, 'eg')).toMatchObject({ ready: false, regionRequired: true, selection: { shipping_country: 'EG' } });
+    expect(resolveZoneShipping(zones(), {}, 'EG').regions.map((row) => row.id)).toEqual(['cairo', 'giza']);
+    expect(resolveZoneShipping(zones(), { shipping_region_id: 'giza', shipping_rate_id: 'r1' }, 'EG')).toMatchObject({ ready: true, selection: { shipping_country: 'EG', shipping_region_id: 'giza', shipping_rate_id: 'r1' } });
+    expect(resolveZoneShipping(zones(), {}, 'SA')).toMatchObject({ ready: true, regionRequired: false, selection: { shipping_country: 'SA' } });
+  });
+  it('never sends a region from another country or an unserved destination', () => {
+    expect(resolveZoneShipping(zones(), { shipping_region_id: 'jeddah' }, 'EG')).toMatchObject({ ready: false, stale: true, selection: { shipping_country: 'EG' } });
+    expect(resolveZoneShipping(zones(), {}, 'US')).toMatchObject({ ready: false, unsupported: true });
+    expect(resolveZoneShipping(undefined, {}, 'EG').ready).toBe(false);
+  });
+});
+
+describe('tax line label', () => {
+  const rule = { name: { ar: 'ضريبة القيمة المضافة', en: 'VAT' }, rate: '14.000', included: true, shipping: false, amount: '12.28' };
+  it('shows the override name, its rate and whether prices include it', () => {
+    expect(taxLineLabel(rule, 'en')).toBe('VAT 14% (included)');
+    expect(taxLineLabel({ ...rule, included: false }, 'en')).toBe('VAT 14%');
+    expect(taxLineLabel(rule, 'ar')).toBe(`ضريبة القيمة المضافة ${new Intl.NumberFormat('ar', { maximumFractionDigits: 3 }).format(14)}% (شاملة)`);
+    expect(taxLineLabel({ ...rule, name: { ar: 'ض', en: 'VAT 14%' } }, 'en')).toBe('VAT 14% (included)');
+  });
+  it('falls back to a plain tax label for the store-wide rate and older APIs', () => {
+    expect(taxLineLabel({ ...rule, name: null, rate: '10.5', included: false }, 'en')).toBe('Tax 10.5%');
+    expect(taxLineLabel(undefined, 'ar')).toBe('الضريبة');
   });
 });
