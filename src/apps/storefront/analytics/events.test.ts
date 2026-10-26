@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { metricsAllowed, restoredMetricsSession } from './events';
+import { campaignFields, metricsAllowed, restoredMetricsSession } from './events';
+import { campaignMediumFromSearch } from '../../../shared/marketing/campaign';
 import { checkoutMetricsKey } from './checkout-key';
 
 describe('first-party metrics contracts', () => {
@@ -27,5 +28,23 @@ describe('first-party metrics contracts', () => {
     expect(restoredMetricsSession({ ...session, pending: Array(51).fill(event) }, 0)).toBeUndefined();
     expect(restoredMetricsSession({ ...session, campaign: { source: 'meta', campaign: 'test', privateContact: 'NEVER-SEND' } }, 0)?.campaign).toEqual({ source: 'meta', campaign: 'test' });
     expect(restoredMetricsSession({ ...session, campaign: { source: '<script>', campaign: 'test' } }, 0)?.campaign).toBeUndefined();
+  });
+  it('restores product views and the landing medium while keeping checkout attribution to source and campaign', () => {
+    const view = { event_id: 'cccccccc-cccc-4ccc-8ccc-cccccccccccc', kind: 'product_view', source: 'funnel', product_id: 9 };
+    const session = { id: 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb', expires: 60000, pending: [view], starts: [], viewed: [9, -1, 'x'], campaign: { source: 'meta', campaign: 'launch' }, medium: 'paid social' };
+    const restored = restoredMetricsSession(session, 0)!;
+    expect(restored.pending[0]).toEqual(view);
+    expect(restored.viewed).toEqual([9]);
+    expect(restored.campaign).toEqual({ source: 'meta', campaign: 'launch' });
+    expect(campaignFields(restored)).toEqual({ utm_source: 'meta', utm_medium: 'paid social', utm_campaign: 'launch' });
+    expect(restoredMetricsSession({ ...session, campaign: undefined }, 0)?.medium).toBeUndefined();
+    expect(restoredMetricsSession({ ...session, pending: [{ ...view, product_id: undefined }] }, 0)).toBeUndefined();
+    expect(campaignFields({})).toEqual({});
+  });
+  it('reads a single clean utm_medium only', () => {
+    expect(campaignMediumFromSearch('?utm_medium=cpc&utm_source=g&utm_campaign=c')).toBe('cpc');
+    expect(campaignMediumFromSearch('?utm_medium=a&utm_medium=b')).toBeUndefined();
+    expect(campaignMediumFromSearch('?utm_medium=%3Cb%3E')).toBeUndefined();
+    expect(campaignMediumFromSearch('?utm_source=g')).toBeUndefined();
   });
 });

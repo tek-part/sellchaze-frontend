@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import api from '../../api/client';
 import './service-marketplace.css';
 import { currencyDigits } from './service-marketplace-money';
 import { ServiceRatingStarIcon } from '../../components/workspace/SidebarReferenceIcons';
@@ -25,7 +26,12 @@ export function ServiceCard({ row }) {
         <p className="ws-service-card-title"><span>{row.title}</span></p><div className="ws-service-card-values"><p dir="ltr">{servicePrice(row)}</p><span className="ws-service-rating"><ServiceRatingStarIcon aria-hidden /><span>{row.ratings_count ? Number(row.rating).toFixed(2) : '0'}</span><span>({row.ratings_count})</span></span></div>
     </Link><ProviderLink provider={row.provider} /></article>;
 }
-export function ServiceContacts({ provider }) {
+/** G4 (#50): opening a published contact channel counts once per visitor and day for the provider's analytics. */
+export function recordContactClick(provider, channel, serviceId) {
+    api.post(`/service-marketplace/providers/${provider.id}/contact-clicks`, { channel, ...(serviceId ? { service_id: serviceId } : {}) }).catch(() => { /* Analytics never blocks contacting the provider. */ });
+}
+export function ServiceContacts({ provider, serviceId }) {
     const { text } = useServiceCopy(); const contacts = provider.contacts || {}; const entries = Object.entries(contacts).filter(([, value]) => value);
-    return entries.length ? <div className="ws-service-contacts">{entries.map(([type, value]) => type === 'whatsapp' ? <a key={type} href={`https://wa.me/${value.replace(/\D/g, '')}`} target="_blank" rel="noopener noreferrer" dir="ltr">WhatsApp: {value}</a> : type === 'telegram' ? <a key={type} href={`https://t.me/${value.replace(/^@/, '')}`} target="_blank" rel="noopener noreferrer" dir="ltr">Telegram: {value}</a> : <button key={type} dir="ltr" onClick={async () => { try { await navigator.clipboard.writeText(value); } catch { /* The selectable value remains available. */ } }}>{value}</button>)}</div> : <p className="ws-service-contact-empty">{text('لم ينشر مقدم الخدمة بيانات تواصل.', 'The provider has not published contact details.')}</p>;
+    const track = (type) => recordContactClick(provider, type, serviceId);
+    return entries.length ? <div className="ws-service-contacts">{entries.map(([type, value]) => type === 'whatsapp' ? <a key={type} href={`https://wa.me/${value.replace(/\D/g, '')}`} target="_blank" rel="noopener noreferrer" dir="ltr" onClick={() => track(type)}>WhatsApp: {value}</a> : type === 'telegram' ? <a key={type} href={`https://t.me/${value.replace(/^@/, '')}`} target="_blank" rel="noopener noreferrer" dir="ltr" onClick={() => track(type)}>Telegram: {value}</a> : <button key={type} dir="ltr" onClick={async () => { track(type); try { await navigator.clipboard.writeText(value); } catch { /* The selectable value remains available. */ } }}>{value}</button>)}</div> : <p className="ws-service-contact-empty">{text('لم ينشر مقدم الخدمة بيانات تواصل.', 'The provider has not published contact details.')}</p>;
 }

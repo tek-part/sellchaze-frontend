@@ -10,6 +10,9 @@ vi.mock('../api/client', () => ({ default: { get: vi.fn() } }));
 vi.mock('react-i18next', () => ({ useTranslation: () => ({ i18n: { language: 'en' } }) }));
 vi.mock('../components/workspace/useWorkspaceAppearance', () => ({ default: () => ({ theme: 'light' }) }));
 vi.mock('../components/dashboard/MetricDateRange', () => ({ default: ({ onApply }) => <button onClick={() => onApply({ from: '2026-10-01', to: '2026-10-02' })}>Change period</button> }));
+// The G4 product reports load their own endpoints and are covered by their own tests.
+vi.mock('../components/analytics/OrderedProductsPanel', () => ({ default: () => <section data-report="ordered-products" /> }));
+vi.mock('../components/analytics/ProductFunnelReport', () => ({ default: () => <section data-report="product-funnel" /> }));
 vi.mock('react-chartjs-2', () => ({ Line: ({ data, ...props }) => <canvas role={props.role} aria-label={props['aria-label']} data-series={JSON.stringify(data.datasets[0].data)} /> }));
 
 const fixture = () => ({
@@ -50,6 +53,12 @@ describe('merchant dashboard performance', () => {
         expect(host.querySelector('.ws-metrics-data').textContent).toContain('2026-10-01');
         expect(host.querySelector('.ws-metrics-products').textContent).toContain('Best seller41,250.5 USD');
         expect(host.querySelector('.ws-metrics-products').textContent).toContain('Almost sold out2');
+    });
+    it('shows the products-ordered panel and product funnel after the store metrics', async () => {
+        await mount();
+        const reports = [...host.querySelectorAll('[data-report]')].map(el => el.dataset.report);
+        expect(reports).toEqual(['ordered-products', 'product-funnel']);
+        expect(host.querySelector('.ws-metrics-charts').compareDocumentPosition(host.querySelector('[data-report]')) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     });
     it('keeps restricted roles from linking to orders or inventory', async () => {
         await mount({ canOrders: false, canInventory: false });
