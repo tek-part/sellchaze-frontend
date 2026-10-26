@@ -35,6 +35,10 @@ export interface CheckoutContactPayload {
   coupon_code?: string;
   shipping_region_id?: string;
   shipping_option_id?: string;
+  /** Gift card codes, applied in order after every other total. */
+  gift_cards?: ReadonlyArray<string>;
+  /** Present (even undefined) to override the selected method: gift cards that pay everything need none. */
+  payment_method?: string;
 }
 
 interface RetryState {
@@ -159,7 +163,7 @@ export function useCheckoutPaymentFlow(options?: { items: ReadonlyArray<Checkout
       referral_attribution: metrics?.referral,
       ab_token: abCheckoutToken(store.id, (items ?? checkoutCartItems(cart.lines)).map((item) => item.product_id)),
       advertising_allowed: browserAdvertisingAllowed(),
-      payment_method: paymentMethod,
+      payment_method: 'payment_method' in payload ? payload.payment_method : paymentMethod,
       ...(preserveCart ? { cart_mode: 'direct' } : {}),
       ...(surface ? { checkout_surface: surface } : {}),
       ...(surface === 'funnel' && /^\/(?:funnels|pages)\/[a-z0-9]+(?:-[a-z0-9]+)*\/?$/.test(window.location.pathname) ? { funnel_path: window.location.pathname } : {}),

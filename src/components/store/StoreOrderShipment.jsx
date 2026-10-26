@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import api from '../../api/client';
 import SettingsCard from '../ui/SettingsCard';
+import { orderAmountDue } from '../../lib/cash-collection';
 import FormField, { INPUT_CLASS } from '../ui/FormField';
 
 const button = 'rounded-lg border border-slate-200 px-4 py-2 text-sm font-semibold disabled:opacity-40';
@@ -106,7 +107,7 @@ export default function StoreOrderShipment({ order, apiBase, uiBase, onOrderUpda
                 {field('description', text('وصف محتويات الطرد', 'Package description'), { required: true, maxLength: 500 })}
                 <FormField label={text('حجم الطرد', 'Package size')} htmlFor="shipment-size"><select id="shipment-size" className={INPUT_CLASS} value={form.package_size} onChange={(e) => setForm({ ...form, package_size: e.target.value })}>{[['SMALL', 'صغير', 'Small'], ['MEDIUM', 'متوسط', 'Medium'], ['LARGE', 'كبير', 'Large']].map(([value, a, en]) => <option key={value} value={value}>{text(a, en)}</option>)}</select></FormField>
                 {field('notes', text('تعليمات التسليم (اختياري)', 'Delivery instructions (optional)'), { maxLength: 500 })}
-                <p className="rounded-lg bg-emerald-50 p-3 text-sm text-emerald-900">{text('المبلغ المطلوب تحصيله', 'Cash to collect')}: <bdi>EGP {order.payment_status === 'paid' ? '0.00' : order.grand_total}</bdi></p>
+                <p className="rounded-lg bg-emerald-50 p-3 text-sm text-emerald-900">{text('المبلغ المطلوب تحصيله', 'Cash to collect')}: <bdi>EGP {order.payment_status === 'paid' ? '0.00' : orderAmountDue(order)}</bdi></p>
                 <div className="flex gap-3"><button type="submit" className={`${button} bg-brand text-white`} disabled={catalogBusy || !form.district_id}>{busy ? text('جارٍ الإرسال…', 'Dispatching…') : text('إنشاء الشحنة لدى Bosta', 'Create shipment with Bosta')}</button><button type="button" className={button} onClick={() => setEditing(false)}>{text('إلغاء', 'Cancel')}</button></div>
             </fieldset></form> : null}
         </div>

@@ -83,6 +83,10 @@
 .sf-co-discount .sf-btn { height: 52px; text-transform: none; letter-spacing: 0; }
 .sf-co-discount__applied { display: inline-flex; align-items: center; gap: 6px; margin-top: 10px; padding: 4px 10px; border-radius: 999px; background: var(--bg); border: 1px solid var(--border); font-size: 0.8125rem; }
 .sf-co-discount__applied button { border: 0; background: none; color: var(--co-muted); cursor: pointer; font-size: 1rem; line-height: 1; }
+.sf-co-gift-card { border-block-start: 0; }
+.sf-co-gift-card__chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0 0; padding: 0; list-style: none; }
+.sf-co-gift-card__chips .sf-co-discount__applied { margin-top: 0; }
+.sf-co-paid-note { margin: 0; padding: 14px 16px; border: 1px solid var(--border); border-radius: 8px; background: var(--bg); font-size: 0.875rem; }
 .sf-co-totals { display: grid; gap: 10px; padding-top: 20px; font-size: 0.875rem; }
 .sf-co-row { display: flex; justify-content: space-between; gap: 12px; }
 .sf-co-row span:last-child { font-variant-numeric: tabular-nums; }

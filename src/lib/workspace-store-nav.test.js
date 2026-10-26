@@ -50,6 +50,17 @@ describe('Store workspace navigation', () => {
         expect(workspaceStoreItemActive(apps, '/store/apps/pixels')).toBe(true);
         expect(workspaceStoreItemActive(apps, '/store/apps')).toBe(true);
     });
+    it('lists gift cards under Products for people who manage discounts', () => {
+        const owner = buildWorkspaceStoreNav(t, storeAccess(['Merchant'], []));
+        const giftCards = owner.find((group) => group.key === 'products').items[1];
+        expect(giftCards).toMatchObject({ key: 'gift-cards', to: '/store/gift-cards', label: 'Gift cards' });
+        expect(workspaceStoreItemActive(giftCards, '/store/gift-cards/12')).toBe(true);
+        expect(merchantWorkspaceRouteAllowed('/store/gift-cards/12')).toBe(true);
+        const coupons = ['store.coupons.manage'];
+        expect(buildWorkspaceStoreNav(t, storeAccess(['Employee'], coupons), coupons).flatMap((group) => group.items ?? [group]).some((item) => item.key === 'gift-cards')).toBe(true);
+        const products = ['store.products.manage'];
+        expect(buildWorkspaceStoreNav(t, storeAccess(['Employee'], products), products).flatMap((group) => group.items ?? [group]).some((item) => item.key === 'gift-cards')).toBe(false);
+    });
     it('shows blog posts only to people who can manage pages, highlighting it on the editor routes', () => {
         const pages = ['store.pages.manage'];
         const editor = buildWorkspaceStoreNav(t, storeAccess(['Employee'], pages), pages).find((group) => group.key === 'design').items.find((item) => item.key === 'articles');

@@ -28,6 +28,7 @@ export function buildWorkspaceStoreNav(t, access, permissions = []) {
         group('orders', t('orders', 'Orders'), OrdersIcon, ['orders', 'returns', 'draft-orders', 'customers', 'missed-orders', 'blocked-phone-numbers', 'blocked-phones', 'newsletter'].map((key) => absolute(item(key)))),
         group('products', t('products', 'Products'), ProductsIcon, [
             absolute(item('products')),
+            absolute(item('gift-cards')),
             route('categories', '/store/categories', t('categories', 'Categories'), HiOutlineCube, access.canStoreCategories || can('categories-list')),
             route('collections', '/store/collections', t('store_nav_collections', 'Collections'), HiOutlineCube, access.canStoreCategories || can('categories-list')),
             absolute(item('reviews')),

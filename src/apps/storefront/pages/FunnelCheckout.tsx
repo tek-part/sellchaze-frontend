@@ -6,6 +6,9 @@ import { UiBlock } from '../ui-blocks/UiBlocks';
 import { useMemo, useState, type FormEvent, type ReactElement } from 'react';
 import { Button, Container, ErrorState, Input, Section, Spinner } from '../foundation/components';
 import { getProduct, quoteCheckout, type CheckoutItem } from '../api/storefront';
+import { GiftCardField, GiftCardLines } from './CheckoutGiftCards';
+import { useGiftCards } from './useGiftCards';
+import { giftCardsCoverTotal } from './checkout-gift-cards';
 import { useAsync } from '../api/useAsync';
 import { useLocale } from '../i18n/useLocale';
 import { formatMoney } from '../utils/format';
@@ -52,6 +55,7 @@ export function FunnelCheckout({ productSlug, renderLayout, compactHeader = fals
   const [offerChoice, setOfferChoice] = useState<{ productId: number; id: string | null; version?: number }>();
   const [coupon, setCoupon] = useState('');
   const [appliedCoupon, setAppliedCoupon] = useState('');
+  const giftCards = useGiftCards();
   const [customChoice, setCustomChoice] = useState<{ productId: number; choice: PersonalizationChoice }>();
   const custom = customChoice?.productId === product?.id ? customChoice?.choice ?? { values: {}, entries: [], busy: false } : { values: {}, entries: [], busy: false };
   const variants = product?.variants ?? [];
@@ -82,13 +86,15 @@ export function FunnelCheckout({ productSlug, renderLayout, compactHeader = fals
   useCheckoutMetrics(items, 'funnel');
   const contact = useCheckoutFields(payment.paymentMethod, product ? [product.id] : []);
   const lead = useCheckoutLead({ contact: { ...contact.payload(), coupon_code: appliedCoupon }, items, source: 'funnel', paymentMethod: payment.paymentMethod, kind: `funnel:${productSlug ?? ''}`, enabled: contact.ready && !payment.busy && !payment.completed && !payment.unresolved && !payment.paymentRetry });
-  const quoteKey = JSON.stringify([items, appliedCoupon, contact.shippingSelection, contact.shippingReady, payment.paymentMethod, payment.unresolved]);
-  const quoteQ = useAsync(async () => !payment.unresolved && items.length && contact.shippingReady ? { key: quoteKey, quote: (await quoteCheckout(items, appliedCoupon, contact.shippingSelection, payment.paymentMethod)).data } : null, [quoteKey, locale]);
+  const quoteKey = JSON.stringify([items, appliedCoupon, giftCards.codes, contact.shippingSelection, contact.shippingReady, payment.paymentMethod, payment.unresolved]);
+  const quoteQ = useAsync(async () => !payment.unresolved && items.length && contact.shippingReady ? { key: quoteKey, quote: (await quoteCheckout(items, appliedCoupon, contact.shippingSelection, payment.paymentMethod, giftCards.codes)).data } : null, [quoteKey, locale]);
   const quote = !quoteQ.loading && !quoteQ.error && quoteQ.data?.key === quoteKey ? quoteQ.data.quote : null;
+  const paidByGiftCards = giftCardsCoverTotal(quote, giftCards.codes);
   const submit = async (event: FormEvent): Promise<void> => {
     event.preventDefault();
     if (!payment.paymentRetry && (!minimumOrderAllows(quote) || !selectionReady || !contact.shippingReady || !contact.phoneVerification.ready || !contact.botProtection.ready)) return;
-    await payment.submit({ ...contact.payload(), coupon_code: appliedCoupon, lead_token: lead.submitToken(), ...(quote?.payment_adjustment_token ? { payment_adjustment_token: quote.payment_adjustment_token } : {}) });
+    await payment.submit({ ...contact.payload(), coupon_code: appliedCoupon, lead_token: lead.submitToken(), ...(quote?.payment_adjustment_token ? { payment_adjustment_token: quote.payment_adjustment_token } : {}),
+      ...(giftCards.codes.length ? { gift_cards: giftCards.codes } : {}), ...(paidByGiftCards ? { payment_method: undefined } : {}) });
   };
 
   const checkout = <Section id="funnel-checkout" className="sf-funnel-checkout"><Container narrow>
@@ -122,14 +128,15 @@ export function FunnelCheckout({ productSlug, renderLayout, compactHeader = fals
           <Button type="button" variant="secondary" disabled={!selectionReady || quoteQ.loading} onClick={() => { setAppliedCoupon(coupon.trim()); quoteQ.reload(); }}>{label('تطبيق', 'Apply')}</Button>
           {appliedCoupon ? <Button type="button" variant="ghost" onClick={() => { setAppliedCoupon(''); setCoupon(''); }}>{label('إزالة', 'Remove')}</Button> : null}
         </div>
-        <fieldset className="sf-funnel-checkout__payment">
+        <GiftCardField model={giftCards} />
+        {paidByGiftCards ? <p role="status" data-paid-by-gift-cards>{label('بطاقات الهدايا تغطي إجمالي الطلب، لا حاجة لطريقة دفع.', 'Your gift cards cover the full total. No payment method is needed.')}</p> : <fieldset className="sf-funnel-checkout__payment">
           <legend>{label('طريقة الدفع', 'Payment method')}</legend>
           {payment.paymentMethods.map((method) => <label key={method.slug}>
             <input type="radio" name="funnel-payment" value={method.slug} checked={payment.paymentMethod === method.slug} onChange={() => payment.setPaymentMethod(method.slug)} required />
             <PaymentMethodLogo slug={method.slug} src={method.logo_url} /><span>{method.slug === 'cod' && method.name === 'Cash on delivery' ? label('الدفع عند الاستلام', 'Cash on delivery') : method.slug === 'bank_transfer' && method.name === 'Bank transfer' ? label('تحويل بنكي', 'Bank transfer') : method.name}{method.test_mode ? label(' (تجريبي)', ' (Test)') : ''}{method.description ? <small style={{ display: 'block', whiteSpace: 'pre-wrap' }}>{method.description}</small> : null}</span>
           </label>)}
           {!payment.paymentMethods.length ? <p>{label('لا توجد طريقة دفع متاحة حاليًا.', 'No payment method is currently available.')}</p> : null}
-        </fieldset>
+        </fieldset>}
       </fieldset>
       <div aria-live="polite" className="sf-funnel-checkout__totals">
         {quoteQ.loading && selectionReady ? <Spinner label={label('جارٍ حساب الإجمالي…', 'Calculating total…')} /> : null}
@@ -142,11 +149,12 @@ export function FunnelCheckout({ productSlug, renderLayout, compactHeader = fals
           {Number(quote.totals.tax_total) > 0 ? <div data-tax-line><dt>{taxLineLabel(quote.tax, locale)}</dt><dd>{formatMoney(Number(quote.totals.tax_total), quote.currency, locale)}</dd></div> : null}
           <PaymentAdjustmentLine amount={quote.totals.payment_adjustment_total} currency={quote.currency} definition />
           <div className="sf-funnel-checkout__grand"><dt>{label('الإجمالي', 'Total')}</dt><dd>{formatMoney(Number(quote.totals.grand_total), quote.currency, locale)}</dd></div>
+          <GiftCardLines quote={quote} definition />
         </dl> : null}
       </div>
       {payment.error && !payment.unresolved ? <div role="alert"><p className="sf-field__error">{payment.error}</p>{!payment.paymentRetry ? <Button type="button" variant="secondary" onClick={() => { contact.query.reload(); quoteQ.reload(); }}>{label('تحديث خيارات التوصيل', 'Refresh delivery options')}</Button> : null}</div> : null}
       {!payment.paymentRetry && !payment.unresolved ? <CheckoutMinimum quote={quote} /> : null}
-      {!payment.unresolved ? <Button type="submit" block loading={payment.busy} disabled={!payment.paymentMethod || !quote || !contact.shippingReady || (!payment.paymentRetry && (!minimumOrderAllows(quote) || !contact.phoneVerification.ready || !contact.botProtection.ready))}>
+      {!payment.unresolved ? <Button type="submit" block loading={payment.busy} disabled={(!payment.paymentMethod && !paidByGiftCards) || !quote || !contact.shippingReady || (!payment.paymentRetry && (!minimumOrderAllows(quote) || !contact.phoneVerification.ready || !contact.botProtection.ready))}>
         {label('تأكيد الطلب', 'Place order')}
       </Button> : null}
     </form><UiBlock slot="after_checkout" /></>}

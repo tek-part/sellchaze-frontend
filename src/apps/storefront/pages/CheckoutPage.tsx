@@ -1,6 +1,9 @@
 import PaymentMethodLogo from '../../../shared/payments/PaymentMethodLogo';
 import { PaymentAdjustmentLine } from './PaymentAdjustmentLine';
 import { CheckoutDiscountLines } from './CheckoutDiscountLines';
+import { GiftCardField, GiftCardLines } from './CheckoutGiftCards';
+import { useGiftCards, type GiftCardsModel } from './useGiftCards';
+import { giftCardsCoverTotal, quoteAmountDue } from './checkout-gift-cards';
 import { UiBlock } from '../ui-blocks/UiBlocks';
 import { useEffect, useMemo, useState, type FormEvent, type ReactElement } from 'react';
 import { Navigate, useSearchParams } from 'react-router-dom';
@@ -44,9 +47,9 @@ function LockIcon(): ReactElement {
 }
 
 /** Order summary column (and the mobile drop-down): lines with thumbnails, discount code, totals. */
-function OrderSummary({ quote, quoteQ, coupon, setCoupon, appliedCoupon, applyCoupon, removeCoupon, disabled, reloadAll }: {
+function OrderSummary({ quote, quoteQ, coupon, setCoupon, appliedCoupon, applyCoupon, removeCoupon, giftCards, disabled, reloadAll }: {
   quote: Quote | null; quoteQ: { loading: boolean; error: Error | null }; coupon: string; setCoupon: (value: string) => void; appliedCoupon: string;
-  applyCoupon: () => void; removeCoupon: () => void; disabled: boolean; reloadAll: () => void;
+  applyCoupon: () => void; removeCoupon: () => void; giftCards: GiftCardsModel; disabled: boolean; reloadAll: () => void;
 }): ReactElement {
   const { t } = useTranslation();
   const { locale } = useLocale();
@@ -79,6 +82,7 @@ function OrderSummary({ quote, quoteQ, coupon, setCoupon, appliedCoupon, applyCo
         <Button type="button" variant="secondary" disabled={quoteQ.loading || !coupon.trim()} onClick={applyCoupon}>{t('checkout.apply')}</Button>
       </div>
       {appliedCoupon ? <span className="sf-co-discount__applied">{appliedCoupon}<button type="button" onClick={removeCoupon} aria-label={ar ? 'إزالة الخصم' : 'Remove coupon'}>×</button></span> : null}
+      <GiftCardField model={giftCards} disabled={disabled} />
     </fieldset>
     <div className="sf-co-totals" aria-live="polite">
       {quoteQ.loading ? <Spinner label={ar ? 'جارٍ حساب الإجمالي…' : 'Calculating total…'} /> : null}
@@ -90,6 +94,7 @@ function OrderSummary({ quote, quoteQ, coupon, setCoupon, appliedCoupon, applyCo
         {Number(quote.totals.tax_total) > 0 ? <div className="sf-co-row" data-tax-line><span>{taxLineLabel(quote.tax, locale)}</span><span>{money(quote.totals.tax_total)}</span></div> : null}
         <PaymentAdjustmentLine amount={quote.totals.payment_adjustment_total} currency={quote.currency} />
         <div className="sf-co-total"><span>{t('checkout.total')}</span><span className="sf-co-total__value"><span className="sf-co-total__currency">{quote.currency}</span>{money(quote.totals.grand_total)}</span></div>
+        <GiftCardLines quote={quote} className="sf-co-row" />
       </> : !quoteQ.loading && !quoteQ.error ? <>
         <div className="sf-co-row"><span>{ar ? 'المجموع الفرعي' : 'Subtotal'}</span><span>{money(cart.totals.subtotal)}</span></div>
         <p className="sf-co-note">{ar ? 'يُحسب الشحن والإجمالي النهائي بعد إدخال عنوان التوصيل.' : 'Shipping and the final total are calculated once you enter your delivery details.'}</p>
@@ -107,25 +112,29 @@ function BasketCheckout(): ReactElement {
   const [coupon, setCoupon] = useState(() => chosenOfferCoupon(store));
   const [appliedCoupon, setAppliedCoupon] = useState(() => chosenOfferCoupon(store));
   const [summaryOpen, setSummaryOpen] = useState(false);
+  const giftCards = useGiftCards();
   const checkout = useCheckoutPaymentFlow();
   const tpl = useTemplate('checkout');
   const items = useMemo(() => checkoutCartItems(cart.lines), [cart.lines]);
   useCheckoutMetrics(items, 'storefront');
   const contact = useCheckoutFields(checkout.paymentMethod, items.map((item) => item.product_id));
   const lead = useCheckoutLead({ contact: { ...contact.payload(), coupon_code: appliedCoupon }, items, source: 'storefront', kind: 'cart', paymentMethod: checkout.paymentMethod, enabled: contact.ready && !checkout.busy && !checkout.completed && !checkout.unresolved && !checkout.paymentRetry });
-  const quoteKey = JSON.stringify([items, appliedCoupon, contact.shippingSelection, contact.shippingReady, checkout.paymentMethod, checkout.unresolved]);
-  const quoteQ = useAsync(async () => !checkout.unresolved && items.length && contact.shippingReady ? { key: quoteKey, data: (await quoteCheckout(items, appliedCoupon, contact.shippingSelection, checkout.paymentMethod)).data } : null, [quoteKey, locale]);
+  const quoteKey = JSON.stringify([items, appliedCoupon, giftCards.codes, contact.shippingSelection, contact.shippingReady, checkout.paymentMethod, checkout.unresolved]);
+  const quoteQ = useAsync(async () => !checkout.unresolved && items.length && contact.shippingReady ? { key: quoteKey, data: (await quoteCheckout(items, appliedCoupon, contact.shippingSelection, checkout.paymentMethod, giftCards.codes)).data } : null, [quoteKey, locale]);
   const quote = !quoteQ.loading && !quoteQ.error && quoteQ.data?.key === quoteKey ? quoteQ.data.data : null;
+  // Gift cards that pay everything leave nothing for a payment method to collect.
+  const paidByGiftCards = giftCardsCoverTotal(quote, giftCards.codes);
   const placeOrder = async (event: FormEvent): Promise<void> => {
     event.preventDefault();
     if (!checkout.paymentRetry && (!minimumOrderAllows(quote) || !contact.shippingReady || !contact.phoneVerification.ready || !contact.botProtection.ready)) return;
-    await checkout.submit({ ...contact.payload(), coupon_code: appliedCoupon, lead_token: lead.submitToken(), ...(quote?.payment_adjustment_token ? { payment_adjustment_token: quote.payment_adjustment_token } : {}) });
+    await checkout.submit({ ...contact.payload(), coupon_code: appliedCoupon, lead_token: lead.submitToken(), ...(quote?.payment_adjustment_token ? { payment_adjustment_token: quote.payment_adjustment_token } : {}),
+      ...(giftCards.codes.length ? { gift_cards: giftCards.codes } : {}), ...(paidByGiftCards ? { payment_method: undefined } : {}) });
   };
   if (!cart.lines.length && !checkout.completed && !checkout.busy && !checkout.unresolved) return <Navigate to="/cart" replace />;
   // A rate that stopped fitting the cart (coupon, quantity) is dropped so the cheapest eligible one applies.
   const reloadAll = (): void => { contact.resetRate(); contact.query.reload(); quoteQ.reload(); };
   const summary = <OrderSummary quote={quote} quoteQ={quoteQ} coupon={coupon} setCoupon={setCoupon} appliedCoupon={appliedCoupon} disabled={checkout.busy || checkout.unresolved}
-    applyCoupon={() => { setAppliedCoupon(coupon.trim()); quoteQ.reload(); }} removeCoupon={() => { clearOfferCoupon(store); setAppliedCoupon(''); setCoupon(''); }} reloadAll={reloadAll} />;
+    applyCoupon={() => { setAppliedCoupon(coupon.trim()); quoteQ.reload(); }} removeCoupon={() => { clearOfferCoupon(store); setAppliedCoupon(''); setCoupon(''); }} giftCards={giftCards} reloadAll={reloadAll} />;
   const totalText = quote ? formatMoney(Number(quote.totals.grand_total), quote.currency, locale) : formatMoney(cart.totals.subtotal, cart.totals.currency || store.currency, locale);
   const methodName = (method: (typeof checkout.paymentMethods)[number]): string => (method.slug === 'cod' && method.name === 'Cash on delivery' ? (ar ? 'الدفع عند الاستلام' : 'Cash on delivery') : method.slug === 'bank_transfer' && method.name === 'Bank transfer' ? (ar ? 'تحويل بنكي' : 'Bank transfer') : method.name) + (method.test_mode ? (ar ? ' (تجريبي)' : ' (Test)') : '');
 
@@ -152,7 +161,8 @@ function BasketCheckout(): ReactElement {
           <section className="sf-co-section" aria-labelledby="sf-co-payment">
             <h2 id="sf-co-payment">{t('checkout.payment')}</h2>
             <p className="sf-co-section__note">{ar ? 'كل المعاملات آمنة ومشفّرة.' : 'All transactions are secure and encrypted.'}</p>
-            {checkout.paymentMethods.length ? <div className="sf-co-choices" role="radiogroup" aria-labelledby="sf-co-payment">
+            {paidByGiftCards ? <p className="sf-co-paid-note" role="status" data-paid-by-gift-cards>{ar ? 'بطاقات الهدايا تغطي إجمالي الطلب، لا حاجة لطريقة دفع.' : 'Your gift cards cover the full total. No payment method is needed.'}</p>
+              : checkout.paymentMethods.length ? <div className="sf-co-choices" role="radiogroup" aria-labelledby="sf-co-payment">
               {checkout.paymentMethods.map((method) => {
                 const selected = checkout.paymentMethod === method.slug;
                 return <div key={method.slug} style={{ display: 'contents' }}>
@@ -170,8 +180,8 @@ function BasketCheckout(): ReactElement {
         {checkout.error && !checkout.unresolved ? <div className="sf-co-alert" role="alert"><p>{checkout.error}</p>{!checkout.paymentRetry ? <Button type="button" variant="secondary" onClick={reloadAll}>{ar ? 'تحديث خيارات التوصيل' : 'Refresh delivery options'}</Button> : null}</div> : null}
         {!checkout.paymentRetry && !checkout.unresolved ? <CheckoutMinimum quote={quote} /> : null}
         {quote?.order_minimum?.eligible === false && !checkout.paymentRetry && !checkout.unresolved ? <ButtonLink href="/cart" variant="secondary" block>{ar ? 'تعديل السلة' : 'Edit cart'}</ButtonLink> : null}
-        {!checkout.unresolved ? <Button type="submit" block className="sf-co-pay" loading={checkout.busy} disabled={!checkout.paymentMethod || !quote || !contact.shippingReady || (!checkout.paymentRetry && (!minimumOrderAllows(quote) || !contact.phoneVerification.ready || !contact.botProtection.ready))}>
-          {`${t('checkout.placeOrder')}${quote ? ` · ${formatMoney(Number(quote.totals.grand_total), quote.currency, locale)}` : ''}`}
+        {!checkout.unresolved ? <Button type="submit" block className="sf-co-pay" loading={checkout.busy} disabled={(!checkout.paymentMethod && !paidByGiftCards) || !quote || !contact.shippingReady || (!checkout.paymentRetry && (!minimumOrderAllows(quote) || !contact.phoneVerification.ready || !contact.botProtection.ready))}>
+          {`${t('checkout.placeOrder')}${quote ? ` · ${formatMoney(quoteAmountDue(quote), quote.currency, locale)}` : ''}`}
         </Button> : null}
         <p className="sf-co-trust"><LockIcon />{ar ? 'بياناتك محمية ولا تُشارك مع أي طرف.' : 'Your details are protected and never shared.'}</p>
         <a className="sf-co-back" href="/cart">{ar ? '→' : '←'} {ar ? 'العودة إلى السلة' : 'Return to cart'}</a>
