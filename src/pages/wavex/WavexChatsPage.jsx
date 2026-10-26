@@ -1,7 +1,6 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Navigate, useOutletContext } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Dialog, DialogBackdrop, DialogPanel, DialogTitle } from '@headlessui/react';
 import {
     HiOutlineArrowsPointingIn,
     HiOutlineArrowsPointingOut,
@@ -28,331 +27,15 @@ import {
     presentChatId,
     sortChatsByActivity,
     unreadCountFromChat,
-    wavexMediaNeedsProxy,
 } from './wavexHelpers';
+import { initials, previewFromChat, formatMsgTime, normalizeMediaKind } from './chats/chatFormat';
+import { ThreadMediaImage, ThreadMediaVideo, ThreadMediaAudio, ThreadMediaFileLink } from './chats/ThreadMedia';
+import ChatListAvatar from './chats/ChatListAvatar';
+
+// Opened from the thread header only; loaded on first use.
+const WavexContactPanel = lazy(() => import('./chats/WavexContactPanel'));
 
 const CHAT_PAGE_LIMIT = 40;
-
-function initials(name) {
-    if (!name || name === '—') {
-        return '?';
-    }
-    const parts = String(name)
-        .trim()
-        .split(/\s+/)
-        .slice(0, 2)
-        .map((s) => s[0])
-        .filter(Boolean);
-    return parts.join('').toUpperCase().slice(0, 2) || '?';
-}
-
-function previewFromChat(c) {
-    const lm = c?.lastMessage ?? c?.last_message ?? c?.conversation;
-    if (!lm) {
-        return '';
-    }
-    const t = lm.body ?? lm.text ?? lm.message ?? (typeof lm === 'string' ? lm : '');
-    return String(t).slice(0, 80);
-}
-
-function formatMsgTime(iso) {
-    if (!iso) {
-        return '';
-    }
-    try {
-        return new Date(iso).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
-    } catch {
-        return '';
-    }
-}
-
-function normalizeMediaKind(msg) {
-    const type = String(msg?.type || '').toLowerCase();
-    const mime = String(msg?.mime || '').toLowerCase();
-    const thumb = String(msg?.media_thumb || '');
-    if (type.includes('image') || mime.startsWith('image/')) return 'image';
-    if (type.includes('video') || mime.startsWith('video/')) return 'video';
-    if (type.includes('audio') || type.includes('voice') || mime.startsWith('audio/')) return 'audio';
-    if (type.includes('document') || type.includes('file') || mime !== '') return 'file';
-    if (thumb.startsWith('data:image')) return 'image';
-    return '';
-}
-
-function useWavexMediaSrc(url) {
-    const [blobSrc, setBlobSrc] = useState(null);
-    const [failed, setFailed] = useState(false);
-
-    useEffect(() => {
-        setBlobSrc(null);
-        setFailed(false);
-        if (!url || !wavexMediaNeedsProxy(url)) {
-            return undefined;
-        }
-        let cancelled = false;
-        let objectUrl = null;
-        api.get('/wavex/chats/media/proxy', { params: { url }, responseType: 'blob' })
-            .then((res) => {
-                if (cancelled) {
-                    return;
-                }
-                objectUrl = URL.createObjectURL(res.data);
-                setBlobSrc(objectUrl);
-            })
-            .catch(() => {
-                if (!cancelled) {
-                    setFailed(true);
-                }
-            });
-        return () => {
-            cancelled = true;
-            if (objectUrl) {
-                URL.revokeObjectURL(objectUrl);
-            }
-        };
-    }, [url]);
-
-    return { blobSrc, failed };
-}
-
-function ThreadMediaImage({ url, thumb, className, alt }) {
-    const { blobSrc, failed } = useWavexMediaSrc(url);
-    const needProxy = Boolean(url && wavexMediaNeedsProxy(url));
-    const thumbOk = typeof thumb === 'string' && thumb.startsWith('data:');
-
-    if (!url && !thumbOk) {
-        return null;
-    }
-
-    // If no URL but we have a thumbnail, display it directly
-    if (!url && thumbOk) {
-        return (
-            <img src={thumb} alt={alt || 'media'} className={className} />
-        );
-    }
-
-    if (!needProxy && url) {
-        return (
-            <a href={url} target="_blank" rel="noreferrer" className="block overflow-hidden rounded-2xl">
-                <img
-                    src={url}
-                    alt={alt}
-                    className={className}
-                    referrerPolicy="no-referrer"
-                    loading="lazy"
-                    onError={(e) => {
-                        if (!e.target.dataset.proxied) {
-                            e.target.dataset.proxied = '1';
-                            const base = api.defaults.baseURL || '/api/v1';
-                            const token = localStorage.getItem('sellchase_access_token') || '';
-                            e.target.src = `${base}/wavex/chats/media/proxy?url=${encodeURIComponent(url)}&token=${encodeURIComponent(token)}`;
-                        }
-                    }}
-                />
-            </a>
-        );
-    }
-
-    // Never upscale thumbnail when a full URL exists: wait for full media/proxy first.
-    if (needProxy && url && !blobSrc && !failed) {
-        return (
-            <div
-                className={`${className} mb-0 min-h-[220px] animate-pulse rounded-2xl bg-slate-200/70`}
-                aria-hidden
-            />
-        );
-    }
-
-    if (needProxy && url && !blobSrc && failed) {
-        if (thumbOk) {
-            return <img src={thumb} alt={alt} className={className} />;
-        }
-        return (
-            <a href={url} target="_blank" rel="noreferrer" className="block overflow-hidden rounded-2xl">
-                <img src={url} alt={alt} className={className} referrerPolicy="no-referrer" />
-            </a>
-        );
-    }
-
-    const src = blobSrc || (!url && thumbOk ? thumb : null);
-    if (!src) {
-        return thumbOk && !url ? (
-            <img src={thumb} alt={alt} className={className} />
-        ) : (
-            <p className="mb-1 text-xs text-slate-500">Media unavailable</p>
-        );
-    }
-
-    const openHref = blobSrc || url || src;
-    return (
-        <a href={openHref} target="_blank" rel="noreferrer" className="block overflow-hidden rounded-2xl">
-            <img src={src} alt={alt} className={className} referrerPolicy="no-referrer" />
-        </a>
-    );
-}
-
-function ThreadMediaVideo({ url, thumb, className }) {
-    const { blobSrc, failed } = useWavexMediaSrc(url);
-    const needProxy = Boolean(url && wavexMediaNeedsProxy(url));
-    const thumbOk = typeof thumb === 'string' && thumb.startsWith('data:');
-    if (!url && !thumbOk) {
-        return null;
-    }
-    if (!url && thumbOk) {
-        return <img src={thumb} alt="video thumbnail" className={className} />;
-    }
-    if (!needProxy) {
-        return (
-            <video
-                src={url}
-                controls
-                className={className}
-                referrerPolicy="no-referrer"
-                onError={(e) => {
-                    if (!e.target.dataset.proxied) {
-                        e.target.dataset.proxied = '1';
-                        e.target.src = `${api.defaults.baseURL || "/api/v1"}/wavex/chats/media/proxy?url=${encodeURIComponent(url)}&token=${localStorage.getItem("sellchase_access_token") || ""}`;
-                    }
-                }}
-            />
-        );
-    }
-    if (!blobSrc && !failed) {
-        return (
-            <div
-                className={`${className} mb-0 min-h-[220px] animate-pulse rounded-2xl bg-slate-800/25`}
-                aria-hidden
-            />
-        );
-    }
-    if (!blobSrc) {
-        if (url) {
-            return <video src={url} controls className={className} referrerPolicy="no-referrer" />;
-        }
-        return thumbOk ? <img src={thumb} alt="video thumbnail" className={className} /> : <p className="mb-1 text-xs text-slate-500">Video unavailable</p>;
-    }
-    return <video src={blobSrc} controls className={className} />;
-}
-
-function ThreadMediaAudio({ url, className }) {
-    const { blobSrc, failed } = useWavexMediaSrc(url);
-    const needProxy = Boolean(url && wavexMediaNeedsProxy(url));
-    if (!url) {
-        return null;
-    }
-    if (!needProxy) {
-        return (
-            <audio
-                src={url}
-                controls
-                className={className}
-                onError={(e) => {
-                    if (!e.target.dataset.proxied) {
-                        e.target.dataset.proxied = '1';
-                        e.target.src = `${api.defaults.baseURL || "/api/v1"}/wavex/chats/media/proxy?url=${encodeURIComponent(url)}&token=${localStorage.getItem("sellchase_access_token") || ""}`;
-                    }
-                }}
-            />
-        );
-    }
-    if (!blobSrc && !failed) {
-        return <span className="mb-1 block text-xs text-slate-500">Loading audio…</span>;
-    }
-    if (!blobSrc) {
-        return <p className="mb-1 text-xs text-slate-500">Audio unavailable</p>;
-    }
-    return <audio src={blobSrc} controls className={className} />;
-}
-
-function ThreadMediaFileLink({ url, label, className }) {
-    const { blobSrc, failed } = useWavexMediaSrc(url);
-    const needProxy = Boolean(url && wavexMediaNeedsProxy(url));
-    if (!url) {
-        return null;
-    }
-    if (!needProxy) {
-        return (
-            <a href={url} target="_blank" rel="noreferrer" className={className}>
-                {label}
-            </a>
-        );
-    }
-    if (!blobSrc && !failed) {
-        return <span className={className}>Loading…</span>;
-    }
-    if (!blobSrc) {
-        return <span className={className}>Unavailable</span>;
-    }
-    return (
-        <a href={blobSrc} target="_blank" rel="noreferrer" className={className}>
-            {label}
-        </a>
-    );
-}
-
-function ChatListAvatar({
-    chatId,
-    label,
-    unread,
-    imageUrl,
-    showImage,
-    onRequestImage,
-    listScrollRef,
-    onVisible,
-}) {
-    const [failed, setFailed] = useState(false);
-    const wrapRef = useRef(null);
-    const onVisibleRef = useRef(onVisible);
-    onVisibleRef.current = onVisible;
-
-    useEffect(() => {
-        setFailed(false);
-    }, [chatId, imageUrl]);
-
-    useEffect(() => {
-        const el = wrapRef.current;
-        const root = listScrollRef?.current ?? null;
-        if (!el || !chatId) {
-            return undefined;
-        }
-        const io = new IntersectionObserver(
-            (entries) => {
-                if (entries[0]?.isIntersecting) {
-                    onVisibleRef.current(chatId);
-                    io.disconnect();
-                }
-            },
-            { root, rootMargin: '80px', threshold: 0.01 },
-        );
-        io.observe(el);
-        return () => io.disconnect();
-    }, [chatId, listScrollRef]);
-
-    return (
-        <span ref={wrapRef} className="relative shrink-0">
-            {showImage && imageUrl && !failed ? (
-                <img
-                    src={imageUrl}
-                    alt=""
-                    referrerPolicy="no-referrer"
-                    className="h-12 w-12 rounded-full object-cover shadow-xs ring-1 ring-slate-200/80"
-                    onError={() => {
-                        setFailed(true);
-                        onRequestImage?.(chatId, true);
-                    }}
-                />
-            ) : (
-                <span className="flex h-12 w-12 items-center justify-center rounded-full bg-linear-to-br from-[#128c7e] to-[#075e54] text-sm font-bold text-white shadow-xs">
-                    {initials(label)}
-                </span>
-            )}
-            {unread > 0 ? (
-                <span className="absolute -inset-e-1 -top-1 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-[#25d366] px-1 text-[10px] font-bold leading-none text-white shadow-sm ring-2 ring-white">
-                    {unread > 99 ? '99+' : unread}
-                </span>
-            ) : null}
-        </span>
-    );
-}
 
 export default function WavexChatsPage() {
     const { t } = useTranslation();
@@ -1386,75 +1069,20 @@ export default function WavexChatsPage() {
                     </button>
                 </header>
 
-                <Dialog open={contactOpen} onClose={() => setContactOpen(false)} className="relative z-220">
-                    <DialogBackdrop className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs" />
-                    <div className="fixed inset-0 flex justify-end">
-                        <DialogPanel className="flex h-full w-full max-w-sm flex-col bg-white shadow-2xl ring-1 ring-slate-200/80">
-                            <div className="flex items-center justify-between border-b border-slate-100 px-4 py-3">
-                                <DialogTitle className="text-base font-bold text-slate-900">
-                                    {t('wavex_contact_info')}
-                                </DialogTitle>
-                                <button
-                                    type="button"
-                                    onClick={() => setContactOpen(false)}
-                                    className="rounded-lg px-2 py-1 text-sm text-slate-600 hover:bg-slate-100"
-                                >
-                                    {t('wavex_contact_close')}
-                                </button>
-                            </div>
-                            <div className="flex flex-1 flex-col gap-4 overflow-y-auto p-4">
-                                {!effectiveChatId ? (
-                                    <p className="text-sm text-slate-500">{t('wavex_wa_select_chat')}</p>
-                                ) : (
-                                    <>
-                                        <div className="flex flex-col items-center gap-2">
-                                            {headerAvatarUrl ? (
-                                                <img
-                                                    src={headerAvatarUrl}
-                                                    alt=""
-                                                    referrerPolicy="no-referrer"
-                                                    className="h-24 w-24 rounded-full object-cover shadow-md ring-2 ring-slate-100"
-                                                />
-                                            ) : (
-                                                <span className="flex h-24 w-24 items-center justify-center rounded-full bg-linear-to-br from-[#128c7e] to-[#075e54] text-2xl font-bold text-white shadow-md">
-                                                    {initials(headerTitle)}
-                                                </span>
-                                            )}
-                                            <p className="text-center font-semibold text-slate-900">{headerTitle}</p>
-                                        </div>
-                                        <div>
-                                            <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
-                                                {t('wavex_contact_jid')}
-                                            </p>
-                                            <p className="mt-1 break-all font-mono text-sm text-slate-800">
-                                                {effectiveChatId}
-                                            </p>
-                                        </div>
-                                        <div className="flex flex-col gap-2">
-                                            <button
-                                                type="button"
-                                                onClick={() => void copyJid()}
-                                                className="rounded-xl bg-[#128c7e] px-4 py-2.5 text-sm font-semibold text-white shadow-xs hover:bg-[#075e54]"
-                                            >
-                                                {t('wavex_contact_copy_jid')}
-                                            </button>
-                                            <button
-                                                type="button"
-                                                onClick={() => {
-                                                    void loadThread(effectiveChatId, { force: true });
-                                                    setContactOpen(false);
-                                                }}
-                                                className="rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-800 hover:bg-slate-50"
-                                            >
-                                                {t('wavex_reload_thread')}
-                                            </button>
-                                        </div>
-                                    </>
-                                )}
-                            </div>
-                        </DialogPanel>
-                    </div>
-                </Dialog>
+                {contactOpen ? (
+                    <Suspense fallback={null}>
+                        <WavexContactPanel
+                            t={t}
+                            effectiveChatId={effectiveChatId}
+                            headerAvatarUrl={headerAvatarUrl}
+                            headerTitle={headerTitle}
+                            headerInitials={initials(headerTitle)}
+                            copyJid={copyJid}
+                            onReloadThread={() => void loadThread(effectiveChatId, { force: true })}
+                            onClose={() => setContactOpen(false)}
+                        />
+                    </Suspense>
+                ) : null}
 
                 {!wawpOk ? (
                     <div className="shrink-0 bg-amber-50 px-3 py-2 text-center text-xs text-amber-900">
