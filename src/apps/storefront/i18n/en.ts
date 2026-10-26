@@ -444,6 +444,7 @@ export const en = {
     calculatedAfterAddress: 'Calculated after address',
     total: 'Total',
     orderFailed: 'We could not place your order. Please try again.',
+    totalChanged: 'Your total was updated. Please review it and confirm your order.',
     thankYou: 'Thank you for your order',
     thankYouHearth: 'Thank you — your order is in',
     orderConfirmed: 'Your order was received.',

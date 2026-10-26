@@ -9,6 +9,7 @@ import {
   submitCheckout,
   type StorefrontPaymentMethod,
   type CheckoutItem,
+  type CheckoutQuote,
 } from '../api/storefront';
 import { useCart } from '../state/cart';
 import { withSessionParams } from './NavigationInterceptor';
@@ -39,6 +40,8 @@ export interface CheckoutContactPayload {
   gift_cards?: ReadonlyArray<string>;
   /** Present (even undefined) to override the selected method: gift cards that pay everything need none. */
   payment_method?: string;
+  /** The grand total shown to the shopper; the server answers 409 total_changed with a new quote if it differs. */
+  expected_total?: string;
 }
 
 interface RetryState {
@@ -67,6 +70,10 @@ export function useCheckoutPaymentFlow(options?: { items: ReadonlyArray<Checkout
   const [paymentRetry, setPaymentRetry] = useState<RetryState>();
   const [error, setError] = useState<string>();
   const [busy, setBusy] = useState(false);
+  // A total the server corrected on placement, for the quote key the shopper confirmed.
+  const [corrected, setCorrected] = useState<{ key: string; quote: CheckoutQuote }>();
+  const [totalChanged, setTotalChanged] = useState(false);
+  const submittedQuoteKey = useRef<string | undefined>(undefined);
   const submitting = useRef(false);
   const completed = useRef(false);
   const items = options?.items;
@@ -93,6 +100,7 @@ export function useCheckoutPaymentFlow(options?: { items: ReadonlyArray<Checkout
     submitting.current = true;
     setBusy(true);
     setError(undefined);
+    setTotalChanged(false);
     try {
       const response = await operation();
       if (!response.data?.number) throw new Error(t('checkout.orderFailed'));
@@ -118,7 +126,7 @@ export function useCheckoutPaymentFlow(options?: { items: ReadonlyArray<Checkout
       window.scrollTo({ top: 0, behavior: 'auto' });
     } catch (requestError) {
       if (requestError instanceof ApiError) {
-        const body = requestError.payload as { checkout_rejected?: boolean; payment_retry?: { token?: string }; receipt?: { token?: string }; data?: { number?: string; tracking?: unknown; total?: string | number; currency?: string; payment_adjustment_total?: string }; message?: string } | undefined;
+        const body = requestError.payload as { code?: string; quote?: CheckoutQuote; checkout_rejected?: boolean; payment_retry?: { token?: string }; receipt?: { token?: string }; data?: { number?: string; tracking?: unknown; total?: string | number; currency?: string; payment_adjustment_total?: string }; message?: string } | undefined;
         if (body?.data?.number && body.receipt?.token) {
           recordPromotionPurchase(store.id, body.data.number, readCheckoutAttempt(scope)?.body.items ?? items ?? checkoutCartItems(cart.lines));
           sendAdvertisingEnvelope(store.id, body.data.tracking);
@@ -135,6 +143,17 @@ export function useCheckoutPaymentFlow(options?: { items: ReadonlyArray<Checkout
           clearCheckoutAttempt(scope);
           setAttempt(undefined);
         }
+        // Nothing was placed: show the corrected totals; the next click confirms them.
+        const quoteKey = submittedQuoteKey.current;
+        if (requestError.status === 409 && body?.code === 'total_changed' && body.quote?.totals && quoteKey !== undefined) {
+          const quote = body.quote;
+          clearCheckoutAttempt(scope);
+          setAttempt(undefined);
+          setCorrected({ key: quoteKey, quote });
+          setTotalChanged(true);
+          setError(t('checkout.totalChanged'));
+          return;
+        }
       }
       setError(requestError instanceof Error ? requestError.message : t('checkout.orderFailed'));
     } finally {
@@ -143,8 +162,10 @@ export function useCheckoutPaymentFlow(options?: { items: ReadonlyArray<Checkout
     }
   }, [cart, items, preserveCart, navigate, paymentRetry, scope, t, store.id]);
 
-  const submit = useCallback(async (payload: CheckoutContactPayload): Promise<void> => {
+  /** `quoteKey` identifies the quote whose total is sent as `expected_total`. */
+  const submit = useCallback(async (payload: CheckoutContactPayload, quoteKey?: string): Promise<void> => {
     if (submitting.current || completed.current) return;
+    submittedQuoteKey.current = quoteKey;
     if (paymentRetry) {
       await run(() => retryCheckoutPayment(paymentRetry.token) as Promise<CheckoutResponse>);
       return;
@@ -179,8 +200,13 @@ export function useCheckoutPaymentFlow(options?: { items: ReadonlyArray<Checkout
     await run(() => resumeCheckoutAttempt(attempt, recoverCheckout, submitCheckout) as Promise<CheckoutResponse>);
   }, [attempt, run]);
 
+  /** The server's corrected quote while the shopper's selection is unchanged. */
+  const correctedQuote = useCallback((quoteKey: string): CheckoutQuote | null => corrected?.key === quoteKey ? corrected.quote : null, [corrected]);
+
   return {
     completed: completed.current,
+    correctedQuote,
+    totalChanged,
     paymentMethods,
     paymentMethod,
     setPaymentMethod,

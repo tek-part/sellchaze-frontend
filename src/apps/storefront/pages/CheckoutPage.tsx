@@ -20,6 +20,7 @@ import { taxLineLabel } from '../utils/shipping';
 import { ThemeRenderer, useTemplate } from '../theme-engine';
 import { flowContext } from './flow-context';
 import { useCheckoutPaymentFlow } from './useCheckoutPaymentFlow';
+import { useQuoteContact } from './useQuoteContact';
 import { CheckoutRecovery } from './CheckoutRecovery';
 import { clearCheckoutAttempt, readCheckoutAttempt } from './checkout-attempt';
 import { CheckoutFieldsForm, useCheckoutFields } from './CheckoutFields';
@@ -119,16 +120,17 @@ function BasketCheckout(): ReactElement {
   useCheckoutMetrics(items, 'storefront');
   const contact = useCheckoutFields(checkout.paymentMethod, items.map((item) => item.product_id));
   const lead = useCheckoutLead({ contact: { ...contact.payload(), coupon_code: appliedCoupon }, items, source: 'storefront', kind: 'cart', paymentMethod: checkout.paymentMethod, enabled: contact.ready && !checkout.busy && !checkout.completed && !checkout.unresolved && !checkout.paymentRetry });
-  const quoteKey = JSON.stringify([items, appliedCoupon, giftCards.codes, contact.shippingSelection, contact.shippingReady, checkout.paymentMethod, checkout.unresolved]);
-  const quoteQ = useAsync(async () => !checkout.unresolved && items.length && contact.shippingReady ? { key: quoteKey, data: (await quoteCheckout(items, appliedCoupon, contact.shippingSelection, checkout.paymentMethod, giftCards.codes)).data } : null, [quoteKey, locale]);
-  const quote = !quoteQ.loading && !quoteQ.error && quoteQ.data?.key === quoteKey ? quoteQ.data.data : null;
+  const quoteContact = useQuoteContact(contact.payload());
+  const quoteKey = JSON.stringify([items, appliedCoupon, giftCards.codes, contact.shippingSelection, contact.shippingReady, checkout.paymentMethod, checkout.unresolved, quoteContact]);
+  const quoteQ = useAsync(async () => !checkout.unresolved && items.length && contact.shippingReady ? { key: quoteKey, data: (await quoteCheckout(items, appliedCoupon, contact.shippingSelection, checkout.paymentMethod, giftCards.codes, quoteContact)).data } : null, [quoteKey, locale]);
+  const quote = checkout.correctedQuote(quoteKey) ?? (!quoteQ.loading && !quoteQ.error && quoteQ.data?.key === quoteKey ? quoteQ.data.data : null);
   // Gift cards that pay everything leave nothing for a payment method to collect.
   const paidByGiftCards = giftCardsCoverTotal(quote, giftCards.codes);
   const placeOrder = async (event: FormEvent): Promise<void> => {
     event.preventDefault();
     if (!checkout.paymentRetry && (!minimumOrderAllows(quote) || !contact.shippingReady || !contact.phoneVerification.ready || !contact.botProtection.ready || contact.countryAllowed === false)) return;
     await checkout.submit({ ...contact.payload(), coupon_code: appliedCoupon, lead_token: lead.submitToken(), ...(quote?.payment_adjustment_token ? { payment_adjustment_token: quote.payment_adjustment_token } : {}),
-      ...(giftCards.codes.length ? { gift_cards: giftCards.codes } : {}), ...(paidByGiftCards ? { payment_method: undefined } : {}) });
+      ...(giftCards.codes.length ? { gift_cards: giftCards.codes } : {}), ...(paidByGiftCards ? { payment_method: undefined } : {}), ...(quote ? { expected_total: quote.totals.grand_total } : {}) }, quoteKey);
   };
   if (!cart.lines.length && !checkout.completed && !checkout.busy && !checkout.unresolved) return <Navigate to="/cart" replace />;
   // A rate that stopped fitting the cart (coupon, quantity) is dropped so the cheapest eligible one applies.
@@ -177,7 +179,7 @@ function BasketCheckout(): ReactElement {
             </div> : <p className="sf-field__error">{ar ? 'لا توجد طريقة دفع متاحة حاليًا.' : 'No payment method is currently available.'}</p>}
           </section>
         </fieldset>
-        {checkout.error && !checkout.unresolved ? <div className="sf-co-alert" role="alert"><p>{checkout.error}</p>{!checkout.paymentRetry ? <Button type="button" variant="secondary" onClick={reloadAll}>{ar ? 'تحديث خيارات التوصيل' : 'Refresh delivery options'}</Button> : null}</div> : null}
+        {checkout.error && !checkout.unresolved ? <div className="sf-co-alert" role="alert"><p>{checkout.error}</p>{!checkout.paymentRetry && !checkout.totalChanged ? <Button type="button" variant="secondary" onClick={reloadAll}>{ar ? 'تحديث خيارات التوصيل' : 'Refresh delivery options'}</Button> : null}</div> : null}
         {!checkout.paymentRetry && !checkout.unresolved ? <CheckoutMinimum quote={quote} /> : null}
         {quote?.order_minimum?.eligible === false && !checkout.paymentRetry && !checkout.unresolved ? <ButtonLink href="/cart" variant="secondary" block>{ar ? 'تعديل السلة' : 'Edit cart'}</ButtonLink> : null}
         {!checkout.unresolved ? <Button type="submit" block className="sf-co-pay" loading={checkout.busy} disabled={(!checkout.paymentMethod && !paidByGiftCards) || !quote || !contact.shippingReady || (!checkout.paymentRetry && (!minimumOrderAllows(quote) || !contact.phoneVerification.ready || !contact.botProtection.ready || contact.countryAllowed === false))}>

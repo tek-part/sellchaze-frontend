@@ -14,6 +14,7 @@ import { useLocale } from '../i18n/useLocale';
 import { formatMoney } from '../utils/format';
 import { taxLineLabel } from '../utils/shipping';
 import { useCheckoutPaymentFlow } from './useCheckoutPaymentFlow';
+import { useQuoteContact } from './useQuoteContact';
 import { CheckoutRecovery } from './CheckoutRecovery';
 import { CheckoutFieldsForm, useCheckoutFields } from './CheckoutFields';
 import './funnel-checkout.css';
@@ -86,15 +87,16 @@ export function FunnelCheckout({ productSlug, renderLayout, compactHeader = fals
   useCheckoutMetrics(items, 'funnel');
   const contact = useCheckoutFields(payment.paymentMethod, product ? [product.id] : []);
   const lead = useCheckoutLead({ contact: { ...contact.payload(), coupon_code: appliedCoupon }, items, source: 'funnel', paymentMethod: payment.paymentMethod, kind: `funnel:${productSlug ?? ''}`, enabled: contact.ready && !payment.busy && !payment.completed && !payment.unresolved && !payment.paymentRetry });
-  const quoteKey = JSON.stringify([items, appliedCoupon, giftCards.codes, contact.shippingSelection, contact.shippingReady, payment.paymentMethod, payment.unresolved]);
-  const quoteQ = useAsync(async () => !payment.unresolved && items.length && contact.shippingReady ? { key: quoteKey, quote: (await quoteCheckout(items, appliedCoupon, contact.shippingSelection, payment.paymentMethod, giftCards.codes)).data } : null, [quoteKey, locale]);
-  const quote = !quoteQ.loading && !quoteQ.error && quoteQ.data?.key === quoteKey ? quoteQ.data.quote : null;
+  const quoteContact = useQuoteContact(contact.payload());
+  const quoteKey = JSON.stringify([items, appliedCoupon, giftCards.codes, contact.shippingSelection, contact.shippingReady, payment.paymentMethod, payment.unresolved, quoteContact]);
+  const quoteQ = useAsync(async () => !payment.unresolved && items.length && contact.shippingReady ? { key: quoteKey, quote: (await quoteCheckout(items, appliedCoupon, contact.shippingSelection, payment.paymentMethod, giftCards.codes, quoteContact)).data } : null, [quoteKey, locale]);
+  const quote = payment.correctedQuote(quoteKey) ?? (!quoteQ.loading && !quoteQ.error && quoteQ.data?.key === quoteKey ? quoteQ.data.quote : null);
   const paidByGiftCards = giftCardsCoverTotal(quote, giftCards.codes);
   const submit = async (event: FormEvent): Promise<void> => {
     event.preventDefault();
     if (!payment.paymentRetry && (!minimumOrderAllows(quote) || !selectionReady || !contact.shippingReady || !contact.phoneVerification.ready || !contact.botProtection.ready || contact.countryAllowed === false)) return;
     await payment.submit({ ...contact.payload(), coupon_code: appliedCoupon, lead_token: lead.submitToken(), ...(quote?.payment_adjustment_token ? { payment_adjustment_token: quote.payment_adjustment_token } : {}),
-      ...(giftCards.codes.length ? { gift_cards: giftCards.codes } : {}), ...(paidByGiftCards ? { payment_method: undefined } : {}) });
+      ...(giftCards.codes.length ? { gift_cards: giftCards.codes } : {}), ...(paidByGiftCards ? { payment_method: undefined } : {}), ...(quote ? { expected_total: quote.totals.grand_total } : {}) }, quoteKey);
   };
 
   const checkout = <Section id="funnel-checkout" className="sf-funnel-checkout"><Container narrow>
@@ -152,7 +154,7 @@ export function FunnelCheckout({ productSlug, renderLayout, compactHeader = fals
           <GiftCardLines quote={quote} definition />
         </dl> : null}
       </div>
-      {payment.error && !payment.unresolved ? <div role="alert"><p className="sf-field__error">{payment.error}</p>{!payment.paymentRetry ? <Button type="button" variant="secondary" onClick={() => { contact.query.reload(); quoteQ.reload(); }}>{label('تحديث خيارات التوصيل', 'Refresh delivery options')}</Button> : null}</div> : null}
+      {payment.error && !payment.unresolved ? <div role="alert"><p className="sf-field__error">{payment.error}</p>{!payment.paymentRetry && !payment.totalChanged ? <Button type="button" variant="secondary" onClick={() => { contact.query.reload(); quoteQ.reload(); }}>{label('تحديث خيارات التوصيل', 'Refresh delivery options')}</Button> : null}</div> : null}
       {!payment.paymentRetry && !payment.unresolved ? <CheckoutMinimum quote={quote} /> : null}
       {!payment.unresolved ? <Button type="submit" block loading={payment.busy} disabled={(!payment.paymentMethod && !paidByGiftCards) || !quote || !contact.shippingReady || (!payment.paymentRetry && (!minimumOrderAllows(quote) || !contact.phoneVerification.ready || !contact.botProtection.ready || contact.countryAllowed === false))}>
         {label('تأكيد الطلب', 'Place order')}

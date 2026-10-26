@@ -14,7 +14,7 @@ vi.mock('./CheckoutMinimum', () => ({ CheckoutMinimum: () => null }));
 vi.mock('./minimum-order', () => ({ minimumOrderAllows: () => fixture.minimum }));
 vi.mock('./CheckoutRecovery', () => ({ CheckoutRecovery: () => null }));
 vi.mock('./CheckoutFields', () => ({ CheckoutFieldsForm: () => null, useCheckoutFields: () => ({ ready: true, shippingReady: true, shippingSelection: {}, phoneVerification: { ready: true }, botProtection: { ready: true }, payload: () => ({ customer_name: 'Local buyer' }) }) }));
-vi.mock('./useCheckoutPaymentFlow', () => ({ useCheckoutPaymentFlow: (options: unknown) => { fixture.flow(options); return { paymentMethod: 'cod', paymentMethods: [{ slug: 'cod', name: 'COD' }], submit: fixture.submit }; } }));
+vi.mock('./useCheckoutPaymentFlow', () => ({ useCheckoutPaymentFlow: (options: unknown) => { fixture.flow(options); return { paymentMethod: 'cod', paymentMethods: [{ slug: 'cod', name: 'COD' }], submit: fixture.submit, correctedQuote: () => null, totalChanged: false }; } }));
 
 let host: HTMLDivElement; let root: Root;
 beforeEach(() => { vi.clearAllMocks(); fixture.minimum = true; Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true }); host = document.createElement('div'); document.body.append(host); root = createRoot(host); fixture.quote.mockResolvedValue({ data: { currency: 'EGP', requires_shipping: false, items: [{ product_id: 4, variant_id: 5, name: 'Selection L', quantity: 2, line_total: '80' }], totals: { subtotal: '80', discount_total: '0', shipping_total: '0', tax_total: '0', grand_total: '80' } } }); });
@@ -29,15 +29,15 @@ describe('same-page checkout', () => {
     expect(host.textContent).toContain('Payment method discount');
     expect(host.querySelector('[data-payment-adjustment]')?.textContent).toContain('8.00');
     await submit();
-    expect(fixture.submit).toHaveBeenCalledWith(expect.objectContaining({ payment_adjustment_token: 'b'.repeat(64) }));
+    expect(fixture.submit).toHaveBeenCalledWith(expect.objectContaining({ payment_adjustment_token: 'b'.repeat(64), expected_total: expect.any(String) }), expect.any(String));
   });
   it('quotes the live variant, quantity, offer and personalization without using or clearing the ordinary basket', async () => {
     const item = { product_id: 4, variant_id: 5, quantity: 2, personalization: { note: 'Review' }, quantity_offer_id: 'fa8f41e8-4944-4847-86f5-8a27cf65ee33', quantity_offer_version: 2 };
-    await render([item]); expect(fixture.quote).toHaveBeenLastCalledWith([item], '', {}, 'cod', []); expect(host.textContent).toContain('Selection L × 2');
+    await render([item]); expect(fixture.quote).toHaveBeenLastCalledWith([item], '', {}, 'cod', [], {}); expect(host.textContent).toContain('Selection L × 2');
     expect(fixture.flow).toHaveBeenLastCalledWith({ items: [item], preserveCart: true, surface: 'product' });
     await render([{ ...item, variant_id: 6, quantity: 4 }]);
-    expect(fixture.quote).toHaveBeenLastCalledWith([{ ...item, variant_id: 6, quantity: 4 }], '', {}, 'cod', []);
-    await submit(); expect(fixture.submit).toHaveBeenCalledExactlyOnceWith({ customer_name: 'Local buyer', coupon_code: '', lead_token: 'local-lead' });
+    expect(fixture.quote).toHaveBeenLastCalledWith([{ ...item, variant_id: 6, quantity: 4 }], '', {}, 'cod', [], {});
+    await submit(); expect(fixture.submit).toHaveBeenCalledExactlyOnceWith({ customer_name: 'Local buyer', coupon_code: '', lead_token: 'local-lead', expected_total: expect.any(String) }, expect.any(String));
   });
   it('applies a gift card as a masked line and submits without a payment method when it covers the total', async () => {
     fixture.check.mockResolvedValue({ data: { last4: 'AAAA', balance: '100.00', currency: 'EGP', expires_at: null } });
@@ -52,12 +52,12 @@ describe('same-page checkout', () => {
     await act(async () => apply.click());
     await act(async () => { await Promise.resolve(); });
     expect(fixture.check).toHaveBeenCalledExactlyOnceWith('GIFTAAAAAAAAAAAA');
-    expect(fixture.quote).toHaveBeenLastCalledWith([{ product_id: 4, quantity: 1 }], '', {}, 'cod', ['GIFTAAAAAAAAAAAA']);
+    expect(fixture.quote).toHaveBeenLastCalledWith([{ product_id: 4, quantity: 1 }], '', {}, 'cod', ['GIFTAAAAAAAAAAAA'], {});
     expect(host.querySelector('[data-gift-card-line]')?.textContent).toContain('•••• AAAA');
     expect(host.querySelector('[data-amount-due]')?.textContent).toContain('0.00');
     expect(host.querySelector('[data-paid-by-gift-cards]')).not.toBeNull();
     await submit();
-    expect(fixture.submit).toHaveBeenCalledExactlyOnceWith({ customer_name: 'Local buyer', coupon_code: '', lead_token: 'local-lead', gift_cards: ['GIFTAAAAAAAAAAAA'], payment_method: undefined });
+    expect(fixture.submit).toHaveBeenCalledExactlyOnceWith({ customer_name: 'Local buyer', coupon_code: '', lead_token: 'local-lead', gift_cards: ['GIFTAAAAAAAAAAAA'], payment_method: undefined, expected_total: '80.00' }, expect.any(String));
   });
   it('lists each applied discount by title and shows a free-shipping discount as free shipping', async () => {
     fixture.quote.mockResolvedValue({ data: { currency: 'EGP', requires_shipping: true, items: [{ product_id: 4, name: 'Selection', quantity: 3, line_total: '300' }],
