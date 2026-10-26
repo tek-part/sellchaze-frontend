@@ -95,3 +95,34 @@ export function refundTotals(summary, quantities, shippingAmount) {
     const computed = items + shipping;
     return { items, shipping, computed, max: Math.min(computed, toCents(summary.refundable_total)) };
 }
+
+/** Which units of a partly shipped line a refund is about first (mirrors StoreInventory::refundUnits). */
+export const REFUND_UNITS = [
+    ['unshipped', 'لم تُشحن بعد (إلغاء الحجز)', 'Not shipped yet (release the hold)'],
+    ['shipped', 'مشحونة ومرتجعة', 'Shipped and returned'],
+];
+
+/** The line offers a choice only when it has both shipped and unshipped units left to refund. */
+export const refundUnitsChoice = (line) => (line.shipped_refundable_quantity ?? 0) > 0 && (line.unshipped_refundable_quantity ?? 0) > 0;
+
+/**
+ * Inventory effect of refunding `quantity` units of a line: units released (never shipped) and units
+ * returned (shipped, restockable). Lines from servers without the bucket fields count as shipped.
+ */
+export function refundUnitSplit(line, quantity, units = 'unshipped') {
+    const count = Math.max(0, Math.trunc(Number(quantity) || 0));
+    const shipped = Math.max(0, line.shipped_refundable_quantity ?? (line.restockable ? line.refundable_quantity : 0));
+    const unshipped = Math.max(0, line.unshipped_refundable_quantity ?? 0);
+    if (units === 'shipped') {
+        const returned = Math.min(count, shipped);
+        return { returned, released: Math.min(count - returned, unshipped) };
+    }
+    const released = Math.min(count, unshipped);
+    return { released, returned: Math.min(count - released, shipped) };
+}
+
+/** Units that can go back on the shelf for the chosen quantities. */
+export function restockableUnits(summary, quantities, unitChoices = {}, defaultUnits = 'unshipped') {
+    return (summary?.items || []).filter((line) => line.restockable).reduce((sum, line) => sum
+        + refundUnitSplit(line, quantities[line.store_order_item_id] || 0, unitChoices[line.store_order_item_id] || defaultUnits).returned, 0);
+}

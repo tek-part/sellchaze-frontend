@@ -35,3 +35,19 @@ describe('refund amounts', () => {
         expect(refundTotals({ ...giftOnly, refundable_total: '1.00' }, { 1: 3 }, '10').max).toBe(100);
     });
 });
+
+describe('refund units on partly shipped lines', () => {
+    const line = { store_order_item_id: 501, refundable_quantity: 2, shipped_refundable_quantity: 1, unshipped_refundable_quantity: 1, restockable: true };
+    it('takes unshipped units first by default and shipped ones on request', async () => {
+        const { refundUnitSplit, refundUnitsChoice, restockableUnits } = await import('../components/store/orders/order-refunds');
+        expect(refundUnitsChoice(line)).toBe(true);
+        expect(refundUnitSplit(line, 1)).toEqual({ released: 1, returned: 0 });
+        expect(refundUnitSplit(line, 1, 'shipped')).toEqual({ returned: 1, released: 0 });
+        expect(refundUnitSplit(line, 2, 'shipped')).toEqual({ returned: 1, released: 1 });
+        expect(restockableUnits({ items: [line] }, { 501: 1 })).toBe(0);
+        expect(restockableUnits({ items: [line] }, { 501: 1 }, { 501: 'shipped' })).toBe(1);
+        // Older summaries without buckets: every refundable unit of a restockable line counts as shipped.
+        expect(restockableUnits({ items: [{ store_order_item_id: 7, refundable_quantity: 2, restockable: true }] }, { 7: 2 })).toBe(2);
+        expect(refundUnitsChoice({ shipped_refundable_quantity: 2, unshipped_refundable_quantity: 0 })).toBe(false);
+    });
+});

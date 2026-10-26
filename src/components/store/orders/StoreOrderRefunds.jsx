@@ -3,8 +3,8 @@ import { Dialog, DialogBackdrop, DialogPanel, DialogTitle } from '@headlessui/re
 import api from '../../../api/client';
 import { HiOutlineXMark } from '../../workspace/WorkspaceIcons';
 import {
-    REFUND_METHODS, REFUND_REASONS, RETURN_REASONS, RETURN_RESOLUTIONS, RETURN_STATUSES, RETURN_STATUS_TONES,
-    fromCents, refundTotals, toCents, vocabularyLabel,
+    REFUND_METHODS, REFUND_REASONS, REFUND_UNITS, RETURN_REASONS, RETURN_RESOLUTIONS, RETURN_STATUSES, RETURN_STATUS_TONES,
+    fromCents, refundTotals, refundUnitSplit, refundUnitsChoice, restockableUnits, toCents, vocabularyLabel,
 } from './order-refunds';
 import { giftCardRefundSplit, refundValueAvailable } from '../../../lib/gift-card-refunds';
 import './order-refunds.css';
@@ -65,7 +65,7 @@ export default function StoreOrderRefunds({ apiBase, endpoint, order, ar, theme,
                     <strong><bdi>{money(refund.amount)}</bdi> · {vocabularyLabel(REFUND_METHODS, refund.method, ar)}</strong>
                     {Number(refund.gift_card_amount || 0) > 0 ? <small data-testid="refund-history-split">{text('إلى بطاقة الهدية', 'To gift card')} <bdi>{money(refund.gift_card_amount)}</bdi> · {text('مبلغ نقدي', 'Money')} <bdi>{money(refund.money_amount)}</bdi></small> : null}
                     <small>{refund.actor || text('النظام', 'System')} · {date(refund.created_at)}{refund.reason ? ` · ${vocabularyLabel(REFUND_REASONS, refund.reason, ar)}` : ''}</small>
-                    <ul>{refund.items.map((item) => <li key={item.store_order_item_id}>{item.name || `#${item.store_order_item_id}`} × {item.quantity}{item.restocked_quantity ? ` · ${text('أعيد للمخزون', 'restocked')} ${item.restocked_quantity}` : ''}</li>)}
+                    <ul>{refund.items.map((item) => <li key={item.store_order_item_id}>{item.name || `#${item.store_order_item_id}`} × {item.quantity}{item.restocked_quantity ? ` · ${text('أعيد للمخزون', 'restocked')} ${item.restocked_quantity}` : ''}{item.released_quantity ? ` · ${text('أُلغي قبل الشحن', 'cancelled before shipping')} ${item.released_quantity}` : ''}</li>)}
                         {Number(refund.shipping_amount) > 0 ? <li>{text('الشحن', 'Shipping')} <bdi>{money(refund.shipping_amount)}</bdi></li> : null}</ul>
                     {refund.note ? <p>{refund.note}</p> : null}
                 </li>)}</ol> : <p className="ws-order-muted">{text('لا توجد مبالغ مستردة لهذا الطلب.', 'No refunds recorded for this order.')}</p>}
@@ -92,7 +92,7 @@ export default function StoreOrderRefunds({ apiBase, endpoint, order, ar, theme,
 function RefundDialog({ apiBase, endpoint, summary, returnRow, order, ar, theme, onClose, onSaved }) {
     const text = (a, e) => (ar ? a : e);
     const fixed = returnRow ? Object.fromEntries(returnRow.items.map((item) => [item.store_order_item_id, item.quantity])) : null;
-    const [quantities, setQuantities] = useState(() => fixed ?? {});
+    const [quantities, setQuantities] = useState(() => fixed ?? {}); const [unitChoices, setUnitChoices] = useState({});
     const [shipping, setShipping] = useState(''); const [manual, setManual] = useState(false); const [amount, setAmount] = useState('');
     const [reason, setReason] = useState(returnRow ? 'returned' : 'customer_request'); const [method, setMethod] = useState('original_payment');
     const [restock, setRestock] = useState(true); const [note, setNote] = useState(''); const [busy, setBusy] = useState(false); const [error, setError] = useState('');
@@ -103,7 +103,10 @@ function RefundDialog({ apiBase, endpoint, summary, returnRow, order, ar, theme,
     const shippingMax = collected ? toCents(summary.shipping?.refundable) : 0;
     const amountCents = manual ? toCents(amount) : totals.max;
     const units = Object.values(quantities).reduce((sum, value) => sum + (Number(value) || 0), 0);
-    const restockable = (summary.items || []).filter((line) => line.restockable && (quantities[line.store_order_item_id] || 0) > 0).reduce((sum, line) => sum + quantities[line.store_order_item_id], 0);
+    // Refunds that close a return are about shipped units; otherwise units that never shipped go first (as on the server).
+    const defaultUnits = returnRow ? 'shipped' : 'unshipped';
+    const unitsFor = (line) => unitChoices[line.store_order_item_id] || defaultUnits;
+    const restockable = restockableUnits(summary, quantities, unitChoices, defaultUnits);
     const shippingInvalid = toCents(shipping) > shippingMax || Number(shipping) < 0;
     const amountInvalid = manual && (amount === '' || amountCents > totals.max || Number(amount) < 0);
     const nothing = units === 0 && toCents(shipping) === 0;
@@ -122,7 +125,11 @@ function RefundDialog({ apiBase, endpoint, summary, returnRow, order, ar, theme,
                 // Approved returns are marked received in the same step; the server refunds exactly the returned lines.
                 await api.patch(`${apiBase}/returns/${returnRow.id}`, { status: 'received', refund });
             } else {
-                const items = Object.entries(quantities).filter(([, quantity]) => quantity > 0).map(([id, quantity]) => ({ store_order_item_id: Number(id), quantity }));
+                const lines = Object.fromEntries((summary.items || []).map((line) => [line.store_order_item_id, line]));
+                const items = Object.entries(quantities).filter(([, quantity]) => quantity > 0).map(([id, quantity]) => {
+                    const line = lines[id];
+                    return line && refundUnitsChoice(line) ? { store_order_item_id: Number(id), quantity, units: unitsFor(line) } : { store_order_item_id: Number(id), quantity };
+                });
                 await api.post(`${endpoint}/refunds`, { ...refund, items, expected_refunded_total: summary.refunded_total });
             }
             const cardNote = split.giftCard > 0 ? text(` عاد ${money(split.giftCard)} إلى بطاقة الهدية تلقائيًا.`, ` ${money(split.giftCard)} went back to the gift card automatically.`) : '';
@@ -145,7 +152,10 @@ function RefundDialog({ apiBase, endpoint, summary, returnRow, order, ar, theme,
                         const value = quantities[line.store_order_item_id] || 0; const id = `refund-qty-${line.store_order_item_id}`;
                         return <div className="ws-refund-line" key={line.store_order_item_id}>
                             <div className="ws-refund-line-name"><label htmlFor={id}>{line.name}</label>{line.variant_name ? <small>{line.variant_name}</small> : null}
-                                <small>{text(`متاح للاسترداد ${line.refundable_quantity} من ${line.quantity}`, `${line.refundable_quantity} of ${line.quantity} refundable`)}{collected ? <> · <bdi>{money(toCents(line.refundable_amount))}</bdi></> : null}</small></div>
+                                <small>{text(`متاح للاسترداد ${line.refundable_quantity} من ${line.quantity}`, `${line.refundable_quantity} of ${line.quantity} refundable`)}{collected ? <> · <bdi>{money(toCents(line.refundable_amount))}</bdi></> : null}</small>
+                            <RefundUnitsField line={line} value={value} units={unitsFor(line)} fixed={Boolean(fixed)} busy={busy} ar={ar}
+                                onChange={(choice) => setUnitChoices((current) => ({ ...current, [line.store_order_item_id]: choice }))} />
+                            </div>
                             <div className="ws-refund-stepper">
                                 <button type="button" aria-label={text(`إنقاص ${line.name}`, `Decrease ${line.name}`)} disabled={busy || Boolean(fixed) || value <= 0} onClick={() => setQuantity(line, value - 1)}>−</button>
                                 <input id={id} type="number" inputMode="numeric" min={0} max={line.refundable_quantity} step={1} value={value} disabled={busy || Boolean(fixed) || line.refundable_quantity === 0} onChange={(event) => setQuantity(line, event.target.value)} />
@@ -173,4 +183,17 @@ function RefundDialog({ apiBase, endpoint, summary, returnRow, order, ar, theme,
             <footer><button type="button" onClick={onClose} disabled={busy}>{text('إلغاء', 'Cancel')}</button><button className="ws-order-primary-button" type="submit" disabled={busy || nothing || shippingInvalid || amountInvalid}>{busy ? text('جار الحفظ…', 'Saving…') : `${text('استرداد', 'Refund')} ${money(amountCents)}`}</button></footer>
         </form></DialogPanel></div>
     </Dialog>;
+}
+
+/** Partly shipped lines: which units the refund is about, and what it does to stock. */
+function RefundUnitsField({ line, value, units, fixed, busy, ar, onChange }) {
+    const text = (a, e) => (ar ? a : e);
+    if (!(line.unshipped_refundable_quantity > 0)) return null;
+    const split = refundUnitSplit(line, value, units); const id = `refund-units-${line.store_order_item_id}`;
+    return <div className="ws-refund-units">
+        {refundUnitsChoice(line) && !fixed ? <label htmlFor={id}>{text(`نوع القطع المستردة من ${line.name}`, `Refunded units of ${line.name}`)}
+            <select id={id} value={units} disabled={busy} onChange={(event) => onChange(event.target.value)}>{REFUND_UNITS.map(([key, a, e]) => <option key={key} value={key}>{ar ? a : e}</option>)}</select></label> : null}
+        <small data-testid={`refund-effect-${line.store_order_item_id}`}>{text(`مشحونة ${line.shipped_refundable_quantity} · لم تُشحن ${line.unshipped_refundable_quantity}`, `${line.shipped_refundable_quantity} shipped · ${line.unshipped_refundable_quantity} not shipped`)}
+            {value > 0 ? ` — ${[split.returned ? text(`${split.returned} مرتجعة`, `${split.returned} returned`) : null, split.released ? text(`${split.released} تُلغى ولن تُشحن`, `${split.released} cancelled, won't ship`) : null].filter(Boolean).join(' · ')}` : ''}</small>
+    </div>;
 }

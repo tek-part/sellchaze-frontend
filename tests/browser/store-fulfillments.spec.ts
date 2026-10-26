@@ -33,9 +33,20 @@ const order = (shipped: boolean) => ({
   timeline: [], review: { classification: null, version: 0 }, placed_at: '2026-10-18T10:00:00Z', created_at: '2026-10-18T10:00:00Z', updated_at: shipped ? '2026-10-22T10:00:00Z' : '2026-10-18T10:00:00Z',
 });
 
-async function dashboard(page: Page, locale: 'ar' | 'en') {
+const refundLine = (id: number, name: string, quantity: number, allocated: string, shipped: number, unshipped: number) => ({
+  store_order_item_id: id, name, variant_name: null, sku: null, unit_price: (Number(allocated) / quantity).toFixed(2), line_total: allocated, quantity, refunded_quantity: 0,
+  refundable_quantity: quantity, allocated_amount: allocated, refunded_amount: '0.00', refundable_amount: allocated, restockable: shipped > 0, digital: false,
+  fulfilled_quantity: shipped, unfulfilled_quantity: unshipped, shipped_refundable_quantity: shipped, unshipped_refundable_quantity: unshipped,
+});
+const refundSummary = () => ({
+  currency: 'EGP', order_status: 'shipped', payment_status: 'paid', payment_collected: true, refundable: true, grand_total: '250.00', refunded_total: '0.00',
+  refundable_total: '250.00', fully_refunded: false, shipping: { total: '50.00', refunded: '0.00', refundable: '50.00' }, gift_card_total: '0.00',
+  items: [refundLine(501, 'Synthetic linen shirt', 2, '100.00', 1, 1), refundLine(502, 'Synthetic canvas cap', 1, '100.00', 0, 1)], refunds: [] as unknown[],
+});
+
+async function dashboard(page: Page, locale: 'ar' | 'en', startShipped = false) {
   const writes: Write[] = [];
-  let shipped = false;
+  let shipped = startShipped;
   await page.addInitScript((value) => { localStorage.setItem('sellchase_access_token', 'isolated-fulfil-review'); localStorage.setItem('sellchase_locale', value); localStorage.setItem('sellchaze_workspace_appearance', 'light'); }, locale);
   await page.route('**/api/v1/**', async (route) => {
     const req = route.request(); const url = new URL(req.url()); const path = url.pathname.replace('/api/v1', '');
@@ -45,7 +56,17 @@ async function dashboard(page: Page, locale: 'ar' | 'en') {
       writes.push({ method: 'POST', path, body: req.postDataJSON() }); shipped = true;
       return route.fulfill({ status: 201, json: { data: partial() }, headers });
     }
+    if (req.method() === 'POST' && path === '/my-store/orders/43/status') {
+      const body = req.postDataJSON(); writes.push({ method: 'POST', path, body });
+      return route.fulfill({ json: { data: { ...order(true), status: body.status, fulfillment_status: 'fulfilled', next_statuses: [] } }, headers });
+    }
+    if (req.method() === 'POST' && path === '/my-store/orders/43/refunds') {
+      writes.push({ method: 'POST', path, body: req.postDataJSON() });
+      return route.fulfill({ status: 201, json: { data: refundSummary() }, headers });
+    }
     if (req.method() !== 'GET') { writes.push({ method: req.method(), path, body: null }); return route.fulfill({ status: 405, json: { message: 'Unexpected write' }, headers }); }
+    if (path === '/my-store/orders/43/refunds') return route.fulfill({ json: { data: refundSummary() }, headers });
+    if (path === '/my-store/orders/43/returns') return route.fulfill({ json: { data: [] }, headers });
     if (path === '/auth/me') return route.fulfill({ json: { user: { id: 1, name: 'Isolated fulfil fixture', roles: ['Merchant'], permissions: ['store.orders.manage'], is_active: true } }, headers });
     if (path === '/my-store') return route.fulfill({ json: { data: { id: 1, owner_user_id: 1, name: 'Local fulfil fixture', slug: 'fixture', status: 'active', currency: 'EGP' } }, headers });
     if (path === '/my-store/orders/43/detail') return route.fulfill({ json: { data: order(shipped) }, headers });
@@ -159,6 +180,47 @@ for (const locale of ['ar', 'en'] as const) {
     await page.evaluate(() => document.fonts.ready);
     expect(await noOverflow(page)).toBe(true);
     expect(api.writes).toEqual([]);
+  });
+
+  test(`Delivering a partially shipped order asks to ship the rest in ${locale}`, async ({ page }) => {
+    const api = await dashboard(page, locale, true);
+    await page.goto('/store/orders/43');
+    await expect(page.getByTestId('order-fulfillment-badge')).toHaveText(t(locale, 'مشحون جزئيًا', 'Partially fulfilled'));
+    await page.locator('.ws-order-toolbar').getByRole('button', { name: t(locale, 'تحديث الحالة', 'Update status'), exact: true }).click();
+    const dialog = page.getByRole('dialog');
+    await dialog.getByRole('combobox', { name: new RegExp(t(locale, 'الحالة الجديدة', 'New status')) }).selectOption('delivered');
+    await expect(dialog).toContainText(t(locale, 'لم تُشحن كل منتجات هذا الطلب بعد', 'Some items on this order have not shipped yet'));
+    const confirm = dialog.getByRole('button', { name: t(locale, 'تأكيد', 'Confirm'), exact: true });
+    await expect(confirm).toBeDisabled();
+    await dialog.getByLabel(t(locale, 'شحن المنتجات المتبقية وتحديد الطلب كمُسلَّم', 'Ship the remaining items and mark the order delivered')).check();
+    expect(await seriousViolations(page, '.ws-order-leftover')).toEqual([]);
+    await confirm.click();
+    await expect(page.getByRole('dialog')).toHaveCount(0);
+    expect(api.writes).toEqual([{ method: 'POST', path: '/my-store/orders/43/status', body: { status: 'delivered', note: null, fulfil_remaining: true } }]);
+  });
+
+  test(`Refunding a partly shipped line lets the merchant pick shipped units in ${locale}`, async ({ page }) => {
+    const api = await dashboard(page, locale, true);
+    await page.goto('/store/orders/43');
+    await page.locator('.ws-order-toolbar').getByRole('button', { name: t(locale, 'استرداد', 'Refund'), exact: true }).click();
+    const dialog = page.getByRole('dialog');
+    await dialog.getByRole('button', { name: t(locale, 'زيادة Synthetic linen shirt', 'Increase Synthetic linen shirt'), exact: true }).click();
+    const effect = dialog.getByTestId('refund-effect-501');
+    await expect(effect).toContainText(t(locale, '1 تُلغى ولن تُشحن', "1 cancelled, won't ship"));
+    await expect(dialog.getByLabel(new RegExp(t(locale, 'إعادة .* إلى المخزون', 'Restock')))).toHaveCount(0);
+    await dialog.getByLabel(t(locale, 'نوع القطع المستردة من Synthetic linen shirt', 'Refunded units of Synthetic linen shirt')).selectOption('shipped');
+    await expect(effect).toContainText(t(locale, '1 مرتجعة', '1 returned'));
+    await expect(dialog.getByLabel(t(locale, 'إعادة 1 قطعة إلى المخزون', 'Restock 1 item(s)'))).toBeChecked();
+    await expect(dialog.getByTestId('refund-effect-502')).toContainText(t(locale, 'لم تُشحن 1', '1 not shipped'));
+    expect(await seriousViolations(page, '.ws-refund-panel')).toEqual([]);
+    await page.setViewportSize({ width: 390, height: 844 });
+    expect(await page.locator('.ws-refund-panel').evaluate((el) => el.scrollWidth <= el.clientWidth)).toBe(true);
+    await dialog.getByRole('button', { name: new RegExp(`^${t(locale, 'استرداد', 'Refund')} \\d`) }).click();
+    await expect(page.getByRole('dialog')).toHaveCount(0);
+    expect(api.writes).toEqual([{ method: 'POST', path: '/my-store/orders/43/refunds', body: {
+      reason: 'customer_request', method: 'original_payment', restock: true, note: null, shipping_amount: null, amount: null,
+      items: [{ store_order_item_id: 501, quantity: 1, units: 'shipped' }], expected_refunded_total: '0.00',
+    } }]);
   });
 
   test(`Storefront order page lists shipments with tracking in ${locale}`, async ({ page }) => {

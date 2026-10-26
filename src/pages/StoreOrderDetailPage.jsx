@@ -52,7 +52,7 @@ export default function StoreOrderDetailPage() {
     const [dialog, setDialog] = useState(null); const [note, setNote] = useState(''); const [classification, setClassification] = useState('');
     const [status, setStatus] = useState(''); const [bankReference, setBankReference] = useState(''); const [busy, setBusy] = useState(false);
     const [notice, setNotice] = useState(''); const [actionError, setActionError] = useState('');
-    const [editing, setEditing] = useState(false); const [refundOpen, setRefundOpen] = useState(false); const [fulfilOpen, setFulfilOpen] = useState(false);
+    const [editing, setEditing] = useState(false); const [refundOpen, setRefundOpen] = useState(false); const [fulfilOpen, setFulfilOpen] = useState(false); const [fulfilRemaining, setFulfilRemaining] = useState(false);
     const [loadedScope, setLoadedScope] = useState(null);
     const generation = useRef(0); const fetchVersion = useRef(0); const submitting = useRef(false); const requestKey = useRef(null);
     const endpoint = `${apiBase}/orders/${orderId}`;
@@ -69,15 +69,17 @@ export default function StoreOrderDetailPage() {
         void load(); return () => { generation.current += 1; fetchVersion.current += 1; };
     }, [load]);
     function open(kind) {
-        setDialog(kind); setActionError(''); setNote(''); setStatus(''); setBankReference('');
+        setDialog(kind); setActionError(''); setNote(''); setStatus(''); setBankReference(''); setFulfilRemaining(false);
         setClassification(order.review?.classification || 'clear'); requestKey.current = crypto.randomUUID();
     }
+    // Delivering a partially shipped order ships the rest without tracking: the merchant confirms it explicitly.
+    const leftoverConfirm = dialog === 'status' && status === 'delivered' && order?.fulfillment_status === 'partial';
     function close() { if (!submitting.current) { setDialog(null); setActionError(''); } }
     async function submit(event) {
         event.preventDefault(); if (submitting.current || !canManage) return;
         const scope = generation.current; submitting.current = true; setBusy(true); setActionError('');
         let path; let payload;
-        if (dialog === 'status') { path = 'status'; payload = { status, note: note || null }; }
+        if (dialog === 'status') { path = 'status'; payload = { status, note: note || null, ...(leftoverConfirm ? { fulfil_remaining: fulfilRemaining } : {}) }; }
         else if (dialog === 'review') { path = 'review'; payload = { classification: classification === 'clear' ? null : classification, version: order.review?.version || 0, note: note || null }; }
         else if (dialog === 'block') { path = 'block-phone'; payload = { note: note || null }; }
         else if (dialog === 'webhook') { path = 'resend-webhook'; payload = { request_key: requestKey.current }; }
@@ -146,6 +148,8 @@ export default function StoreOrderDetailPage() {
         {editing && canManage && !archived ? <StoreOrderEditModal key={`${endpoint}:${scopeKey}`} apiBase={apiBase} orderId={order.id} ar={ar} theme={theme} onClose={() => setEditing(false)} onSaved={(updated, recovered) => { setOrder(updated); setLoadedScope(scopeKey); setEditing(false); setNotice(recovered ? text('تحققنا من حفظ التعديل. هذه أحدث بيانات الطلب.', 'We reconciled the saved edit. These are the latest order details.') : text('حُفظ تعديل الطلب.', 'Order changes saved.')); }} /> : null}
         <Dialog open={Boolean(dialog)} onClose={close} className="ws-orders-dialog" dir={ar ? 'rtl' : 'ltr'} data-workspace-theme={theme}><DialogBackdrop transition className="ws-orders-backdrop ws-order-transition" /><div className="ws-orders-dialog-position"><DialogPanel transition className="ws-order-action-panel ws-order-transition"><form onSubmit={submit}><header><DialogTitle>{label?.[ar ? 0 : 1]}</DialogTitle><button type="button" onClick={close} disabled={busy} aria-label={text('إغلاق', 'Close')}><HiOutlineXMark aria-hidden /></button></header><div className="ws-order-action-body">
             {dialog === 'status' ? <label>{text('الحالة الجديدة', 'New status')}<select required value={status} disabled={busy} onChange={event => setStatus(event.target.value)}><option value="">{text('اختر الحالة', 'Choose status')}</option>{next.map(value => <option value={value} key={value}>{orderStatusLabel(value, ar)}</option>)}</select></label> : null}
+            {leftoverConfirm ? <div className="ws-order-leftover" role="group" aria-labelledby="ws-leftover-note"><p id="ws-leftover-note">{text('لم تُشحن كل منتجات هذا الطلب بعد. تحديده كمُسلَّم يشحن المنتجات المتبقية دون رقم تتبع ودون إشعار للعميل.', 'Some items on this order have not shipped yet. Marking it delivered ships the remaining items without tracking and without notifying the customer.')}</p>
+                <label className="ws-refund-check"><input type="checkbox" checked={fulfilRemaining} disabled={busy} onChange={event => setFulfilRemaining(event.target.checked)} />{text('شحن المنتجات المتبقية وتحديد الطلب كمُسلَّم', 'Ship the remaining items and mark the order delivered')}</label></div> : null}
             {dialog === 'status' && ORDER_RETURN_STATUSES.includes(status) ? <p>{text('تتبع إرجاع المنتجات لا يصدر استردادًا ماليًا ولا يعيد المخزون تلقائيًا.', 'Tracking a product return does not issue a payment refund or automatically restock products.')}</p> : null}
             {dialog === 'review' ? <><p>{text('تصنيف يدوي للمراجعة؛ تبقى حالة الطلب والدفع كما هي.', 'A manual review classification. Order and payment status stay as recorded.')}</p><label>{text('التصنيف', 'Classification')}<select value={classification} disabled={busy} onChange={event => setClassification(event.target.value)}>{Object.entries(reviewLabels).map(([key, labels]) => <option key={key} value={key}>{labels[ar ? 0 : 1]}</option>)}</select></label></> : null}
             {dialog === 'block' ? <p>{text('سيمنع الحظر هذا الرقم من إنشاء طلبات جديدة في هذا المتجر. الطلب الحالي يبقى كما هو.', 'Blocking prevents this number from placing new orders in this store. The current order remains as recorded.')} <bdi>{phone}</bdi></p> : null}
@@ -154,7 +158,7 @@ export default function StoreOrderDetailPage() {
             {dialog === 'bank' ? <><p>{text('أكد فقط بعد التحقق من وصول', 'Confirm only after verifying receipt of')} <bdi>{money(orderAmountDue(order))}</bdi>. {text('يتيح التأكيد المنتجات الرقمية للمشتري.', 'Confirmation releases digital products to the buyer.')}</p><label>{text('مرجع التحويل البنكي', 'Bank transfer reference')}<input required maxLength={200} value={bankReference} disabled={busy} onChange={event => setBankReference(event.target.value)} /></label></> : null}
             {['status', 'review', 'block', 'bank'].includes(dialog) ? <label>{text('ملاحظة داخلية (اختياري)', 'Internal note (optional)')}<textarea rows={3} maxLength={2000} disabled={busy} value={note} onChange={event => setNote(event.target.value)} /></label> : null}
             {actionError ? <p role="alert" className="ws-orders-error">{actionError}</p> : null}
-        </div><footer><button type="button" onClick={close} disabled={busy}>{text('إلغاء', 'Cancel')}</button><button className="ws-order-primary-button" type="submit" disabled={busy || (dialog === 'status' && !status) || (dialog === 'bank' && !bankReference.trim())}>{busy ? text('جار الحفظ…', 'Saving…') : text('تأكيد', 'Confirm')}</button></footer></form></DialogPanel></div></Dialog>
+        </div><footer><button type="button" onClick={close} disabled={busy}>{text('إلغاء', 'Cancel')}</button><button className="ws-order-primary-button" type="submit" disabled={busy || (dialog === 'status' && !status) || (leftoverConfirm && !fulfilRemaining) || (dialog === 'bank' && !bankReference.trim())}>{busy ? text('جار الحفظ…', 'Saving…') : text('تأكيد', 'Confirm')}</button></footer></form></DialogPanel></div></Dialog>
     </div>;
 }
 
