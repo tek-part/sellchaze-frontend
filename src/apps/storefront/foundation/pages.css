@@ -78,6 +78,9 @@
 .sf-return__line { display: flex; justify-content: space-between; align-items: center; gap: var(--sp-4); flex-wrap: wrap; min-width: 0; }
 .sf-return__line > div:first-child { min-width: 0; flex: 1 1 12rem; }
 .sf-card-row__meta { font-family: var(--font); font-size: var(--fs-sm); color: var(--muted); }
+.sf-shipment__body { display: flex; flex-direction: column; gap: var(--sp-2); min-width: 0; flex: 1 1 auto; overflow-wrap: anywhere; }
+.sf-shipment__items { list-style: none; margin: 0; padding: 0; }
+.sf-shipment__track { align-self: flex-start; }
 @media (max-width: 768px) {
   .sf-account { grid-template-columns: 1fr; }
   .sf-account__nav { position: static; flex-direction: row; flex-wrap: wrap; gap: var(--sp-4); border-bottom: 1px solid var(--border); padding-bottom: var(--sp-3); margin-bottom: var(--sp-4); }

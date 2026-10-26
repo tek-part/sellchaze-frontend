@@ -1,0 +1,16 @@
+.ws-fulfillments .ws-refunds-head h2{flex:1 1 auto}
+.ws-fulfil-waiting{padding:12px;border-radius:8px;background:var(--ws-panel-soft);margin-bottom:12px;min-width:0;overflow-wrap:anywhere}
+.ws-fulfil-waiting strong{font-weight:500}
+.ws-fulfil-waiting ul{margin:4px 0 0;padding-inline-start:18px;font-size:13px}
+.ws-shipments>li.is-cancelled{opacity:.75}
+.ws-shipments>li.is-cancelled>.ws-returns-row-head strong{text-decoration:line-through}
+.ws-shipment-track{display:inline-block;margin:2px 0 4px;font-size:13px;font-weight:500;color:#0b6b35;text-decoration:underline;text-underline-offset:2px}
+:where([data-workspace-theme='dark']) .ws-shipment-track{color:#7ad19c}
+.ws-shipment-cancel{color:#b42318}
+:where([data-workspace-theme='dark']) .ws-shipment-cancel{color:#fda29b}
+.ws-fulfillments .ws-sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap}
+.ws-fulfil-panel .ws-order-action-body small{display:block;margin-top:4px;font-size:12px}
+.ws-order-danger-button{background:#b42318!important;color:#fff;padding:8px 16px;border-radius:8px;min-height:40px;font-weight:500;border:0}
+.ws-orders-fulfillment{display:block;margin-top:4px;width:fit-content}
+/* Shared green fails AA with white 14px text; shipment actions use the darker green (5:1+). */
+:is(.ws-fulfillments,.ws-fulfil-panel) .ws-order-primary-button{background:#0b7a3b!important;color:#fff}

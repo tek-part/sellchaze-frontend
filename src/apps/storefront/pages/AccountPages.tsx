@@ -20,6 +20,7 @@ import { useStore } from '../state/store-context';
 import { ThemeRenderer, useLayout, useTemplate } from '../theme-engine';
 import { flowContext } from './flow-context';
 import { OrderReturnSection } from './OrderReturnSection';
+import { OrderShipmentsSection } from './OrderShipmentsSection';
 
 /** Render the active theme's account sub-template when it provides one; otherwise null (fallback). */
 function useAccountTemplate(name: 'account-profile' | 'account-orders' | 'account-order' | 'account-addresses'): ReactElement | null {
@@ -182,8 +183,9 @@ export function OrderDetailPage(): ReactElement {
   const currency = order?.currency || store.currency;
   // Themes may render their own order template; returns stay available underneath it.
   const returns = order ? <OrderReturnSection order={order} currency={currency} onChanged={setUpdated} /> : null;
+  const shipments = order ? <OrderShipmentsSection order={order} /> : null;
 
-  if (themed) return <>{themed}{returns}</>;
+  if (themed) return <>{themed}{shipments}{returns}</>;
   if (orderQ.loading) return <Spinner label={t('account.loadingOrder')} />;
   if (!order) return <EmptyState variant="orders" title={t('account.orderNotFound')} description={t('account.orderNotFoundHint')} />;
 
@@ -214,6 +216,7 @@ export function OrderDetailPage(): ReactElement {
         <span>{t('account.orderTotal')}</span>
         <span className="sf-cart-summary__total-value">{formatMoney(Number(order.total), currency)}</span>
       </div>
+      {shipments}
       {returns}
       <a href="/account/orders" className="sf-link">
         <span className="sf-link__label">{t('account.backToOrders')}</span>

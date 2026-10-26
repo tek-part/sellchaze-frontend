@@ -10,7 +10,7 @@ import { IndexTable, useIndexTable } from '../../../components/data-table';
 import { HiOutlinePlus, HiOutlineClipboardDocument, HiOutlineEye, HiOutlineEyeSlash, HiOutlinePencilSquare, HiOutlineTrash } from '../../../components/workspace/WorkspaceIcons';
 import './merchant-webhooks.css';
 
-const events = [{ value: 'orders', label: 'Orders' }, { value: 'order-status-update', label: 'Order Status Update' }];
+const events = [{ value: 'orders', label: 'Orders' }, { value: 'order-status-update', label: 'Order Status Update' }, { value: 'order-fulfillment', label: 'Order Fulfillment' }];
 const empty = { url: '', description: '', type: '', enabled: true, version: 1 };
 const statusLabels = { queued: ['قيد الانتظار', 'Queued'], processing: ['جارٍ الإرسال', 'Sending'], retry: ['إعادة المحاولة', 'Retrying'], blocked: ['يتطلب شحن المحفظة', 'Wallet funding required'], sent: ['تم الإرسال', 'Sent'], skipped: ['توقف الإرسال', 'Skipped'], failed: ['فشل الإرسال', 'Failed'], expired: ['انتهت المهلة', 'Expired'] };
 function failureText(failure, text) {

@@ -30,3 +30,8 @@
 @media(max-width:480px){.ws-refund-line{flex-direction:column;align-items:stretch}.ws-refund-stepper{align-self:flex-start}}
 /* The shared green fails AA with white 14px text; refund actions use a darker green (5:1+). */
 :is(.ws-refunds,.ws-returns,.ws-refund-panel) .ws-order-primary-button{background:#0b7a3b!important;color:#fff}
+/* Partly shipped lines: the units choice and its stock effect sit under the line name. */
+.ws-refund-units{display:grid;gap:4px;margin-top:6px;min-width:0;overflow-wrap:anywhere}
+.ws-refund-units small{color:var(--ws-muted);font-size:12px}
+.ws-refund-units label{display:block;min-width:0}
+.ws-order-action-body .ws-refund-units select{min-width:0;max-width:100%;text-overflow:ellipsis}

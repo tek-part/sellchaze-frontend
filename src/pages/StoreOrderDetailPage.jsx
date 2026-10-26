@@ -19,6 +19,8 @@ import StoreOrderNotifications from '../components/store/StoreOrderNotifications
 import StoreOrderCashPayment from '../components/store/StoreOrderCashPayment';
 import StoreOrderEditModal from '../components/store/orders/StoreOrderEditModal';
 import StoreOrderRefunds from '../components/store/orders/StoreOrderRefunds';
+import StoreOrderFulfillments from '../components/store/orders/StoreOrderFulfillments';
+import { FULFILLABLE_ORDER_STATUSES, FULFILLMENT_STATUSES, FULFILLMENT_STATUS_TONES, vocabularyLabel as fulfillmentLabel } from '../components/store/orders/order-fulfillments';
 import { PAYMENT_STATUS_LABELS } from '../components/store/orders/order-refunds';
 import { orderAmountDue } from '../lib/cash-collection';
 import { orderBotLabel } from '../components/store/orders/OrderBotVerification';
@@ -32,6 +34,8 @@ const actionLabels = { status: ['تحديث حالة الطلب', 'Update order 
 const eventLabels = { merchant_payment_pending: ['الدفع بانتظار التحصيل', 'Payment awaiting collection'], merchant_payment_failed: ['وُثّق فشل الدفع اليدوي', 'Manual payment failure recorded'], merchant_edit: ['عُدّل الطلب', 'Order edited'], merchant_archive: ['أُرشف الطلب', 'Order archived'], merchant_restore: ['استُرجع الطلب', 'Order restored'], merchant_phone_block: ['حُظر رقم الهاتف', 'Phone blocked'], merchant_webhook_resend: ['طُلب إعادة إرسال الويب هوك', 'Webhook resend requested'], merchant_review_clear: ['أُزيل التصنيف', 'Classification cleared'], merchant_review_moderate_risk: reviewLabels.moderate_risk, merchant_review_high_risk: reviewLabels.high_risk, merchant_review_spam: reviewLabels.spam, refund: ['سُجل استرداد', 'Refund recorded'], return_refund: ['سُجل استرداد للمرتجع', 'Return refunded'], return_requested: ['طلب العميل إرجاعًا', 'Return requested'], return_approved: ['قُبل طلب الإرجاع', 'Return approved'], return_rejected: ['رُفض طلب الإرجاع', 'Return rejected'], return_received: ['استُلم المرتجع', 'Return received'], return_closed: ['أُغلق طلب الإرجاع', 'Return closed'] , order_protection: ['علّمته الحماية من الطلبات الوهمية', 'Flagged by fake order protection'] };
 // Refunds are recorded after fulfilment, or for cancelled orders that were paid.
 const REFUND_STATUSES = ['shipped', 'delivered', 'returning_from_delivery', 'request_refund', 'refund_in_progress', 'refunded', 'cancelled'];
+// Shipments exist from confirmation on; unconfirmed orders cannot ship yet.
+const shipmentsVisible = (order, requiresShipping) => requiresShipping && (!['pending', 'cancelled'].includes(order.status) || (order.fulfillment_status && order.fulfillment_status !== 'unfulfilled'));
 const refundsVisible = order => REFUND_STATUSES.includes(order.status) && (order.status !== 'cancelled' || ['paid', 'partially_refunded', 'refunded'].includes(order.payment_status));
 
 function DetailCard({ title, children, className = '' }) {
@@ -48,7 +52,7 @@ export default function StoreOrderDetailPage() {
     const [dialog, setDialog] = useState(null); const [note, setNote] = useState(''); const [classification, setClassification] = useState('');
     const [status, setStatus] = useState(''); const [bankReference, setBankReference] = useState(''); const [busy, setBusy] = useState(false);
     const [notice, setNotice] = useState(''); const [actionError, setActionError] = useState('');
-    const [editing, setEditing] = useState(false); const [refundOpen, setRefundOpen] = useState(false);
+    const [editing, setEditing] = useState(false); const [refundOpen, setRefundOpen] = useState(false); const [fulfilOpen, setFulfilOpen] = useState(false); const [fulfilRemaining, setFulfilRemaining] = useState(false);
     const [loadedScope, setLoadedScope] = useState(null);
     const generation = useRef(0); const fetchVersion = useRef(0); const submitting = useRef(false); const requestKey = useRef(null);
     const endpoint = `${apiBase}/orders/${orderId}`;
@@ -61,19 +65,21 @@ export default function StoreOrderDetailPage() {
     }, [endpoint, canManage, scopeKey]);
     useEffect(() => {
         generation.current += 1; fetchVersion.current += 1; submitting.current = false; requestKey.current = null;
-        setOrder(null); setError(''); setDialog(null); setEditing(false); setRefundOpen(false); setBusy(false); setNotice(''); setNote(''); setBankReference('');
+        setOrder(null); setError(''); setDialog(null); setEditing(false); setRefundOpen(false); setFulfilOpen(false); setBusy(false); setNotice(''); setNote(''); setBankReference('');
         void load(); return () => { generation.current += 1; fetchVersion.current += 1; };
     }, [load]);
     function open(kind) {
-        setDialog(kind); setActionError(''); setNote(''); setStatus(''); setBankReference('');
+        setDialog(kind); setActionError(''); setNote(''); setStatus(''); setBankReference(''); setFulfilRemaining(false);
         setClassification(order.review?.classification || 'clear'); requestKey.current = crypto.randomUUID();
     }
+    // Delivering a partially shipped order ships the rest without tracking: the merchant confirms it explicitly.
+    const leftoverConfirm = dialog === 'status' && status === 'delivered' && order?.fulfillment_status === 'partial';
     function close() { if (!submitting.current) { setDialog(null); setActionError(''); } }
     async function submit(event) {
         event.preventDefault(); if (submitting.current || !canManage) return;
         const scope = generation.current; submitting.current = true; setBusy(true); setActionError('');
         let path; let payload;
-        if (dialog === 'status') { path = 'status'; payload = { status, note: note || null }; }
+        if (dialog === 'status') { path = 'status'; payload = { status, note: note || null, ...(leftoverConfirm ? { fulfil_remaining: fulfilRemaining } : {}) }; }
         else if (dialog === 'review') { path = 'review'; payload = { classification: classification === 'clear' ? null : classification, version: order.review?.version || 0, note: note || null }; }
         else if (dialog === 'block') { path = 'block-phone'; payload = { note: note || null }; }
         else if (dialog === 'webhook') { path = 'resend-webhook'; payload = { request_key: requestKey.current }; }
@@ -103,9 +109,11 @@ export default function StoreOrderDetailPage() {
         {error ? <p role="alert" className="ws-orders-error">{error}<button onClick={() => void load()}>{text('إعادة التحميل', 'Reload')}</button></p> : null}
         {notice ? <p role="status" className="ws-orders-notice">{notice}</p> : null}
         <div className="ws-order-toolbar"><StatusBadge status={order.status} label={orderStatusLabel(order.status, ar)} />{archived ? <span className="ws-order-archived">{text('مؤرشف', 'Archived')}</span> : null}{order.review?.classification ? <span className={`ws-order-review is-${order.review.classification}`}>{reviewLabels[order.review.classification]?.[ar ? 0 : 1]}</span> : null}
+            {requiresShipping && order.fulfillment_status ? <span className={`ws-dt-badge ${FULFILLMENT_STATUS_TONES[order.fulfillment_status] || ''}`} data-testid="order-fulfillment-badge">{fulfillmentLabel(FULFILLMENT_STATUSES, order.fulfillment_status, ar)}</span> : null}
             {canManage && !archived ? <>
                 <button type="button" onClick={() => setEditing(true)}>{text('تعديل الطلب', 'Edit order')}</button>
                 <button type="button" onClick={() => open('status')} disabled={!next.length}>{text('تحديث الحالة', 'Update status')}</button>
+                {requiresShipping && FULFILLABLE_ORDER_STATUSES.includes(order.status) && order.fulfillment_status !== 'fulfilled' ? <button type="button" onClick={() => setFulfilOpen(true)}>{text('شحن المنتجات', 'Fulfill items')}</button> : null}
                 {refundsVisible(order) ? <button type="button" onClick={() => setRefundOpen(true)}>{text('استرداد', 'Refund')}</button> : null}
                 <button type="button" onClick={() => open('review')}>{text('تصنيف الطلب', 'Classify order')}</button>
                 {whatsapp ? <a href={whatsapp} target="_blank" rel="noopener noreferrer">{text('تأكيد عبر واتساب', 'Confirm via WhatsApp')}</a> : null}
@@ -119,6 +127,7 @@ export default function StoreOrderDetailPage() {
         <div className="ws-order-layout"><div className="ws-order-primary">
             <DetailCard title={text('عناصر سلة التسوق', 'Cart items')}><div className="ws-order-cart-scroll"><table><thead><tr><th>{text('المنتج', 'Product')}</th><th>{text('السعر', 'Price')}</th><th>{text('الكمية', 'Quantity')}</th><th>{text('الإجمالي', 'Total')}</th></tr></thead><tbody>{(order.items || []).map(item => <tr key={item.id}><td><strong>{item.name}</strong>{item.variant_name ? <small>{item.variant_name}</small> : null}{item.sku ? <small><bdi>{item.sku}</bdi></small> : null}<PersonalizationSummary entries={item.personalization} /><DigitalDeliverySummary delivery={item.digital_delivery} /></td><td><bdi>{money(item.unit_price)}</bdi></td><td>{item.quantity}</td><td><bdi>{money(item.line_total)}</bdi></td></tr>)}</tbody></table></div>{!order.items?.length ? <p className="ws-order-muted">{text('لا توجد عناصر في الطلب.', 'This order has no items.')}</p> : null}</DetailCard>
             <DetailCard title={text('ملخص الطلب', 'Order summary')}><dl className="ws-order-summary"><DataRow label={text('مجموع المنتجات', 'Subtotal')}><bdi>{money(order.subtotal)}</bdi></DataRow><DataRow label={text('تكلفة الشحن', 'Shipping cost')}><bdi>{money(order.shipping_total)}</bdi></DataRow><DataRow label={text('الخصم', 'Discount')}><bdi>−{money(order.discount_total)}</bdi></DataRow>{Number(order.tax_total) !== 0 ? <DataRow label={order.manual_tax_included ? text('الضريبة المشمولة', 'Included tax') : text('الضريبة', 'Tax')}><bdi>{money(order.tax_total)}</bdi></DataRow> : null}{Number(order.payment_adjustment_total || 0) !== 0 ? <DataRow label={Number(order.payment_adjustment_total) < 0 ? text('خصم طريقة الدفع', 'Payment method discount') : text('رسوم طريقة الدفع', 'Payment method fee')}><bdi>{money(order.payment_adjustment_total)}</bdi></DataRow> : null}{Number(order.manual_adjustment_total) !== 0 ? <DataRow label={text('تسوية الإجمالي', 'Total adjustment')}><bdi>{money(order.manual_adjustment_total)}</bdi></DataRow> : null}<DataRow label={text('الإجمالي', 'Total')}><strong><bdi>{money(order.grand_total)}</bdi></strong></DataRow>{Number(order.gift_card_total || 0) > 0 ? <>{(order.gift_cards ?? []).map((card) => <DataRow key={`${card.gift_card_id}-${card.last4}`} label={<>{text('بطاقة هدية', 'Gift card')} <bdi dir="ltr">•••• {card.last4}</bdi></>}><bdi>−{money(card.amount)}</bdi></DataRow>)}<DataRow label={text('المبلغ المستحق', 'Amount due')}><strong><bdi>{money(orderAmountDue(order))}</bdi></strong></DataRow></> : null}</dl></DetailCard>
+            {shipmentsVisible(order, requiresShipping) ? <StoreOrderFulfillments key={`fulfillments-${endpoint}:${scopeKey}`} orderVersion={`${order.status}:${order.updated_at}`} apiBase={apiBase} endpoint={endpoint} order={order} ar={ar} theme={theme} canManage={canManage && !archived} open={fulfilOpen} onOpenChange={setFulfilOpen} onOrderUpdated={() => void load()} /> : null}
             {refundsVisible(order) ? <StoreOrderRefunds key={`refunds-${endpoint}:${scopeKey}`} apiBase={apiBase} endpoint={endpoint} order={order} ar={ar} theme={theme} canManage={canManage && !archived} open={refundOpen} onOpenChange={setRefundOpen} onOrderUpdated={() => void load()} /> : null}
             {!archived ? <details className="ws-order-extra"><summary>{text('الدفع والشحن والتسليم', 'Payment, shipping and delivery')}</summary><div className="ws-order-extra-content">
                 <DetailCard title={text('الدفع', 'Payment')}><PaymentMethodLogo slug={order.payment_method} /><p>{order.payment_method === 'bank_transfer' ? text('تحويل بنكي', 'Bank transfer') : order.payment_method === 'cod' ? text('الدفع عند الاستلام', 'Cash on delivery') : order.payment_method === 'gift_card' ? text('بطاقة هدية', 'Gift card') : order.payment_method} · {order.payment_status === 'paid' ? text('مدفوع', 'Paid') : PAYMENT_STATUS_LABELS[order.payment_status] && order.payment_status !== 'pending' ? PAYMENT_STATUS_LABELS[order.payment_status][ar ? 0 : 1] : text('بانتظار الدفع', 'Awaiting payment')}</p>{canManage && ['bank_transfer', 'transfer_receipt'].includes(order.payment_method) && order.payment_status !== 'paid' && !['cancelled', ...ORDER_RETURN_STATUSES].includes(order.status) ? <button className="ws-order-primary-button" onClick={() => open('bank')}>{text('مراجعة تأكيد الدفع', 'Review payment confirmation')}</button> : null}{canManage && order.payment_method === 'transfer_receipt' ? <StoreOrderTransferProofs endpoint={endpoint} ar={ar} canManage={canManage} paid={order.payment_status === 'paid'} /> : null}</DetailCard>
@@ -139,6 +148,8 @@ export default function StoreOrderDetailPage() {
         {editing && canManage && !archived ? <StoreOrderEditModal key={`${endpoint}:${scopeKey}`} apiBase={apiBase} orderId={order.id} ar={ar} theme={theme} onClose={() => setEditing(false)} onSaved={(updated, recovered) => { setOrder(updated); setLoadedScope(scopeKey); setEditing(false); setNotice(recovered ? text('تحققنا من حفظ التعديل. هذه أحدث بيانات الطلب.', 'We reconciled the saved edit. These are the latest order details.') : text('حُفظ تعديل الطلب.', 'Order changes saved.')); }} /> : null}
         <Dialog open={Boolean(dialog)} onClose={close} className="ws-orders-dialog" dir={ar ? 'rtl' : 'ltr'} data-workspace-theme={theme}><DialogBackdrop transition className="ws-orders-backdrop ws-order-transition" /><div className="ws-orders-dialog-position"><DialogPanel transition className="ws-order-action-panel ws-order-transition"><form onSubmit={submit}><header><DialogTitle>{label?.[ar ? 0 : 1]}</DialogTitle><button type="button" onClick={close} disabled={busy} aria-label={text('إغلاق', 'Close')}><HiOutlineXMark aria-hidden /></button></header><div className="ws-order-action-body">
             {dialog === 'status' ? <label>{text('الحالة الجديدة', 'New status')}<select required value={status} disabled={busy} onChange={event => setStatus(event.target.value)}><option value="">{text('اختر الحالة', 'Choose status')}</option>{next.map(value => <option value={value} key={value}>{orderStatusLabel(value, ar)}</option>)}</select></label> : null}
+            {leftoverConfirm ? <div className="ws-order-leftover" role="group" aria-labelledby="ws-leftover-note"><p id="ws-leftover-note">{text('لم تُشحن كل منتجات هذا الطلب بعد. تحديده كمُسلَّم يشحن المنتجات المتبقية دون رقم تتبع ودون إشعار للعميل.', 'Some items on this order have not shipped yet. Marking it delivered ships the remaining items without tracking and without notifying the customer.')}</p>
+                <label className="ws-refund-check"><input type="checkbox" checked={fulfilRemaining} disabled={busy} onChange={event => setFulfilRemaining(event.target.checked)} />{text('شحن المنتجات المتبقية وتحديد الطلب كمُسلَّم', 'Ship the remaining items and mark the order delivered')}</label></div> : null}
             {dialog === 'status' && ORDER_RETURN_STATUSES.includes(status) ? <p>{text('تتبع إرجاع المنتجات لا يصدر استردادًا ماليًا ولا يعيد المخزون تلقائيًا.', 'Tracking a product return does not issue a payment refund or automatically restock products.')}</p> : null}
             {dialog === 'review' ? <><p>{text('تصنيف يدوي للمراجعة؛ تبقى حالة الطلب والدفع كما هي.', 'A manual review classification. Order and payment status stay as recorded.')}</p><label>{text('التصنيف', 'Classification')}<select value={classification} disabled={busy} onChange={event => setClassification(event.target.value)}>{Object.entries(reviewLabels).map(([key, labels]) => <option key={key} value={key}>{labels[ar ? 0 : 1]}</option>)}</select></label></> : null}
             {dialog === 'block' ? <p>{text('سيمنع الحظر هذا الرقم من إنشاء طلبات جديدة في هذا المتجر. الطلب الحالي يبقى كما هو.', 'Blocking prevents this number from placing new orders in this store. The current order remains as recorded.')} <bdi>{phone}</bdi></p> : null}
@@ -147,7 +158,7 @@ export default function StoreOrderDetailPage() {
             {dialog === 'bank' ? <><p>{text('أكد فقط بعد التحقق من وصول', 'Confirm only after verifying receipt of')} <bdi>{money(orderAmountDue(order))}</bdi>. {text('يتيح التأكيد المنتجات الرقمية للمشتري.', 'Confirmation releases digital products to the buyer.')}</p><label>{text('مرجع التحويل البنكي', 'Bank transfer reference')}<input required maxLength={200} value={bankReference} disabled={busy} onChange={event => setBankReference(event.target.value)} /></label></> : null}
             {['status', 'review', 'block', 'bank'].includes(dialog) ? <label>{text('ملاحظة داخلية (اختياري)', 'Internal note (optional)')}<textarea rows={3} maxLength={2000} disabled={busy} value={note} onChange={event => setNote(event.target.value)} /></label> : null}
             {actionError ? <p role="alert" className="ws-orders-error">{actionError}</p> : null}
-        </div><footer><button type="button" onClick={close} disabled={busy}>{text('إلغاء', 'Cancel')}</button><button className="ws-order-primary-button" type="submit" disabled={busy || (dialog === 'status' && !status) || (dialog === 'bank' && !bankReference.trim())}>{busy ? text('جار الحفظ…', 'Saving…') : text('تأكيد', 'Confirm')}</button></footer></form></DialogPanel></div></Dialog>
+        </div><footer><button type="button" onClick={close} disabled={busy}>{text('إلغاء', 'Cancel')}</button><button className="ws-order-primary-button" type="submit" disabled={busy || (dialog === 'status' && !status) || (leftoverConfirm && !fulfilRemaining) || (dialog === 'bank' && !bankReference.trim())}>{busy ? text('جار الحفظ…', 'Saving…') : text('تأكيد', 'Confirm')}</button></footer></form></DialogPanel></div></Dialog>
     </div>;
 }
 
