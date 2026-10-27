@@ -1,4 +1,4 @@
-import { useEffect, useId, useState } from 'react';
+import { useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { HiOutlineChevronDown } from '../workspace/WorkspaceIcons';
@@ -38,13 +38,33 @@ export default function StoreSettingsNavigation({ items, uiBase, rel, label, que
         'head-code': text('إضافة كود للهيد', 'Add head code'), 'seo-settings': text('إعدادات SEO', 'SEO settings'), payments: text('بوابات الدفع', 'Payment gateways'),
         'digital-delivery': text('تسليم المنتجات الرقمية', 'Digital delivery'), notifications: text('الإشعارات', 'Notifications'), 'order-push': text('إشعارات الطلبات', 'Order notifications'), shipping: text('الشحن والضرائب', 'Shipping & tax'),
         'social-links': text('روابط التواصل الاجتماعي', 'Social links'), managers: text('المديرون', 'Managers'), 'login-sessions': text('جلسات الدخول', 'Login sessions'), 'phone-verification': text('التحقق من الهاتف', 'Phone verification'), 'customer-login': text('دخول العملاء', 'Customer login') };
+    const navigation = useRef(null);
+    useLayoutEffect(() => {
+        const nav = navigation.current;
+        const scroll = nav?.closest('.ws-secondary-sidebar-scroll');
+        const selected = nav?.querySelector('[aria-current="page"]');
+        if (!scroll || !selected) return;
+        const reveal = () => {
+            const bounds = scroll.getBoundingClientRect();
+            const item = selected.getBoundingClientRect();
+            if (!item.height || !scroll.clientHeight) return;
+            if (item.top < bounds.top) scroll.scrollTop += item.top - bounds.top;
+            else if (item.bottom > bounds.bottom) scroll.scrollTop += item.bottom - bounds.bottom;
+        };
+        reveal();
+        if (typeof ResizeObserver === 'undefined') return;
+        const observer = new ResizeObserver(reveal);
+        observer.observe(nav);
+        observer.observe(scroll);
+        return () => observer.disconnect();
+    }, [rel, query, ar]);
     const search = query.trim().toLocaleLowerCase();
     const known = new Set(sections.flatMap(section => section.items));
     const groups = [...sections, { key: 'other', ar: 'المزيد', en: 'More', items: items.filter(item => !known.has(item.key)).map(item => item.key) }].map(section => ({
         ...section,
         rows: section.items.map(key => items.find(item => item.key === key)).filter(Boolean).filter(item => !search || [labels[item.key], item.label, item.to, ar ? section.ar : section.en, ...(['webhooks', 'public-api'].includes(item.key) ? ['Public API'] : [])].filter(Boolean).join(' ').toLocaleLowerCase().includes(search)),
     })).filter(section => section.rows.length);
-    return <nav className="ws-settings-navigation" aria-label={label}>
+    return <nav ref={navigation} className="ws-settings-navigation" aria-label={label}>
         {groups.map(section => <section key={section.key} className="ws-settings-nav-group" aria-label={ar ? section.ar : section.en}>
             <h3>{ar ? section.ar : section.en}</h3>
             {section.key === 'integrations' ? <ApiNavigation items={section.rows} uiBase={uiBase} rel={rel} searching={!!search} onNavigate={onNavigate} /> : section.rows.map(item => <Link key={item.key} to={`${uiBase}/${item.to}`} onClick={onNavigate} aria-current={item.isActive(rel) ? 'page' : undefined}>

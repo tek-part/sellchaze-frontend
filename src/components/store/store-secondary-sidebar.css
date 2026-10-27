@@ -29,5 +29,5 @@
 .ws-settings-mobile-drawer{padding:0!important;border-radius:0!important;overflow:hidden!important;background:var(--ws-panel)!important}
 .ws-secondary-sidebar.is-mobile{width:100%;border:0;height:100dvh}
 @media(min-width:1024px){.ws-workspace-body:has(>.ws-secondary-navigation-slot:not(:empty))>.ws-main-scroll{padding:24px}.ws-store-settings-shell{min-width:0}}
-@media(max-width:1023px){.ws-secondary-navigation-slot{display:none}.ws-settings-mobile-toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;padding-bottom:16px;margin-bottom:20px;border-bottom:1px solid var(--ws-border)}.ws-settings-mobile-toolbar .ws-secondary-button svg{width:18px;height:18px}.ws-settings-mobile-toolbar strong{font-size:15px}.ws-settings-content{width:100%}}
+@media(max-width:1023px){.ws-secondary-navigation-slot{display:none}.ws-settings-mobile-toolbar{position:sticky;top:var(--ws-workspace-header-height,56px);z-index:20;background:var(--ws-panel-soft);display:flex;align-items:center;justify-content:space-between;gap:12px;padding-bottom:16px;margin-bottom:20px;border-bottom:1px solid var(--ws-border)}.ws-settings-mobile-toolbar .ws-secondary-button svg{width:18px;height:18px}.ws-settings-mobile-toolbar strong{font-size:15px}.ws-settings-content{width:100%}}
 @media(prefers-reduced-motion:reduce){.ws-secondary-sidebar *{scroll-behavior:auto!important}}

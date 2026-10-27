@@ -80,6 +80,15 @@ export default function StoreLayout() {
     const settingsNavigation = unifiedNavigation && activeGroup?.key === 'settings';
     // buildStoreNav already applies permission checks. Keep every allowed destination.
     const settingsItems = settingsNavigation ? activeGroup.items : [];
+    useEffect(() => {
+        if (!settingsNavigation) return;
+        const media = window.matchMedia('(min-width:1024px)');
+        const closeOnDesktop = () => { if (media.matches) setDrawerOpen(false); };
+        closeOnDesktop();
+        media.addEventListener('change', closeOnDesktop);
+        return () => media.removeEventListener('change', closeOnDesktop);
+    }, [settingsNavigation]);
+
 
     const context = useMemo(() => ({
         ...parent,
@@ -169,6 +178,7 @@ export default function StoreLayout() {
                     </div>
                 ) : (
                     settingsNavigation ? <>
+                    <h1 className="sr-only">{activeGroup.label}</h1>
                     {parent.secondaryNavigationTarget ? createPortal(
                         <StoreSettingsSidebar items={settingsItems} uiBase={uiBase} rel={rel} label={activeGroup.label}
                             collapsed={secondaryCollapsed} onToggle={() => setSecondaryCollapsed(value => !value)} />,
