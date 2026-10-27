@@ -159,13 +159,15 @@ for (const locale of ['ar', 'en'] as const) for (const width of [1920, 320]) for
         const content = document.querySelector('#workspace-content')!.getBoundingClientRect();
         return { top: box.top, bottom: box.bottom, width: box.width, headerBottom: header.bottom,
           adjacency: Math.min(Math.abs(box.left - primary.right), Math.abs(box.right - primary.left)),
-          overlap: Math.max(0, Math.min(box.right, content.right) - Math.max(box.left, content.left)) };
+          overlap: Math.max(0, Math.min(box.right, content.right) - Math.max(box.left, content.left)),
+          headerOverlap: Math.max(0, Math.min(box.right, header.right) - Math.max(box.left, header.left)) };
       });
-      expect(geometry.top).toBeCloseTo(geometry.headerBottom, 0);
+      expect(geometry.top).toBe(0);
       expect(geometry.bottom).toBeCloseTo(1031, 0);
       expect(geometry.width).toBe(288);
       expect(geometry.adjacency).toBeLessThanOrEqual(1);
       expect(geometry.overlap).toBe(0);
+      expect(geometry.headerOverlap).toBe(0);
       const links = await pane.locator('a').evaluateAll(elements => elements.map(element => element.getAttribute('href')));
       for (const suffix of ['bot-protection', 'shopping-preferences', 'localization', 'order-limits', 'publish']) expect(links).toContain(`/store/settings/${suffix}`);
       const collapse = pane.getByRole('button', { name: locale === 'ar' ? 'طي شريط الإعدادات' : 'Collapse settings sidebar' });

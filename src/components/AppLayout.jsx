@@ -269,6 +269,7 @@ export default function AppLayout() {
                 <Sidebar me={me} permissions={permissions} storeUrl={storeUrl} toggleButtonRef={merchantWorkspace ? sidebarToggleRef : undefined} collapsed={sidebarCollapsed} onSearch={() => setSearchOpen(true)} onCollapse={() => { setSidebarCollapsed(true); requestAnimationFrame(() => sidebarToggleRef.current?.focus()); }} onExpand={() => { setSidebarCollapsed(false); requestAnimationFrame(() => sidebarToggleRef.current?.focus()); }} />
                 {merchantWorkspace ? <button type="button" className="ws-sidebar-rail" tabIndex={-1} aria-label={ws(sidebarCollapsed ? 'expand' : 'collapse')} title={ws(sidebarCollapsed ? 'expand' : 'collapse')} aria-expanded={!sidebarCollapsed} aria-controls="workspace-sidebar" onClick={() => { setSidebarCollapsed(value => !value); requestAnimationFrame(() => sidebarToggleRef.current?.focus()); }} /> : null}
             </div>
+            <div ref={setSecondaryNavigationTarget} className="ws-secondary-navigation-slot" />
             <div className="ws-main-column">
                 <div ref={workspaceHeaderRef} className="ws-header-container">
                 {impersonationActive ? <div className="ws-impersonation" role="status">
@@ -278,7 +279,6 @@ export default function AppLayout() {
                 <WorkspaceHeader merchantWorkspace={merchantWorkspace} me={me} permissions={permissions} storeUrl={storeUrl} chatUnread={chatUnread} appearance={appearance} onLanguage={toggleLanguage} onNavigation={openMobileNavigation} onToggleSidebar={() => setSidebarCollapsed((value) => !value)} sidebarToggleRef={sidebarToggleRef} collapsed={sidebarCollapsed} onSearch={() => setSearchOpen(true)} onLogout={() => setLogoutOpen(true)} />
                 </div>
                 <div className="ws-workspace-body">
-                <div ref={setSecondaryNavigationTarget} className="ws-secondary-navigation-slot" />
                 <main id="workspace-content" tabIndex={-1} className="ws-main-scroll">
                     <div className="ws-page"><Suspense fallback={<BrandLoader />}><Fragment key={pageKey}><Outlet context={{ me, isAdmin, permissions, unifiedStoreNavigation: !isAdminOnly, secondaryNavigationTarget }} /></Fragment></Suspense></div>
                 </main>
