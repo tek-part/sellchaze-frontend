@@ -93,7 +93,14 @@ for (const locale of ['ar', 'en'] as const) for (const width of [320, 390, 900])
     await page.mouse.wheel(0, 500);
     await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(before + 300);
     const scroll = await page.evaluate(() => window.scrollY);
-    await opener.click();
+    // The button is sticky and already visible. A real pointer click avoids Playwright's
+    // scrollIntoViewIfNeeded compensating for the document's unrelated scroll-padding.
+    const button = await opener.boundingBox();
+    expect(button).not.toBeNull();
+    expect(button!.y).toBeGreaterThanOrEqual(0);
+    expect(button!.y + button!.height).toBeLessThanOrEqual(844);
+    await page.mouse.click(button!.x + button!.width / 2, button!.y + button!.height / 2);
+    expect(await page.evaluate(() => window.scrollY)).toBe(scroll);
     await drawer.getByRole('button', { name: locale === 'ar' ? 'إغلاق قائمة الإعدادات' : 'Close settings menu' }).click();
     await expect(opener).toBeFocused();
     expect(await page.evaluate(() => window.scrollY)).toBe(scroll);
@@ -125,7 +132,7 @@ for (const locale of ['ar', 'en'] as const) {
 
     await page.getByRole('button', { name: locale === 'ar' ? 'تغيير اللغة' : 'Change language', exact: true }).click();
     await expect(page.locator('html')).toHaveAttribute('dir', locale === 'ar' ? 'ltr' : 'rtl');
-    const results = await new AxeBuilder({ page }).include('.ws-secondary-sidebar').withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa']).analyze();
+    const results = await new AxeBuilder({ page }).include('.ws-secondary-sidebar').withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']).analyze();
     expect(results.violations.filter(v => ['serious', 'critical'].includes(v.impact ?? ''))).toEqual([]);
     expect(api.mutations).toEqual([]);
   });
@@ -181,7 +188,7 @@ for (const locale of ['ar', 'en'] as const) for (const width of [1920, 320]) for
     } else {
       const drawer = await openSettingsMenu(page, locale);
       await expect(drawer.locator('[aria-current="page"]')).toBeInViewport();
-      const results = await new AxeBuilder({ page }).include('.ws-settings-mobile-drawer').withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa']).analyze();
+      const results = await new AxeBuilder({ page }).include('.ws-settings-mobile-drawer').withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']).analyze();
       expect(results.violations.filter(v => ['serious', 'critical'].includes(v.impact ?? ''))).toEqual([]);
       await page.keyboard.press('Escape');
     }
@@ -199,6 +206,9 @@ for (const locale of ['ar', 'en'] as const) {
     const pane = page.locator('.ws-secondary-navigation-slot .ws-secondary-sidebar');
     await expect(pane).toBeVisible();
     await expect(pane.locator('[aria-current="page"]')).toBeInViewport();
+    await page.setViewportSize({ width: 1024, height: 500 });
+    await expect(pane.locator('[aria-current="page"]')).toBeInViewport();
+    await page.setViewportSize({ width: 1024, height: 600 });
     const scroll = pane.locator('.ws-secondary-sidebar-scroll');
     const top = await page.evaluate(() => window.scrollY);
     await scroll.evaluate(element => { element.scrollTop = 0; });
