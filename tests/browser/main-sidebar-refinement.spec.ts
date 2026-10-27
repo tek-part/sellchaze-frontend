@@ -1,6 +1,7 @@
 import { expect, test, type Page } from 'playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 import { effectiveApiMethod } from './helpers/api-method';
+declare global { interface Window { restoreNavigationViewport: () => void; } }
 type Locale = 'ar' | 'en';
 async function fixture(page: Page, locale: Locale, theme = 'light', roles = ['Merchant'], permissions: string[] = []) {
     const calls: string[] = [], writes: string[] = [];
@@ -102,7 +103,7 @@ for(const locale of ['en','ar'] as const){
             window.dispatchEvent(new Event('resize'));
         });
         await expect.poll(()=>page.evaluate(()=>{const box=document.querySelector('.ws-compact-flyout')!.getBoundingClientRect(),v=window.visualViewport!;return box.width<=v.width-16+1 && box.left>=v.offsetLeft && box.right<=v.offsetLeft+v.width;})).toBe(true);
-        await page.evaluate(()=>{(window as Window & {restoreNavigationViewport:()=>void}).restoreNavigationViewport();window.dispatchEvent(new Event('resize'));});
+        await page.evaluate(()=>{window.restoreNavigationViewport();window.dispatchEvent(new Event('resize'));});
         await page.mouse.move(512,10);const scrolled=await primary(page).locator('.ws-sidebar-scroll').evaluate(el=>{const before=el.scrollTop;el.scrollTop=before===0?20:0;return el.scrollTop!==before;});expect(scrolled).toBe(true);await expect(flyout(page)).toBeHidden();
         await page.goto('/services');await group(page,orders(locale)).hover();await expect(flyout(page)).toBeVisible();await bounds(page);const service=await page.locator('.ws-secondary-navigation-slot>.ws-context-navigation').boundingBox();expect(service!.y).toBe(0);expect(service!.height).toBe(600);
         const cdp=await page.context().newCDPSession(page);
