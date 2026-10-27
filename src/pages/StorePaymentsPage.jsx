@@ -107,6 +107,20 @@ function PaymentMethods({ context: { apiBase, uiBase, access } }) {
     }, [apiBase, access.canStoreSettings, attempt]);
     if (!access.canStoreSettings) return <Navigate to={`${uiBase}/overview`} replace />;
     const providerName = row => row.slug === 'cod' ? text('دفع عند الاستلام', 'Cash on delivery') : row.slug === 'bank_transfer' ? text('تحويل بنكي', 'Bank transfer') : row.slug === 'transfer_receipt' ? text('تحويل مع إيصال', 'Transfer with receipt') : row.provider_name;
+    const inheritsConnection = row => Boolean(row.inherits_environment && row.connection_gateway);
+    const canActivate = row => row.available && (!inheritsConnection(row) || row.configured || row.enabled);
+    const connectionHint = row => {
+        if (!inheritsConnection(row)) return null;
+        const connection = rows.find(item => item.slug === row.connection_gateway);
+        const limits = row.amount_limits;
+        return <div className="ws-payment-connection">
+            <p>{text('تستخدم إعدادات وبيئة', 'Uses the settings and environment of')} {connection ? providerName(connection) : row.connection_gateway}. {row.test_mode ? text('وضع الاختبار', 'Test mode') : text('الوضع الفعلي', 'Live mode')}.</p>
+            {row.supported_currencies?.length ? <p>{text('العملات المدعومة', 'Supported currencies')}: {row.supported_currencies.join(', ')}. {text('لا يتم تحويل أسعار المتجر تلقائيًا.', 'Store prices are not converted automatically.')}</p> : null}
+            {limits?.minimum ? <p>{text('الحد الأدنى', 'Minimum')}: {limits.minimum} {limits.currency}{limits.maximum ? <> · {text('الحد الأقصى', 'Maximum')}: {limits.maximum} {limits.currency}</> : null}</p> : null}
+            {!row.configured ? <p>{text('يلزم اكتمال ربط Tap واستخدام عملة مدعومة للمتجر قبل التفعيل.', 'Complete the Tap connection and use a supported store currency before activation.')}</p> : null}
+            {connection ? <button type="button" disabled={saving} onClick={() => { setError(''); setDraft(structuredClone(connection)); }}>{text('تعديل إعدادات Tap', 'Edit Tap settings')}</button> : null}
+        </div>;
+    };
     const patch = value => setDraft(current => ({ ...current, ...value }));
     const presentation = value => setDraft(current => ({ ...current, presentation: { ...current.presentation, ...value } }));
     const save = async (event, gateway = draft) => {
@@ -114,8 +128,8 @@ function PaymentMethods({ context: { apiBase, uiBase, access } }) {
         if (saving) return;
         setSaving(true); setError('');
         try {
-            const { data } = await api.put(`${apiBase}/payments`, { gateways: [{ slug: gateway.slug,
-                enabled: Boolean(gateway.enabled), test_mode: Boolean(gateway.test_mode), order: Number(gateway.order || 0), notes: gateway.notes,
+            const { data } = await api.post(`${apiBase}/payments`, { gateways: [{ slug: gateway.slug,
+                enabled: Boolean(gateway.enabled), ...(!inheritsConnection(gateway) ? { test_mode: Boolean(gateway.test_mode) } : {}), order: Number(gateway.order || 0), notes: gateway.notes,
                 presentation: gateway.presentation,
                 credentials: Object.fromEntries(Object.entries(gateway.credentials).filter(([, value]) => value.trim() && value !== MASK)) }] });
             setRows(rowsFrom(data)); setDraft(null);
@@ -134,7 +148,8 @@ function PaymentMethods({ context: { apiBase, uiBase, access } }) {
             <h2>{providerName(row)}</h2>
             <span className={`ws-payment-state ${row.enabled ? 'is-enabled' : ''}`}>{row.enabled ? text('مفعّل', 'Enabled') : text('غير مفعّل', 'Disabled')}</span>
             {!row.available ? <p className="ws-payment-setup">{text('الربط قيد الاستكمال', 'Connection in progress')}</p> : null}
-            <div className="ws-payment-actions"><button type="button" className="ws-payment-toggle" disabled={saving || !row.available} onClick={() => {
+            {connectionHint(row)}
+            <div className="ws-payment-actions"><button type="button" className="ws-payment-toggle" disabled={saving || !canActivate(row)} onClick={() => {
                 if (!row.enabled && row.credential_fields.length && !row.configured) { setError(''); setDraft({ ...row, enabled: true }); }
                 else void save(null, { ...row, enabled: !row.enabled });
             }}>{row.enabled ? text('إلغاء التفعيل', 'Deactivate') : text('تفعيل طريقة الدفع', 'Activate payment method')}</button><button type="button" disabled={saving} onClick={() => { setError(''); setDraft(structuredClone(row)); }}>{text('تعديل', 'Edit')}</button></div>
@@ -146,7 +161,8 @@ function PaymentMethods({ context: { apiBase, uiBase, access } }) {
                     <div className="ws-payment-dialog-body">
                         {error ? <p role="alert" className="ws-payments-error">{error}</p> : null}
                         {!draft.available ? <p role="status" className="ws-payments-error">{text('يمكن تجهيز بيانات الطريقة؛ سيُتاح تفعيلها عند اكتمال الربط.', 'You can prepare these settings. Activation will be available when the connection is complete.')}</p> : null}
-                        <Toggle label={text('تفعيل طريقة الدفع', 'Enable payment method')} checked={draft.enabled} disabled={!draft.available || saving} onChange={enabled => patch({ enabled })} />
+                        <Toggle label={text('تفعيل طريقة الدفع', 'Enable payment method')} checked={draft.enabled} disabled={!canActivate(draft) || saving} onChange={enabled => patch({ enabled })} />
+                        {connectionHint(draft)}
                         <FormField label={text('اسم طريقة الدفع', 'Customer-facing name')} htmlFor="payment-name"><input id="payment-name" className={INPUT_CLASS} value={draft.presentation.name} maxLength={120} onChange={event => presentation({ name: event.target.value })} /></FormField>
                         <FormField label={text('وصف طريقة الدفع', 'Customer-facing description')} htmlFor="payment-description"><textarea id="payment-description" className={INPUT_CLASS} value={draft.presentation.description} maxLength={2000} onChange={event => presentation({ description: event.target.value })} /></FormField>
                         <FormField label={text('أولوية الظهور', 'Display priority')} htmlFor="payment-order"><input id="payment-order" type="number" min="0" max="100000" className={INPUT_CLASS} value={draft.order} onChange={event => patch({ order: event.target.value })} /></FormField>
@@ -154,7 +170,7 @@ function PaymentMethods({ context: { apiBase, uiBase, access } }) {
                         {draft.credential_fields.length ? <>
                             <h3>{text('بيانات الربط', 'Connection settings')}</h3>
                             {draft.slug === 'easykash' ? <p>{text('يعمل هذا الربط بالجنيه المصري، ولا توفر الواجهة بيئة اختبار. اترك وضع الاختبار مغلقًا عند التفعيل.', 'This connection uses EGP. The API has no sandbox; turn test mode off before activation.')}</p> : draft.slug === 'myfatoorah' ? <p>{text('اختر دولة حسابك وعملتها الأساسية. بيئة الاختبار تعمل بالدينار الكويتي.', 'Choose your account country and base currency. The sandbox uses KWD.')}</p> : null}
-                            <Toggle checked={draft.test_mode} onChange={test_mode => patch({ test_mode })} label={text('وضع الاختبار', 'Test mode')} />
+                            {!inheritsConnection(draft) ? <Toggle checked={draft.test_mode} onChange={test_mode => patch({ test_mode })} label={text('وضع الاختبار', 'Test mode')} /> : null}
                             {draft.credential_fields.map(key => <FormField key={key} label={fieldLabel(t, key)} htmlFor={`payment-${key}`} hint={draft.stored[key] && !(draft.visible_fields || []).includes(key) ? text('محفوظ — اتركه فارغًا للاحتفاظ بالقيمة الحالية.', 'Saved — leave blank to keep the current value.') : undefined}>{key === 'country' ? <select id={`payment-${key}`} className={INPUT_CLASS} value={draft.credentials[key]} onChange={event => patch({ credentials: { ...draft.credentials, [key]: event.target.value } })}><option value="">{text('اختر دولة الحساب', 'Choose account country')}</option>{[['KW','الكويت','Kuwait'],['SA','السعودية','Saudi Arabia'],['AE','الإمارات','UAE'],['EG','مصر','Egypt'],['QA','قطر','Qatar'],['BH','البحرين','Bahrain'],['JO','الأردن','Jordan'],['OM','عمان','Oman']].map(([value,a,e]) => <option key={value} value={value}>{text(a,e)}</option>)}</select> : (draft.visible_fields || []).includes(key) ? <input id={`payment-${key}`} className={INPUT_CLASS} dir="ltr" value={draft.credentials[key]} onChange={event => patch({ credentials: { ...draft.credentials, [key]: event.target.value } })} /> : <SecretInput id={`payment-${key}`} stored={draft.stored[key]} value={draft.credentials[key]} placeholder={key} onChange={event => patch({ credentials: { ...draft.credentials, [key]: event.target.value } })} />}</FormField>)}
                         </> : null}
                         {draft.return_url ? <FormField label={text('رابط العودة وإشعارات XPay', 'XPay return and callback URL')} hint={text('أنشئ API Payment في لوحة XPay وأدخل هذا الرابط في Redirect URL وCallback URL، ثم أدخل رقم القالب أعلاه. يدعم الربط حسابات خصم رسوم المعالجة من قيمة الدفع.', 'Create an API Payment in XPay, use this URL for both Redirect URL and Callback URL, then enter its template ID above. This connection supports processing fees included in the payment amount.')}><CopyField value={draft.return_url} /></FormField> : null}

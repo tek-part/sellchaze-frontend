@@ -22,5 +22,6 @@ export default function PaymentMethodLogo({ slug, src, className = '', width = 6
   const style = { width, height, maxWidth: '100%', objectFit: 'contain' as const, flexShrink: 0 };
   return source && failed !== source
     ? <img src={source} width={width} height={height} style={style} className={className} alt="" loading="lazy" decoding="async" onError={() => setFailed(source)} />
+    : slug === 'deema' ? <span style={{ ...style, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, fontWeight: 700 }} className={className} aria-hidden="true">Deema</span>
     : <svg viewBox="0 0 48 32" width={width} height={height} style={style} className={className} aria-hidden="true"><rect x="2" y="2" width="44" height="28" rx="5" fill="none" stroke="currentColor" strokeWidth="2" /><path d="M3 11h42M9 23h10" stroke="currentColor" strokeWidth="3" /></svg>;
 }
