@@ -236,7 +236,7 @@ function SidebarNavInner({ isAdmin = false, roles = [], permissions = [], onNavi
                 }}
             >
                 <div className={sec('flex flex-col gap-1')}>
-                    <SectionLabel>{t('nav_sidebar_section_overview')}</SectionLabel>
+                    <SectionLabel navigationSection>{t('nav_sidebar_section_overview')}</SectionLabel>
                     <NavLink to="/admin/dashboard" className={navLinkClass}>
                         <HiOutlineHome className="h-5 w-5 shrink-0 opacity-95" aria-hidden />
                         {t('admin_dashboard_title', 'Admin Dashboard')}
@@ -244,7 +244,7 @@ function SidebarNavInner({ isAdmin = false, roles = [], permissions = [], onNavi
                 </div>
 
                 <div className={sec('mt-5 flex flex-col gap-1.5 border-t border-slate-200/80 pt-5')}>
-                    <SectionLabel>{t('nav_admin_section_users_access', 'Users & Access')}</SectionLabel>
+                    <SectionLabel navigationSection>{t('nav_admin_section_users_access', 'Users & Access')}</SectionLabel>
                     <NavLink
                         to="/admin/users"
                         className={() => navLinkClass({ isActive: adminUsersEmployeesActive })}
@@ -270,7 +270,7 @@ function SidebarNavInner({ isAdmin = false, roles = [], permissions = [], onNavi
                 </div>
 
                 <div className={sec('mt-5 flex flex-col gap-1.5 border-t border-slate-200/80 pt-5')}>
-                    <SectionLabel>{t('nav_admin_section_content', 'Content')}</SectionLabel>
+                    <SectionLabel navigationSection>{t('nav_admin_section_content', 'Content')}</SectionLabel>
                     <NavLink to="/admin/articles" className={navLinkClass}>
                         <HiOutlineNewspaper className="h-5 w-5 shrink-0 opacity-95" aria-hidden />
                         {t('nav_admin_articles', 'Articles')}
@@ -282,7 +282,7 @@ function SidebarNavInner({ isAdmin = false, roles = [], permissions = [], onNavi
                 </div>
 
                 <div className={sec('mt-5 flex flex-col gap-1.5 border-t border-slate-200/80 pt-5')}>
-                    <SectionLabel>{t('nav_sidebar_section_people', 'People')}</SectionLabel>
+                    <SectionLabel navigationSection>{t('nav_sidebar_section_people', 'People')}</SectionLabel>
                     <NavLink to="/community" className={navLinkClass}>
                         <HiOutlineNewspaper className="h-5 w-5 shrink-0 opacity-95" aria-hidden />
                         {t('feed_title', 'Community')}
@@ -311,7 +311,7 @@ function SidebarNavInner({ isAdmin = false, roles = [], permissions = [], onNavi
                 </div>
 
                 <div className={sec('mt-5 flex flex-col gap-2 border-t border-slate-200/80 pt-5')}>
-                    <SectionLabel>{t('nav_sidebar_section_wavex')}</SectionLabel>
+                    <SectionLabel navigationSection>{t('nav_sidebar_section_wavex')}</SectionLabel>
                     <NavGroup
                         title={t('nav_group_wavex')}
                         icon={FaWhatsapp}
@@ -346,7 +346,7 @@ function SidebarNavInner({ isAdmin = false, roles = [], permissions = [], onNavi
                 </div>
 
                 <div className={sec('mt-5 flex flex-col gap-2 border-t border-slate-200/80 pt-5')}>
-                    <SectionLabel>{t('nav_admin_section_reports', 'Reports & Analytics')}</SectionLabel>
+                    <SectionLabel navigationSection>{t('nav_admin_section_reports', 'Reports & Analytics')}</SectionLabel>
                     <NavGroup
                         title={t('nav_admin_reports', 'Reports')}
                         icon={HiOutlinePresentationChartLine}
@@ -369,7 +369,7 @@ function SidebarNavInner({ isAdmin = false, roles = [], permissions = [], onNavi
                 </div>
 
                 <div className={sec('mt-5 flex flex-col gap-1.5 border-t border-slate-200/80 pt-5')}>
-                    <SectionLabel>{t('nav_admin_section_system', 'System')}</SectionLabel>
+                    <SectionLabel navigationSection>{t('nav_admin_section_system', 'System')}</SectionLabel>
                     <NavLink to="/admin/monitoring/live" className={navLinkClass}>
                         <HiOutlineChartBar className="h-5 w-5 shrink-0 opacity-95" aria-hidden />
                         {t('nav_monitoring_live')}
@@ -385,7 +385,7 @@ function SidebarNavInner({ isAdmin = false, roles = [], permissions = [], onNavi
                 </div>
 
                 <div className={sec('mt-5 flex flex-col gap-2 border-t border-slate-200/80 pt-5')}>
-                    <SectionLabel>{t('nav_sidebar_section_settings')}</SectionLabel>
+                    <SectionLabel navigationSection>{t('nav_sidebar_section_settings')}</SectionLabel>
                     <NavGroup
                         title={t('settings')}
                         icon={HiOutlineCog6Tooth}
@@ -439,30 +439,26 @@ function SidebarNavInner({ isAdmin = false, roles = [], permissions = [], onNavi
             }}
         >
             <div className={sec('flex flex-col gap-1')}>
-                <SectionLabel>{hasStoreAccess ? t('workspace_nav_main', 'Main') : t('nav_sidebar_section_overview')}</SectionLabel>
-                {hasStoreAccess ? <NavLink to="/dashboard" className={navLinkClass}>
-                    <DashboardIcon className="h-5 w-5 shrink-0 opacity-95" aria-hidden />
-                    {ws('statisticsDashboard')}
-                </NavLink> : <NavLink to="/community" className={navLinkClass}><HiOutlineUsers aria-hidden />{t('feed_title', 'Community')}</NavLink>}
-                {workspaceStoreGroups.filter((group) => group.section !== 'other').map((group) => {
-                    if (group.single) {
-                        const active = group.items ? group.items.some((item) => workspaceStoreItemActive(item, location.pathname)) : workspaceStoreItemActive(group, location.pathname);
-                        return <Link key={group.key} to={group.to} aria-current={active ? 'page' : undefined} className={navLinkClass({ isActive: active })}><group.Icon className="h-5 w-5 shrink-0" aria-hidden />{group.label}</Link>;
-                    }
-                    const active = group.items.some((item) => workspaceStoreItemActive(item, location.pathname));
-                    return <NavGroup reference key={group.key} groupKey={`store-${group.key}`} title={group.label} icon={group.Icon} defaultOpen={active} groupActive={active}>
-                        {group.items.map((item) => <Link key={item.key} to={item.to} aria-current={workspaceStoreItemActive(item, location.pathname) ? 'page' : undefined} className={subNavLinkClass({ isActive: workspaceStoreItemActive(item, location.pathname) })}><span className="ws-nav-label">{item.label}</span>{item.badge ? <span className="ws-nav-badge">{item.badge}</span> : null}</Link>)}
-                    </NavGroup>;
-                })}
+                <SectionLabel navigationSection>{ws('sectionHome')}</SectionLabel>
+                {hasStoreAccess ? <NavLink to="/dashboard" className={navLinkClass}><DashboardIcon className="h-5 w-5 shrink-0" aria-hidden />{ws('statisticsDashboard')}</NavLink> : <NavLink to="/community" className={navLinkClass}><HiOutlineUsers aria-hidden />{t('feed_title', 'Community')}</NavLink>}
             </div>
-
-            {workspaceStoreGroups.some((group) => group.section === 'other') ? <div className={sec('mt-5 flex flex-col gap-1.5')}>
-                <SectionLabel>{ws('communityServices')}</SectionLabel>
-                {workspaceStoreGroups.filter((group) => group.section === 'other').map((group) => {
-                    const active = group.items ? group.items.some((item) => workspaceStoreItemActive(item, location.pathname)) : workspaceStoreItemActive(group, location.pathname);
-                    return <Link key={group.key} to={group.to} aria-current={active ? 'page' : undefined} className={navLinkClass({ isActive: active })}><group.Icon className="h-5 w-5" aria-hidden /><span className="ws-nav-label">{group.label}</span>{group.badge ? <span className="ws-nav-badge">{group.badge}</span> : null}</Link>;
-                })}
-            </div> : null}
+            {[
+                ['sectionCommerce', ['orders', 'products', 'design']],
+                ['sectionGrowth', ['funnels', 'tracking', 'marketing']],
+                ['sectionManagement', ['wallet', 'apps', 'community', 'service-marketplace', 'marketing-services', 'platform-referral', 'support', 'settings']],
+            ].map(([section, keys]) => {
+                const groups = keys.map(key => workspaceStoreGroups.find(group => group.key === key)).filter(Boolean);
+                return groups.length ? <div key={section} className={sec('mt-4 flex flex-col gap-1')}>
+                    <SectionLabel navigationSection>{ws(section)}</SectionLabel>
+                    {groups.map(group => {
+                        const active = group.items ? group.items.some(item => workspaceStoreItemActive(item, location.pathname)) : workspaceStoreItemActive(group, location.pathname);
+                        if (group.single) return <Link key={group.key} to={group.to} aria-current={active ? 'page' : undefined} className={navLinkClass({ isActive: active })}><group.Icon className="h-5 w-5 shrink-0" aria-hidden /><span className="ws-nav-label">{group.label}</span>{group.badge ? <span className="ws-nav-badge">{group.badge}</span> : null}</Link>;
+                        return <NavGroup reference key={group.key} groupKey={`store-${group.key}`} title={group.label} icon={group.Icon} defaultOpen={active} groupActive={active}>
+                            {group.items.map(item => <Link key={item.key} to={item.to} aria-current={workspaceStoreItemActive(item, location.pathname) ? 'page' : undefined} className={subNavLinkClass({ isActive: workspaceStoreItemActive(item, location.pathname) })}>{item.Icon ? <item.Icon className="h-5 w-5 shrink-0" aria-hidden /> : null}<span className="ws-nav-label">{item.label}</span>{item.badge ? <span className="ws-nav-badge">{item.badge}</span> : null}</Link>)}
+                        </NavGroup>;
+                    })}
+                </div> : null;
+            })}
         </nav>
             </NavigationResults>
     );

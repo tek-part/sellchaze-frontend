@@ -1,7 +1,8 @@
-import { Children, cloneElement, isValidElement } from 'react';
+import { Children, isValidElement } from 'react';
 import { Link, NavLink } from 'react-router-dom';
 import { HiOutlineArrowUpRight, HiOutlineMagnifyingGlass } from './WorkspaceIcons';
 import useWorkspaceCopy from './workspaceCopy';
+import CompactNavigation from './CompactNavigation';
 
 export function navigationText(node) {
     if (typeof node === 'string') return node;
@@ -25,26 +26,24 @@ export function collectNavigation(node, group = '', items = new Map()) {
     return [...items.values()];
 }
 /** Compact rail uses the same permission-filtered groups and links as the full menu. */
-export function collectCompactNavigation(node, rows = []) {
+export function collectCompactNavigation(node, rows = [], section = '') {
+    let currentSection = section;
     Children.forEach(node, (element) => {
         if (!isValidElement(element)) return;
+        if (element.props.navigationSection) { currentSection = navigationText(element.props.children); return; }
         if (element.props.title && element.props.icon) {
-            rows.push({ label: element.props.title, groupKey: element.props.groupKey || element.props.title, Icon: element.props.icon, active: Boolean(element.props.groupActive) });
+            rows.push({ label: element.props.title, groupKey: element.props.groupKey || element.props.title, Icon: element.props.icon, active: Boolean(element.props.groupActive), section: currentSection, children: element.props.children });
         } else if (element.type === Link || element.type === NavLink) {
             const label = navigationText(element.props.children).replace(/\s+/g, ' ').trim();
             const icon = Children.toArray(element.props.children).find(isValidElement);
-            if (label && icon) rows.push({ label, element, icon });
-        } else collectCompactNavigation(element.props.children, rows);
+            if (label && icon) rows.push({ label, element, icon, section: currentSection });
+        } else collectCompactNavigation(element.props.children, rows, currentSection);
     });
     return rows;
 }
-export default function NavigationResults({ query = '', search = false, compact = false, additionalItems = [], children, onNavigate, onExpand }) {
+export default function NavigationResults({ query = '', search = false, compact = false, additionalItems = [], children, onNavigate }) {
     const ws = useWorkspaceCopy();
-    if (compact) return <nav aria-label={ws('navigation')} className="ws-compact-nav">
-        {collectCompactNavigation(children).map(({ label, groupKey, Icon, element, icon, active }, index) => Icon
-            ? <button key={`${label}-${index}`} type="button" title={label} aria-label={label} aria-current={active ? 'location' : undefined} onClick={() => onExpand?.(groupKey)}><Icon aria-hidden /></button>
-            : cloneElement(element, { key: `${element.props.to}-${index}`, title: label, 'aria-label': label, onClick: onNavigate }, <>{icon}<span className="sr-only">{label}</span></>))}
-    </nav>;
+    if (compact) return <CompactNavigation rows={collectCompactNavigation(children)} onNavigate={onNavigate} />;
     if (!search && !query.trim()) return children;
     const needle = normalizeNavigationText(query);
     const indexed = new Map(additionalItems.map((item) => [item.to, item]));

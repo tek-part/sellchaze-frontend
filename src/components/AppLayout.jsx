@@ -57,7 +57,7 @@ export default function AppLayout() {
     const [mobileNavOpen, setMobileNavOpen] = useState(false);
     const [mobileDrawerWidth, setMobileDrawerWidth] = useState(null);
     const [mobileDrawerViewportWidth, setMobileDrawerViewportWidth] = useState(null);
-    const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+    const [sidebarCollapsed, setSidebarCollapsed] = useState(true);
     const sidebarToggleRef = useRef(null);
     const workspaceHeaderRef = useRef(null);
     const [secondaryNavigationTarget, setSecondaryNavigationTarget] = useState(null);

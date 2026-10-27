@@ -59,7 +59,9 @@ for (const locale of ['en', 'ar'] as const) {
         await page.setViewportSize({ width: 1600, height: 900 }); await page.goto(path);
         const rail = await geometry(page, width);
         const primary = page.locator('#workspace-sidebar');
-        expect((await primary.boundingBox())!.width).toBe(272);
+        expect((await primary.boundingBox())!.width).toBe(64);
+        await page.locator('[aria-controls=workspace-sidebar][aria-expanded=false]').first().click();
+        await expect.poll(async () => (await primary.boundingBox())!.width).toBe(272);
         const toggle = rail.locator('.ws-secondary-sidebar-heading button');
         await toggle.click(); await expect(rail).toHaveClass(/is-collapsed/); expect((await rail.boundingBox())!.width).toBe(48);
         expect((await primary.boundingBox())!.width).toBe(272);

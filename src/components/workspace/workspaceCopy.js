@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next';
 
 const copy = {
+    sectionHome: ['الرئيسية', 'Home'], sectionCommerce: ['التجارة', 'Commerce'], sectionGrowth: ['النمو', 'Growth'], sectionManagement: ['الإدارة', 'Management'],
     other: ['أخرى', 'Other'],
     communityServices: ['خدمات مجتمع سيلشيز', 'Sellchaze community services'],
     statisticsDashboard: ['لوحة الإحصائيات', 'Statistics dashboard'],
