@@ -17,7 +17,7 @@
 .ws-secondary-sidebar .ws-settings-navigation :is(a,button){display:flex;align-items:center;gap:10px;width:100%;height:auto;min-height:38px;padding:8px 10px;font-size:13px;line-height:20px;border-radius:7px;color:var(--ws-muted);text-align:start;white-space:normal}
 .ws-secondary-sidebar .ws-settings-navigation svg{width:18px;height:18px;flex-shrink:0}
 .ws-secondary-sidebar .ws-settings-navigation :is(a,button):hover{background:var(--ws-panel-soft);color:var(--ws-text)}
-.ws-secondary-sidebar .ws-settings-navigation a[aria-current=page]{color:var(--ws-green-ink);background:var(--ws-green-soft);font-weight:600;box-shadow:none}
+.ws-secondary-sidebar .ws-settings-navigation a[aria-current=page]{color:var(--ws-text);background:var(--ws-green-soft);font-weight:600;box-shadow:none}
 .ws-secondary-sidebar .ws-settings-navigation :is(a,button):focus-visible{outline:2px solid var(--ws-green-ink);outline-offset:-2px}
 .ws-secondary-sidebar .ws-nav-badge{margin-inline-start:auto}
 .ws-secondary-sidebar .ws-settings-api-panel{display:grid;margin-inline-start:18px;padding-inline-start:10px}
@@ -31,3 +31,5 @@
 @media(min-width:1024px){.ws-workspace-body:has(>.ws-secondary-navigation-slot:not(:empty))>.ws-main-scroll{padding:24px}.ws-store-settings-shell{min-width:0}}
 @media(max-width:1023px){.ws-secondary-navigation-slot{display:none}.ws-settings-mobile-toolbar{position:sticky;top:var(--ws-workspace-header-height,56px);z-index:20;background:var(--ws-panel-soft);display:flex;align-items:center;justify-content:space-between;gap:12px;padding-bottom:16px;margin-bottom:20px;border-bottom:1px solid var(--ws-border)}.ws-settings-mobile-toolbar .ws-secondary-button svg{width:18px;height:18px}.ws-settings-mobile-toolbar strong{font-size:15px}.ws-settings-content{width:100%}}
 @media(prefers-reduced-motion:reduce){.ws-secondary-sidebar *{scroll-behavior:auto!important}}
+.ws-secondary-sidebar .ws-settings-navigation a[aria-current=page] svg{color:var(--ws-green-ink)}
+@media(max-width:599px){.ws-store-settings-shell .ws-settings-content{padding-bottom:88px}}

@@ -118,8 +118,11 @@ for (const locale of ['ar', 'en'] as const) {
     await page.setViewportSize({ width: 320, height: 844 });
     const drawer = await openSettingsMenu(page, locale);
     await expect(drawer.getByRole('link', { name: 'Webhooks', exact: true })).toHaveAttribute('aria-current', 'page');
-    await page.keyboard.press('Escape');
+    // Resizing an open mobile drawer to desktop closes its modal/body lock.
     await page.setViewportSize({ width: 1440, height: 900 });
+    await expect(drawer).not.toBeVisible();
+    await expect(page.getByRole('dialog')).toHaveCount(0);
+
     await page.getByRole('button', { name: locale === 'ar' ? 'تغيير اللغة' : 'Change language', exact: true }).click();
     await expect(page.locator('html')).toHaveAttribute('dir', locale === 'ar' ? 'ltr' : 'rtl');
     const results = await new AxeBuilder({ page }).include('.ws-secondary-sidebar').withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa']).analyze();
@@ -165,6 +168,16 @@ for (const locale of ['ar', 'en'] as const) for (const width of [1920, 320]) for
       await expect(expand).toBeFocused(); await expand.click();
       await expect(pane).toHaveCSS('width', '288px'); await expect(collapse).toBeFocused();
       await testInfo.attach('secondary-settings-geometry', { body: JSON.stringify(geometry), contentType: 'application/json' });
+      const primary = page.locator('.ws-desktop-sidebar');
+      const field = card.locator('input').first();
+      await field.fill('Preserved sidebar draft');
+      await primary.getByRole('button', { name: locale === 'ar' ? 'إخفاء القائمة الجانبية' : 'Hide sidebar', exact: true }).click();
+      await expect(primary).toHaveCSS('width', '64px');
+      await expect(field).toHaveValue('Preserved sidebar draft');
+      await page.screenshot({ path: testInfo.outputPath('compact-primary-full-secondary.png') });
+      await primary.getByRole('button', { name: locale === 'ar' ? 'إظهار القائمة الجانبية' : 'Show sidebar', exact: true }).click();
+      await expect(field).toHaveValue('Preserved sidebar draft');
+
     } else {
       const drawer = await openSettingsMenu(page, locale);
       await expect(drawer.locator('[aria-current="page"]')).toBeInViewport();
