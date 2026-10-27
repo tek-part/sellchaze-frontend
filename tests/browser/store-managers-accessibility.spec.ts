@@ -231,7 +231,9 @@ for (const locale of ['ar', 'en'] as const) {
     await pane.getByRole('searchbox').fill('Webhooks');
     await pane.getByRole('link', { name: 'Webhooks', exact: true }).focus();
     await page.keyboard.press('Enter'); await expect(page).toHaveURL(/\/settings\/webhooks$/);
-    await page.goto('/dashboard');
+    await primary.locator('a[href="/support"]').click();
+    await expect(page).toHaveURL(/\/support$/);
+    await expect(page.getByRole('heading', { name: locale === 'ar' ? 'الدعم الفني' : 'Support', exact: true })).toBeVisible();
     await expect(page.locator('.ws-secondary-navigation-slot')).toBeEmpty();
     expect(api.mutations).toEqual([]);
   });
