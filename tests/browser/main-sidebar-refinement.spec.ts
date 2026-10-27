@@ -91,7 +91,7 @@ for(const locale of ['en','ar'] as const){
     test(`${locale} bottom flyout clamps, scroll closes and full-height second rail stays fixed`,async({page},info)=>{
         await fixture(page,locale,'dark');await ready(page,'/store/apps?tab=discover');await page.setViewportSize({width:1024,height:600});const secondary=page.locator('.ws-secondary-navigation-slot>.ws-context-navigation');
         await expect(secondary).toBeVisible();const before=await secondary.boundingBox();expect(before!.y).toBe(0);expect(before!.height).toBe(600);
-        const wallet=rail(page).locator('button[aria-label="'+(locale==='ar'?'محفظتك':'Your wallet')+'"]');await wallet.scrollIntoViewIfNeeded();await wallet.hover();await expect(flyout(page)).toBeVisible();await bounds(page);expect(await secondary.boundingBox()).toEqual(before);
+        const wallet=rail(page).locator('button[aria-label="'+(locale==='ar'?'محفظتك':'Your wallet')+'"]');await wallet.scrollIntoViewIfNeeded();const hoverStarted=Date.now();await wallet.hover();await expect(flyout(page)).toBeVisible();await info.attach('bottom-hover-latency.json',{body:JSON.stringify({locale,elapsedMs:Date.now()-hoverStarted}),contentType:'application/json'});await bounds(page);expect(await secondary.boundingBox()).toEqual(before);
         await page.screenshot({path:info.outputPath(`secondary-flyout-${locale}.png`)});
         // Substitute only the viewport boundary: real popup DOM must fit a narrow visual viewport.
         await page.evaluate(()=>{
@@ -103,8 +103,18 @@ for(const locale of ['en','ar'] as const){
         });
         await expect.poll(()=>page.evaluate(()=>{const box=document.querySelector('.ws-compact-flyout')!.getBoundingClientRect(),v=window.visualViewport!;return box.width<=v.width-16+1 && box.left>=v.offsetLeft && box.right<=v.offsetLeft+v.width;})).toBe(true);
         await page.evaluate(()=>{(window as Window & {restoreNavigationViewport:()=>void}).restoreNavigationViewport();window.dispatchEvent(new Event('resize'));});
-        await primary(page).locator('.ws-sidebar-scroll').evaluate(el=>{el.scrollTop=0});await expect(flyout(page)).toBeHidden();
+        await page.mouse.move(512,10);const scrolled=await primary(page).locator('.ws-sidebar-scroll').evaluate(el=>{const before=el.scrollTop;el.scrollTop=before===0?20:0;return el.scrollTop!==before;});expect(scrolled).toBe(true);await expect(flyout(page)).toBeHidden();
         await page.goto('/services');await group(page,orders(locale)).hover();await expect(flyout(page)).toBeVisible();await bounds(page);const service=await page.locator('.ws-secondary-navigation-slot>.ws-context-navigation').boundingBox();expect(service!.y).toBe(0);expect(service!.height).toBe(600);
+        const cdp=await page.context().newCDPSession(page);
+        await cdp.send('Emulation.setPageScaleFactor',{pageScaleFactor:6});await expect(flyout(page)).toBeHidden(); // its anchor is outside the short visual viewport
+        await cdp.send('Emulation.setPageScaleFactor',{pageScaleFactor:1});
+        await page.setViewportSize({width:1080,height:4000});await group(page,orders(locale)).hover();await expect(flyout(page)).toBeVisible();
+        await cdp.send('Emulation.setPageScaleFactor',{pageScaleFactor:6});
+        await expect(flyout(page)).toBeVisible();
+        await expect.poll(()=>page.evaluate(()=>{const box=document.querySelector('.ws-compact-flyout')!.getBoundingClientRect(),v=window.visualViewport!;return box.width<=v.width-16+1 && box.left>=v.offsetLeft && box.right<=v.offsetLeft+v.width && box.bottom<=v.offsetTop+v.height;})).toBe(true);
+        await info.attach('real-zoom-bounds.json',{body:JSON.stringify(await page.evaluate(()=>{const b=document.querySelector('.ws-compact-flyout')!.getBoundingClientRect(),v=window.visualViewport!;return{box:{x:b.x,y:b.y,width:b.width,height:b.height},visual:{x:v.offsetLeft,y:v.offsetTop,width:v.width,height:v.height,scale:v.scale}};})),contentType:'application/json'});
+        await cdp.send('Emulation.setPageScaleFactor',{pageScaleFactor:1});await cdp.detach();
+
     });
     test(`${locale} administrator groups retain all links and one unread consumer`,async({page})=>{
         const {calls,writes}=await fixture(page,locale,'light',['Admin'],['wavex-access','stores-edit']);await ready(page,'/community/search');await page.waitForLoadState('networkidle');const before=calls.length;
