@@ -29,3 +29,5 @@
 .ws-frame:has(.ws-context-navigation) .ws-services-heading>div{min-width:0}
 
 .ws-context-navigation .ws-community-create{background:var(--ws-green-fill);color:white}
+
+.ws-context-navigation .text-slate-400{color:var(--ws-muted)}

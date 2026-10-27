@@ -121,7 +121,6 @@ export default function CommunityShell({ children, rightRail = true }) {
             <div className={`ws-community-with-navigation grid items-start gap-6 xl:justify-center${rightRail ? ' has-suggestions' : ''}`}>
                 <SecondaryNavigation title={t('community_brand_title')}>{(query, close) => <div onClick={event => { if (event.target.closest('a')) close(); }}>
                     <div className="px-3 pb-4 pt-2">
-                        <p className="text-lg font-bold tracking-tight text-slate-900">{t('community_brand_title')}</p>
                         <p className="mt-0.5 text-xs text-slate-500">{t('community_brand_subtitle')}</p>
                     </div>
 

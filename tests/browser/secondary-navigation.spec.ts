@@ -104,7 +104,7 @@ for (const locale of ['en', 'ar'] as const) {
         }
         await geometry(page, wavex ? 380 : 330);
         if (wavex) {
-            await page.getByRole('button', { name: 'Fullscreen', exact: true }).click(); await expect(page.locator('.ws-secondary-navigation-slot')).toBeHidden(); await expect(composer).toHaveValue('Unsent synthetic draft');
+            await page.getByRole('button', { name: 'Fullscreen', exact: true }).click(); expect(await page.locator('.fixed.inset-0.z-120').boundingBox()).toEqual({x:0,y:0,width:1440,height:900}); await expect(page.locator('.ws-secondary-navigation-slot')).toBeHidden(); await expect(composer).toHaveValue('Unsent synthetic draft');
             await page.getByRole('button', { name: 'Exit fullscreen', exact: true }).click(); await geometry(page, 380); await expect(composer).toHaveValue('Unsent synthetic draft');
             await rail.getByRole('searchbox').fill('Synthetic contact 49'); await expect(rail.getByRole('button', { name: /Synthetic contact 49/ })).toBeVisible();
             await rail.getByRole('searchbox').fill('');
@@ -114,3 +114,34 @@ for (const locale of ['en', 'ar'] as const) {
         expect(writes.every(path => /\/chat\/conversations\/4\/read$/.test(path))).toBe(true); // pre-existing read call is intercepted, never sent
     });
 }
+
+
+test('category tabs preserve keyboard selection and a filtered fallback tabstop', async ({ page }) => {
+    await fixture(page, 'en'); await page.setViewportSize({ width:1440,height:900 });
+    await page.goto('/store/apps?tab=discover');
+    const rail = await geometry(page, 288);
+    await rail.getByRole('searchbox').fill('Sales');
+    const sales = rail.getByRole('tab', { name:'Sales',exact:true });
+    await expect(sales).toHaveAttribute('tabindex','0'); await sales.focus(); await page.keyboard.press('Enter');
+    await expect(sales).toHaveAttribute('aria-selected','true'); await expect(page).toHaveURL(/category=sales/);
+    await rail.getByRole('searchbox').fill(''); await sales.focus(); await page.keyboard.press('Home');
+    await expect(rail.getByRole('tab', { name:'Tracking',exact:true })).toHaveAttribute('aria-selected','true');
+    await page.goto('/services');
+    const serviceRail = await geometry(page,288);
+    const all = serviceRail.getByRole('tab', { name:'All',exact:true }); await all.focus(); await page.keyboard.press('End');
+    const last = serviceRail.getByRole('tab', { name:'Finance and accounting',exact:true }); await expect(last).toBeFocused(); await expect(last).toHaveAttribute('aria-selected','true');
+    await page.keyboard.press('ArrowDown'); await expect(all).toBeFocused(); await expect(all).toHaveAttribute('aria-selected','true');
+    await page.keyboard.press('ArrowUp'); await expect(last).toBeFocused();
+});
+
+test('portalled conversation list opens its existing new-chat overlay over the viewport', async ({ page }) => {
+    const {writes} = await fixture(page,'en',true); await page.setViewportSize({width:1440,height:900}); await page.goto('/chat');
+    const rail = await geometry(page,330);
+    await rail.locator('.ws-chat-list > div:first-child button').click();
+    const overlay = page.locator('.fixed.inset-0.z-50'); await expect(overlay).toBeVisible();
+    expect(await overlay.boundingBox()).toEqual({x:0,y:0,width:1440,height:900});
+    const input = overlay.locator('input'); await expect(input).toBeVisible(); await input.fill('Synthetic search');
+    const point = (await input.boundingBox())!;
+    expect(await page.evaluate(({x,y}) => document.elementFromPoint(x,y)?.tagName, {x:point.x+5,y:point.y+5})).toBe('INPUT');
+    expect(writes).toEqual([]);
+});
