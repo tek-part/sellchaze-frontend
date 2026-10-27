@@ -59,6 +59,8 @@ export default function AppLayout() {
     const [mobileDrawerViewportWidth, setMobileDrawerViewportWidth] = useState(null);
     const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
     const sidebarToggleRef = useRef(null);
+    const workspaceHeaderRef = useRef(null);
+    const [secondaryNavigationTarget, setSecondaryNavigationTarget] = useState(null);
     const [impersonationActive, setImpersonationActive] = useState(() => isImpersonating());
     const [impersonationExitLoading, setImpersonationExitLoading] = useState(false);
     const appearance = useWorkspaceAppearance();
@@ -147,6 +149,22 @@ export default function AppLayout() {
             window.removeEventListener('sellchase:me-updated', onMeUpdated);
         };
     }, [navigate]);
+
+    // Contextual navigation stays below the real header, including impersonation banners.
+    useLayoutEffect(() => {
+        const header = workspaceHeaderRef.current;
+        const frame = header?.closest('.ws-frame');
+        if (!header || !frame) return;
+        const measure = () => frame.style.setProperty('--ws-workspace-header-height', `${header.getBoundingClientRect().height}px`);
+        measure();
+        if (typeof ResizeObserver === 'undefined') {
+            window.addEventListener('resize', measure);
+            return () => window.removeEventListener('resize', measure);
+        }
+        const observer = new ResizeObserver(measure);
+        observer.observe(header);
+        return () => observer.disconnect();
+    }, [me, impersonationActive]);
 
     // Owners (Merchant, non-admin) own exactly one store — resolve its
     // public storefront URL so the header can offer a direct "View store" link.
@@ -252,16 +270,19 @@ export default function AppLayout() {
                 {merchantWorkspace ? <button type="button" className="ws-sidebar-rail" tabIndex={-1} aria-label={ws(sidebarCollapsed ? 'expand' : 'collapse')} title={ws(sidebarCollapsed ? 'expand' : 'collapse')} aria-expanded={!sidebarCollapsed} aria-controls="workspace-sidebar" onClick={() => { setSidebarCollapsed(value => !value); requestAnimationFrame(() => sidebarToggleRef.current?.focus()); }} /> : null}
             </div>
             <div className="ws-main-column">
-                <div className="ws-header-container">
+                <div ref={workspaceHeaderRef} className="ws-header-container">
                 {impersonationActive ? <div className="ws-impersonation" role="status">
                     <p><HiOutlineArrowUturnLeft aria-hidden />{t('impersonation_banner')}</p>
                     <button type="button" disabled={impersonationExitLoading} onClick={() => void handleExitImpersonation()}>{impersonationExitLoading ? '…' : t('impersonation_exit')}</button>
                 </div> : null}
                 <WorkspaceHeader merchantWorkspace={merchantWorkspace} me={me} permissions={permissions} storeUrl={storeUrl} chatUnread={chatUnread} appearance={appearance} onLanguage={toggleLanguage} onNavigation={openMobileNavigation} onToggleSidebar={() => setSidebarCollapsed((value) => !value)} sidebarToggleRef={sidebarToggleRef} collapsed={sidebarCollapsed} onSearch={() => setSearchOpen(true)} onLogout={() => setLogoutOpen(true)} />
                 </div>
+                <div className="ws-workspace-body">
+                <div ref={setSecondaryNavigationTarget} className="ws-secondary-navigation-slot" />
                 <main id="workspace-content" tabIndex={-1} className="ws-main-scroll">
-                    <div className="ws-page"><Suspense fallback={<BrandLoader />}><Fragment key={pageKey}><Outlet context={{ me, isAdmin, permissions, unifiedStoreNavigation: !isAdminOnly }} /></Fragment></Suspense></div>
+                    <div className="ws-page"><Suspense fallback={<BrandLoader />}><Fragment key={pageKey}><Outlet context={{ me, isAdmin, permissions, unifiedStoreNavigation: !isAdminOnly, secondaryNavigationTarget }} /></Fragment></Suspense></div>
                 </main>
+                </div>
             </div>
             <Dialog open={mobileNavOpen} onClose={() => setMobileNavOpen(false)} className="ws-dialog-layer">
                 <DialogBackdrop transition className="ws-backdrop" />
