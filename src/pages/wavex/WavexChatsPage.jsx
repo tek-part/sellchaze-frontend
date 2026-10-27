@@ -17,6 +17,8 @@ import {
 } from '../../components/workspace/WorkspaceIcons';
 import toast from 'react-hot-toast';
 import api from '../../api/client';
+import SecondaryNavigation from '../../components/navigation/SecondaryNavigation';
+import useWorkspaceDesktop from '../../hooks/useWorkspaceDesktop';
 import {
     chatIdFrom,
     chatLabel,
@@ -66,6 +68,7 @@ export default function WavexChatsPage() {
     const [chatOffset, setChatOffset] = useState(0);
     const [contactOpen, setContactOpen] = useState(false);
     const [maximized, setMaximized] = useState(false);
+    const workspaceDesktop = useWorkspaceDesktop();
     const [avatarByChatId, setAvatarByChatId] = useState({});
     const [pendingFile, setPendingFile] = useState(null);
 
@@ -181,7 +184,7 @@ export default function WavexChatsPage() {
         );
         obs.observe(target);
         return () => obs.disconnect();
-    }, [listTab, hasMore, loadingChats, loadingMore]);
+    }, [listTab, hasMore, loadingChats, loadingMore, workspaceDesktop, maximized]);
 
     useEffect(() => {
         chatOffsetRef.current = chatOffset;
@@ -757,9 +760,10 @@ export default function WavexChatsPage() {
                     : 'h-[min(100dvh-6rem,920px)] max-h-[min(100dvh-6rem,920px)] w-full max-w-[1400px] rounded-2xl',
             ].join(' ')}
         >
-            {/* Left: list */}
+            {/* One list DOM tree; pagination/avatar observers follow the portal on breakpoint changes. */}
+            <SecondaryNavigation title={t('wavex_tab_chats')} width={380} inlineOnMobile search={false} ownScroll enabled={!maximized}>
             <aside className={[
-                'h-full min-h-0 w-full shrink-0 flex-col border-slate-200/80 md:flex md:w-[min(100%,380px)] md:border-e',
+                `h-full min-h-0 w-full shrink-0 flex-col border-slate-200/80 md:flex md:w-[min(100%,380px)] md:border-e${!maximized ? ' ws-wavex-list-in-shell' : ''}`,
                 selected ? 'hidden' : 'flex',
             ].join(' ')}>
                 <div className="flex shrink-0 items-center gap-2 bg-[#f0f2f5] px-3 py-3">
@@ -998,6 +1002,7 @@ export default function WavexChatsPage() {
                     )}
                 </div>
             </aside>
+            </SecondaryNavigation>
 
             {/* Right: conversation */}
             <section className={[

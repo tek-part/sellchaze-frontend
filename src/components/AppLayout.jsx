@@ -150,7 +150,7 @@ export default function AppLayout() {
         };
     }, [navigate]);
 
-    // Contextual navigation stays below the real header, including impersonation banners.
+    // Measure the real header, including impersonation banners, for mobile sticky controls.
     useLayoutEffect(() => {
         const header = workspaceHeaderRef.current;
         const frame = header?.closest('.ws-frame');

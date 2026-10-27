@@ -21,6 +21,7 @@ import {
     HiUsers,
 } from 'react-icons/hi2';
 import FollowSuggestions from '../../../components/feed/FollowSuggestions';
+import SecondaryNavigation from '../../../components/navigation/SecondaryNavigation';
 
 /**
  * Community navigation — the Instagram grammar: a quiet list of bare icons,
@@ -117,8 +118,8 @@ export default function CommunityShell({ children, rightRail = true }) {
 
     return (
         <div className="mx-auto w-full max-w-[1400px] pb-24 lg:pb-0">
-            <div className="grid items-start gap-6 lg:grid-cols-[260px_minmax(0,1fr)] xl:grid-cols-[260px_minmax(0,720px)_320px] xl:justify-center">
-                <aside className="sticky top-1 hidden lg:block">
+            <div className={`ws-community-with-navigation grid items-start gap-6 xl:justify-center${rightRail ? ' has-suggestions' : ''}`}>
+                <SecondaryNavigation title={t('community_brand_title')}>{(query, close) => <div onClick={event => { if (event.target.closest('a')) close(); }}>
                     <div className="px-3 pb-4 pt-2">
                         <p className="text-lg font-bold tracking-tight text-slate-900">{t('community_brand_title')}</p>
                         <p className="mt-0.5 text-xs text-slate-500">{t('community_brand_subtitle')}</p>
@@ -158,19 +159,19 @@ export default function CommunityShell({ children, rightRail = true }) {
                             </NavLink>
                         ) : null}
 
-                        {NAV_ITEMS.map((item) => (
+                        {NAV_ITEMS.filter(item => t(item.labelKey).toLocaleLowerCase().includes(query.trim().toLocaleLowerCase())).map((item) => (
                             <SidebarLink key={item.to} {...item} />
                         ))}
                     </nav>
 
                     <NavLink
                         to="/community/create"
-                        className="sc-press mt-4 flex items-center justify-center gap-2 rounded-xl bg-brand px-4 py-3 text-[15px] font-bold text-white shadow-md shadow-brand/20 transition hover:bg-brand-dark"
+                        className="ws-community-create sc-press mt-4 flex items-center justify-center gap-2 rounded-xl bg-brand px-4 py-3 text-[15px] font-bold text-white shadow-md shadow-brand/20 transition hover:bg-brand-dark"
                     >
                         <HiOutlinePlus className="h-5 w-5" aria-hidden />
                         {t('community_create_cta')}
                     </NavLink>
-                </aside>
+                </div>}</SecondaryNavigation>
 
                 <main className="min-w-0">{children}</main>
 

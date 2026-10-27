@@ -10,6 +10,7 @@ import {
 } from '../components/workspace/WorkspaceIcons';
 import api from '../api/client';
 import { loadEcho } from '../lib/echo';
+import SecondaryNavigation from '../components/navigation/SecondaryNavigation';
 
 function initials(name) {
     return (name || '?').trim().charAt(0).toUpperCase();
@@ -194,9 +195,11 @@ export default function ChatPage() {
 
     return (
         <div className="mx-auto h-[calc(100vh-150px)] min-h-[520px] w-full max-w-6xl overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xs">
-            <div className="grid h-full grid-cols-1 md:grid-cols-[330px_1fr]">
-                {/* sidebar */}
-                <div className={`flex min-h-0 flex-col border-slate-100 md:border-e ${current ? 'hidden md:flex' : 'flex'}`}>
+            <div className="ws-chat-with-navigation grid h-full grid-cols-1 md:grid-cols-[330px_1fr]">
+                {/* Conversation state stays in this page when its navigation moves into the shell. */}
+                <SecondaryNavigation title={t('chat_title', 'Messages')} width={330} inlineOnMobile ownScroll search={false}>
+                {(query) =>
+                <div className={`ws-chat-list flex min-h-0 flex-col border-slate-100 md:border-e ${current ? 'hidden md:flex' : 'flex'}`}>
                     <div className="flex items-center justify-between border-b border-slate-100 px-4 py-4">
                         <h1 className="text-lg font-semibold text-slate-900">{t('chat_title', 'Messages')}</h1>
                         <button onClick={openNew} className="flex h-9 w-9 items-center justify-center rounded-xl bg-brand/10 text-brand transition hover:bg-brand/20" aria-label={t('chat_new', 'New chat')}>
@@ -208,7 +211,7 @@ export default function ChatPage() {
                             <div className="p-6 text-center text-sm text-slate-400">{t('loading', 'Loading…')}</div>
                         ) : convs.length === 0 ? (
                             <div className="p-6 text-center text-sm text-slate-400">{t('chat_empty', 'No conversations yet. Tap + to start one.')}</div>
-                        ) : convs.map((c) => {
+                        ) : convs.filter(c => (c.other_user?.name || '').toLocaleLowerCase().includes(query.trim().toLocaleLowerCase())).map((c) => {
                             const o = c.other_user || {};
                             const active = current && current.id === c.id;
                             return (
@@ -224,6 +227,8 @@ export default function ChatPage() {
                         })}
                     </div>
                 </div>
+
+                }</SecondaryNavigation>
 
                 {/* thread */}
                 <div className={`min-h-0 flex-col ${current ? 'flex' : 'hidden md:flex'}`}>

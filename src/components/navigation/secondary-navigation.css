@@ -1,0 +1,31 @@
+.ws-secondary-sidebar.ws-context-navigation{width:var(--ws-secondary-width,288px)}
+.ws-secondary-sidebar.ws-context-navigation.is-collapsed{width:48px;padding:0}
+.ws-context-navigation.is-collapsed .ws-secondary-sidebar-heading{padding:12px 9px}
+.ws-context-navigation-body,.ws-context-native-scroll{display:flex;flex:1;min-height:0;flex-direction:column}
+.ws-context-navigation-body[hidden]{display:none}
+.ws-context-navigation .ws-secondary-sidebar-scroll{padding:0 12px 24px}
+.ws-context-navigation :is(nav,[role=tablist]){display:flex;flex-direction:column;gap:3px}
+.ws-context-navigation :is(nav,[role=tablist]) :is(a,button){display:flex;align-items:center;gap:10px;min-height:40px;width:100%;padding:10px;border:0;border-radius:7px;font-size:13px;line-height:20px;text-align:start;white-space:normal;color:var(--ws-muted);background:transparent}
+.ws-context-navigation :is(nav,[role=tablist]) :is(a,button):hover{background:var(--ws-panel-soft);color:var(--ws-text)}
+.ws-context-navigation :is(nav,[role=tablist]) :is([aria-current=page],[aria-selected=true]){background:var(--ws-green-soft);color:var(--ws-text);font-weight:600}
+.ws-context-navigation :is(nav,[role=tablist]) svg{width:20px;height:20px;flex-shrink:0}
+.ws-context-navigation :is(button,a,input):focus-visible{outline:2px solid var(--ws-secondary-focus);outline-offset:-2px}
+.ws-context-navigation.is-mobile{width:100%}
+/* The header follows its content column, whose available width may be much smaller than the viewport. */
+.ws-main-column[data-secondary-narrow] .ws-header{gap:8px;padding-inline:12px}.ws-main-column[data-secondary-narrow] .ws-search-trigger{width:36px;height:36px;padding:8px;border:0;background:none}.ws-main-column[data-secondary-narrow] :is(.ws-search-trigger span,.ws-search-trigger kbd,.ws-account-name,.ws-account-chevron){display:none}.ws-main-column[data-secondary-narrow] :is(.ws-header-start,.ws-header-actions){gap:3px}
+@media(min-width:1024px){.ws-apps-content.is-discovery.ws-apps-with-navigation,.ws-services-layout.ws-services-with-navigation{display:block}.ws-community-with-navigation{grid-template-columns:minmax(0,1fr)}.ws-chat-with-navigation{grid-template-columns:minmax(0,1fr)}.ws-wavex-list-in-shell{display:flex!important;width:100%!important;border:0}.ws-context-native-scroll>.ws-wavex-list-in-shell{flex:1}.ws-context-native-scroll>.ws-chat-list{display:flex!important;flex:1;border:0}}
+@media(min-width:1280px){.ws-community-with-navigation.has-suggestions{grid-template-columns:minmax(0,720px) 320px}}
+
+.ws-apps-content.is-discovery.ws-apps-with-navigation,.ws-services-layout.ws-services-with-navigation{display:block}
+[data-workspace-theme=dark] .ws-context-navigation :is(.text-slate-900,.text-slate-800,.text-slate-700){color:var(--ws-text)}
+[data-workspace-theme=dark] .ws-context-navigation :is(.text-slate-600,.text-slate-500,.text-slate-400){color:var(--ws-muted)}
+[data-workspace-theme=dark] .ws-context-navigation :is(.bg-white,.bg-\[\#f0f2f5\]){background:var(--ws-panel);color:var(--ws-text)}
+[data-workspace-theme=dark] .ws-context-navigation :is(.border-slate-100,.border-slate-200\/80){border-color:var(--ws-border)}
+
+.ws-main-column[data-secondary-narrow] :is(.ws-store-link,.ws-chat-link){display:inline-flex;width:36px;min-width:36px;padding:8px;justify-content:center;font-size:0;gap:0}.ws-main-column[data-secondary-narrow] :is(.ws-store-link,.ws-chat-link)>span:not(.ws-notification-dot){display:none}.ws-main-column[data-secondary-narrow] :is(.ws-store-link,.ws-chat-link) svg{width:20px;height:20px}
+
+.ws-frame:has(.ws-context-navigation) .ws-services-heading{flex-wrap:wrap}
+.ws-frame:has(.ws-context-navigation) .ws-services-toolbar{flex-wrap:wrap;max-width:100%;flex-shrink:1}
+.ws-frame:has(.ws-context-navigation) .ws-services-heading>div{min-width:0}
+
+.ws-context-navigation .ws-community-create{background:var(--ws-green-fill);color:white}
