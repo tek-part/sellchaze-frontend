@@ -80,7 +80,7 @@ for(const locale of ['en','ar'] as const){
     test(`${locale} employee permission refresh removes stale flyout before reuse; customer has no store groups`,async({page})=>{
         const {user}=await fixture(page,locale,'light',['Employee'],['store.products.manage','store.orders.manage']);await ready(page,'/community/search');
         await group(page,orders(locale)).click();await expect(flyout(page)).toBeVisible();user.permissions=['store.products.manage'];await page.evaluate(()=>window.dispatchEvent(new Event('sellchase:me-updated')));await expect(group(page,orders(locale))).toHaveCount(0);await expect(flyout(page)).toBeHidden();
-        await group(page,products(locale)).click();expect(await flyout(page).locator('a').evaluateAll(links=>links.map(a=>a.getAttribute('href')))).toEqual(['/store/products']);
+        await group(page,products(locale)).click();expect(await flyout(page).locator('a').evaluateAll(links=>links.map(a=>a.getAttribute('href')))).toEqual(['/store/products','/store/ab-tests']);
         user.roles=['Customer'];user.permissions=[];await page.evaluate(()=>window.dispatchEvent(new Event('sellchase:me-updated')));await expect(rail(page).locator('button')).toHaveCount(0);await expect(flyout(page)).toBeHidden();await expect(rail(page).locator('a[href="/community"]')).toBeVisible();
     });
     test(`${locale} touch opens groups without hover; mobile keeps accessible complete navigation drawer`,async({browser})=>{
@@ -93,9 +93,16 @@ for(const locale of ['en','ar'] as const){
         await expect(secondary).toBeVisible();const before=await secondary.boundingBox();expect(before!.y).toBe(0);expect(before!.height).toBe(600);
         const wallet=rail(page).locator('button[aria-label="'+(locale==='ar'?'محفظتك':'Your wallet')+'"]');await wallet.scrollIntoViewIfNeeded();await wallet.hover();await expect(flyout(page)).toBeVisible();await bounds(page);expect(await secondary.boundingBox()).toEqual(before);
         await page.screenshot({path:info.outputPath(`secondary-flyout-${locale}.png`)});
-        const cdp=await page.context().newCDPSession(page);await cdp.send('Emulation.setPageScaleFactor',{pageScaleFactor:6});
+        // Substitute only the viewport boundary: real popup DOM must fit a narrow visual viewport.
+        await page.evaluate(()=>{
+            const original=Object.getOwnPropertyDescriptor(window,'visualViewport')!;
+            const viewport=Object.assign(new EventTarget(),{offsetLeft:0,offsetTop:0,width:180,height:600});
+            Object.defineProperty(window,'visualViewport',{configurable:true,value:viewport});
+            Object.assign(window,{restoreNavigationViewport:()=>Object.defineProperty(window,'visualViewport',original)});
+            window.dispatchEvent(new Event('resize'));
+        });
         await expect.poll(()=>page.evaluate(()=>{const box=document.querySelector('.ws-compact-flyout')!.getBoundingClientRect(),v=window.visualViewport!;return box.width<=v.width-16+1 && box.left>=v.offsetLeft && box.right<=v.offsetLeft+v.width;})).toBe(true);
-        await cdp.send('Emulation.setPageScaleFactor',{pageScaleFactor:1});await cdp.detach();
+        await page.evaluate(()=>{(window as Window & {restoreNavigationViewport:()=>void}).restoreNavigationViewport();window.dispatchEvent(new Event('resize'));});
         await primary(page).locator('.ws-sidebar-scroll').evaluate(el=>{el.scrollTop=0});await expect(flyout(page)).toBeHidden();
         await page.goto('/services');await group(page,orders(locale)).hover();await expect(flyout(page)).toBeVisible();await bounds(page);const service=await page.locator('.ws-secondary-navigation-slot>.ws-context-navigation').boundingBox();expect(service!.y).toBe(0);expect(service!.height).toBe(600);
     });

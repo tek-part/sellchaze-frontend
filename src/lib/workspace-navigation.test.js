@@ -7,6 +7,8 @@ import { I18nextProvider } from 'react-i18next';
 import SidebarNav from '../components/SidebarNav';
 import { collectCompactNavigation, normalizeNavigationText } from '../components/workspace/NavigationResults';
 import { NavLink } from 'react-router-dom';
+import { buildWorkspaceStoreNav } from '../components/store/workspaceStoreNav';
+import { storeAccess } from './storeAccess';
 
 const i18n = createInstance();
 await i18n.init({ lng: 'en', initImmediate: false, resources: { en: { translation: {} } } });
@@ -91,4 +93,25 @@ describe('Workspace search uses the authorized sidebar', () => {
         expect(html.match(/aria-current="location"/g)).toHaveLength(1);
         expect(html).not.toMatch(/aria-label="Orders" aria-current=/);
     });
+    it('retains original authorized children and section labels for compact flyouts', () => {
+        const Icon = () => React.createElement('svg');
+        const Group = () => null;
+        const Label = () => null;
+        const children = React.createElement(NavLink, { to: '/store/orders' }, 'All orders');
+        const rows = collectCompactNavigation(React.createElement('nav', null,
+            React.createElement(Label, { navigationSection: true }, 'Commerce'),
+            React.createElement(Group, { title: 'Orders', groupKey: 'store-orders', icon: Icon }, children)));
+        expect(rows).toHaveLength(1);
+        expect(rows[0].section).toBe('Commerce');
+        expect(rows[0].children).toBe(children);
+    });
+    it('presentation sections preserve every functional registry destination for owners and employees', () => {
+        const t = (_key, fallback) => fallback || _key;
+        for (const [roles, permissions] of [[['Merchant'], []], [['Employee'], ['store.products.manage', 'store.orders.manage']]]) {
+            const groups = buildWorkspaceStoreNav(t, storeAccess(roles, permissions), permissions);
+            const expected = [...new Set(['/dashboard', ...groups.flatMap(group => group.single ? [group.to, ...(group.items || []).map(item => item.to)] : group.items.map(item => item.to))])].sort();
+            expect(links({ roles, permissions }).sort()).toEqual(expected);
+        }
+    });
+
 });
