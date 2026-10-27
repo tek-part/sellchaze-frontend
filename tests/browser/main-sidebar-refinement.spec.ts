@@ -52,7 +52,7 @@ for(const locale of ['en','ar'] as const) for(const theme of ['light','dark']){
     });
     test(`${locale} ${theme} group hover opens one complete authorized flyout without requests or layout expansion`,async({page},info)=>{
         const {calls,writes}=await fixture(page,locale,theme);await ready(page);await page.waitForLoadState('networkidle');const before=calls.length;
-        const trigger=group(page,orders(locale));const start=Date.now();await trigger.hover();await expect(flyout(page)).toBeVisible();const elapsed=Date.now()-start;
+        const trigger=group(page,orders(locale));const start=Date.now();await trigger.hover();await expect(flyout(page)).toBeVisible();const elapsed=Date.now()-start;await expect(page.getByRole('banner')).toHaveCount(1);
         await info.attach('hover-latency.json',{body:JSON.stringify({elapsedMs:elapsed,configuredOpenDelayMs:100,configuredCloseDelayMs:120}),contentType:'application/json'});
         await expect(trigger).toHaveAttribute('aria-expanded','true');expect(await flyout(page).locator('a').evaluateAll(links=>links.map(a=>a.getAttribute('href')))).toEqual(expectedOrders);await bounds(page);
         const b=(await flyout(page).boundingBox())!;await page.mouse.move(b.x+b.width/2,b.y+50,{steps:4});await page.waitForTimeout(160);await expect(flyout(page)).toBeVisible();

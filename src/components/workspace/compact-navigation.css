@@ -7,8 +7,8 @@ body[data-workspace-theme] .ws-sidebar-compact .ws-sidebar-scroll .ws-compact-na
 .ws-sidebar-scroll .ws-compact-nav [data-compact-trigger]:focus-visible{outline:2px solid var(--ws-green-fill);outline-offset:2px}
 .ws-compact-flyout,.ws-compact-tooltip{position:fixed;z-index:140;max-width:calc(100vw - 16px);background:var(--ws-panel);color:var(--ws-text);border:1px solid var(--ws-border);border-radius:12px;box-shadow:0 8px 30px #10182824;overflow:auto;overscroll-behavior:contain;font-family:inherit}
 .ws-compact-flyout{width:288px;padding:8px;scrollbar-width:thin}
-.ws-compact-flyout>header{display:flex;align-items:center;gap:10px;padding:10px 10px 14px;margin-bottom:4px;border-bottom:1px solid var(--ws-border);font-size:14px}
-.ws-compact-flyout>header svg{width:22px;height:22px;color:var(--ws-green-ink)}
+.ws-compact-flyout>.ws-compact-flyout-heading{display:flex;align-items:center;gap:10px;padding:10px 10px 14px;margin-bottom:4px;border-bottom:1px solid var(--ws-border);font-size:14px}
+.ws-compact-flyout>.ws-compact-flyout-heading svg{width:22px;height:22px;color:var(--ws-green-ink)}
 .ws-compact-flyout nav{display:flex;flex-direction:column;gap:2px}
 .ws-compact-flyout nav a{display:flex;align-items:center;gap:10px;min-height:40px;padding:9px 10px;border-radius:7px;color:var(--ws-muted);font-size:13px;line-height:20px;text-align:start;transition:background-color .1s,color .1s;box-shadow:none;border:0;transform:none;background:transparent}
 .ws-compact-flyout nav a>svg{width:20px;height:20px;flex-shrink:0;color:currentColor}

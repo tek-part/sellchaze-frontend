@@ -116,7 +116,7 @@ export default function CompactNavigation({ rows, onNavigate }) {
             </div>)}
         </nav>
         {open ? createPortal(<div ref={panel} id={id} dir={rtl ? 'rtl' : 'ltr'} data-workspace-theme={theme} className={open.Icon ? 'ws-compact-flyout' : 'ws-compact-tooltip'} role={open.Icon ? undefined : 'tooltip'} style={{ ...position, visibility: position ? 'visible' : 'hidden' }} onPointerEnter={clearTimer} onPointerLeave={leave}>
-            {open.Icon ? <><header><open.Icon aria-hidden /><strong>{open.label}</strong></header><nav aria-label={open.label} onKeyDown={event => {
+            {open.Icon ? <><div className="ws-compact-flyout-heading"><open.Icon aria-hidden /><strong>{open.label}</strong></div><nav aria-label={open.label} onKeyDown={event => {
                 const links = [...event.currentTarget.querySelectorAll('a')], index = links.indexOf(document.activeElement);
                 let next = event.key === 'ArrowDown' ? (index + 1) % links.length : event.key === 'ArrowUp' ? (index - 1 + links.length) % links.length : event.key === 'Home' ? 0 : event.key === 'End' ? links.length - 1 : null;
                 if (next !== null) { event.preventDefault(); links[next]?.focus(); }
