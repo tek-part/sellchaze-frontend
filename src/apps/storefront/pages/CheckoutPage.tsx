@@ -180,6 +180,7 @@ function BasketCheckout(): ReactElement {
             </div> : <p className="sf-field__error">{ar ? 'لا توجد طريقة دفع متاحة حاليًا.' : 'No payment method is currently available.'}</p>}
           </section>
         </fieldset>
+        {quoteQ.error && checkout.paymentMethods.some(method => method.slug === checkout.paymentMethod && method.amount_limits) ? <div className="sf-co-alert" role="alert"><p>{ar ? 'تعذّر تأكيد المبلغ لهذه الطريقة. راجع الحدود الموضحة أو اختر طريقة دفع أخرى.' : 'The amount could not be confirmed for this payment method. Check the displayed limits or choose another method.'}</p></div> : null}
         {checkout.error && !checkout.unresolved ? <div className="sf-co-alert" role="alert"><p>{checkout.error}</p>{!checkout.paymentRetry && !checkout.totalChanged ? <Button type="button" variant="secondary" onClick={reloadAll}>{ar ? 'تحديث خيارات التوصيل' : 'Refresh delivery options'}</Button> : null}</div> : null}
         {!checkout.paymentRetry && !checkout.unresolved ? <CheckoutMinimum quote={quote} /> : null}
         {quote?.order_minimum?.eligible === false && !checkout.paymentRetry && !checkout.unresolved ? <ButtonLink href="/cart" variant="secondary" block>{ar ? 'تعديل السلة' : 'Edit cart'}</ButtonLink> : null}

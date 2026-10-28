@@ -23,11 +23,15 @@ async function fixture(page: Page, locale: 'en' | 'ar', theme: string, testMode 
     if (path === '/api/v1/storefront') return respond({ store: { id: STORE, name: 'Synthetic limits shop', slug: 'synthetic', currency: 'KWD', supported_currencies: ['KWD'], default_locale: locale, supported_locales: ['en', 'ar'], tracking_enabled: false }, theme: { key: theme, version: '1.0.0', settings: {} }, navigation: { header: [], footer: [] } });
     if (path.endsWith('/payment-methods')) return respond({ data: [{ slug: 'tap', name: 'Tap', test_mode: testMode }, { slug: 'deema', name: 'Deema', test_mode: testMode, amount_limits: { currency: 'KWD', minimum: testMode ? '100.000' : '10.000', maximum: testMode ? '200.000' : null } }] });
     if (path.endsWith('/checkout/fields')) return respond({ data: [], requires_shipping: false, has_digital: false, shipping: { enabled: false, regions_enabled: false, auto_select_region: false, currency: 'KWD', flat_rate: '0', free_over: null, regions: [], options: [] } });
+    if (path.endsWith('/cart/catalog')) return respond({ store_id: STORE, data: [product] });
     if (path.endsWith('/products/synthetic-limits')) return respond({ data: product });
     if (path.endsWith('/funnels/synthetic-limits')) return respond({ data: { slug: 'synthetic-limits', title: 'Synthetic limits funnel', template: 'page', locale, funnel_product_slug: 'synthetic-limits', sections: [] } });
     if (path.endsWith('/checkout/quote')) {
       const body = request.postDataJSON() as Record<string, unknown>; quotes.push(body);
-      if (body.payment_method === 'deema') return respond({ message: locale === 'ar' ? 'المبلغ غير مؤهل لديمة.' : 'Amount is not eligible for Deema.', errors: { payment_method: ['Deema amount is outside the supported range.'] } }, 422);
+      if (body.payment_method === 'deema') {
+        const message = testMode ? 'Deema sandbox payments must be between 100 and 200 KWD.' : 'Deema live payments require at least 10 KWD.';
+        return respond({ message, errors: { payment_method: [message] } }, 422);
+      }
       return respond({ data: { currency: 'KWD', requires_shipping: false, amount_due: amount,
         items: [{ product_id: 700, variant_id: null, name: product.name, quantity: 1, line_total: amount }],
         totals: { subtotal: amount, discount_total: '0.00', shipping_total: '0.00', tax_total: '0.00', grand_total: amount } } });
@@ -54,7 +58,7 @@ async function check(page: Page, locale: 'en' | 'ar', theme: string, surface: Su
   await form.getByRole('radio', { name: /^Deema/ }).check();
   await expect.poll(() => seen.quotes.at(-1)?.payment_method).toBe('deema');
   await expect(submit).toBeDisabled();
-  await expect(page.getByRole('alert').filter({ hasText: locale === 'ar' ? 'المبلغ غير مؤهل' : 'Amount is not eligible' })).toBeVisible();
+  await expect(form.getByRole('alert').filter({ hasText: surface === 'cart' ? (locale === 'ar' ? 'تعذّر تأكيد المبلغ لهذه الطريقة' : 'The amount could not be confirmed for this payment method') : (live ? 'Deema live payments' : 'Deema sandbox payments') })).toBeVisible();
   expect(seen.writes).toEqual([]);
   await form.getByRole('radio', { name: /^Tap/ }).check();
   await expect(submit).toBeEnabled();
