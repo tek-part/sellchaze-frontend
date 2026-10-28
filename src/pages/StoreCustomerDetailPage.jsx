@@ -1,5 +1,6 @@
+import ReportingMoney from '../components/ReportingMoney';
 import { useEffect, useId, useMemo, useState } from 'react';
-import { Link, useOutletContext, useSearchParams } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import api from '../api/client';
 import useStoreScope from '../hooks/useStoreScope';
@@ -30,7 +31,6 @@ function draftOf(customer) {
  */
 export default function StoreCustomerDetailPage() {
     const { apiBase, uiBase } = useStoreScope();
-    const { store } = useOutletContext();
     const [params] = useSearchParams();
     const key = readCustomerKey(params.get('key'));
     const { i18n } = useTranslation();
@@ -75,7 +75,6 @@ export default function StoreCustomerDetailPage() {
         return () => { active = false; };
     }, [apiBase]);
 
-    const money = (value) => new Intl.NumberFormat(ar ? 'ar-EG' : 'en', { style: 'currency', currency: customer?.stats.currency || store?.currency || 'EGP', maximumFractionDigits: 2 }).format(Number(value || 0));
     const date = (value) => (value ? new Intl.DateTimeFormat(ar ? 'ar-EG' : 'en', { year: 'numeric', month: 'short', day: 'numeric' }).format(new Date(value)) : '—');
 
     const changes = useMemo(() => {
@@ -148,8 +147,8 @@ export default function StoreCustomerDetailPage() {
 
         <ul className="ws-customer-stats" aria-label={text('ملخص العميل', 'Customer summary')}>
             <li><span>{text('الطلبات', 'Orders')}</span><strong>{stats.orders_count}</strong></li>
-            <li><span>{text('إجمالي الإنفاق', 'Amount spent')}</span><strong>{money(stats.total_spent)}</strong></li>
-            <li><span>{text('متوسط قيمة الطلب', 'Average order value')}</span><strong>{money(stats.average_order_value)}</strong></li>
+            <li><span>{text('إجمالي الإنفاق', 'Amount spent')}</span><strong><ReportingMoney value={stats.total_spent} report={stats.reporting_money} currency={stats.currency} /></strong></li>
+            <li><span>{text('متوسط قيمة الطلب', 'Average order value')}</span><strong><ReportingMoney value={stats.average_order_value} report={stats.reporting_money} currency={stats.currency} average /></strong></li>
             <li><span>{text('أول طلب', 'First order')}</span><strong>{date(stats.first_order_at)}</strong></li>
             <li><span>{text('آخر طلب', 'Last order')}</span><strong>{date(stats.last_order_at)}</strong></li>
         </ul>

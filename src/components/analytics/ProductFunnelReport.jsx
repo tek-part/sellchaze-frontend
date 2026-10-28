@@ -1,3 +1,4 @@
+import ReportingMoney from '../ReportingMoney';
 import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import api from '../../api/client';
@@ -38,7 +39,6 @@ export default function ProductFunnelReport({ apiBase }) {
         return () => { active = false; controller.abort(); };
     }, [apiBase, range, filterKey, retry]);
 
-    const money = (value) => new Intl.NumberFormat(locale, { style: 'currency', currency: data?.currency || 'USD' }).format(Number(value));
     const count = (value) => new Intl.NumberFormat(locale).format(value);
     const rate = (value) => value === null || value === undefined ? '—' : new Intl.NumberFormat(locale, { style: 'percent', maximumFractionDigits: 2 }).format(Number(value) / 100);
     const date = (key) => key ? new Date(`${String(key).slice(0, 10)}T12:00:00`).toLocaleDateString(locale, { day: 'numeric', month: 'short', year: 'numeric' }) : '';
@@ -93,7 +93,7 @@ export default function ProductFunnelReport({ apiBase }) {
                                 <tr key={row.product_id}>
                                     <th scope="row">{row.name || t('g4_deleted_product')}</th>
                                     <td className={cell}>{count(row.views)}</td><td className={cell}>{count(row.carts)}</td><td className={cell}>{count(row.checkouts)}</td>
-                                    <td className={cell}>{count(row.orders)}</td><td className={cell}>{count(row.units)}</td><td className={cell}>{money(row.revenue)}</td>
+                                    <td className={cell}>{count(row.orders)}</td><td className={cell}>{count(row.units)}</td><td className={cell}><ReportingMoney value={row.revenue} report={row.reporting_money} currency={data.currency} /></td>
                                     <td className={cell}>{rate(row.cart_rate)}</td><td className={cell}>{rate(row.checkout_rate)}</td><td className={cell}>{rate(row.conversion_rate)}</td>
                                 </tr>
                             ))}
@@ -102,7 +102,7 @@ export default function ProductFunnelReport({ apiBase }) {
                             <tr>
                                 <th scope="row">{t('g4_total')}</th>
                                 <td className={cell}>{count(totals.views)}</td><td className={cell}>{count(totals.carts)}</td><td className={cell}>{count(totals.checkouts)}</td>
-                                <td className={cell}>{count(totals.orders)}</td><td className={cell}>{count(totals.units)}</td><td className={cell}>{money(totals.revenue)}</td>
+                                <td className={cell}>{count(totals.orders)}</td><td className={cell}>{count(totals.units)}</td><td className={cell}><ReportingMoney value={totals.revenue} report={data.reporting_money} currency={data.currency} /></td>
                                 <td className={cell}>{rate(totals.cart_rate)}</td><td className={cell}>{rate(totals.checkout_rate)}</td><td className={cell}>{rate(totals.conversion_rate)}</td>
                             </tr>
                         </tfoot> : null}
