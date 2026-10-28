@@ -1,3 +1,4 @@
+import { PaymentAmountLimitHint } from './PaymentAmountLimitHint';
 import PaymentMethodLogo from '../../../shared/payments/PaymentMethodLogo';
 import { PaymentAdjustmentLine } from './PaymentAdjustmentLine';
 import { CheckoutDiscountLines } from './CheckoutDiscountLines';
@@ -170,7 +171,7 @@ function BasketCheckout(): ReactElement {
                 return <div key={method.slug} style={{ display: 'contents' }}>
                   <label className={`sf-co-choice ${selected ? 'is-selected' : ''}`}>
                     <input type="radio" name="payment_method" checked={selected} onChange={() => checkout.setPaymentMethod(method.slug)} required />
-                    <span className="sf-co-choice__label"><strong>{methodName(method)}</strong></span>
+                    <span className="sf-co-choice__label"><strong>{methodName(method)}</strong><PaymentAmountLimitHint method={method} locale={locale} /></span>
                     <span className="sf-co-choice__aside"><PaymentMethodLogo slug={method.slug} src={method.logo_url} /></span>
                   </label>
                   {selected && method.description ? <div className="sf-co-choice__detail">{method.description}</div> : null}
@@ -179,6 +180,7 @@ function BasketCheckout(): ReactElement {
             </div> : <p className="sf-field__error">{ar ? 'لا توجد طريقة دفع متاحة حاليًا.' : 'No payment method is currently available.'}</p>}
           </section>
         </fieldset>
+        {quoteQ.error && checkout.paymentMethods.some(method => method.slug === checkout.paymentMethod && method.amount_limits) ? <div className="sf-co-alert" role="alert"><p>{ar ? 'تعذّر تأكيد المبلغ لهذه الطريقة. راجع الحدود الموضحة أو اختر طريقة دفع أخرى.' : 'The amount could not be confirmed for this payment method. Check the displayed limits or choose another method.'}</p></div> : null}
         {checkout.error && !checkout.unresolved ? <div className="sf-co-alert" role="alert"><p>{checkout.error}</p>{!checkout.paymentRetry && !checkout.totalChanged ? <Button type="button" variant="secondary" onClick={reloadAll}>{ar ? 'تحديث خيارات التوصيل' : 'Refresh delivery options'}</Button> : null}</div> : null}
         {!checkout.paymentRetry && !checkout.unresolved ? <CheckoutMinimum quote={quote} /> : null}
         {quote?.order_minimum?.eligible === false && !checkout.paymentRetry && !checkout.unresolved ? <ButtonLink href="/cart" variant="secondary" block>{ar ? 'تعديل السلة' : 'Edit cart'}</ButtonLink> : null}

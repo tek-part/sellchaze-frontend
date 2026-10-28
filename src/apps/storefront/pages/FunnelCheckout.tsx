@@ -1,3 +1,4 @@
+import { PaymentAmountLimitHint } from './PaymentAmountLimitHint';
 import PaymentMethodLogo from '../../../shared/payments/PaymentMethodLogo';
 import { PaymentAdjustmentLine } from './PaymentAdjustmentLine';
 import { CheckoutDiscountLines } from './CheckoutDiscountLines';
@@ -137,7 +138,7 @@ export function FunnelCheckout({ productSlug, renderLayout, compactHeader = fals
           <legend>{label('طريقة الدفع', 'Payment method')}</legend>
           {payment.paymentMethods.map((method) => <label key={method.slug}>
             <input type="radio" name="funnel-payment" value={method.slug} checked={payment.paymentMethod === method.slug} onChange={() => payment.setPaymentMethod(method.slug)} required />
-            <PaymentMethodLogo slug={method.slug} src={method.logo_url} /><span>{method.slug === 'cod' && method.name === 'Cash on delivery' ? label('الدفع عند الاستلام', 'Cash on delivery') : method.slug === 'bank_transfer' && method.name === 'Bank transfer' ? label('تحويل بنكي', 'Bank transfer') : method.name}{method.test_mode ? label(' (تجريبي)', ' (Test)') : ''}{method.description ? <small style={{ display: 'block', whiteSpace: 'pre-wrap' }}>{method.description}</small> : null}</span>
+            <PaymentMethodLogo slug={method.slug} src={method.logo_url} /><span>{method.slug === 'cod' && method.name === 'Cash on delivery' ? label('الدفع عند الاستلام', 'Cash on delivery') : method.slug === 'bank_transfer' && method.name === 'Bank transfer' ? label('تحويل بنكي', 'Bank transfer') : method.name}{method.test_mode ? label(' (تجريبي)', ' (Test)') : ''}{method.description ? <small style={{ display: 'block', whiteSpace: 'pre-wrap' }}>{method.description}</small> : null}<PaymentAmountLimitHint method={method} locale={locale} /></span>
           </label>)}
           {!payment.paymentMethods.length ? <p>{label('لا توجد طريقة دفع متاحة حاليًا.', 'No payment method is currently available.')}</p> : null}
         </fieldset>}

@@ -208,7 +208,7 @@ export function submitProductReview(slug: string, review: { rating: number; titl
 export interface AppliedDiscount { id: number; title: string; code: string | null; method: 'code' | 'automatic'; type: 'fixed' | 'percentage' | 'free_shipping' | 'buy_x_get_y' | 'bundle'; amount: string; bundle_id?: string }
 export const applyCoupon = (code: string): Promise<{ data: unknown; discounts?: ReadonlyArray<AppliedDiscount> }> => apiSend('/checkout/coupon/apply', 'POST', { code });
 export const removeCoupon = (): Promise<{ data: unknown; discounts?: ReadonlyArray<AppliedDiscount> }> => apiSend('/checkout/coupon', 'DELETE');
-export interface StorefrontPaymentMethod { slug: string; name: string; test_mode: boolean; logo_url?: string | null; description?: string }
+export interface StorefrontPaymentMethod { slug: string; name: string; test_mode: boolean; logo_url?: string | null; description?: string; amount_limits?: { currency: string; minimum: string; maximum: string | null } }
 export const getPaymentMethods = (productIds: ReadonlyArray<number> = []): Promise<{ data: ReadonlyArray<StorefrontPaymentMethod> }> => {
   const params = new URLSearchParams();
   [...new Set(productIds)].forEach((id) => params.append('product_ids[]', String(id)));
