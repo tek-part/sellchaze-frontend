@@ -31,7 +31,19 @@ for (const locale of ['ar', 'en'] as const) for (const width of [1920, 390, 320]
     await page.goto('/store/products/30/edit');
     const card = page.locator('.pe-product-pixels'), add = card.getByRole('button', { name: locale === 'ar' ? 'إضافة Pixel' : 'Add Pixel', exact: true }), save = page.getByRole('button', { name: locale === 'ar' ? 'حفظ' : 'Save', exact: true });
     await expect(add).toBeVisible(); await expect(card.locator('.pe-pixel-row')).toHaveCount(0);
-    if (width === 1920) await expect(page.getByRole('link', { name: 'A/B Tests', exact: true })).toBeVisible();
+    if (width === 1920) {
+      const sidebar = page.locator('#workspace-sidebar');
+      await expect(sidebar).toHaveAttribute('data-collapsed');
+      const products = sidebar.getByRole('button', { name: locale === 'ar' ? 'المنتجات' : 'Products', exact: true });
+      await products.focus();
+      await products.press(locale === 'ar' ? 'ArrowLeft' : 'ArrowRight');
+      const flyout = page.locator('.ws-compact-flyout');
+      await expect(flyout.getByRole('link', { name: 'A/B Tests', exact: true })).toHaveAttribute('href', '/store/ab-tests');
+      await expect(flyout.getByRole('link', { name: 'A/B Tests', exact: true })).toBeVisible();
+      await page.keyboard.press('Escape');
+      await expect(flyout).toBeHidden();
+      await expect(products).toBeFocused();
+    }
     const header = card.locator('header');
     await expect(header.getByRole('button', { name: locale === 'ar' ? 'إضافة Pixel' : 'Add Pixel', exact: true })).toBeVisible();
     const headerGeometry = await header.evaluate(el => { const h = el.querySelector('h2')!.getBoundingClientRect(), b = el.querySelector('button')!.getBoundingClientRect(); return { height: el.getBoundingClientRect().height, centerGap: Math.abs(h.y + h.height / 2 - b.y - b.height / 2) }; });
