@@ -12,7 +12,7 @@ const READY_TIMEOUT_MS = 6000;
  *
  * Props: `src` (customize URL), `width` (px), `onReady()`, `onSectionSelected(id)`, `openHref`.
  */
-const PreviewFrame = forwardRef(function PreviewFrame({ src, width, onReady, onSectionSelected, openHref }, ref) {
+const PreviewFrame = forwardRef(function PreviewFrame({ src, width, onReady, onSectionSelected, openHref, loading = false, error = false, onReload }, ref) {
     const { t } = useTranslation();
     const frame = useRef(null);
     const [ready, setReady] = useState(false);
@@ -26,7 +26,11 @@ const PreviewFrame = forwardRef(function PreviewFrame({ src, width, onReady, onS
         return true;
     }, [origin]);
 
-    useImperativeHandle(ref, () => ({ post, isReady: () => ready, reload: () => setReloadKey((k) => k + 1) }), [post, ready]);
+    const reload = useCallback(() => {
+        setReloadKey((k) => k + 1);
+        onReload?.();
+    }, [onReload]);
+    useImperativeHandle(ref, () => ({ post, isReady: () => ready, reload }), [post, ready, reload]);
 
     // A new src or a manual reload restarts the handshake.
     useEffect(() => { setReady(false); setTimedOut(false); }, [src, reloadKey]);
@@ -48,6 +52,14 @@ const PreviewFrame = forwardRef(function PreviewFrame({ src, width, onReady, onS
     }, [origin, onReady, onSectionSelected]);
 
     if (!src) {
+        if (loading || error) return (
+            <div className="flex h-full flex-col items-center justify-center gap-3 p-8 text-center" role="status">
+                <p className="text-sm font-semibold text-slate-700">{loading
+                    ? t('customizer_preview_loading', 'Preparing your private preview…')
+                    : t('customizer_preview_failed', 'The private preview could not be loaded. Try again.')}</p>
+                {error ? <button type="button" onClick={reload} className="rounded-lg bg-slate-800 px-3 py-2 text-sm font-semibold text-white">{t('customizer_reload_preview', 'Reload preview')}</button> : null}
+            </div>
+        );
         return (
             <div className="flex h-full flex-col items-center justify-center gap-2 p-8 text-center">
                 <HiOutlineSignalSlash className="h-8 w-8 text-slate-300" aria-hidden />
@@ -64,6 +76,7 @@ const PreviewFrame = forwardRef(function PreviewFrame({ src, width, onReady, onS
                 ref={frame}
                 title={t('customizer_preview_title', 'Live storefront preview')}
                 src={src}
+                referrerPolicy="no-referrer"
                 className={`h-full w-full border-0 transition-opacity duration-300 ${ready ? 'opacity-100' : 'opacity-0'}`}
                 sandbox="allow-forms allow-same-origin allow-scripts allow-popups allow-modals"
             />
@@ -81,7 +94,7 @@ const PreviewFrame = forwardRef(function PreviewFrame({ src, width, onReady, onS
                             <p className="text-sm font-semibold text-amber-900">{t('customizer_preview_slow', 'The preview has not responded yet')}</p>
                             <p className="max-w-md text-xs text-amber-800">{t('customizer_preview_slow_hint', 'Make sure the storefront is reachable and supports customize mode, then reload.')}</p>
                             <div className="flex items-center gap-2">
-                                <button type="button" onClick={() => setReloadKey((k) => k + 1)} className="inline-flex items-center gap-1.5 rounded-lg bg-amber-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-amber-700">
+                                <button type="button" onClick={reload} className="inline-flex items-center gap-1.5 rounded-lg bg-amber-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-amber-700">
                                     <HiOutlineArrowPath className="h-4 w-4" aria-hidden />
                                     {t('customizer_reload_preview', 'Reload preview')}
                                 </button>

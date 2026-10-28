@@ -13,6 +13,7 @@ import EditorTopBar from '../components/editor/EditorTopBar';
 import EditorSidebar from '../components/editor/EditorSidebar';
 import Inspector from '../components/editor/Inspector';
 import PreviewFrame from '../components/customizer/PreviewFrame';
+import useCustomizerPreview from '../components/customizer/useCustomizerPreview';
 import RevisionsDrawer from '../components/customizer/RevisionsDrawer';
 import {
     FALLBACK_VIEWPORT_WIDTH, blockLimits, blockSchemaFor, defaultsFor, fromApiSections, hasBlocks, isTranslatable, migrateLegacyBlocks,
@@ -78,6 +79,8 @@ export default function StoreCustomizePage() {
     const [pane, setPane] = useState('sections'); // < lg: which of sections | preview | inspector is shown
     const [viewport, setViewport] = useState('desktop');
     const [locale, setLocale] = useState(defaultLocale);
+    const localeRef = useRef(locale);
+    localeRef.current = locale;
     const [saveStatus, setSaveStatus] = useState('saved');
     const [pageDirty, setPageDirty] = useState(false);
     const [publishing, setPublishing] = useState(false);
@@ -141,7 +144,7 @@ export default function StoreCustomizePage() {
         setPageError('');
         try {
             const url = pageKey === 'home' ? `${apiBase}/pages/template/home` : `${apiBase}/pages/${pageKey}`;
-            const { data } = await api.get(url, pageKey === 'home' ? { params: { locale } } : undefined);
+            const { data } = await api.get(url, pageKey === 'home' ? { params: { locale: localeRef.current } } : undefined);
             if (seq !== loadSeq.current) return;
             const payload = data?.data ?? data;
             const sameRecord = keepHistory && pageRef.current && String(pageRef.current.id) === String(payload?.id);
@@ -166,8 +169,7 @@ export default function StoreCustomizePage() {
                 ? t('customizer_home_missing', 'The home layout endpoint is not available yet. Once the backend ships it, reload this page.')
                 : errorMessage(e));
         }
-        // `locale` is read on purpose: the home page is per-locale (contract §3).
-        // eslint-disable-next-line react-hooks/exhaustive-deps
+        // Read the latest locale without triggering a reload before pending edits are flushed.
     }, [apiBase, pageKey, loadPageRevisions, t]);
 
     useEffect(() => { loadPage(); }, [loadPage]);
@@ -512,7 +514,9 @@ export default function StoreCustomizePage() {
 
     // ----- live preview (contract §5) -----------------------------------------------------------
     const previewBase = previewBaseFor(store);
-    const previewSrc = previewUrlFor(previewBase, locale, theme?.key || undefined);
+    const previewThemeId = themeStatus === 'ready' && (!themeIdParam || Number(themeIdParam) === theme?.id) ? theme?.id : null;
+    const previewAccess = useCustomizerPreview(apiBase, previewThemeId, import.meta.env.DEV ? previewBase : '', store?.id);
+    const previewSrc = previewUrlFor(previewAccess.url, locale, theme?.key || undefined);
     const storefrontHref = import.meta.env.DEV ? (previewBase ? `${previewBase}?preview=1&lang=${locale}` : '') : (store?.storefront_url || store?.public_url || '');
     const path = pageKey === 'home' ? '/' : `/pages/${page?.slug || ''}`;
     const hydratePayload = useMemo(() => ({
@@ -649,10 +653,13 @@ export default function StoreCustomizePage() {
                     <PreviewFrame
                         ref={preview}
                         src={previewSrc}
+                        loading={previewAccess.loading}
+                        error={previewAccess.error}
+                        onReload={previewAccess.reload}
                         width={WIDTHS[viewport] || WIDTHS.desktop}
                         onReady={onPreviewReady}
                         onSectionSelected={onSectionSelectedInPreview}
-                        openHref={storefrontHref}
+                        openHref={previewAccess.url || storefrontHref}
                     />
                 </main>
 
