@@ -55,6 +55,7 @@ export default function StoreCustomizePage() {
     const navigate = useNavigate();
     const [searchParams, setSearchParams] = useSearchParams();
     const { apiBase, uiBase, store, access } = useStoreContext();
+    const editorScope = `${apiBase}:${store?.id ?? ''}`;
     const { locales, defaultLocale } = useStoreLocales();
     const localesRef = useRef({ locales, defaultLocale });
     localesRef.current = { locales, defaultLocale };
@@ -67,6 +68,7 @@ export default function StoreCustomizePage() {
     const [schema, setSchema] = useState({});
     const [schemaError, setSchemaError] = useState('');
     const [page, setPage] = useState(null);
+    const [pageScope, setPageScope] = useState('');
     const [pageStatus, setPageStatus] = useState('loading');
     const [pageError, setPageError] = useState('');
     const [history, setHistory] = useState(() => createHistory([]));
@@ -90,6 +92,7 @@ export default function StoreCustomizePage() {
 
     // Theme settings (contract §3 `settings_schema` + PUT themes/settings)
     const [theme, setTheme] = useState(null); // { id, key, name, isActive }
+    const [themeScope, setThemeScope] = useState('');
     const [themeGroups, setThemeGroups] = useState([]);
     const [themeValues, setThemeValues] = useState(null);
     const [themeStatus, setThemeStatus] = useState('loading');
@@ -105,6 +108,7 @@ export default function StoreCustomizePage() {
     const schemaRef = useRef(schema);
     schemaRef.current = schema;
     const loadSeq = useRef(0);
+    const themeLoadSeq = useRef(0);
     const preview = useRef(null);
     const [previewReady, setPreviewReady] = useState(false);
 
@@ -123,6 +127,8 @@ export default function StoreCustomizePage() {
     // ----- loaders ------------------------------------------------------------------------------
     useEffect(() => {
         let active = true;
+        setSchema({});
+        setPages([]);
         api.get(`${apiBase}/pages/schema`)
             .then(({ data }) => { if (active) { setSchema(data?.sections_schema ?? {}); setSchemaError(''); } })
             .catch((e) => { if (active) setSchemaError(isNotFound(e) ? t('customizer_schema_missing', 'The section library endpoint is not available yet.') : errorMessage(e)); });
@@ -130,18 +136,21 @@ export default function StoreCustomizePage() {
             .then(({ data }) => { if (active) setPages((Array.isArray(data?.data) ? data.data : []).filter((p) => p.template !== 'home')); })
             .catch(() => { if (active) setPages([]); });
         return () => { active = false; };
-    }, [apiBase, t]);
+    }, [apiBase, editorScope, t]);
 
-    const loadPageRevisions = useCallback(async (id) => {
+    const loadPageRevisions = useCallback(async (id, sequence = loadSeq.current) => {
         if (!id) return;
-        try { const { data } = await api.get(`${apiBase}/pages/${id}/revisions`); setPageRevisions(Array.isArray(data?.data) ? data.data : []); }
-        catch { setPageRevisions([]); }
+        try {
+            const { data } = await api.get(`${apiBase}/pages/${id}/revisions`);
+            if (sequence === loadSeq.current) setPageRevisions(Array.isArray(data?.data) ? data.data : []);
+        } catch { if (sequence === loadSeq.current) setPageRevisions([]); }
     }, [apiBase]);
 
     const loadPage = useCallback(async ({ keepHistory = false } = {}) => {
         const seq = ++loadSeq.current;
         setPageStatus('loading');
         setPageError('');
+        setPageRevisions([]);
         try {
             const url = pageKey === 'home' ? `${apiBase}/pages/template/home` : `${apiBase}/pages/${pageKey}`;
             const { data } = await api.get(url, pageKey === 'home' ? { params: { locale: localeRef.current } } : undefined);
@@ -149,6 +158,7 @@ export default function StoreCustomizePage() {
             const payload = data?.data ?? data;
             const sameRecord = keepHistory && pageRef.current && String(pageRef.current.id) === String(payload?.id);
             setPage(payload);
+            setPageScope(editorScope);
             if (!sameRecord) {
                 const loaded = fromApiSections(payload?.sections);
                 setHistory(createHistory(loaded));
@@ -161,7 +171,7 @@ export default function StoreCustomizePage() {
             }
             setPageDirty(!!payload?.has_unpublished_changes);
             setPageStatus('ready');
-            loadPageRevisions(payload?.id);
+            loadPageRevisions(payload?.id, seq);
         } catch (e) {
             if (seq !== loadSeq.current) return;
             setPageStatus('error');
@@ -170,9 +180,9 @@ export default function StoreCustomizePage() {
                 : errorMessage(e));
         }
         // Read the latest locale without triggering a reload before pending edits are flushed.
-    }, [apiBase, pageKey, loadPageRevisions, t]);
+    }, [apiBase, editorScope, pageKey, loadPageRevisions, t]);
 
-    useEffect(() => { loadPage(); }, [loadPage]);
+    useEffect(() => { loadPage(); return () => { loadSeq.current += 1; }; }, [loadPage]);
     // Locale switch: re-resolve the home page for that locale, keeping local edits when it is the same
     // record. Pending edits are flushed first so a per-locale record swap never drops them.
     const firstLocaleRun = useRef(true);
@@ -183,27 +193,34 @@ export default function StoreCustomizePage() {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [locale]);
 
-    const loadThemeRevisions = useCallback(async (id) => {
+    const loadThemeRevisions = useCallback(async (id, sequence = themeLoadSeq.current) => {
         if (!id) return;
-        try { const { data } = await api.get(`${apiBase}/themes/${id}/revisions`); setThemeRevisions(Array.isArray(data?.data) ? data.data : []); }
-        catch { setThemeRevisions([]); }
+        try {
+            const { data } = await api.get(`${apiBase}/themes/${id}/revisions`);
+            if (sequence === themeLoadSeq.current) setThemeRevisions(Array.isArray(data?.data) ? data.data : []);
+        } catch { if (sequence === themeLoadSeq.current) setThemeRevisions([]); }
     }, [apiBase]);
 
     // `?theme=<id>` edits that installed theme; otherwise the active one.
     const loadTheme = useCallback(async () => {
+        const sequence = ++themeLoadSeq.current;
         setThemeStatus('loading');
         setThemeError('');
+        setThemeRevisions([]);
         try {
             let activeId = null;
             try { const { data: list } = await api.get(`${apiBase}/themes`); activeId = list?.active_theme_id ?? null; }
             catch (e) { if (!themeIdParam) throw e; }
+            if (sequence !== themeLoadSeq.current) return;
             const targetId = themeIdParam ? Number(themeIdParam) : activeId;
             if (!targetId) { setThemeStatus('error'); setThemeError(t('store_customize_no_theme', 'Activate a theme first')); return; }
             const { data } = await api.get(`${apiBase}/themes/${targetId}`);
+            if (sequence !== themeLoadSeq.current) return;
             const groups = data?.version?.settings_schema ?? [];
             const { locales: ls, defaultLocale: dl } = localesRef.current;
             const values = normalizeThemeValues(groups, data?.install?.draft_settings ?? data?.install?.settings ?? {}, ls, dl);
             setTheme({ id: Number(targetId), key: data?.theme?.key ?? '', name: data?.theme?.name ?? '', isActive: activeId == null ? undefined : Number(activeId) === Number(targetId) });
+            setThemeScope(editorScope);
             setThemeGroups(groups);
             setThemeValues(values);
             themeSavedJson.current = stableJson(values);
@@ -211,14 +228,15 @@ export default function StoreCustomizePage() {
             setThemeDirty(!!data?.install?.has_unpublished_changes);
             setThemeStatus('ready');
             setSelectedGroupId((cur) => (groups.some((g) => g.id === cur) ? cur : (groups[0]?.id ?? null)));
-            loadThemeRevisions(targetId);
+            loadThemeRevisions(targetId, sequence);
         } catch (e) {
+            if (sequence !== themeLoadSeq.current) return;
             setThemeStatus('error');
             setThemeError(isNotFound(e) && themeIdParam ? t('editor_theme_load_failed', 'This theme could not be loaded') : errorMessage(e));
         }
-    }, [apiBase, themeIdParam, loadThemeRevisions, t]);
+    }, [apiBase, editorScope, themeIdParam, loadThemeRevisions, t]);
 
-    useEffect(() => { loadTheme(); }, [loadTheme]);
+    useEffect(() => { loadTheme(); return () => { themeLoadSeq.current += 1; }; }, [loadTheme]);
 
     // ----- persistence --------------------------------------------------------------------------
     const persistSections = useCallback(async (snapshot, { quiet = true } = {}) => {
@@ -514,7 +532,8 @@ export default function StoreCustomizePage() {
 
     // ----- live preview (contract §5) -----------------------------------------------------------
     const previewBase = previewBaseFor(store);
-    const previewThemeId = themeStatus === 'ready' && (!themeIdParam || Number(themeIdParam) === theme?.id) ? theme?.id : null;
+    const previewScopeReady = pageScope === editorScope && themeScope === editorScope && themeStatus === 'ready';
+    const previewThemeId = previewScopeReady && (!themeIdParam || Number(themeIdParam) === theme?.id) ? theme?.id : null;
     const previewAccess = useCustomizerPreview(apiBase, previewThemeId, import.meta.env.DEV ? previewBase : '', store?.id);
     const previewSrc = previewUrlFor(previewAccess.url, locale, theme?.key || undefined);
     const storefrontHref = import.meta.env.DEV ? (previewBase ? `${previewBase}?preview=1&lang=${locale}` : '') : (store?.storefront_url || store?.public_url || '');
@@ -530,10 +549,10 @@ export default function StoreCustomizePage() {
     useEffect(() => { setPreviewReady(false); }, [previewSrc]);
 
     useEffect(() => {
-        if (!previewReady) return undefined;
+        if (!previewReady || !previewScopeReady || pageStatus !== 'ready') return undefined;
         const timer = window.setTimeout(() => { preview.current?.post({ type: 'hydrate', payload: hydratePayload }); }, HYDRATE_DEBOUNCE_MS);
         return () => window.clearTimeout(timer);
-    }, [previewReady, hydratePayload]);
+    }, [previewReady, previewScopeReady, pageStatus, hydratePayload]);
 
     useEffect(() => {
         if (!previewReady) return;

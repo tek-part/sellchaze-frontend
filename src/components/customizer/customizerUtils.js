@@ -130,7 +130,9 @@ export function previewBaseFor(store) {
 export function previewUrlFor(base, locale, themeKey) {
     if (!base) return '';
     const url = new URL(base);
-    url.searchParams.set('preview', '1');
+    // A signed owner preview must fail closed when its API fails, never show demo catalogues.
+    if (url.searchParams.has('__preview')) url.searchParams.delete('preview');
+    else url.searchParams.set('preview', '1');
     url.searchParams.set('customize', '1');
     url.searchParams.set('lang', locale);
     if (themeKey) url.searchParams.set('theme', themeKey);

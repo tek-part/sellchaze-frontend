@@ -32,7 +32,7 @@ describe('private customizer preview', () => {
         expect(api.post).toHaveBeenCalledWith('/stores/14/themes/preview', { theme_id: 10 });
         await act(async () => resolve(response()));
         let url = new URL(host.querySelector('iframe').src);
-        expect(Object.fromEntries(url.searchParams)).toEqual({ __preview: 'private-capability', preview: '1', customize: '1', lang: 'ar', theme: 'naseem' });
+        expect(Object.fromEntries(url.searchParams)).toEqual({ __preview: 'private-capability', customize: '1', lang: 'ar', theme: 'naseem' });
         expect(url.origin).toBe('https://preview.store.example');
         expect(host.querySelector('iframe').getAttribute('referrerpolicy')).toBe('no-referrer');
         await render({ locale: 'en' });

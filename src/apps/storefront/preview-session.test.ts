@@ -1,11 +1,23 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { preservePreviewNavigation, publicStorefrontUrl, readSignedPreviewToken, withPreviewLink, withPreviewRead } from './preview-session';
 import { apiFetch, apiRootFetch, setApiLocale } from './api/client';
+import { loadStorefrontBootstrap, resetStorefrontBootstrapCache } from './api/bootstrap';
 
 const token = `Y2F0YWxvZzoxOjI6OTk5OTk5OTk5OQ.${'a'.repeat(64)}`;
 const query = `?__preview=${token}`;
-afterEach(() => { vi.unstubAllGlobals(); setApiLocale(null); });
+afterEach(() => { vi.unstubAllGlobals(); setApiLocale(null); resetStorefrontBootstrapCache(); });
 describe('signed storefront preview capability', () => {
+  it('shares the authorized bootstrap between entry and provider without forwarding it to catalog reads', async () => {
+    const payload = { store: { id: 14, status: 'draft' }, preview: { valid: true } };
+    const fetch = vi.fn().mockResolvedValue({ ok: true, status: 200, json: async () => payload });
+    vi.stubGlobal('fetch', fetch); vi.stubGlobal('window', { location: { search: `${query}&customize=1&lang=ar` } }); setApiLocale('ar');
+    expect(await loadStorefrontBootstrap()).toEqual(payload);
+    expect(await loadStorefrontBootstrap()).toEqual(payload);
+    expect(fetch).toHaveBeenCalledTimes(1);
+    expect(fetch.mock.calls[0]?.[0]).toBe(`/api/v1/storefront?__preview=${token}&lang=ar`);
+    await apiFetch('/products'); await apiFetch('/home'); await apiFetch('/payment-methods');
+    expect(fetch.mock.calls.slice(1).map(call => call[0])).toEqual(['/api/v1/storefront/products?lang=ar', '/api/v1/storefront/home?lang=ar', '/api/v1/storefront/payment-methods?lang=ar']);
+  });
   it('accepts only bounded capability shapes and leaves verification to the server', () => {
     expect(readSignedPreviewToken(query)).toBe(token); expect(readSignedPreviewToken('')).toBeNull();
     for (const value of ['javascript:alert(1)', 'unbounded', `${'x'.repeat(257)}.${'a'.repeat(64)}`, `${token}&other=1`.replace('.', '%00')]) expect(readSignedPreviewToken(`?__preview=${encodeURIComponent(value)}`)).toBeNull();
