@@ -37,16 +37,20 @@ async function fixture(page: Page, locale: Locale, admin = false, dark = false) 
 async function geometry(page: Page, width: number) {
     const rail = page.locator('.ws-secondary-navigation-slot > .ws-context-navigation');
     await expect(rail).toBeVisible();
-    const r = await rail.boundingBox();
-    expect(r).not.toBeNull();
-    expect(r!.y).toBe(0); expect(r!.height).toBe(page.viewportSize()!.height); expect(r!.width).toBe(width);
-    const header = (await page.locator('.ws-header').boundingBox())!;
-    const main = (await page.locator('#workspace-content').boundingBox())!;
-    const rtl = await page.locator('html').getAttribute('dir') === 'rtl';
-    expect(rtl ? header.x + header.width <= r!.x + 1 : header.x >= r!.x + r!.width - 1).toBe(true);
-    expect(rtl ? main.x + main.width <= r!.x + 1 : main.x >= r!.x + r!.width - 1).toBe(true);
-    const overflow = await page.evaluate(() => ({ width: document.documentElement.scrollWidth, viewport: document.documentElement.clientWidth, offenders: [...document.querySelectorAll('body *')].filter(el => el.getBoundingClientRect().right > innerWidth + 1 || el.getBoundingClientRect().left < -1).slice(-12).map(el => `${el.tagName}.${el.className}`) }));
-    expect(overflow.width, JSON.stringify(overflow)).toBeLessThanOrEqual(overflow.viewport);
+    // Sample all columns and direction in one frame: separate protocol reads can straddle
+    // the portal mount, locale change or responsive layout update.
+    const measure = () => page.evaluate(() => {
+        const rail = document.querySelector('.ws-secondary-navigation-slot > .ws-context-navigation')!.getBoundingClientRect();
+        const header = document.querySelector('.ws-header')!.getBoundingClientRect();
+        const main = document.querySelector('#workspace-content')!.getBoundingClientRect();
+        const rtl = document.documentElement.dir === 'rtl';
+        return { top: rail.y, height: rail.height, width: rail.width,
+            headerOutside: rtl ? header.right <= rail.left + 1 : header.left >= rail.right - 1,
+            mainOutside: rtl ? main.right <= rail.left + 1 : main.left >= rail.right - 1,
+            noOverflow: document.documentElement.scrollWidth <= document.documentElement.clientWidth };
+    });
+    await expect.poll(measure).toEqual({ top: 0, height: page.viewportSize()!.height, width,
+        headerOutside: true, mainOutside: true, noOverflow: true });
     return rail;
 }
 const community = ['/community', '/community/following', '/community/saved', '/community/trending', '/community/search', '/community/connections/fixture', '/community/tag/synthetic', '/community/groups', '/community/groups/7', '/community/create'];
