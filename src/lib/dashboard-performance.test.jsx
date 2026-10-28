@@ -22,6 +22,22 @@ const fixture = () => ({
     low_stock: [{ product_id: 5, name: 'Almost sold out', available: 2 }], top_products: [{ product_id: 5, name: 'Best seller', quantity: 4, revenue: 1250.5 }],
     profit_complete: false, tracking_started_at: '2026-10-01', period: { timezone: 'Africa/Cairo' },
 });
+const mixedCurrencyFixture = (unknownRate = false) => {
+    const data = fixture();
+    const report = {
+        reporting_currency: 'KWD', equivalent: true, complete: !unknownRate,
+        policy: { version: 'cbk-2026-10-27-v1', rates: { USD: '0.308150', KWD: '1' } },
+        totals_by_currency: { USD: { total: '100.00', count: 1, average: '100.00' }, KWD: { total: '10.00', count: 1, average: '10.00' } },
+        base_equivalent: unknownRate ? null : '40.82', average_base_equivalent: unknownRate ? null : '20.41', count: unknownRate ? 3 : 2,
+    };
+    if (unknownRate) report.totals_by_currency.EUR = { total: '5.00', count: 1, average: '5.00' };
+    data.currency = 'KWD';
+    data.reporting_money = report;
+    data.summary = { ...data.summary, orders: report.count, total_sales: report.base_equivalent, average_order_value: report.average_base_equivalent };
+    data.daily = [{ ...data.daily[0], orders: report.count, sales: report.base_equivalent, average: report.average_base_equivalent, reporting_money: report }];
+    data.top_products = [{ ...data.top_products[0], quantity: report.count, revenue: report.base_equivalent, reporting_money: report }];
+    return data;
+};
 let root, host;
 beforeEach(() => { vi.clearAllMocks(); globalThis.IS_REACT_ACT_ENVIRONMENT = true; host = document.createElement('div'); document.body.append(host); root = createRoot(host); api.get.mockResolvedValue({ data: { data: fixture() } }); });
 afterEach(async () => { await act(async () => root.unmount()); host.remove(); });
@@ -51,8 +67,30 @@ describe('merchant dashboard performance', () => {
         expect(host.querySelector('canvas[aria-label="Total sales"]').dataset.series).toBe('[250.5,1000]');
         expect(host.querySelector('canvas[aria-label="Total orders"]').dataset.series).toBe('[1,3]');
         expect(host.querySelector('.ws-metrics-data').textContent).toContain('2026-10-01');
-        expect(host.querySelector('.ws-metrics-products').textContent).toContain('Best seller41,250.5 USD');
+        expect(host.querySelector('.ws-metrics-products').textContent).toContain('Best seller41,250.50 USD');
         expect(host.querySelector('.ws-metrics-products').textContent).toContain('Almost sold out2');
+    });
+    it('shows pinned KWD equivalents and original USD/KWD buckets across cards, series and products', async () => {
+        api.get.mockResolvedValueOnce({ data: { data: mixedCurrencyFixture() } });
+        await mount();
+        expect(card('total_sales').querySelector('.ws-metric-value').textContent).toBe('40.82KWD equivalent');
+        expect(card('average_order_value').querySelector('.ws-metric-value').textContent).toBe('20.41KWD equivalent');
+        expect(card('total_sales').textContent).toContain('Original: 100.00 USD + 10.00 KWD');
+        expect(host.querySelector('canvas[aria-label="Total sales"]').dataset.series).toBe('[40.82]');
+        expect(host.querySelector('.ws-metrics-data').textContent).toContain('40.82 KWD equivalentOriginal: 100.00 USD + 10.00 KWD');
+        expect(host.querySelector('.ws-metrics-products tbody tr').textContent).toContain('40.82 KWD equivalentOriginal: 100.00 USD + 10.00 KWD');
+        expect(host.textContent).not.toContain('110.00 KWD');
+    });
+    it('keeps unknown-rate dashboard equivalents unavailable while preserving every original currency bucket', async () => {
+        api.get.mockResolvedValueOnce({ data: { data: mixedCurrencyFixture(true) } });
+        await mount();
+        expect(card('total_sales').querySelector('.ws-metric-value').textContent).toBe('—');
+        expect(card('average_order_value').querySelector('.ws-metric-value').textContent).toBe('—');
+        expect(card('total_sales').textContent).toContain('Original: 100.00 USD + 10.00 KWD + 5.00 EUR');
+        expect(card('total_sales').textContent).toContain('Equivalent unavailable: missing pinned rate');
+        expect(host.querySelector('canvas[aria-label="Total sales"]')).toBeNull();
+        expect(host.querySelector('.ws-metrics-products tbody tr').textContent).toContain('—Original: 100.00 USD + 10.00 KWD + 5.00 EUREquivalent unavailable: missing pinned rate');
+        expect(host.textContent).not.toContain('0.00 KWD equivalent');
     });
     it('shows the products-ordered panel and product funnel after the store metrics', async () => {
         await mount();
