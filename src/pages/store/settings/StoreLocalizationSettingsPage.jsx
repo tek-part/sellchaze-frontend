@@ -73,7 +73,10 @@ export default function StoreLocalizationSettingsPage() {
     const [values, setValues] = useState(initial);
     const [currencies, setCurrencies] = useState([]);
     const [currenciesError, setCurrenciesError] = useState('');
-    const timezones = useMemo(timezoneOptions, []);
+    const timezones = useMemo(
+        () => [...new Set(['UTC', initial.timezone, ...timezoneOptions()])].sort(),
+        [initial.timezone],
+    );
 
     useEffect(() => { setValues(initial); }, [initial]);
 
