@@ -1,3 +1,4 @@
+import { PaymentAmountLimitHint } from './PaymentAmountLimitHint';
 import PaymentMethodLogo from '../../../shared/payments/PaymentMethodLogo';
 import { PaymentAdjustmentLine } from './PaymentAdjustmentLine';
 import { CheckoutDiscountLines } from './CheckoutDiscountLines';
@@ -170,7 +171,7 @@ function BasketCheckout(): ReactElement {
                 return <div key={method.slug} style={{ display: 'contents' }}>
                   <label className={`sf-co-choice ${selected ? 'is-selected' : ''}`}>
                     <input type="radio" name="payment_method" checked={selected} onChange={() => checkout.setPaymentMethod(method.slug)} required />
-                    <span className="sf-co-choice__label"><strong>{methodName(method)}</strong></span>
+                    <span className="sf-co-choice__label"><strong>{methodName(method)}</strong><PaymentAmountLimitHint method={method} locale={locale} /></span>
                     <span className="sf-co-choice__aside"><PaymentMethodLogo slug={method.slug} src={method.logo_url} /></span>
                   </label>
                   {selected && method.description ? <div className="sf-co-choice__detail">{method.description}</div> : null}
