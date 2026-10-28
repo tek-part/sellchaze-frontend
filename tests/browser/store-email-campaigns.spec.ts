@@ -164,11 +164,21 @@ for (const locale of ['en', 'ar'] as const) {
 test('the merchant sidebar links to email campaigns under marketing tools; the editor previews side by side', async ({ page }, testInfo) => {
   await workspace(page, 'en');
   await page.setViewportSize({ width: 1440, height: 900 });
-  await page.goto('/store/email-campaigns');
-  const sidebar = page.locator('.ws-desktop-sidebar');
-  await sidebar.getByRole('button', { name: 'Marketing tools', exact: true }).click();
-  await expect(sidebar.locator('a[href="/store/email-campaigns"]')).toBeVisible();
-  await page.goto('/store/email-campaigns/4');
+  await page.goto('/store/products');
+  const sidebar = page.locator('#workspace-sidebar');
+  await expect(sidebar).toHaveAttribute('data-collapsed');
+  const marketing = sidebar.getByRole('button', { name: 'Marketing tools', exact: true });
+  await marketing.focus();
+  await marketing.press('ArrowRight');
+  const campaigns = page.locator('.ws-compact-flyout').getByRole('link', { name: 'Email campaigns', exact: true });
+  await expect(campaigns).toHaveAttribute('href', '/store/email-campaigns');
+  await campaigns.focus();
+  await campaigns.press('Enter');
+  await expect(page).toHaveURL(/\/store\/email-campaigns$/);
+  await expect(page.locator('.ws-compact-flyout')).toBeHidden();
+  await expect(sidebar).toHaveAttribute('data-collapsed');
+  await page.getByRole('link', { name: 'Winter teaser', exact: true }).first().click();
+  await expect(page).toHaveURL(/\/store\/email-campaigns\/4$/);
   await expect(page.getByRole('heading', { level: 1, name: 'Winter teaser' })).toBeVisible();
   await expect(page.locator('iframe[title="Email preview"]')).toBeVisible();
   await page.getByRole('button', { name: 'Phone', exact: true }).click();
