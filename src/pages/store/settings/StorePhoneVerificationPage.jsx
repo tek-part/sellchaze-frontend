@@ -11,7 +11,7 @@ const errorText = (error) => Object.values(error.response?.data?.errors || {}).f
 
 export default function StorePhoneVerificationPage() {
     const context = useStoreContext();
-    return <PhoneVerificationEditor key={context.apiBase} context={context} />;
+    return <PhoneVerificationEditor key={`${context.apiBase}:${context.me?.id ?? ''}:${context.store?.id ?? ''}`} context={context} />;
 }
 
 function PhoneVerificationEditor({ context: { apiBase, uiBase, access } }) {
@@ -27,6 +27,8 @@ function PhoneVerificationEditor({ context: { apiBase, uiBase, access } }) {
     const [busy, setBusy] = useState(false);
     const [reload, setReload] = useState(0);
     const working = useRef(false);
+    const mounted = useRef(false);
+    useEffect(() => { mounted.current = true; return () => { mounted.current = false; }; }, []);
     useDirty(settings ? { enabled: settings.enabled, instance: '', token: '', clear: false } : null, settings ? { enabled, instance, token, clear } : null);
     const apply = (data) => { setSettings(data); setEnabled(data.enabled); setInstance(''); setToken(''); setClear(false); };
     useEffect(() => {
@@ -40,11 +42,11 @@ function PhoneVerificationEditor({ context: { apiBase, uiBase, access } }) {
         if (working.current || !settings) return;
         working.current = true; setBusy(true); setError(''); setSaved(false);
         try {
-            const { data } = await api.put(`${apiBase}/phone-verification`, { enabled, version: settings.version, clear_credentials: clear, verify_connection: verify,
+            const { data } = await api.post(`${apiBase}/phone-verification`, { enabled, version: settings.version, clear_credentials: clear, verify_connection: verify,
                 ...(instance || token ? { credentials: { instance_id: instance.trim(), access_token: token.trim() } } : {}) });
-            apply(data.data); setSaved(true);
-        } catch (failure) { setError(errorText(failure)); }
-        finally { working.current = false; setBusy(false); }
+            if (mounted.current) { apply(data.data); setSaved(true); }
+        } catch (failure) { if (mounted.current) setError(errorText(failure)); }
+        finally { working.current = false; if (mounted.current) setBusy(false); }
     }
     return <div className="mx-auto max-w-3xl space-y-5">
         <PageHeader title={text('تأكيد الهاتف عبر واتساب OTP', 'WhatsApp phone verification')} subtitle={text('اطلب تأكيد امتلاك رقم الهاتف قبل إنشاء الطلب، في السلة وصفحات البيع.', 'Require phone possession verification before order creation in carts and sales funnels.')} />

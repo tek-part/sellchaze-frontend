@@ -449,3 +449,9 @@ body[data-workspace-merchant='true'] .ws-sidebar-compact .ws-sidebar-scroll .ws-
 @media(prefers-reduced-motion:reduce){
   .ws-frame *,.ws-drawer *,.ws-nav-panel,.ws-sidebar-rail::after{transition:none !important}
 }
+
+/* Contextual navigation starts at the viewport top beside the main icon rail. */
+.ws-workspace-body{display:flex;align-items:stretch;flex:1;min-width:0}
+.ws-workspace-body>.ws-main-scroll{flex:1;min-width:0}
+.ws-secondary-navigation-slot:empty{display:none}
+.ws-secondary-navigation-slot{flex:0 0 auto;position:sticky;top:0;height:100dvh;min-height:0;align-self:flex-start}

@@ -1,4 +1,5 @@
 import { Fragment, Suspense, useCallback, useEffect, useMemo, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { Dialog, DialogBackdrop, DialogPanel } from '@headlessui/react';
 import { Link, Navigate, Outlet, useLocation, useOutletContext } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -8,7 +9,7 @@ import useStoreScope from '../../hooks/useStoreScope';
 import { fullStoreAccess, storeAccess, storeUiPermissions } from '../../lib/storeAccess';
 import StoreSidebar from './StoreSidebar';
 import StoreStatusPill from './StoreStatusPill';
-import StoreSettingsNavigation from './StoreSettingsNavigation';
+import StoreSettingsSidebar from './StoreSettingsSidebar';
 import { buildStoreNav, findActiveGroup, relativeStorePath } from './storeNav';
 import BrandLoader from '../BrandLoader';
 import { readStoreSnapshot, writeStoreSnapshot } from '../../lib/sessionSnapshots';
@@ -44,6 +45,7 @@ export default function StoreLayout() {
     const [loading, setLoading] = useState(() => !store);
     const [error, setError] = useState('');
     const [drawerOpen, setDrawerOpen] = useState(false);
+    const [secondaryCollapsed, setSecondaryCollapsed] = useState(false);
 
     const refreshStore = useCallback(async () => {
         try {
@@ -76,12 +78,17 @@ export default function StoreLayout() {
     const rel = relativeStorePath(location.pathname, uiBase);
     const activeGroup = useMemo(() => findActiveGroup(groups, rel), [groups, rel]);
     const settingsNavigation = unifiedNavigation && activeGroup?.key === 'settings';
-    const referenceSettings = settingsNavigation && (['/settings/general', '/settings/store-info', '/settings/head-code', '/settings/seo', '/settings/social-links', '/settings/order-push', '/settings/managers', '/settings/login-sessions'].includes(rel) || rel.startsWith('/settings/webhooks') || rel.startsWith('/settings/public-api'));
-    const settingsOrder = ['general', 'domains', 'store-info', 'head-code', 'seo-settings', 'payments', 'digital-delivery', 'notifications', 'order-push', 'shipping', 'social-links', 'managers', 'webhooks', 'public-api', 'login-sessions', 'phone-verification'];
-    const settingsItems = settingsNavigation
-        ? [...activeGroup.items].filter((item) => settingsOrder.includes(item.key) || item.isActive(rel))
-            .sort((a, b) => settingsOrder.indexOf(a.key) - settingsOrder.indexOf(b.key))
-        : [];
+    // buildStoreNav already applies permission checks. Keep every allowed destination.
+    const settingsItems = settingsNavigation ? activeGroup.items : [];
+    useEffect(() => {
+        if (!settingsNavigation) return;
+        const media = window.matchMedia('(min-width:1024px)');
+        const closeOnDesktop = () => { if (media.matches) setDrawerOpen(false); };
+        closeOnDesktop();
+        media.addEventListener('change', closeOnDesktop);
+        return () => media.removeEventListener('change', closeOnDesktop);
+    }, [settingsNavigation]);
+
 
     const context = useMemo(() => ({
         ...parent,
@@ -110,7 +117,7 @@ export default function StoreLayout() {
     const page = <Suspense fallback={<BrandLoader />}><Fragment key={location.pathname}><Outlet context={context} /></Fragment></Suspense>;
 
     return (
-        <div className="min-w-0">
+        <div className={`min-w-0${settingsNavigation ? ' ws-store-settings-shell' : ''}`}>
             <div className="ws-store-content min-w-0 flex-1">
                 {/* Mobile / tablet: sticky sub-bar + the active group's items as a scroll strip. */}
                 {!unifiedNavigation ? <div className="mb-4 border-b border-slate-200/80 bg-surface/95 sticky -top-3 z-30 -mx-3 backdrop-blur md:-top-5 md:-mx-5">
@@ -171,16 +178,20 @@ export default function StoreLayout() {
                     </div>
                 ) : (
                     settingsNavigation ? <>
-                    {referenceSettings ? <header className="ws-settings-page-heading"><h1>{t('settings', 'Settings')}</h1><p>{t('store_general_control', 'Manage your store')}</p></header> : null}
-                    <div className={`ws-settings-layout${referenceSettings ? ' ws-settings-layout--reference' : ''}`}>
-                        <StoreSettingsNavigation items={settingsItems} uiBase={uiBase} rel={rel} label={activeGroup.label} />
-                        <div className="ws-settings-content">{page}</div>
-                    </div></> : page
+                    <h1 className="sr-only">{activeGroup.label}</h1>
+                    {parent.secondaryNavigationTarget ? createPortal(
+                        <StoreSettingsSidebar items={settingsItems} uiBase={uiBase} rel={rel} label={activeGroup.label}
+                            collapsed={secondaryCollapsed} onToggle={() => setSecondaryCollapsed(value => !value)} />,
+                        parent.secondaryNavigationTarget,
+                    ) : null}
+                    <div className="ws-settings-mobile-toolbar"><strong>{activeGroup.label}</strong><button type="button" className="ws-secondary-button" onClick={() => setDrawerOpen(true)} aria-expanded={drawerOpen} aria-controls="store-settings-mobile-menu"><HiOutlineBars3 aria-hidden />{t('store_nav_open_menu', 'Open store menu')}</button></div>
+                    <div className="ws-settings-content">{page}</div>
+                    </> : page
                 )}
             </div>
 
             {/* Mobile drawer */}
-            <Dialog open={!unifiedNavigation && drawerOpen} onClose={() => setDrawerOpen(false)} className="relative z-60">
+            <Dialog open={drawerOpen && (!unifiedNavigation || settingsNavigation)} onClose={() => setDrawerOpen(false)} className="relative z-60">
                 <DialogBackdrop
                     transition
                     className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs transition duration-200 data-closed:opacity-0"
@@ -188,8 +199,10 @@ export default function StoreLayout() {
                 <div className="fixed inset-0 flex">
                     <DialogPanel
                         transition
-                        className="relative flex h-full w-[min(86vw,20rem)] flex-col overflow-y-auto rounded-e-3xl bg-white p-4 shadow-2xl shadow-brand-dark/20 transition duration-300 ease-out data-closed:-translate-x-full data-closed:rtl:translate-x-full"
+                        id={settingsNavigation ? "store-settings-mobile-menu" : undefined}
+                        className={`relative flex h-full w-[min(86vw,20rem)] flex-col overflow-y-auto rounded-e-3xl bg-white p-4 shadow-2xl shadow-brand-dark/20 transition duration-300 ease-out data-closed:-translate-x-full data-closed:rtl:translate-x-full${settingsNavigation ? ' ws-settings-mobile-drawer' : ''}`}
                     >
+                        {settingsNavigation ? <StoreSettingsSidebar items={settingsItems} uiBase={uiBase} rel={rel} label={activeGroup.label} mobile onToggle={() => setDrawerOpen(false)} onNavigate={() => setDrawerOpen(false)} /> : <>
                         <div className="mb-3 flex items-center justify-between">
                             <span className="text-sm font-bold text-slate-900">{t('store_nav_title', 'Store admin')}</span>
                             <button
@@ -202,6 +215,7 @@ export default function StoreLayout() {
                             </button>
                         </div>
                         <StoreSidebar {...sidebarProps} onNavigate={() => setDrawerOpen(false)} />
+                        </>}
                     </DialogPanel>
                 </div>
             </Dialog>

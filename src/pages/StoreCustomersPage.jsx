@@ -1,3 +1,4 @@
+import ReportingMoney from '../components/ReportingMoney';
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useOutletContext } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -29,7 +30,6 @@ export default function StoreCustomersPage() {
     const [tags, setTags] = useState([]);
     const [exporting, setExporting] = useState(false);
 
-    const money = (value) => new Intl.NumberFormat(ar ? 'ar-EG' : 'en', { style: 'currency', currency: store?.currency || 'EGP', maximumFractionDigits: 2 }).format(Number(value || 0));
     const date = (value) => (value ? new Intl.DateTimeFormat(ar ? 'ar-EG' : 'en', { year: 'numeric', month: 'short', day: 'numeric' }).format(new Date(value)) : '—');
     const ordersLink = (customer) => `${uiBase}/orders?search=${encodeURIComponent(customer.phone || customer.email || '')}`;
     const detailLink = (customer) => customerHref(uiBase, customer.key);
@@ -42,14 +42,14 @@ export default function StoreCustomersPage() {
 
     const filters = useMemo(() => [
         { key: 'orders', param: 'orders', label: text('عدد الطلبات', 'Number of orders'), type: 'range' },
-        { key: 'spent', param: 'spent', label: text('إجمالي الإنفاق', 'Amount spent'), type: 'range' },
+        { key: 'spent', param: 'spent', label: `${text('الإنفاق بما يعادل', 'Amount spent equivalent in')} ${store?.currency || 'EGP'}`, type: 'range' },
         { key: 'last_order', param: 'last_order', label: text('تاريخ آخر طلب', 'Last order date'), type: 'date-range' },
         { key: 'first_order', param: 'first_order', label: text('تاريخ أول طلب (من)', 'First order from'), type: 'date-range' },
         { key: 'account', label: text('الحساب', 'Account'), type: 'select', options: [{ value: 'registered', label: text('لديه حساب', 'Has an account') }, { value: 'guest', label: text('ضيف', 'Guest checkout') }] },
         { key: 'tag', label: text('الوسوم', 'Tags'), type: 'multi', options: tags.map((tag) => ({ value: tag, label: tag })) },
         { key: 'marketing', label: text('التسويق', 'Email & SMS marketing'), type: 'select', options: [{ value: 'subscribed', label: text('مشترك', 'Subscribed') }, { value: 'not_subscribed', label: text('غير مشترك', 'Not subscribed') }] },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    ], [ar, tags]);
+    ], [ar, tags, store?.currency]);
     const views = useMemo(() => [
         { id: 'all', label: text('كل العملاء', 'All customers'), state: { filters: {} } },
         { id: 'repeat', label: text('عملاء متكررون', 'Repeat customers'), state: { filters: { orders: { min: '2', max: '' } } } },
@@ -73,9 +73,9 @@ export default function StoreCustomersPage() {
         { key: 'orders', header: text('الطلبات', 'Orders'), sortKey: 'orders_count', align: 'end', csv: (c) => c.orders_count,
             render: (c) => <span className="ws-dt-num">{c.orders_count}</span> },
         { key: 'spent', header: text('إجمالي الإنفاق', 'Amount spent'), sortKey: 'total_spent', align: 'end', csv: (c) => c.total_spent,
-            render: (c) => <span className="ws-dt-num">{money(c.total_spent)}</span> },
-        { key: 'average', header: text('متوسط الطلب', 'Average order'), align: 'end', defaultHidden: true, csv: (c) => (c.orders_count ? (c.total_spent / c.orders_count).toFixed(2) : ''),
-            render: (c) => <span className="ws-dt-num">{c.orders_count ? money(c.total_spent / c.orders_count) : '—'}</span> },
+            render: (c) => <span className="ws-dt-num"><ReportingMoney value={c.total_spent} report={c.reporting_money} currency={c.currency || store?.currency} /></span> },
+        { key: 'average', header: text('متوسط الطلب', 'Average order'), align: 'end', defaultHidden: true, csv: (c) => c.reporting_money?.average_base_equivalent ?? '',
+            render: (c) => <span className="ws-dt-num"><ReportingMoney value={c.reporting_money?.average_base_equivalent} report={c.reporting_money} currency={c.currency || store?.currency} average /></span> },
         { key: 'last', header: text('آخر طلب', 'Last order'), sortKey: 'last_order_at', csv: (c) => c.last_order_at ?? '', render: (c) => <span className="ws-dt-num">{date(c.last_order_at)}</span> },
         { key: 'first', header: text('أول طلب', 'First order'), sortKey: 'first_order_at', defaultHidden: true, csv: (c) => c.first_order_at ?? '', render: (c) => <span className="ws-dt-num">{date(c.first_order_at)}</span> },
         { key: 'email', header: text('البريد الإلكتروني', 'Email'), defaultHidden: true, csv: (c) => c.email ?? '', render: (c) => <span dir="ltr">{c.email || '—'}</span> },
@@ -106,7 +106,13 @@ export default function StoreCustomersPage() {
             setExporting(false);
         }
     };
-    const bulkActions = [{ key: 'export', label: text('تصدير CSV', 'Export CSV'), onAction: (list) => downloadCsv(`customers-${new Date().toISOString().slice(0, 10)}.csv`, table.visibleColumns, list) }];
+    const exportColumns = [...table.visibleColumns,
+        { header: 'Reporting currency', csv: (row) => row.currency || store?.currency || '' },
+        { header: 'Original totals by currency', csv: (row) => JSON.stringify(row.reporting_money?.totals_by_currency || {}) },
+        { header: 'Equivalent complete', csv: (row) => row.reporting_money?.complete === false ? 'no' : 'yes' },
+        { header: 'Policy version', csv: (row) => row.reporting_money?.policy?.version || '' },
+    ];
+    const bulkActions = [{ key: 'export', label: text('تصدير CSV', 'Export CSV'), onAction: (list) => downloadCsv(`customers-${new Date().toISOString().slice(0, 10)}.csv`, exportColumns, list) }];
 
     return <section className="ws-catalog-page ws-product-list">
         <header className="ws-products-heading"><div className="ws-products-intro">
@@ -115,7 +121,7 @@ export default function StoreCustomersPage() {
         </div></header>
         <div className="ws-dt-card">
             <IndexFilters table={table} searchPlaceholder={text('ابحث بالاسم أو الهاتف أو البريد', 'Search name, phone or email')} exportDisabled={!rows.length || exporting}
-                onExport={() => (selectedRows.length ? downloadCsv(`customers-${new Date().toISOString().slice(0, 10)}.csv`, table.visibleColumns, selectedRows) : exportAll())} />
+                onExport={() => (selectedRows.length ? downloadCsv(`customers-${new Date().toISOString().slice(0, 10)}.csv`, exportColumns, selectedRows) : exportAll())} />
             <IndexTable table={table} rows={rows} rowKey={(c) => c.key} loading={loading} error={error} onRetry={reload} meta={meta}
                 label={text('العملاء', 'Customers')} bulkActions={bulkActions} rowHref={detailLink}
                 emptyState={{ icon: HiOutlineUsers, title: text('لا يوجد عملاء بعد', 'No customers yet'), description: text('سيظهر هنا كل عميل يطلب من متجرك تلقائيًا.', 'Everyone who orders from your store will appear here automatically.') }} />

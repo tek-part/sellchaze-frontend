@@ -1,3 +1,4 @@
+import { effectiveApiMethod } from './helpers/api-method';
 import { expect, test, type Page } from 'playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 import { readFile } from 'node:fs/promises';
@@ -22,10 +23,10 @@ async function workspace(page: Page, locale: 'ar' | 'en', manager = false, appea
   await page.route('**/api/v1/**', async route => {
     const request = route.request();
     const path = new URL(request.url()).pathname.replace('/api/v1', '');
-    const headers = { 'Access-Control-Allow-Origin': request.headers()['origin'] || 'http://127.0.0.1:4183', 'Access-Control-Allow-Credentials': 'true', 'Access-Control-Allow-Headers': 'authorization,content-type,x-requested-with', 'Access-Control-Allow-Methods': 'GET,POST,PUT,PATCH,DELETE,OPTIONS' };
-    if (request.method() === 'OPTIONS') { await route.fulfill({ status: 204, headers }); return; }
-    if (request.method() !== 'GET') {
-      if (sessionDetails && request.method() === 'DELETE' && path.startsWith('/auth/sessions/')) {
+    const headers = { 'Access-Control-Allow-Origin': request.headers()['origin'] || 'http://127.0.0.1:4183', 'Access-Control-Allow-Credentials': 'true', 'Access-Control-Allow-Headers': 'authorization,content-type,x-requested-with,x-http-method-override', 'Access-Control-Allow-Methods': 'GET,POST,PUT,PATCH,DELETE,OPTIONS' };
+    if (effectiveApiMethod(request) === 'OPTIONS') { await route.fulfill({ status: 204, headers }); return; }
+    if (effectiveApiMethod(request) !== 'GET') {
+      if (sessionDetails && effectiveApiMethod(request) === 'DELETE' && path.startsWith('/auth/sessions/')) {
         const id = Number(path.split('/').at(-1));
         expect([2, 3]).toContain(id);
         mutations.push({ method: 'DELETE', path, data: {} });
@@ -34,7 +35,7 @@ async function workspace(page: Page, locale: 'ar' | 'en', manager = false, appea
       }
       expect(path.startsWith('/my-store/managers')).toBe(true);
       const data = request.postDataJSON() as Record<string, unknown>;
-      mutations.push({ method: request.method(), path, data });
+      mutations.push({ method: effectiveApiMethod(request), path, data });
       row = { ...row, ...data, version: 'b'.repeat(64) };
       await route.fulfill({ json: { data: row }, headers }); return;
     }
@@ -62,142 +63,194 @@ async function workspace(page: Page, locale: 'ar' | 'en', manager = false, appea
   return { mutations, reads };
 }
 
-async function selectedSettingsVisible(page: Page) {
-  await expect.poll(() => page.locator('.ws-settings-navigation').evaluate(element => {
-    const active = element.querySelector('[aria-current="page"]');
-    if (!active) return false;
-    const strip = element.getBoundingClientRect(); const item = active.getBoundingClientRect();
-    const left = strip.left + element.clientLeft; const right = left + element.clientWidth;
-    return item.width > element.clientWidth
-      ? (getComputedStyle(element).direction === 'rtl' ? Math.abs(item.right - right) <= 1 : Math.abs(item.left - left) <= 1)
-      : item.left >= left - 1 && item.right <= right + 1;
-  })).toBe(true);
+async function openSettingsMenu(page: Page, locale: 'ar' | 'en') {
+  await page.getByRole('button', { name: locale === 'ar' ? 'فتح قائمة المتجر' : 'Open store menu', exact: true }).click();
+  return page.locator('.ws-settings-mobile-drawer');
 }
 
 for (const locale of ['ar', 'en'] as const) for (const width of [320, 390, 900]) {
-  test(`Settings navigation reveals the selected section without moving the page in ${locale} at ${width}px`, async ({ page }) => {
+  test(`Settings drawer preserves page position and keyboard focus in ${locale} at ${width}px`, async ({ page }) => {
     const api = await workspace(page, locale);
     await page.setViewportSize({ width, height: 844 });
     await page.goto('/store/settings/login-sessions');
-    const navigation = page.locator('.ws-settings-navigation');
-    const selected = navigation.locator('[aria-current="page"]');
-    await expect(selected).toHaveAttribute('href', '/store/settings/login-sessions');
-    await selectedSettingsVisible(page);
     await expect(page.getByText('Isolated device 24', { exact: true })).toBeVisible();
-    await expect.poll(() => page.evaluate(() => window.scrollY)).toBe(0);
-    expect(await page.evaluate(() => document.activeElement?.tagName)).toBe('BODY');
-    // Scrolling the menu manually must remain possible, without snapping back on scroll.
-    await navigation.hover(); await page.mouse.wheel(locale === 'ar' ? 1800 : -1800, 0);
-    await expect.poll(() => navigation.evaluate(element => {
-      const current = element.querySelector('[aria-current="page"]')!.getBoundingClientRect();
-      const bounds = element.getBoundingClientRect();
-      return current.right < bounds.left || current.left > bounds.right;
-    })).toBe(true);
-    await page.setViewportSize({ width: width === 320 ? 390 : 320, height: 844 });
-    await selectedSettingsVisible(page);
+    const before = await page.evaluate(() => window.scrollY);
+    const opener = page.getByRole('button', { name: locale === 'ar' ? 'فتح قائمة المتجر' : 'Open store menu', exact: true });
+    const drawer = await openSettingsMenu(page, locale);
+    await expect(drawer).toBeVisible();
+    const selected = drawer.locator('[aria-current="page"]');
+    await expect(selected).toHaveAttribute('href', '/store/settings/login-sessions');
+    await expect(selected).toBeInViewport();
+    const menu = drawer.locator('.ws-secondary-sidebar-scroll');
+    await expect(menu).toHaveCSS('overflow-y', 'auto');
+    await menu.evaluate(element => { element.scrollTop = element.scrollHeight; });
+    await expect(drawer.getByRole('button', { name: 'Public API', exact: true })).toBeInViewport();
+    await page.keyboard.press('Escape');
+    await expect(drawer).not.toBeVisible();
+    await expect(opener).toBeFocused();
+    expect(await page.evaluate(() => window.scrollY)).toBe(before);
     await page.locator('.ws-login-table').hover();
-    const start = await page.evaluate(() => window.scrollY);
     await page.mouse.wheel(0, 500);
-    await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThanOrEqual(start + 499);
-    // Session rows are cards on phones and rewrap at a new width, so measure the element the browser
-    // keeps in place (scroll anchoring: the first fully visible row, or the first fully visible cell
-    // of a row cut by the top edge) instead of a row that is scrolled out of view.
-    const anchor = await page.evaluateHandle(() => {
-      const rows = [...document.querySelectorAll('.ws-login-table tbody tr')];
-      const row = rows.find(item => item.getBoundingClientRect().bottom > 0) ?? rows[0]!;
-      return row.getBoundingClientRect().top >= 0 ? row : [...row.children].find(cell => cell.getBoundingClientRect().top >= 0) ?? row;
-    });
-    const before = await anchor.evaluate(element => element.getBoundingClientRect().top);
-    await page.setViewportSize({ width: 390, height: 844 });
-    await selectedSettingsVisible(page);
-    // Browser scroll anchoring may change scrollY when text wraps at the new width.
-    // The content stays at the same visible position; revealing the menu must not reset it.
-    // Rewrapped cards move by fractional pixels while scroll offsets snap to whole ones, hence 2px.
-    await expect.poll(() => anchor.evaluate((element, top) => Math.abs(element.getBoundingClientRect().top - top), before)).toBeLessThanOrEqual(2);
-    expect(await page.evaluate(() => window.scrollY)).toBeGreaterThan(200);
+    await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(before + 300);
+    const scroll = await page.evaluate(() => window.scrollY);
+    // The button is sticky and already visible. A real pointer click avoids Playwright's
+    // scrollIntoViewIfNeeded compensating for the document's unrelated scroll-padding.
+    const button = await opener.boundingBox();
+    expect(button).not.toBeNull();
+    expect(button!.y).toBeGreaterThanOrEqual(0);
+    expect(button!.y + button!.height).toBeLessThanOrEqual(844);
+    await page.mouse.click(button!.x + button!.width / 2, button!.y + button!.height / 2);
+    expect(await page.evaluate(() => window.scrollY)).toBe(scroll);
+    await drawer.getByRole('button', { name: locale === 'ar' ? 'إغلاق قائمة الإعدادات' : 'Close settings menu' }).click();
+    await expect(opener).toBeFocused();
+    expect(await page.evaluate(() => window.scrollY)).toBe(scroll);
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)).toBe(true);
     expect(api.mutations).toEqual([]);
   });
 }
 
 for (const locale of ['ar', 'en'] as const) {
-  test(`Settings API links survive desktop, phone and locale changes in ${locale}`, async ({ page }) => {
+  test(`Settings API search and links survive desktop, phone and locale changes in ${locale}`, async ({ page }) => {
     const api = await workspace(page, locale);
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.goto('/store/settings/managers');
-    const navigation = page.locator('.ws-settings-navigation');
-    await navigation.getByRole('button', { name: 'Public API', exact: true }).click();
-    await navigation.getByRole('link', { name: 'Webhooks', exact: true }).click();
+    const pane = page.locator('.ws-secondary-navigation-slot .ws-secondary-sidebar');
+    const search = pane.getByRole('searchbox');
+    await search.fill('Webhooks');
+    await expect(pane.getByRole('button', { name: 'Public API', exact: true })).toHaveAttribute('aria-expanded', 'true');
+    await pane.getByRole('link', { name: 'Webhooks', exact: true }).click();
     await expect(page).toHaveURL(/\/settings\/webhooks$/);
-    await expect(navigation.getByRole('button', { name: 'Public API', exact: true })).toHaveAttribute('aria-expanded', 'true');
-    await expect(navigation.getByRole('link', { name: 'Webhooks', exact: true })).toHaveCSS('height', '30px');
-    await expect(navigation.locator('.ws-settings-api-panel')).toHaveCSS('padding-top', '2px');
-    await expect(navigation.locator('.ws-settings-api-panel>div')).toHaveCSS('row-gap', '1px');
+    await search.clear();
+    await expect(pane.getByRole('link', { name: 'Webhooks', exact: true })).toHaveAttribute('aria-current', 'page');
     await page.setViewportSize({ width: 320, height: 844 });
-    await selectedSettingsVisible(page);
+    const drawer = await openSettingsMenu(page, locale);
+    await expect(drawer.getByRole('link', { name: 'Webhooks', exact: true })).toHaveAttribute('aria-current', 'page');
+    // Resizing an open mobile drawer to desktop closes its modal/body lock.
     await page.setViewportSize({ width: 1440, height: 900 });
+    await expect(drawer).not.toBeVisible();
+    await expect(page.getByRole('dialog')).toHaveCount(0);
+
     await page.getByRole('button', { name: locale === 'ar' ? 'تغيير اللغة' : 'Change language', exact: true }).click();
     await expect(page.locator('html')).toHaveAttribute('dir', locale === 'ar' ? 'ltr' : 'rtl');
-    await page.setViewportSize({ width: 390, height: 844 });
-    await selectedSettingsVisible(page);
-    const results = await new AxeBuilder({ page }).include('.ws-settings-navigation').withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']).analyze();
+    const results = await new AxeBuilder({ page }).include('.ws-secondary-sidebar').withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']).analyze();
     expect(results.violations.filter(v => ['serious', 'critical'].includes(v.impact ?? ''))).toEqual([]);
     expect(api.mutations).toEqual([]);
   });
 }
 
 for (const locale of ['ar', 'en'] as const) for (const width of [1920, 320]) for (const section of ['general', 'seo']) {
-  test(`Measured settings frame fits ${section} in ${locale} at ${width}px`, async ({ page }, testInfo) => {
+  test(`Full secondary settings frame fits ${section} in ${locale} at ${width}px`, async ({ page }, testInfo) => {
     const api = await workspace(page, locale, false, width === 320 ? 'dark' : 'light');
     await page.setViewportSize({ width, height: width === 1920 ? 1031 : 844 });
     await page.goto(`/store/settings/${section}`);
     const card = page.locator(section === 'general' ? '.ws-general-settings form' : '.ws-seo-settings');
     await expect(card.locator('input').first()).toBeVisible();
     await page.evaluate(() => document.fonts.ready);
-    const heading = page.locator('.ws-settings-page-heading h1');
-    await expect(heading).toHaveCSS('font-size', '22px');
-    await expect(heading).toHaveCSS('font-weight', '700');
-    await expect(heading).toHaveCSS('margin-bottom', '4px');
-    await expect(page.locator('.ws-settings-page-heading p')).toHaveCSS('font-size', '13px');
+    await expect(page.locator('.ws-settings-page-heading')).toHaveCount(0);
     await expect(card.locator('.ws-settings-card-heading>div>h2')).toHaveCSS('font-size', '18px');
     await expect(card.locator('.ws-settings-card-heading>div>h2')).toHaveCSS('font-weight', '600');
-    await expect(card.locator('.ws-settings-card-heading>div>p')).toHaveCSS('font-size', '13px');
-    if (section === 'general') {
-      await expect(card).toHaveCSS('border-radius', '12px');
-      await expect(card.locator('h3').first()).toHaveCSS('font-size', '15px');
-      await expect(card.locator('h3').first()).toHaveCSS('margin-bottom', '5.25px');
-    }
-    const nav = page.locator('.ws-settings-navigation');
     if (width === 1920) {
-      await expect(nav.locator('a').first()).toHaveCSS('height', '32px');
-      await expect(nav.locator('a').first()).toHaveCSS('font-size', '13px');
-      await expect(nav.locator('a').first()).toHaveCSS('gap', '10px');
-      await expect(nav.locator('svg').first()).toHaveCSS('width', '16px');
-      await expect(nav).toHaveCSS('padding', '16px 12px 20px');
-      const selected = nav.locator('a[aria-current="page"]');
-      await selected.hover();
-      expect(await selected.evaluate(element => getComputedStyle(element).backgroundColor === getComputedStyle(element.closest('.ws-settings-navigation')!).backgroundColor)).toBe(true);
-      expect(await selected.evaluate(element => getComputedStyle(element).boxShadow)).not.toBe('none');
-      const geometry = await nav.evaluate(element => ({ width: element.getBoundingClientRect().width, height: element.getBoundingClientRect().height, top: element.getBoundingClientRect().top }));
-      expect(geometry.height).toBe(518);
-      expect(geometry.top).toBeCloseTo(160.734375, 1);
-      if (locale === 'ar') expect(Math.abs(geometry.width - 269.890625)).toBeLessThan(3);
-      await testInfo.attach('settings-frame-geometry', { body: JSON.stringify(geometry), contentType: 'application/json' });
+      const pane = page.locator('.ws-secondary-navigation-slot .ws-secondary-sidebar');
+      await expect(pane).toBeVisible();
+      const geometry = await pane.evaluate(element => {
+        const box = element.getBoundingClientRect();
+        const header = document.querySelector('.ws-header-container')!.getBoundingClientRect();
+        const primary = document.querySelector('#workspace-sidebar')!.getBoundingClientRect();
+        const content = document.querySelector('#workspace-content')!.getBoundingClientRect();
+        return { top: box.top, bottom: box.bottom, width: box.width, headerBottom: header.bottom,
+          adjacency: Math.min(Math.abs(box.left - primary.right), Math.abs(box.right - primary.left)),
+          overlap: Math.max(0, Math.min(box.right, content.right) - Math.max(box.left, content.left)),
+          headerOverlap: Math.max(0, Math.min(box.right, header.right) - Math.max(box.left, header.left)) };
+      });
+      expect(geometry.top).toBe(0);
+      expect(geometry.bottom).toBeCloseTo(1031, 0);
+      expect(geometry.width).toBe(288);
+      expect(geometry.adjacency).toBeLessThanOrEqual(1);
+      expect(geometry.overlap).toBe(0);
+      expect(geometry.headerOverlap).toBe(0);
+      const links = await pane.locator('a').evaluateAll(elements => elements.map(element => element.getAttribute('href')));
+      for (const suffix of ['bot-protection', 'shopping-preferences', 'localization', 'order-limits', 'publish']) expect(links).toContain(`/store/settings/${suffix}`);
+      const collapse = pane.getByRole('button', { name: locale === 'ar' ? 'طي شريط الإعدادات' : 'Collapse settings sidebar' });
+      await collapse.click();
+      await expect(pane).toHaveCSS('width', '48px');
+      const expand = pane.getByRole('button', { name: locale === 'ar' ? 'توسيع شريط الإعدادات' : 'Expand settings sidebar' });
+      await expect(expand).toBeFocused(); await expand.click();
+      await expect(pane).toHaveCSS('width', '288px'); await expect(collapse).toBeFocused();
+      await testInfo.attach('secondary-settings-geometry', { body: JSON.stringify(geometry), contentType: 'application/json' });
+      const primary = page.locator('.ws-desktop-sidebar');
+      const field = card.locator('input').first();
+      await field.fill('Preserved sidebar draft');
+      await expect(primary).toHaveCSS('width', '64px');
+      await primary.getByRole('button', { name: locale === 'ar' ? 'إظهار القائمة الجانبية' : 'Show sidebar', exact: true }).click();
+      await expect(primary).toHaveCSS('width', '272px');
+      await expect(field).toHaveValue('Preserved sidebar draft');
+      await primary.getByRole('button', { name: locale === 'ar' ? 'إخفاء القائمة الجانبية' : 'Hide sidebar', exact: true }).click();
+      await expect(primary).toHaveCSS('width', '64px');
+      await expect(field).toHaveValue('Preserved sidebar draft');
+      await page.screenshot({ path: testInfo.outputPath('compact-primary-full-secondary.png') });
+      await primary.getByRole('button', { name: locale === 'ar' ? 'إظهار القائمة الجانبية' : 'Show sidebar', exact: true }).click();
+      await expect(field).toHaveValue('Preserved sidebar draft');
+
     } else {
-      await selectedSettingsVisible(page);
+      const drawer = await openSettingsMenu(page, locale);
+      await expect(drawer.locator('[aria-current="page"]')).toBeInViewport();
+      const results = await new AxeBuilder({ page }).include('.ws-settings-mobile-drawer').withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']).analyze();
+      expect(results.violations.filter(v => ['serious', 'critical'].includes(v.impact ?? ''))).toEqual([]);
+      await page.keyboard.press('Escape');
     }
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)).toBe(true);
-    const results = await new AxeBuilder({ page }).include('.ws-settings-layout').include('.ws-settings-page-heading').withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa']).analyze();
-    expect(results.violations.filter(violation => ['serious', 'critical'].includes(violation.impact ?? ''))).toEqual([]);
     await page.screenshot({ path: testInfo.outputPath('merchant-settings-frame.png') });
     expect(api.mutations).toEqual([]);
   });
 }
 
-// Fresh Source desktop DOM (2026-10-20): 28px labels with a 12px top margin,
-// 4px group end padding, and no NewsLetter badge. Community adds one 32px row.
+for (const locale of ['ar', 'en'] as const) {
+  test(`Secondary rail scrolls independently on short 1024px desktop in ${locale}`, async ({ page }) => {
+    const api = await workspace(page, locale, false, 'dark');
+    await page.setViewportSize({ width: 1024, height: 600 });
+    await page.goto('/store/settings/login-sessions');
+    const pane = page.locator('.ws-secondary-navigation-slot .ws-secondary-sidebar');
+    await expect(pane).toBeVisible();
+    await expect(pane.locator('[aria-current="page"]')).toBeInViewport();
+    await page.setViewportSize({ width: 1024, height: 500 });
+    await expect(pane.locator('[aria-current="page"]')).toBeInViewport();
+    await page.setViewportSize({ width: 1024, height: 600 });
+    const scroll = pane.locator('.ws-secondary-sidebar-scroll');
+    const top = await page.evaluate(() => window.scrollY);
+    await scroll.evaluate(element => { element.scrollTop = 0; });
+    await scroll.hover(); await page.mouse.wheel(0, 800);
+    await expect.poll(() => scroll.evaluate(element => element.scrollTop)).toBeGreaterThan(200);
+    expect(await page.evaluate(() => window.scrollY)).toBe(top);
+    await page.locator('.ws-login-table').hover(); await page.mouse.wheel(0, 500);
+    await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(300);
+    expect(await pane.evaluate(element => Math.abs(element.getBoundingClientRect().bottom - innerHeight))).toBeLessThanOrEqual(1);
+    const primary = page.locator('.ws-desktop-sidebar');
+    await expect(primary).toHaveCSS('width', '64px');
+    await primary.getByRole('button', { name: locale === 'ar' ? 'إظهار القائمة الجانبية' : 'Show sidebar', exact: true }).click();
+    await expect(primary).toHaveCSS('width', '272px');
+    await primary.getByRole('button', { name: locale === 'ar' ? 'إخفاء القائمة الجانبية' : 'Hide sidebar', exact: true }).click();
+    await expect(primary).toHaveCSS('width', '64px');
+    expect(await pane.evaluate(element => {
+      const box = element.getBoundingClientRect(), main = document.querySelector('#workspace-sidebar')!.getBoundingClientRect();
+      return Math.min(Math.abs(box.left - main.right), Math.abs(box.right - main.left));
+    })).toBeLessThanOrEqual(1);
+    await primary.getByRole('button', { name: locale === 'ar' ? 'إظهار القائمة الجانبية' : 'Show sidebar', exact: true }).click();
+    await expect(primary).toHaveCSS('width', '272px');
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)).toBe(true);
+    await pane.getByRole('searchbox').fill('Webhooks');
+    await pane.getByRole('link', { name: 'Webhooks', exact: true }).focus();
+    await page.keyboard.press('Enter'); await expect(page).toHaveURL(/\/settings\/webhooks$/);
+    await primary.locator('a[href="/support"]').click();
+    await expect(page).toHaveURL(/\/support$/);
+    await expect(page.getByRole('heading', { name: locale === 'ar' ? 'الدعم الفني' : 'Support', exact: true })).toBeVisible();
+    await expect(page.locator('.ws-secondary-navigation-slot')).toBeEmpty();
+    expect(api.mutations).toEqual([]);
+  });
+}
+
+// Grouped navigation must remain complete and independently scrollable in both layouts.
 for (const locale of ['ar', 'en'] as const) for (const width of [1920, 390, 320]) for (const appearance of ['light', 'dark'] as const) {
-  test(`Merchant sidebar groups match the reference and stay keyboard reachable in ${locale} at ${width}px ${appearance}`, async ({ page }, testInfo) => {
+  test(`Merchant sidebar groups stay organized, full-height and keyboard reachable in ${locale} at ${width}px ${appearance}`, async ({ page }, testInfo) => {
     test.setTimeout(60_000);
     const api = await workspace(page, locale, false, appearance);
     await page.emulateMedia({ reducedMotion: appearance === 'dark' ? 'reduce' : 'no-preference' });
@@ -206,6 +259,11 @@ for (const locale of ['ar', 'en'] as const) for (const width of [1920, 390, 320]
     const opener = page.getByRole('button', { name: locale === 'ar' ? 'افتح القائمة' : 'Open navigation', exact: true });
     if (width < 768) await opener.click();
     const sidebar = page.locator(width < 768 ? '.ws-drawer' : '.ws-desktop-sidebar');
+    if (width >= 768) {
+      await expect(sidebar).toHaveCSS('width', '64px');
+      await sidebar.getByRole('button', { name: locale === 'ar' ? 'إظهار القائمة الجانبية' : 'Show sidebar', exact: true }).click();
+      await expect(sidebar).toHaveCSS('width', '272px');
+    }
     const dashboard = sidebar.locator('nav a[href="/dashboard"]');
     await expect(dashboard).toBeVisible();
     await page.evaluate(() => document.fonts.ready);
@@ -215,29 +273,42 @@ for (const locale of ['ar', 'en'] as const) for (const width of [1920, 390, 320]
     await products.focus(); await page.keyboard.press('Enter');
     await expect(orders).toHaveAttribute('aria-expanded', 'true');
     await expect(products).toHaveAttribute('aria-expanded', 'true');
-    await expect(sidebar.locator('nav>div').first()).toHaveCSS('height', '866px');
+    const sections = sidebar.locator('nav>div');
+    await expect(sections.locator(':scope>p')).toHaveText(locale === 'ar'
+      ? ['الرئيسية', 'التجارة', 'النمو', 'الإدارة']
+      : ['Home', 'Commerce', 'Growth', 'Management']);
+    await expect(sections.nth(0).locator('a[href="/dashboard"]')).toHaveCount(1);
+    await expect(sections.nth(1).locator('a[href="/store/orders"]')).toBeVisible();
+    await expect(sections.nth(1).locator('a[href="/store/products"]')).toBeVisible();
+    await expect(sections.nth(2).locator('a[href="/store/funnels"]')).toHaveCount(1);
+    await expect(sections.nth(3).locator('a[href="/community"]')).toHaveCount(1);
+    await expect(sections.nth(3).locator('a[href="/store/settings/general"]')).toHaveCount(1);
+    const scroll = sidebar.locator('.ws-sidebar-scroll');
+    // aria-expanded changes before the disclosure finishes growing in normal-motion mode.
+    await expect.poll(() => scroll.evaluate(element => element.scrollHeight > element.clientHeight)).toBe(true);
     const geometry = await sidebar.evaluate(element => {
+      const box = element.getBoundingClientRect();
       const scroll = element.querySelector('.ws-sidebar-scroll')!;
-      const groups = Array.from(element.querySelectorAll('nav>div'));
-      return {
-        firstMenuInset: element.querySelector('nav a')!.getBoundingClientRect().top - scroll.getBoundingClientRect().top + scroll.scrollTop,
-        community: Boolean(element.querySelector('a[href="/community"]')),
-        groups: groups.map(group => {
-          const label = group.querySelector('p')!; const style = getComputedStyle(label);
-          return { height: group.getBoundingClientRect().height, paddingBottom: getComputedStyle(group).paddingBottom,
-            labelHeight: label.getBoundingClientRect().height, labelInset: label.getBoundingClientRect().top - group.getBoundingClientRect().top,
-            labelPadding: style.padding, letterSpacing: style.letterSpacing, textTransform: style.textTransform };
-        }),
-      };
+      const bounds = scroll.getBoundingClientRect();
+      return { top: box.top, bottom: box.bottom, viewportHeight: innerHeight,
+        scrollTop: bounds.top, scrollBottom: bounds.bottom,
+        scrollHeight: scroll.scrollHeight, clientHeight: scroll.clientHeight };
     });
-    expect(geometry.firstMenuInset).toBe(48);
-    expect(geometry.community).toBe(true);
-    expect(geometry.groups.map(group => group.height)).toEqual([866, 204]);
-    for (const group of geometry.groups) expect(group).toMatchObject({ paddingBottom: '4px', labelHeight: 28, labelInset: 12, labelPadding: '0px 8px', letterSpacing: '0.66px', textTransform: 'uppercase' });
+    expect(geometry.top).toBe(0);
+    expect(geometry.bottom).toBe(geometry.viewportHeight);
+    expect(geometry.scrollTop).toBeGreaterThanOrEqual(geometry.top);
+    expect(geometry.scrollBottom).toBeLessThanOrEqual(geometry.bottom);
+    expect(geometry.scrollHeight).toBeGreaterThan(geometry.clientHeight);
+    const documentScroll = await page.evaluate(() => window.scrollY);
+    await dashboard.focus();
+    await dashboard.hover();
+    const beforeWheel = await scroll.evaluate(element => element.scrollTop);
+    await page.mouse.wheel(0, 400);
+    await expect.poll(() => scroll.evaluate(element => element.scrollTop)).toBeGreaterThan(beforeWheel);
+    expect(await page.evaluate(() => window.scrollY)).toBe(documentScroll);
     const newsletter = sidebar.locator('a[href="/store/newsletter"]');
     await expect(newsletter.locator('.ws-nav-badge')).toHaveCount(0);
     await expect(newsletter).toHaveCSS('transition-duration', '0s');
-    await expect(sidebar.locator('nav>div').last().locator('a')).toHaveCount(5);
     const settings = sidebar.locator('nav a[href="/store/settings/general"]');
     await dashboard.focus();
     for (let index = 0; index < 70 && !await settings.evaluate(element => element === document.activeElement); index++) await page.keyboard.press('Tab');
@@ -278,6 +349,19 @@ for (const width of [1440, 390]) {
     await expect(page.getByRole('button', { name: 'Add manager', exact: true })).toBeVisible();
     if (width < 768) await page.getByRole('button', { name: 'Open navigation', exact: true }).click();
     const navigation = page.locator(width < 768 ? '.ws-drawer' : '.ws-desktop-sidebar');
+    if (width >= 768) {
+      await expect(navigation).toHaveCSS('width', '64px');
+      const compactProducts = navigation.getByRole('button', { name: 'Products', exact: true });
+      await compactProducts.focus(); await page.keyboard.press('Enter');
+      const flyout = page.locator('.ws-compact-flyout');
+      await expect(flyout.getByRole('link', { name: 'All products', exact: true })).toBeVisible();
+      await expect(compactProducts).toHaveCSS('transition-duration', '0s');
+      await expect(flyout.getByRole('link', { name: 'All products', exact: true })).toHaveCSS('transition-duration', '0s');
+      await page.keyboard.press('Escape');
+      await expect(flyout).toBeHidden(); await expect(compactProducts).toBeFocused();
+      await navigation.getByRole('button', { name: 'Show sidebar', exact: true }).click();
+      await expect(navigation).toHaveCSS('width', '272px');
+    }
     const products = navigation.getByRole('button', { name: 'Products', exact: true });
     await products.click();
     await expect(navigation.getByRole('link', { name: 'All products', exact: true })).toBeVisible();
@@ -299,7 +383,11 @@ for (const locale of ['ar', 'en'] as const) {
       await workspace(page, locale);
       await page.setViewportSize({ width, height: 900 });
       await page.goto('/store/settings/managers');
-      await expect(page.getByRole('link', { name: locale === 'ar' ? 'اعدادات المديرين' : 'Managers', exact: true })).toHaveAttribute('aria-current', 'page');
+      if (width < 1024) {
+        const settingsDrawer = await openSettingsMenu(page, locale);
+        await expect(settingsDrawer.locator('a[href="/store/settings/managers"]')).toHaveAttribute('aria-current', 'page');
+        await page.keyboard.press('Escape');
+      } else await expect(page.locator('.ws-settings-navigation a[href="/store/settings/managers"]')).toHaveAttribute('aria-current', 'page');
       await page.getByRole('button', { name: locale === 'ar' ? 'إضافة مدير' : 'Add manager', exact: true }).click();
       const dialog = page.getByRole('dialog');
       await expect(dialog).toBeVisible();

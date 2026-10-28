@@ -23,9 +23,18 @@ test('operators reach exchange rates from settings and get one chat badge reques
   const calls = await workspace(page, ['Admin']);
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto('/settings/email');
-  // Settings pages open the sidebar's settings group, which now lists exchange rates.
-  await page.locator('.ws-sidebar a[href="/settings/currencies"]').first().click();
+  const sidebar = page.locator('#workspace-sidebar');
+  await expect(sidebar).toHaveAttribute('data-collapsed');
+  const settings = sidebar.getByRole('button', { name: 'Settings', exact: true });
+  await settings.focus();
+  await settings.press('ArrowRight');
+  const currencies = page.locator('.ws-compact-flyout').getByRole('link', { name: 'Currencies', exact: true });
+  await expect(currencies).toHaveAttribute('href', '/settings/currencies');
+  await currencies.focus();
+  await currencies.press('Enter');
   await expect(page).toHaveURL(/\/settings\/currencies$/);
+  await expect(page.locator('.ws-compact-flyout')).toBeHidden();
+  await expect(sidebar).toHaveAttribute('data-collapsed');
   await expect(page.getByRole('heading', { level: 1, name: 'Currencies' })).toBeVisible();
   await expect(page.getByText('EGP').first()).toBeVisible();
   await expect(page.locator('a[href="/chat"] .ws-notification-dot')).toHaveText('4');

@@ -1,3 +1,4 @@
+import ReportingMoney from '../components/ReportingMoney';
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import useStoreScope from '../hooks/useStoreScope';
@@ -46,7 +47,6 @@ export default function StoreAnalyticsPage() {
     if (err) return <p className="rounded-lg border border-red-100 bg-red-50 px-3 py-2 text-sm text-red-700">{err}</p>;
     if (loading || !ov) return <div className="flex min-h-48 items-center justify-center text-sm text-slate-500">{t('loading', 'Loading…')}</div>;
 
-    const cur = '';
     const rev = ov.revenue; const sales = ov.sales; const cust = ov.customers; const cp = ov.coupons; const rv = ov.reviews;
 
     return (
@@ -65,22 +65,22 @@ export default function StoreAnalyticsPage() {
 
             {/* Revenue */}
             <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-                <StatCard label={t('rev_today', 'Revenue · Today')} value={`${cur}${rev.today_revenue}`} />
-                <StatCard label={t('rev_week', 'Revenue · This week')} value={`${cur}${rev.week_revenue}`} />
-                <StatCard label={t('rev_month', 'Revenue · This month')} value={`${cur}${rev.month_revenue}`} />
-                <StatCard label={t('rev_total', 'Revenue · Total')} value={`${cur}${rev.total_revenue}`} sub={t('rev_delivered_only', 'Delivered orders')} />
+                <StatCard label={t('rev_today', 'Revenue · Today')} value={<ReportingMoney value={rev.today_revenue} report={rev.reporting_money?.today} />} />
+                <StatCard label={t('rev_week', 'Revenue · This week')} value={<ReportingMoney value={rev.week_revenue} report={rev.reporting_money?.week} />} />
+                <StatCard label={t('rev_month', 'Revenue · This month')} value={<ReportingMoney value={rev.month_revenue} report={rev.reporting_money?.month} />} />
+                <StatCard label={t('rev_total', 'Revenue · Total')} value={<ReportingMoney value={rev.total_revenue} report={rev.reporting_money?.total} />} sub={t('rev_delivered_only', 'Delivered orders')} />
             </div>
 
             {/* Sales + customers + coupons + reviews */}
             <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
                 <StatCard label={t('sales_total_orders', 'Total orders')} value={sales.total_orders} />
-                <StatCard label={t('sales_aov', 'Avg. order value')} value={sales.average_order_value} />
+                <StatCard label={t('sales_aov', 'Avg. order value')} value={<ReportingMoney value={sales.average_order_value} report={ov.reporting_money} average />} />
                 <StatCard label={t('sales_items_sold', 'Items sold')} value={sales.total_items_sold} />
                 <StatCard label={t('rev_reviews_avg', 'Avg. rating')} value={rv.average_rating ?? '—'} sub={`${rv.total_reviews} ${t('reviews_label', 'reviews')}`} />
                 <StatCard label={t('cust_total', 'Customers')} value={cust.total_customers} />
                 <StatCard label={t('cust_returning', 'Returning')} value={cust.returning_customers} />
                 <StatCard label={t('cust_new', 'New this month')} value={cust.new_customers_this_month} />
-                <StatCard label={t('coupon_redemptions', 'Coupon redemptions')} value={cp.coupon_redemptions} sub={`${cp.total_coupon_usage} ${t('coupon_discounted', 'discounted')}`} />
+                <StatCard label={t('coupon_redemptions', 'Coupon redemptions')} value={cp.coupon_redemptions} sub={<ReportingMoney value={cp.total_coupon_usage} report={cp.reporting_money} />} />
             </div>
 
             <div className="grid gap-5 lg:grid-cols-3">
@@ -100,7 +100,7 @@ export default function StoreAnalyticsPage() {
                             {ov.top_products.map((p) => (
                                 <li key={p.id} className="flex items-center justify-between gap-2 text-sm">
                                     <span className="truncate text-slate-700">{p.name}</span>
-                                    <span className="shrink-0 text-slate-500">{p.quantity_sold}× · <span className="font-medium text-slate-900">{p.revenue_generated}</span></span>
+                                    <span className="shrink-0 text-slate-500">{p.quantity_sold}× · <span className="font-medium text-slate-900"><ReportingMoney value={p.revenue_generated} report={p.reporting_money} /></span></span>
                                 </li>
                             ))}
                         </ul>
@@ -115,7 +115,7 @@ export default function StoreAnalyticsPage() {
                             {categories.map((c) => (
                                 <li key={c.category_id} className="flex items-center justify-between gap-2 text-sm">
                                     <span className="truncate text-slate-700">{c.category}</span>
-                                    <span className="shrink-0 text-slate-500">{c.quantity_sold}× · <span className="font-medium text-slate-900">{c.revenue_generated}</span></span>
+                                    <span className="shrink-0 text-slate-500">{c.quantity_sold}× · <span className="font-medium text-slate-900"><ReportingMoney value={c.revenue_generated} report={c.reporting_money} /></span></span>
                                 </li>
                             ))}
                         </ul>
